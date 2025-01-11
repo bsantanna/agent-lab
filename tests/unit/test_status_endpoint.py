@@ -10,13 +10,13 @@ def client():
 
 
 def test_health_check(client):
-    response = client.get("/actuator/health")
+    response = client.get("/status/health")
     assert response.status_code == 200
     assert response.json() == {"msg": "success"}
 
 
 def test_metrics(client):
-    response = client.get("/actuator/metrics")
+    response = client.get("/status/metrics")
     assert response.status_code == 200, "The /metrics endpoint should return 200"
     data = response.json()
 
