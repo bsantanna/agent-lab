@@ -36,12 +36,6 @@ jobs:
       - name: Test
         run: |
           pytest --cov=app --cov-report=xml
-
-  scan:
-    name: Scan
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
       - name: SonarQube
         uses: SonarSource/sonarqube-scan-action@v4
         env:
