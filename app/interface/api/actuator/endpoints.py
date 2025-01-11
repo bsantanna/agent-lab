@@ -1,5 +1,6 @@
-import time
 import threading
+import time
+
 import psutil
 from fastapi import APIRouter
 

@@ -1,11 +1,11 @@
-from uuid import uuid4
 from typing import Iterator
+from uuid import uuid4
 
-from app.domain.repositories.user import UserRepository
 from app.domain.models import User
+from app.domain.repositories.user import UserRepository
+
 
 class UserService:
-
     def __init__(self, user_repository: UserRepository) -> None:
         self._repository: UserRepository = user_repository
 

@@ -37,12 +37,13 @@ def setup_routers(application: FastAPI):
 
 def setup_exception_handlers(application: FastAPI):
     application.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
     @application.exception_handler(HTTPException)
     async def http_exception_handler(request: Request, exc: HTTPException):
         match = re.match(r"^(\d+):", exc.detail)
         if match:
             status_code = int(match.group(1))
-            detail = exc.detail[len(match.group(0)):].strip()
+            detail = exc.detail[len(match.group(0)) :].strip()
         else:
             status_code = exc.status_code
             detail = exc.detail
@@ -72,5 +73,6 @@ def setup_middlewares(application: FastAPI):
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
 
 app = create_app()

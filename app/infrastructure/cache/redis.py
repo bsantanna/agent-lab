@@ -13,4 +13,3 @@ class RedisClient:
 
     def delete(self, key: str):
         self._redis.delete(key)
-
