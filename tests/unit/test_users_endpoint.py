@@ -4,8 +4,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.domain.models import User
-from app.domain.repositories.user import UserRepository, UserNotFoundError
+from app.domain.repositories.user import UserNotFoundError, UserRepository
 from app.main import app
+
 
 @pytest.fixture
 def client():
@@ -25,8 +26,18 @@ def test_get_list(client):
     assert response.status_code == 200
     data = response.json()
     assert data == [
-        {"id": 1, "email": "test1@email.com", "hashed_password": "pwd", "is_active": True},
-        {"id": 2, "email": "test2@email.com", "hashed_password": "pwd", "is_active": False},
+        {
+            "id": 1,
+            "email": "test1@email.com",
+            "hashed_password": "pwd",
+            "is_active": True,
+        },
+        {
+            "id": 2,
+            "email": "test2@email.com",
+            "hashed_password": "pwd",
+            "is_active": False,
+        },
     ]
 
 
@@ -44,7 +55,12 @@ def test_get_by_id(client):
 
     assert response.status_code == 200
     data = response.json()
-    assert data == {"id": 1, "email": "xyz@email.com", "hashed_password": "pwd", "is_active": True}
+    assert data == {
+        "id": 1,
+        "email": "xyz@email.com",
+        "hashed_password": "pwd",
+        "is_active": True,
+    }
     repository_mock.get_by_id.assert_called_once_with(1)
 
 
@@ -73,7 +89,12 @@ def test_add(_, client):
 
     assert response.status_code == 201
     data = response.json()
-    assert data == {"id": 1, "email": "xyz@email.com", "hashed_password": "pwd", "is_active": True}
+    assert data == {
+        "id": 1,
+        "email": "xyz@email.com",
+        "hashed_password": "pwd",
+        "is_active": True,
+    }
     repository_mock.add.assert_called_once_with(email="xyz@email.com", password="pwd")
 
 
@@ -95,4 +116,3 @@ def test_remove_404(client):
         response = client.delete("/users/delete/1")
 
     assert response.status_code == 404
-

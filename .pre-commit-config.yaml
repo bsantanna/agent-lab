@@ -2,57 +2,57 @@ default_language_version:
   python: python3.11
 
 repos:
-- repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.0.1
-  hooks:
-  - id: check-toml
-  - id: check-yaml
-  - id: check-json
-  - id: check-added-large-files
-  - id: end-of-file-fixer
-  - id: trailing-whitespace
-  - id: mixed-line-ending
-  - id: detect-private-key
-  - id: check-ast
-  - id: check-merge-conflict
-  - id: check-case-conflict
-  - id: debug-statements
-  - id: requirements-txt-fixer
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: check-toml
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+      - id: detect-private-key
+      - id: check-ast
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: debug-statements
+      - id: requirements-txt-fixer
 
-- repo: https://github.com/PyCQA/isort
-  rev: 5.12.0
-  hooks:
-  - id: isort
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
 
-- repo: https://github.com/PyCQA/flake8
-  rev: 7.1.1
-  hooks:
-  - id: flake8
-    args:
-      - --ignore=E501,W201,W503
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.1.1
+    hooks:
+      - id: flake8
+        args:
+          - --ignore=E203,E501,W201,W503
 
-- repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.5.4
-  hooks:
-  - id: ruff
-    args:
-      - --fix
-  - id: ruff-format
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.5.4
+    hooks:
+      - id: ruff
+        args:
+          - --fix
+      - id: ruff-format
 
-- repo: local
-  hooks:
-  - id: test
-    name: test
-    entry: make test
-    language: system
-    pass_filenames: false
-    always_run: true
+  - repo: local
+    hooks:
+      - id: test
+        name: test
+        entry: make test
+        language: system
+        pass_filenames: false
+        always_run: true
 
-- repo: local
-  hooks:
-  - id: sonar-scanner
-    name: Sonar Scanner
-    entry: sonar-scanner
-    language: system
-    pass_filenames: false
-    always_run: true
+#  - repo: local
+#    hooks:
+#      - id: sonar-scanner
+#        name: Sonar Scanner
+#        entry: sonar-scanner
+#        language: system
+#        pass_filenames: false
+#        always_run: true

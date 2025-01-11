@@ -1,4 +1,3 @@
-alembic
 dependency-injector
 fastapi[standard]
 flake8
@@ -14,6 +13,6 @@ ruff
 slowapi
 sqlalchemy
 starlette
-testcontainers[redis]
 testcontainers[postgresql]
+testcontainers[redis]
 uvicorn
