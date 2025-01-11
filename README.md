@@ -1,6 +1,6 @@
-# Agent Lab
+# Agent-Lab
 
-API for Generating Synthetic Datasets from Dialog Sessions Using REACT Agents.
+Tool for generating synthetic datasets from dialog sessions using REACT agents.
 
 This project implements a REACT agent using a LangGraph workflow consisting of three steps:
 
@@ -114,3 +114,25 @@ Access the interactive documentation (OpenAPI):
 ```
 
 ---
+
+## 🤝 Contributing
+
+We appreciate the support from the community and welcome any help to improve this project. If you encounter any issues or have suggestions for enhancements, please report them by creating an issue on our [GitHub Issues](https://github.com/bsantanna/agent-lab/issues) page.
+
+To contribute to the project, follow these steps:
+
+1. Fork the repository.
+2. Create a new branch for your feature or bugfix.
+3. Activate the pre-commit hooks by running `pre-commit install`, make your changes, and commit them with clear and concise messages.
+4. Ensure your changes pass the pre-commit hooks and achieve at least 80% test coverage in SonarQube.
+5. Push your changes to your forked repository.
+6. Create a Pull Request (PR) to the `main` branch of the original repository.
+
+We will review your PR and provide feedback. Thank you for your contributions and support!
+
+
+---
+
+## 📜 License
+
+This project is licensed under the MIT License. See the [LICENSE.md] file for more details.
