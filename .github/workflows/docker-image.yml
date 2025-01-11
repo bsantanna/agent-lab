@@ -2,7 +2,7 @@ name: Docker Image
 
 on:
   workflow_run:
-    workflows: ["Continuous Integration"]
+    workflows: [ "Continuous Integration" ]
     types:
       - completed
 

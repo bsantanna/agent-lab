@@ -6,6 +6,7 @@ pre-commit
 psutil
 psycopg2-binary
 pytest
+pytest-asyncio
 pytest-cov
 pyyaml
 requests
