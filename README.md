@@ -1,5 +1,7 @@
 # Agent-Lab
 
+[![SonarCloud Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=bsantanna_agent-lab&metric=alert_status)](https://sonarcloud.io/dashboard?id=bsantanna_agent-lab)
+
 Tool for generating synthetic datasets from dialog sessions using REACT agents.
 
 This project implements a REACT agent using a LangGraph workflow consisting of three steps:
