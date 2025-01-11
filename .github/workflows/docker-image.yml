@@ -39,6 +39,4 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            bsantanna/agent-lab:${{ env.VERSION }}
-        env:
-          VERSION: ${{ env.VERSION }}
+            bsantanna/agent-lab:${{ secrets.DOCKER_TAG }}
