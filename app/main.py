@@ -8,7 +8,7 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
 from app.core.container import Container
-from app.interface.api.actuator.endpoints import router as actuator_router
+from app.interface.api.status.endpoints import router as status_router
 from app.interface.api.users.endpoints import router as user_router
 
 logging.basicConfig(level=logging.DEBUG)
@@ -31,7 +31,7 @@ def create_app():
 
 
 def setup_routers(application: FastAPI):
-    application.include_router(actuator_router, prefix="/actuator", tags=["actuator"])
+    application.include_router(status_router, prefix="/status", tags=["status"])
     application.include_router(user_router, prefix="/users", tags=["users"])
 
 
