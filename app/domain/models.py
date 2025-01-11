@@ -4,7 +4,7 @@ from app.infrastructure.database.config import Base
 
 
 class User(Base):
-    __tablename__ = "users"
+    __tablename__ = "agents"
 
     id = Column(Integer, primary_key=True)
     email = Column(String, unique=True)
