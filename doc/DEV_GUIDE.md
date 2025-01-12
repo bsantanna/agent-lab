@@ -56,7 +56,6 @@ Access the interactive documentation (OpenAPI):
 ## Project Structure
 
 
-```markdown
 | Project File Structure | Project Database Structure |
 |------------------------|-----------------------------|
 | ```plaintext           |
@@ -71,7 +70,6 @@ Access the interactive documentation (OpenAPI):
 | ├── tests              |
 |     ├── integration    |
 | ```                    | ![Domain Model](domain_model.png) |
-```
 
 ---
 
