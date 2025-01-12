@@ -2,9 +2,9 @@ import os
 
 from dependency_injector import containers, providers
 
-from app.application.services.user import UserService
+from app.application.services.agent import AgentService
 from app.core.logging import logger
-from app.domain.repositories.user import UserRepository
+from app.domain.repositories.agent import AgentRepository
 from app.infrastructure.cache.redis import RedisClient
 from app.infrastructure.database.config import Database
 
@@ -29,11 +29,11 @@ class Container(containers.DeclarativeContainer):
 
     redis_client = providers.Singleton(RedisClient, redis_url=config.cache.url)
 
-    user_repository = providers.Factory(
-        UserRepository, session_factory=db.provided.session
+    agent_repository = providers.Factory(
+        AgentRepository, session_factory=db.provided.session
     )
 
-    user_service = providers.Factory(
-        UserService,
-        user_repository=user_repository,
+    agent_service = providers.Factory(
+        AgentService,
+        agent_repository=agent_repository,
     )

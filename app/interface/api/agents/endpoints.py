@@ -1,7 +1,7 @@
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, Response, status
 
-from app.application.services.user import UserService
+from app.application.services.agent import AgentService
 from app.core.container import Container
 from app.domain.exceptions.base import NotFoundError
 
@@ -11,19 +11,19 @@ router = APIRouter()
 @router.get("/list")
 @inject
 def get_list(
-    user_service: UserService = Depends(Provide[Container.user_service]),
+    agent_service: AgentService = Depends(Provide[Container.agent_service]),
 ):
-    return user_service.get_users()
+    return agent_service.get_agents()
 
 
-@router.get("/{user_id}")
+@router.get("/{agent_id}")
 @inject
 def get_by_id(
-    user_id: int,
-    user_service: UserService = Depends(Provide[Container.user_service]),
+    agent_id: int,
+    agent_service: AgentService = Depends(Provide[Container.agent_service]),
 ):
     try:
-        return user_service.get_user_by_id(user_id)
+        return agent_service.get_agent_by_id(agent_id)
     except NotFoundError:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -31,19 +31,19 @@ def get_by_id(
 @router.post("/create", status_code=status.HTTP_201_CREATED)
 @inject
 def add(
-    user_service: UserService = Depends(Provide[Container.user_service]),
+    agent_service: AgentService = Depends(Provide[Container.agent_service]),
 ):
-    return user_service.create_user()
+    return agent_service.create_agent()
 
 
-@router.delete("/delete/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/delete/{agent_id}", status_code=status.HTTP_204_NO_CONTENT)
 @inject
 def remove(
-    user_id: int,
-    user_service: UserService = Depends(Provide[Container.user_service]),
+    agent_id: int,
+    agent_service: AgentService = Depends(Provide[Container.agent_service]),
 ):
     try:
-        user_service.delete_user_by_id(user_id)
+        agent_service.delete_agent_by_id(agent_id)
     except NotFoundError:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     else:
