@@ -55,21 +55,24 @@ Access the interactive documentation (OpenAPI):
 
 ## Project Structure
 
+```plaintext
+/
+├── app
+│   ├── application
+│   ├── core
+│   ├── domain
+│   ├── infrastructure
+│   ├── interfaces
+│   ├── middleware
+├── tests
+    ├── integration
+```
 
-| Project File Structure | Project Database Structure |
-|------------------------|-----------------------------|
-| ```plaintext           |
-| /                      |
-| ├── app                |
-| │   ├── application    |
-| │   ├── core           |
-| │   ├── domain         |
-| │   ├── infrastructure |
-| │   ├── interfaces     |
-| │   ├── middleware     |
-| ├── tests              |
-|     ├── integration    |
-| ```                    | ![Domain Model](domain_model.png) |
+---
+
+## Project Database Structure
+
+<img src="domain_model.png" alt="Domain Model" style="max-height: 500px;">
 
 ---
 
