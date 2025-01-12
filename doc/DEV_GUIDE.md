@@ -72,7 +72,7 @@ Access the interactive documentation (OpenAPI):
 
 ## Project Database Structure
 
-<img src="domain_model.png" alt="Domain Model" style="max-height: 500px;">
+![Domain Model](domain_model_web.png)
 
 ---
 
