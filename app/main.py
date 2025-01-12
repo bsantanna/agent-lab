@@ -9,6 +9,8 @@ from starlette.responses import JSONResponse
 
 from app.core.container import Container
 from app.interface.api.agents.endpoints import router as agents_router
+from app.interface.api.integrations.endpoints import router as integrations_router
+from app.interface.api.language_models.endpoints import router as language_models_router
 from app.interface.api.status.endpoints import router as status_router
 
 logging.basicConfig(level=logging.DEBUG)
@@ -32,6 +34,10 @@ def create_app():
 
 def setup_routers(application: FastAPI):
     application.include_router(agents_router, prefix="/agents", tags=["agents"])
+    application.include_router(
+        integrations_router, prefix="/integrations", tags=["integrations"]
+    )
+    application.include_router(language_models_router, prefix="/llms", tags=["llms"])
     application.include_router(status_router, prefix="/status", tags=["status"])
 
 

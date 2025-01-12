@@ -25,7 +25,11 @@ from app.infrastructure.database.config import Database
 
 class Container(containers.DeclarativeContainer):
     wiring_config = containers.WiringConfiguration(
-        modules=["app.interface.api.agents.endpoints"]
+        modules=[
+            "app.interface.api.agents.endpoints",
+            "app.interface.api.integrations.endpoints",
+            "app.interface.api.language_models.endpoints",
+        ]
     )
 
     if os.getenv("DOCKER"):
