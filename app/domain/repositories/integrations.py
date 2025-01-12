@@ -1,6 +1,7 @@
 from contextlib import AbstractContextManager
 from typing import Callable, Iterator
 
+from hvac.v1 import Client
 from sqlalchemy.orm import Session
 
 from app.domain.exceptions.base import NotFoundError
@@ -9,19 +10,21 @@ from app.domain.models import Integration
 
 class IntegrationRepository:
     def __init__(
-        self, session_factory: Callable[..., AbstractContextManager[Session]]
+        self,
+        session_factory: Callable[..., AbstractContextManager[Session]],
+        hvac_client: Callable[..., AbstractContextManager[Client]],
     ) -> None:
         self.session_factory = session_factory
 
     def get_all(self) -> Iterator[Integration]:
         with self.session_factory() as session:
-            return session.query(Integration).all()
+            return session.query(Integration).filter(Integration.is_active).all()
 
     def get_by_id(self, integration_id: int) -> Integration:
         with self.session_factory() as session:
             integration = (
                 session.query(Integration)
-                .filter(Integration.id == integration_id)
+                .filter(Integration.id == integration_id, Integration.is_active)
                 .first()
             )
             if not integration:
@@ -47,7 +50,8 @@ class IntegrationRepository:
             )
             if not entity:
                 raise IntegrationNotFoundError(integration_id)
-            session.delete(entity)
+
+            entity.is_active = False
             session.commit()
 
 

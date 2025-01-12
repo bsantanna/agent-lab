@@ -13,6 +13,7 @@ from sqlalchemy.orm import relationship
 from app.infrastructure.database.config import Base
 
 agent_type = Enum("three_step_react", name="agent_type")
+
 integration_type = Enum(
     "anthropic_api_v1",
     "grok_api_v1",
@@ -20,6 +21,7 @@ integration_type = Enum(
     "ollama_api_v1",
     name="integration_type",
 )
+
 message_role = Enum("assistant", "human", "system", "tool", name="message_role")
 
 
@@ -93,8 +95,6 @@ class Integration(Base):
     id = Column(String, primary_key=True)
     created_at = Column(TIMESTAMP)
     is_active = Column(Boolean)
-    api_endpoint = Column(String)
-    api_key = Column(String)
     integration_type = Column(integration_type)
 
     language_models = relationship("LanguageModel", back_populates="integration")

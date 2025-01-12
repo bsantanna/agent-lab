@@ -1,6 +1,7 @@
 dependency-injector
 fastapi[standard]
 flake8
+hvac
 isort
 pre-commit
 psutil
@@ -16,4 +17,5 @@ sqlalchemy
 starlette
 testcontainers[postgresql]
 testcontainers[redis]
+testcontainers[vault]
 uvicorn
