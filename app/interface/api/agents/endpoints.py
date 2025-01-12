@@ -1,7 +1,7 @@
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, Response, status
 
-from app.application.services.agent import AgentService
+from app.application.services.agents import AgentService
 from app.core.container import Container
 from app.domain.exceptions.base import NotFoundError
 

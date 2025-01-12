@@ -14,7 +14,11 @@ from app.infrastructure.database.config import Base
 
 agent_type = Enum("three_step_react", name="agent_type")
 integration_type = Enum(
-    "anthropic_api", "grok_api", "openai_api", "ollama_api", name="integration_type"
+    "anthropic_api_v1",
+    "grok_api_v1",
+    "openai_api_v1",
+    "ollama_api_v1",
+    name="integration_type",
 )
 message_role = Enum("assistant", "human", "system", "tool", name="message_role")
 
@@ -105,8 +109,6 @@ class Message(Base):
     agent_id = Column(String, ForeignKey("agents.id"))
     message_role = Column(message_role)
     message_content = Column(Text)
-    message_previous_id = Column(String, ForeignKey("messages.id"))
-    message_next_id = Column(String, ForeignKey("messages.id"))
     attachment_id = Column(String, ForeignKey("attachments.id"))
 
     agent = relationship("Agent", back_populates="messages")

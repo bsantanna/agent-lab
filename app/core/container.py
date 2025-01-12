@@ -2,9 +2,23 @@ import os
 
 from dependency_injector import containers, providers
 
-from app.application.services.agent import AgentService
+from app.application.services.agents import AgentService, AgentSettingService
+from app.application.services.attachments import AttachmentService
+from app.application.services.integrations import IntegrationService
+from app.application.services.language_models import (
+    LanguageModelService,
+    LanguageModelSettingService,
+)
+from app.application.services.messages import MessageService
 from app.core.logging import logger
-from app.domain.repositories.agent import AgentRepository
+from app.domain.repositories.agents import AgentRepository, AgentSettingRepository
+from app.domain.repositories.attachments import AttachmentRepository
+from app.domain.repositories.integrations import IntegrationRepository
+from app.domain.repositories.language_models import (
+    LanguageModelRepository,
+    LanguageModelSettingRepository,
+)
+from app.domain.repositories.messages import MessageRepository
 from app.infrastructure.cache.redis import RedisClient
 from app.infrastructure.database.config import Database
 
@@ -36,4 +50,58 @@ class Container(containers.DeclarativeContainer):
     agent_service = providers.Factory(
         AgentService,
         agent_repository=agent_repository,
+    )
+
+    agent_setting_repository = providers.Factory(
+        AgentSettingRepository, session_factory=db.provided.session
+    )
+
+    agent_setting_service = providers.Factory(
+        AgentSettingService,
+        agent_setting_repository=agent_setting_repository,
+    )
+
+    attachment_repository = providers.Factory(
+        AttachmentRepository, session_factory=db.provided.session
+    )
+
+    attachment_service = providers.Factory(
+        AttachmentService,
+        attachment_repository=attachment_repository,
+    )
+
+    integration_repository = providers.Factory(
+        IntegrationRepository, session_factory=db.provided.session
+    )
+
+    integration_service = providers.Factory(
+        IntegrationService,
+        integration_repository=integration_repository,
+    )
+
+    language_model_repository = providers.Factory(
+        LanguageModelRepository, session_factory=db.provided.session
+    )
+
+    language_model_service = providers.Factory(
+        LanguageModelService,
+        language_model_repository=language_model_repository,
+    )
+
+    language_model_setting_repository = providers.Factory(
+        LanguageModelSettingRepository, session_factory=db.provided.session
+    )
+
+    language_model_setting_service = providers.Factory(
+        LanguageModelSettingService,
+        language_model_setting_repository=language_model_setting_repository,
+    )
+
+    message_repository = providers.Factory(
+        MessageRepository, session_factory=db.provided.session
+    )
+
+    message_service = providers.Factory(
+        MessageService,
+        message_repository=message_repository,
     )
