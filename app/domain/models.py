@@ -1,4 +1,13 @@
-from sqlalchemy import BLOB, TIMESTAMP, Boolean, Column, Enum, ForeignKey, String, Text
+from sqlalchemy import (
+    TIMESTAMP,
+    Boolean,
+    Column,
+    Enum,
+    ForeignKey,
+    LargeBinary,
+    String,
+    Text,
+)
 from sqlalchemy.orm import relationship
 
 from app.infrastructure.database.config import Base
@@ -43,7 +52,7 @@ class Attachment(Base):
     created_at = Column(TIMESTAMP)
     is_active = Column(Boolean)
     file_name = Column(String)
-    raw_content = Column(BLOB)
+    raw_content = Column(LargeBinary)
     parsed_content = Column(Text)
     embeddings_id = Column(String)
 
