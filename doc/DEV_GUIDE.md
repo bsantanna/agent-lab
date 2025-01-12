@@ -53,11 +53,10 @@ Access the interactive documentation (OpenAPI):
 
 ---
 
-## Project Structure
+## Project File Structure
 
 ```plaintext
 /
-├── alembic
 ├── app
 │   ├── application
 │   ├── core
@@ -67,8 +66,13 @@ Access the interactive documentation (OpenAPI):
 │   ├── middleware
 ├── tests
     ├── integration
-    ├── unit
 ```
+
+---
+
+## Project Database Structure
+
+![Domain Model](domain_model.png)
 
 ---
 
