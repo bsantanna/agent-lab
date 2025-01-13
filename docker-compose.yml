@@ -63,6 +63,8 @@ services:
       - "8200:8200"
     networks:
       - agent-lab
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: dev-only-token
     volumes:
       - ./docker-volumes/vault/file:/vault/file
       - ./docker-volumes/vault/config:/vault/config
