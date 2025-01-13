@@ -65,11 +65,10 @@ services:
       - agent-lab
     environment:
       VAULT_DEV_ROOT_TOKEN_ID: dev-only-token
-    volumes:
-      - ./vault.json:/vault/config/vault.json
+      VAULT_LOCAL_CONFIG: '{"storage": {"file": {"path": "/vault/file"}}, "listener": [{"tcp": { "address": "0.0.0.0:8200", "tls_disable": true}}], "default_lease_ttl": "168h", "max_lease_ttl": "720h", "ui": true}'
     cap_add:
       - IPC_LOCK
-    entrypoint: vault server -dev -config=/vault/config/vault.json
+    entrypoint: vault server -dev
 
 #  opensearch:
 #    image: opensearchproject/opensearch:latest
