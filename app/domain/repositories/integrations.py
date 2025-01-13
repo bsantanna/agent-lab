@@ -14,7 +14,7 @@ class IntegrationRepository:
     def __init__(
         self,
         session_factory: Callable[..., AbstractContextManager[Session]],
-        hvac_client: Callable[..., AbstractContextManager[Client]],
+        hvac_client: Callable[..., Client],
     ) -> None:
         self.session_factory = session_factory
         self.hvac_client = hvac_client
