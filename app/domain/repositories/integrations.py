@@ -1,3 +1,5 @@
+from uuid import uuid4
+from datetime import datetime
 from contextlib import AbstractContextManager
 from typing import Callable, Iterator
 
@@ -15,6 +17,7 @@ class IntegrationRepository:
         hvac_client: Callable[..., AbstractContextManager[Client]],
     ) -> None:
         self.session_factory = session_factory
+        self.hvac_client = hvac_client
 
     def get_all(self) -> Iterator[Integration]:
         with self.session_factory() as session:
@@ -31,10 +34,22 @@ class IntegrationRepository:
                 raise IntegrationNotFoundError(integration_id)
             return integration
 
-    def add(self, email: str, password: str, is_active: bool = True) -> Integration:
+    def add(
+        self, integration_type: str, api_endpoint: str, api_key: str
+    ) -> Integration:
+        gen_id = uuid4()
+        with self.hvac_client as client:
+            client.secrets.kv.v2.create_or_update_secret(
+                path=f"integration_{gen_id}",
+                secret={"api_endpoint": api_endpoint, "api_key": api_key},
+            )
+
         with self.session_factory() as session:
             integration = Integration(
-                email=email, hashed_password=password, is_active=is_active
+                id=str(gen_id),
+                created_at=datetime.now(),
+                is_active=True,
+                integration_type=integration_type,
             )
             session.add(integration)
             session.commit()

@@ -57,6 +57,20 @@ services:
       postgres:
         condition: service_healthy
 
+  vault:
+    image: vault:1.18.1
+    ports:
+      - "8200:8200"
+    networks:
+      - agent-lab
+#    volumes:
+#      - ./volumes/logs:/vault/logs
+#      - ./volumes/file:/vault/file
+#      - ./volumes/config:/vault/config
+    cap_add:
+      - IPC_LOCK
+    entrypoint: vault server -config=/vault/config/vault.json
+
 #  opensearch:
 #    image: opensearchproject/opensearch:latest
 #    networks:

@@ -1,5 +1,4 @@
 from typing import Iterator
-from uuid import uuid4
 
 from app.domain.models import Integration
 from app.domain.repositories.integrations import IntegrationRepository
@@ -15,9 +14,14 @@ class IntegrationService:
     def get_integration_by_id(self, integration_id: int) -> Integration:
         return self._repository.get_by_id(integration_id)
 
-    def create_integration(self) -> Integration:
-        uid = uuid4()
-        return self._repository.add(email=f"{uid}@email.com", password="pwd")
+    def create_integration(
+        self, integration_type: str, api_endpoint: str, api_key: str
+    ) -> Integration:
+        return self._repository.add(
+            integration_type=integration_type,
+            api_endpoint=api_endpoint,
+            api_key=api_key,
+        )
 
     def delete_integration_by_id(self, integration_id: int) -> None:
         return self._repository.delete_by_id(integration_id)
