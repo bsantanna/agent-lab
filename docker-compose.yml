@@ -59,19 +59,15 @@ services:
 
   vault:
     image: hashicorp/vault:1.18
-    user: "1001:1001"
     ports:
       - "8200:8200"
     networks:
       - agent-lab
     environment:
       VAULT_DEV_ROOT_TOKEN_ID: dev-only-token
-    volumes:
-      - ./docker-volumes/vault/file:/vault/file
-      - ./docker-volumes/vault/config:/vault/config
     cap_add:
       - IPC_LOCK
-    entrypoint: vault server -dev -config=/vault/config/vault.json
+    entrypoint: vault server -dev
 
 #  opensearch:
 #    image: opensearchproject/opensearch:latest
