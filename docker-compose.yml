@@ -58,7 +58,7 @@ services:
         condition: service_healthy
 
   vault:
-    image: vault:1.18.1
+    image: hashicorp/vault:1.18
     ports:
       - "8200:8200"
     networks:
