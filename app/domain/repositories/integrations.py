@@ -39,11 +39,10 @@ class IntegrationRepository:
         self, integration_type: str, api_endpoint: str, api_key: str
     ) -> Integration:
         gen_id = uuid4()
-        with self.hvac_client as client:
-            client.secrets.kv.v2.create_or_update_secret(
-                path=f"integration_{gen_id}",
-                secret={"api_endpoint": api_endpoint, "api_key": api_key},
-            )
+        self.hvac_client.secrets.kv.v2.create_or_update_secret(
+            path=f"integration_{gen_id}",
+            secret={"api_endpoint": api_endpoint, "api_key": api_key},
+        )
 
         with self.session_factory() as session:
             integration = Integration(
