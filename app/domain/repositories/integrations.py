@@ -3,7 +3,7 @@ from datetime import datetime
 from contextlib import AbstractContextManager
 from typing import Callable, Iterator
 
-from hvac.v1 import Client
+import hvac
 from sqlalchemy.orm import Session
 
 from app.domain.exceptions.base import NotFoundError
@@ -14,10 +14,11 @@ class IntegrationRepository:
     def __init__(
         self,
         session_factory: Callable[..., AbstractContextManager[Session]],
-        hvac_client: Callable[..., Client],
+        vault_url: str,
+        vault_token: str,
     ) -> None:
         self.session_factory = session_factory
-        self.hvac_client = hvac_client
+        self.hvac_client = hvac.Client(url=vault_url, token=vault_token)
 
     def get_all(self) -> Iterator[Integration]:
         with self.session_factory() as session:

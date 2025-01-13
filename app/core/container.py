@@ -1,6 +1,5 @@
 import os
 
-import hvac
 from dependency_injector import containers, providers
 
 from app.application.services.agents import AgentService, AgentSettingService
@@ -48,10 +47,6 @@ class Container(containers.DeclarativeContainer):
 
     redis_client = providers.Singleton(RedisClient, redis_url=config.cache.url)
 
-    hvac_client = providers.Singleton(
-        hvac.Client, url=config.vault.url, token=config.vault.token
-    )
-
     agent_repository = providers.Factory(
         AgentRepository, session_factory=db.provided.session
     )
@@ -82,7 +77,8 @@ class Container(containers.DeclarativeContainer):
     integration_repository = providers.Factory(
         IntegrationRepository,
         session_factory=db.provided.session,
-        hvac_client=hvac_client,
+        vault_url=config.vault.url,
+        vault_token=config.vault.token,
     )
 
     integration_service = providers.Factory(
