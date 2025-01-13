@@ -71,7 +71,7 @@ services:
       - ./docker-volumes/vault/config:/vault/config
     cap_add:
       - IPC_LOCK
-    entrypoint: vault server -config=/vault/config/vault.json
+    entrypoint: vault server -dev -config=/vault/config/vault.json
 
 #  opensearch:
 #    image: opensearchproject/opensearch:latest
