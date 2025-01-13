@@ -2,3 +2,6 @@ cache:
   url: "redis://localhost:6379/0"
 db:
   url: "postgresql://postgres:postgres@localhost:5432/agent_lab"
+vault:
+  url: "http://locahost:8200"
+  token: "dev-only-token"
