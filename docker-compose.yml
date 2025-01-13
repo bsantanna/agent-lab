@@ -59,6 +59,7 @@ services:
 
   vault:
     image: hashicorp/vault:1.18
+    user: "1001:1001"
     ports:
       - "8200:8200"
     networks:
