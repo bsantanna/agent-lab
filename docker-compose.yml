@@ -63,10 +63,9 @@ services:
       - "8200:8200"
     networks:
       - agent-lab
-#    volumes:
-#      - ./volumes/logs:/vault/logs
-#      - ./volumes/file:/vault/file
-#      - ./volumes/config:/vault/config
+    volumes:
+      - ./docker-volumes/vault/file:/vault/file
+      - ./docker-volumes/vault/config:/vault/config
     cap_add:
       - IPC_LOCK
     entrypoint: vault server -config=/vault/config/vault.json
