@@ -10,8 +10,6 @@ class LanguageModelCreateRequest(BaseModel):
 
 
 class LanguageModelSettingResponse(BaseModel):
-    id: str
-    language_model_id: str
     setting_key: str
     setting_value: str
 
@@ -30,7 +28,7 @@ class LanguageModelResponse(BaseModel):
         from_attributes = True
 
 
-class LanguageModelSettingsResponse(BaseModel):
+class LanguageModelExpandedResponse(BaseModel):
     id: str
     created_at: datetime
     is_active: bool
