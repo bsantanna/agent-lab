@@ -60,7 +60,7 @@ class IntegrationRepository:
         with self.session_factory() as session:
             entity: Integration = (
                 session.query(Integration)
-                .filter(Integration.id == integration_id)
+                .filter(Integration.id == integration_id, Integration.is_active)
                 .first()
             )
             if not entity:
