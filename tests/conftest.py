@@ -14,7 +14,6 @@ vault = (
     .with_env("VAULT_DEV_LISTEN_ADDRESS", "0.0.0.0:8200")
 )
 
-
 os.environ["TESTING"] = "1"
 
 

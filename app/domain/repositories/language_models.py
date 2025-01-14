@@ -93,6 +93,24 @@ class LanguageModelSettingRepository:
             session.refresh(language_model_settings)
             return language_model_settings
 
+    def update_by_key(
+        self, language_model_id: str, setting_key: str, setting_value: str
+    ) -> None:
+        with self.session_factory() as session:
+            entity: LanguageModelSetting = (
+                session.query(LanguageModelSetting)
+                .filter(
+                    LanguageModelSetting.language_model_id == language_model_id,
+                    LanguageModelSetting.setting_key == setting_key,
+                )
+                .first()
+            )
+            if not entity:
+                raise LanguageModelNotFoundError(language_model_id)
+
+            entity.setting_value = setting_value
+            session.commit()
+
 
 class LanguageModelSettingNotFoundError(NotFoundError):
     entity_name: str = "LanguageModelSetting"

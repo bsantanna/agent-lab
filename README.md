@@ -50,6 +50,7 @@ and contributing to the project. Happy coding!
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](doc/LICENSE.md)
+This project is licensed under the MIT License. See
+the [LICENSE](doc/LICENSE.md)
 file for
 more details.
