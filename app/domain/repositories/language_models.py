@@ -45,6 +45,23 @@ class LanguageModelRepository:
             session.refresh(language_model)
             return language_model
 
+    def update_tag_by_id(
+        self, language_model_id: str, language_model_tag: str
+    ) -> LanguageModel:
+        with self.session_factory() as session:
+            entity: LanguageModel = (
+                session.query(LanguageModel)
+                .filter(LanguageModel.id == language_model_id, LanguageModel.is_active)
+                .first()
+            )
+            if not entity:
+                raise LanguageModelNotFoundError(language_model_id)
+
+            entity.language_model_tag = language_model_tag
+            session.commit()
+            session.refresh(entity)
+            return entity
+
     def delete_by_id(self, language_model_id: str) -> None:
         with self.session_factory() as session:
             entity: LanguageModel = (
@@ -95,7 +112,7 @@ class LanguageModelSettingRepository:
 
     def update_by_key(
         self, language_model_id: str, setting_key: str, setting_value: str
-    ) -> None:
+    ) -> LanguageModelSetting:
         with self.session_factory() as session:
             entity: LanguageModelSetting = (
                 session.query(LanguageModelSetting)
@@ -110,6 +127,8 @@ class LanguageModelSettingRepository:
 
             entity.setting_value = setting_value
             session.commit()
+            session.refresh(entity)
+            return entity
 
 
 class LanguageModelSettingNotFoundError(NotFoundError):
