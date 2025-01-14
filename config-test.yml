@@ -3,5 +3,5 @@ cache:
 db:
   url: "sqlite:///./agent_lab.db"
 vault:
-  url: "http://locahost:18200"
+  url: "http://localhost:18200"
   token: "dev-only-token"
