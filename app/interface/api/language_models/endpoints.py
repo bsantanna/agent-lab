@@ -49,7 +49,7 @@ def get_by_id(
             language_model.id
         )
         response = LanguageModelSettingsResponse.model_validate(language_model)
-        response.settings = [
+        response.lm_settings = [
             LanguageModelSettingResponse.model_validate(setting) for setting in settings
         ]
         return response
