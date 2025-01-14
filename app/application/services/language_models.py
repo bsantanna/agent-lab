@@ -3,6 +3,7 @@ from typing import Iterator
 from app.application.services.integrations import IntegrationService
 from app.domain.exceptions.base import InvalidFieldError
 from app.domain.models import LanguageModel, LanguageModelSetting
+from app.domain.repositories.integrations import IntegrationNotFoundError
 from app.domain.repositories.language_models import (
     LanguageModelRepository,
     LanguageModelSettingRepository,
@@ -65,8 +66,9 @@ class LanguageModelService:
         language_model_tag: str,
     ) -> LanguageModel:
         # verify integration
-        integration = self._integration_service.get_integration_by_id(integration_id)
-        if integration is None:
+        try:
+            self._integration_service.get_integration_by_id(integration_id)
+        except IntegrationNotFoundError:
             raise InvalidFieldError(
                 field_name="integration_id", reason="integration not found"
             )
