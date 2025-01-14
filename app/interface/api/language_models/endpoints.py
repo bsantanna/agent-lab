@@ -77,7 +77,7 @@ def add(
 @router.delete("/delete/{language_model_id}", status_code=status.HTTP_204_NO_CONTENT)
 @inject
 def remove(
-    language_model_id: int,
+    language_model_id: str,
     language_model_service: LanguageModelService = Depends(
         Provide[Container.language_model_service]
     ),

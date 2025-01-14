@@ -45,7 +45,7 @@ class LanguageModelRepository:
             session.refresh(language_model)
             return language_model
 
-    def delete_by_id(self, language_model_id: int) -> None:
+    def delete_by_id(self, language_model_id: str) -> None:
         with self.session_factory() as session:
             entity: LanguageModel = (
                 session.query(LanguageModel)
@@ -54,6 +54,7 @@ class LanguageModelRepository:
             )
             if not entity:
                 raise LanguageModelNotFoundError(language_model_id)
+
             entity.is_active = False
             session.commit()
 
@@ -91,18 +92,6 @@ class LanguageModelSettingRepository:
             session.commit()
             session.refresh(language_model_settings)
             return language_model_settings
-
-    def delete_by_id(self, language_model_settings_id: int) -> None:
-        with self.session_factory() as session:
-            entity: LanguageModelSetting = (
-                session.query(LanguageModelSetting)
-                .filter(LanguageModelSetting.id == language_model_settings_id)
-                .first()
-            )
-            if not entity:
-                raise LanguageModelSettingNotFoundError(language_model_settings_id)
-            session.delete(entity)
-            session.commit()
 
 
 class LanguageModelSettingNotFoundError(NotFoundError):
