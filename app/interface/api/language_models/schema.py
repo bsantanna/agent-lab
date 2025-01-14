@@ -25,6 +25,17 @@ class LanguageModelResponse(BaseModel):
     is_active: bool
     language_model_tag: str
     integration_id: str
+
+    class Config:
+        from_attributes = True
+
+
+class LanguageModelSettingsResponse(BaseModel):
+    id: str
+    created_at: datetime
+    is_active: bool
+    language_model_tag: str
+    integration_id: str
     settings: Optional[List[LanguageModelSettingResponse]] = None
 
     class Config:

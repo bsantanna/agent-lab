@@ -13,6 +13,7 @@ from app.interface.api.language_models.schema import (
     LanguageModelCreateRequest,
     LanguageModelResponse,
     LanguageModelSettingResponse,
+    LanguageModelSettingsResponse,
 )
 
 router = APIRouter()
@@ -29,7 +30,7 @@ def get_list(
     return [LanguageModelResponse.model_validate(lm) for lm in language_models]
 
 
-@router.get("/{language_model_id}", response_model=LanguageModelResponse)
+@router.get("/{language_model_id}", response_model=LanguageModelSettingsResponse)
 @inject
 def get_by_id(
     language_model_id: str,
