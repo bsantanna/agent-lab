@@ -48,7 +48,7 @@ def get_by_id(
         settings = language_model_setting_service.get_language_model_settings(
             language_model.id
         )
-        response = LanguageModelResponse.model_validate(language_model)
+        response = LanguageModelSettingsResponse.model_validate(language_model)
         response.settings = [
             LanguageModelSettingResponse.model_validate(setting) for setting in settings
         ]
