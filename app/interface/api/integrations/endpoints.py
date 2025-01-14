@@ -1,25 +1,33 @@
+from typing import List
+
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Body, Depends, Response, status
 
 from app.application.services.integrations import IntegrationService
 from app.core.container import Container
 from app.domain.exceptions.base import NotFoundError
-from app.interface.api.integrations.schema import IntegrationCreateRequest
+from app.interface.api.integrations.schema import (
+    IntegrationCreateRequest,
+    IntegrationResponse,
+)
 
 router = APIRouter()
 
 
-@router.get("/list")
+@router.get(path="/list", response_model=List[IntegrationResponse])
 @inject
 def get_list(
     integration_service: IntegrationService = Depends(
         Provide[Container.integration_service]
     ),
 ):
-    return integration_service.get_integrations()
+    integrations = integration_service.get_integrations()
+    return [
+        IntegrationResponse.model_validate(integration) for integration in integrations
+    ]
 
 
-@router.get("/{integration_id}")
+@router.get(path="/{integration_id}", response_model=IntegrationResponse)
 @inject
 def get_by_id(
     integration_id: str,
@@ -28,12 +36,15 @@ def get_by_id(
     ),
 ):
     try:
-        return integration_service.get_integration_by_id(integration_id)
+        integration = integration_service.get_integration_by_id(integration_id)
+        return IntegrationResponse.model_validate(integration)
     except NotFoundError:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
 
 
-@router.post("/create", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/create", status_code=status.HTTP_201_CREATED, response_model=IntegrationResponse
+)
 @inject
 def add(
     integration_data: IntegrationCreateRequest = Body(...),
@@ -41,11 +52,13 @@ def add(
         Provide[Container.integration_service]
     ),
 ):
-    return integration_service.create_integration(
+    integration = integration_service.create_integration(
         integration_type=integration_data.integration_type,
         api_endpoint=integration_data.api_endpoint,
         api_key=integration_data.api_key,
     )
+
+    return IntegrationResponse.model_validate(integration)
 
 
 @router.delete("/delete/{integration_id}", status_code=status.HTTP_204_NO_CONTENT)

@@ -1,3 +1,4 @@
+from datetime import datetime
 from urllib.parse import urlparse
 
 from pydantic import BaseModel, validator
@@ -28,3 +29,13 @@ class IntegrationCreateRequest(BaseModel):
         if v not in valid_types:
             raise InvalidFieldError("integration_type", "not supported")
         return v
+
+
+class IntegrationResponse(BaseModel):
+    id: str
+    created_at: datetime
+    is_active: bool
+    integration_type: str
+
+    class Config:
+        from_attributes = True
