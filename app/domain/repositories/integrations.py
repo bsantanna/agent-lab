@@ -24,7 +24,7 @@ class IntegrationRepository:
         with self.session_factory() as session:
             return session.query(Integration).filter(Integration.is_active).all()
 
-    def get_by_id(self, integration_id: int) -> Integration:
+    def get_by_id(self, integration_id: str) -> Integration:
         with self.session_factory() as session:
             integration = (
                 session.query(Integration)
@@ -56,7 +56,7 @@ class IntegrationRepository:
             session.refresh(integration)
             return integration
 
-    def delete_by_id(self, integration_id: int) -> None:
+    def delete_by_id(self, integration_id: str) -> None:
         with self.session_factory() as session:
             entity: Integration = (
                 session.query(Integration)

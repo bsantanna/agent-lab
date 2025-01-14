@@ -22,7 +22,7 @@ def get_list(
 @router.get("/{integration_id}")
 @inject
 def get_by_id(
-    integration_id: int,
+    integration_id: str,
     integration_service: IntegrationService = Depends(
         Provide[Container.integration_service]
     ),
@@ -51,7 +51,7 @@ def add(
 @router.delete("/delete/{integration_id}", status_code=status.HTTP_204_NO_CONTENT)
 @inject
 def remove(
-    integration_id: int,
+    integration_id: str,
     integration_service: IntegrationService = Depends(
         Provide[Container.integration_service]
     ),

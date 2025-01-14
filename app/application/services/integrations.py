@@ -11,7 +11,7 @@ class IntegrationService:
     def get_integrations(self) -> Iterator[Integration]:
         return self._repository.get_all()
 
-    def get_integration_by_id(self, integration_id: int) -> Integration:
+    def get_integration_by_id(self, integration_id: str) -> Integration:
         return self._repository.get_by_id(integration_id)
 
     def create_integration(
@@ -23,5 +23,5 @@ class IntegrationService:
             api_key=api_key,
         )
 
-    def delete_integration_by_id(self, integration_id: int) -> None:
+    def delete_integration_by_id(self, integration_id: str) -> None:
         return self._repository.delete_by_id(integration_id)
