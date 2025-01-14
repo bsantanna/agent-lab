@@ -70,7 +70,7 @@ class TestIntegrationsEndpoints:
         assert response_2.status_code == 204
 
     @pytest.mark.asyncio
-    async def test_remove_not_found(self, client):
+    async def test_delete_not_found(self, client):
         # given
         integration_id = "not_existing_id"
 
@@ -79,3 +79,18 @@ class TestIntegrationsEndpoints:
 
         # then
         assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_create_invalid_endpoint_bad_request(self, client):
+        # when
+        response = client.post(
+            url="/integrations/create",
+            json={
+                "api_endpoint": "an_invalid_endpoint",
+                "api_key": "an_invalid_key",
+                "integration_type": "openai_api_v1",
+            },
+        )
+
+        # then
+        assert response.status_code == 400
