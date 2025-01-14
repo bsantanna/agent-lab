@@ -16,3 +16,15 @@ class IntegrationCreateRequest(BaseModel):
         if not all([parsed.scheme, parsed.netloc]):
             raise InvalidFieldError("api_endpoint", "invalid url format")
         return v
+
+    @validator("integration_type")
+    def validate_integration_type(cls, v):
+        valid_types = [
+            "anthropic_api_v1",
+            "grok_api_v1",
+            "openai_api_v1",
+            "ollama_api_v1",
+        ]
+        if v not in valid_types:
+            raise InvalidFieldError("integration_type", "not supported")
+        return v

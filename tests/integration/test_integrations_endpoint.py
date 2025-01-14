@@ -94,3 +94,18 @@ class TestIntegrationsEndpoints:
 
         # then
         assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_create_invalid_integration_type_bad_request(self, client):
+        # when
+        response = client.post(
+            url="/integrations/create",
+            json={
+                "api_endpoint": "https://example.com",
+                "api_key": "an_invalid_key",
+                "integration_type": "an_invalid_integration_type",
+            },
+        )
+
+        # then
+        assert response.status_code == 400
