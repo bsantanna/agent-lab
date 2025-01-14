@@ -45,7 +45,7 @@ class LanguageModelRepository:
             session.refresh(language_model)
             return language_model
 
-    def update_tag_by_id(
+    def update_language_model_tag(
         self, language_model_id: str, language_model_tag: str
     ) -> LanguageModel:
         with self.session_factory() as session:

@@ -23,11 +23,6 @@ class LanguageModelSettingService:
     ) -> Iterator[LanguageModelSetting]:
         return self._repository.get_all(model_id=language_model_id)
 
-    def get_language_model_setting_by_id(
-        self, language_model_setting_id: int
-    ) -> LanguageModelSetting:
-        return self._repository.get_by_id(language_model_setting_id)
-
     def create_language_model_setting(
         self, language_model_id: str, setting_key: str, setting_value: str
     ) -> LanguageModelSetting:
@@ -37,10 +32,14 @@ class LanguageModelSettingService:
             setting_value=setting_value,
         )
 
-    def delete_language_model_setting_by_id(
-        self, language_model_setting_id: int
-    ) -> None:
-        return self._repository.delete_by_id(language_model_setting_id)
+    def update_by_key(
+        self, language_model_id: str, setting_key: str, setting_value: str
+    ) -> LanguageModelSetting:
+        return self._repository.update_by_key(
+            language_model_id=language_model_id,
+            setting_key=setting_key,
+            setting_value=setting_value,
+        )
 
 
 class LanguageModelService:
@@ -89,3 +88,10 @@ class LanguageModelService:
 
     def delete_language_model_by_id(self, language_model_id: str) -> None:
         return self._repository.delete_by_id(language_model_id)
+
+    def update_language_model_tag(
+        self, language_model_id: str, language_model_tag: str
+    ) -> LanguageModel:
+        return self._repository.update_language_model_tag(
+            language_model_id=language_model_id, language_model_tag=language_model_tag
+        )
