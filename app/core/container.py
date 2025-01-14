@@ -103,6 +103,7 @@ class Container(containers.DeclarativeContainer):
         LanguageModelService,
         language_model_repository=language_model_repository,
         language_model_setting_service=language_model_setting_service,
+        integration_service=integration_service,
     )
 
     message_repository = providers.Factory(

@@ -1,5 +1,7 @@
 from typing import Iterator
 
+from app.application.services.integrations import IntegrationService
+from app.domain.exceptions.base import InvalidFieldError
 from app.domain.models import LanguageModel, LanguageModelSetting
 from app.domain.repositories.language_models import (
     LanguageModelRepository,
@@ -45,9 +47,11 @@ class LanguageModelService:
         self,
         language_model_repository: LanguageModelRepository,
         language_model_setting_service: LanguageModelSettingService,
+        integration_service: IntegrationService,
     ) -> None:
         self._repository: LanguageModelRepository = language_model_repository
         self._setting_service = language_model_setting_service
+        self._integration_service = integration_service
 
     def get_language_models(self) -> Iterator[LanguageModel]:
         return self._repository.get_all()
@@ -60,6 +64,13 @@ class LanguageModelService:
         integration_id: str,
         language_model_tag: str,
     ) -> LanguageModel:
+        # verify integration
+        integration = self._integration_service.get_integration_by_id(integration_id)
+        if integration is None:
+            raise InvalidFieldError(
+                field_name="integration_id", reason="integration not found"
+            )
+
         # create language model
         language_model = self._repository.add(
             integration_id=integration_id, language_model_tag=language_model_tag
