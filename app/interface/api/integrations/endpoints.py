@@ -1,5 +1,5 @@
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, Response, status, Body
+from fastapi import APIRouter, Body, Depends, Response, status
 
 from app.application.services.integrations import IntegrationService
 from app.core.container import Container

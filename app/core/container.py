@@ -86,15 +86,6 @@ class Container(containers.DeclarativeContainer):
         integration_repository=integration_repository,
     )
 
-    language_model_repository = providers.Factory(
-        LanguageModelRepository, session_factory=db.provided.session
-    )
-
-    language_model_service = providers.Factory(
-        LanguageModelService,
-        language_model_repository=language_model_repository,
-    )
-
     language_model_setting_repository = providers.Factory(
         LanguageModelSettingRepository, session_factory=db.provided.session
     )
@@ -102,6 +93,16 @@ class Container(containers.DeclarativeContainer):
     language_model_setting_service = providers.Factory(
         LanguageModelSettingService,
         language_model_setting_repository=language_model_setting_repository,
+    )
+
+    language_model_repository = providers.Factory(
+        LanguageModelRepository, session_factory=db.provided.session
+    )
+
+    language_model_service = providers.Factory(
+        LanguageModelService,
+        language_model_repository=language_model_repository,
+        language_model_setting_service=language_model_setting_service,
     )
 
     message_repository = providers.Factory(
