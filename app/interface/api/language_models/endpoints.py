@@ -1,5 +1,5 @@
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Response, status, Body
 
 from app.application.services.language_models import (
     LanguageModelService,
@@ -53,7 +53,7 @@ def get_by_id(
 @router.post("/create", status_code=status.HTTP_201_CREATED)
 @inject
 def add(
-    language_model_data: LanguageModelCreateRequest,
+    language_model_data: LanguageModelCreateRequest = Body(...),
     language_model_service: LanguageModelService = Depends(
         Provide[Container.language_model_service]
     ),
