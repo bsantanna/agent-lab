@@ -36,6 +36,7 @@ class Agent(Base):
     agent_summary = Column(Text)
     language_model_id = Column(String, ForeignKey("language_models.id"))
 
+    language_model = relationship("LanguageModel", back_populates="agents")
     settings = relationship("AgentSetting", back_populates="agent")
     messages = relationship("Message", back_populates="agent")
 
@@ -75,6 +76,7 @@ class LanguageModel(Base):
     integration_id = Column(String, ForeignKey("integrations.id"))
 
     agents = relationship("Agent", back_populates="language_model")
+    integration = relationship("Integration", back_populates="language_models")
     settings = relationship("LanguageModelSetting", back_populates="language_model")
 
 
