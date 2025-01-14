@@ -57,7 +57,7 @@ class LanguageModelService:
     def get_language_models(self) -> Iterator[LanguageModel]:
         return self._repository.get_all()
 
-    def get_language_model_by_id(self, language_model_id: int) -> LanguageModel:
+    def get_language_model_by_id(self, language_model_id: str) -> LanguageModel:
         return self._repository.get_by_id(language_model_id)
 
     def create_language_model(

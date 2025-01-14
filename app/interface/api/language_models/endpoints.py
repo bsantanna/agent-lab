@@ -25,7 +25,7 @@ def get_list(
 @router.get("/{language_model_id}")
 @inject
 def get_by_id(
-    language_model_id: int,
+    language_model_id: str,
     language_model_service: LanguageModelService = Depends(
         Provide[Container.language_model_service]
     ),

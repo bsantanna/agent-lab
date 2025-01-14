@@ -19,7 +19,7 @@ class LanguageModelRepository:
         with self.session_factory() as session:
             return session.query(LanguageModel).filter(LanguageModel.is_active).all()
 
-    def get_by_id(self, language_model_id: int) -> LanguageModel:
+    def get_by_id(self, language_model_id: str) -> LanguageModel:
         with self.session_factory() as session:
             language_model = (
                 session.query(LanguageModel)
