@@ -57,7 +57,7 @@ class MessageRepository:
             session.refresh(message)
             return message
 
-    def delete_by_id(self, message_id: int) -> None:
+    def delete_by_id(self, message_id: str) -> None:
         with self.session_factory() as session:
             entity: Message = (
                 session.query(Message)
