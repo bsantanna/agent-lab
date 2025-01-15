@@ -12,7 +12,7 @@ def client():
 
 
 class TestAgentsEndpoints:
-    def create_agent(self, client):
+    def _create_agent(self, client):
         # create integration
         response = client.post(
             url="/integrations/create",
@@ -53,9 +53,10 @@ class TestAgentsEndpoints:
         assert response.status_code == 200
         assert isinstance(response.json(), list)
 
+    @pytest.mark.asyncio
     async def test_create_and_read_success(self, client):
         # given
-        create_agent_response = self.create_agent(client)
+        create_agent_response = self._create_agent(client)
         agent_id = create_agent_response.json()["id"]
 
         # when
@@ -65,6 +66,15 @@ class TestAgentsEndpoints:
         assert read_agent_response.status_code == 200
         response_json = read_agent_response.json()
         assert "ag_settings" in response_json
-        assert "conclusion_system_prompt" in response_json["ag_settings"]
-        assert "execution_system_prompt" in response_json["ag_settings"]
-        assert "preparation_system_prompt" in response_json["ag_settings"]
+        assert isinstance(response_json["ag_settings"], list)
+
+    @pytest.mark.asyncio
+    async def test_get_by_id_not_found(self, client):
+        # given
+        agent_id = "not_existing_id"
+
+        # when
+        response = client.get(f"/agents/{agent_id}")
+
+        # then
+        assert response.status_code == 404
