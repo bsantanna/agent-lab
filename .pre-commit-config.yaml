@@ -19,10 +19,10 @@ repos:
       - id: debug-statements
       - id: requirements-txt-fixer
 
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.12.0
-    hooks:
-      - id: isort
+  #  - repo: https://github.com/PyCQA/isort
+  #    rev: 5.12.0
+  #    hooks:
+  #      - id: isort
 
   - repo: https://github.com/PyCQA/flake8
     rev: 7.1.1

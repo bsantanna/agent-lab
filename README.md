@@ -42,7 +42,7 @@ three steps:
 ## Development Guide
 
 To get started quickly and easily with this project, please refer to our
-comprehensive [Development Guide](DEV_GUIDE.md). It provides step-by-step
+comprehensive [Development Guide](doc/DEV_GUIDE.md). It provides step-by-step
 instructions for setting up your environment, running the application,
 and contributing to the project. Happy coding!
 
@@ -50,5 +50,7 @@ and contributing to the project. Happy coding!
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE.md](LICENSE.md) file for
+This project is licensed under the MIT License. See
+the [LICENSE](doc/LICENSE.md)
+file for
 more details.

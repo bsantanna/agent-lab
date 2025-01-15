@@ -1,11 +1,14 @@
 dependency-injector
 fastapi[standard]
 flake8
+hvac
 isort
 pre-commit
 psutil
 psycopg2-binary
+pydantic
 pytest
+pytest-asyncio
 pytest-cov
 pyyaml
 requests
@@ -15,4 +18,5 @@ sqlalchemy
 starlette
 testcontainers[postgresql]
 testcontainers[redis]
+testcontainers[vault]
 uvicorn

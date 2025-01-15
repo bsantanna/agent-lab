@@ -8,8 +8,10 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
 from app.core.container import Container
+from app.interface.api.agents.endpoints import router as agents_router
+from app.interface.api.integrations.endpoints import router as integrations_router
+from app.interface.api.language_models.endpoints import router as language_models_router
 from app.interface.api.status.endpoints import router as status_router
-from app.interface.api.users.endpoints import router as user_router
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -17,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 def create_app():
     application = FastAPI(
-        title="Agent Lab",
+        title="Agent-Lab",
         version="0.1.0",
         dependencies=[],
     )
@@ -31,8 +33,12 @@ def create_app():
 
 
 def setup_routers(application: FastAPI):
+    application.include_router(agents_router, prefix="/agents", tags=["agents"])
+    application.include_router(
+        integrations_router, prefix="/integrations", tags=["integrations"]
+    )
+    application.include_router(language_models_router, prefix="/llms", tags=["llms"])
     application.include_router(status_router, prefix="/status", tags=["status"])
-    application.include_router(user_router, prefix="/users", tags=["users"])
 
 
 def setup_exception_handlers(application: FastAPI):

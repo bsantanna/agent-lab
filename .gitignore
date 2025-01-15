@@ -175,3 +175,7 @@ opensearch-data
 
 # SQLite database
 *.db
+
+# Docker volumes
+
+docker-volumes/vault/file/

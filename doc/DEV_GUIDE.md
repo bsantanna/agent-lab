@@ -57,7 +57,6 @@ Access the interactive documentation (OpenAPI):
 
 ```plaintext
 /
-├── alembic
 ├── app
 │   ├── application
 │   ├── core
@@ -67,8 +66,13 @@ Access the interactive documentation (OpenAPI):
 │   ├── middleware
 ├── tests
     ├── integration
-    ├── unit
 ```
+
+---
+
+## Project Database Structure
+
+![Domain Model](domain_model_web.png)
 
 ---
 
