@@ -9,11 +9,14 @@ from app.application.services.language_models import (
 )
 from app.core.container import Container
 from app.domain.exceptions.base import NotFoundError
+from app.domain.models import LanguageModel
 from app.interface.api.language_models.schema import (
     LanguageModelCreateRequest,
     LanguageModelResponse,
     LanguageModelSettingResponse,
     LanguageModelExpandedResponse,
+    LanguageModelUpdateRequest,
+    LanguageModelSettingUpdateRequest,
 )
 
 router = APIRouter()
@@ -45,14 +48,8 @@ def get_by_id(
         language_model = language_model_service.get_language_model_by_id(
             language_model_id
         )
-        settings = language_model_setting_service.get_language_model_settings(
-            language_model.id
-        )
-        response = LanguageModelExpandedResponse.model_validate(language_model)
-        response.lm_settings = [
-            LanguageModelSettingResponse.model_validate(setting) for setting in settings
-        ]
-        return response
+
+        return _format_expanded_response(language_model, language_model_setting_service)
     except NotFoundError:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -88,3 +85,63 @@ def remove(
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     else:
         return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(path="/update_tag", response_model=LanguageModelResponse)
+@inject
+def update_tag(
+    language_model_data: LanguageModelUpdateRequest = Body(...),
+    language_model_service: LanguageModelService = Depends(
+        Provide[Container.language_model_service]
+    ),
+):
+    try:
+        language_model = language_model_service.update_language_model_tag(
+            language_model_id=language_model_data.language_model_id,
+            language_model_tag=language_model_data.language_model_tag,
+        )
+        return LanguageModelResponse.model_validate(language_model)
+    except NotFoundError:
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+
+
+@router.post(path="/update_setting", response_model=LanguageModelExpandedResponse)
+@inject
+def update_setting(
+    language_model_data: LanguageModelSettingUpdateRequest = Body(...),
+    language_model_service: LanguageModelService = Depends(
+        Provide[Container.language_model_service]
+    ),
+    language_model_setting_service: LanguageModelSettingService = Depends(
+        Provide[Container.language_model_setting_service]
+    ),
+):
+    try:
+        language_model_setting_service.update_by_key(
+            language_model_id=language_model_data.language_model_id,
+            setting_key=language_model_data.setting_key,
+            setting_value=language_model_data.setting_value,
+        )
+
+        language_model = language_model_service.get_language_model_by_id(
+            language_model_id=language_model_data.language_model_id
+        )
+
+        return _format_expanded_response(language_model, language_model_setting_service)
+
+    except NotFoundError:
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+
+
+def _format_expanded_response(
+    language_model: LanguageModel,
+    language_model_setting_service: LanguageModelSettingService,
+):
+    settings = language_model_setting_service.get_language_model_settings(
+        language_model.id
+    )
+    response = LanguageModelExpandedResponse.model_validate(language_model)
+    response.lm_settings = [
+        LanguageModelSettingResponse.model_validate(setting) for setting in settings
+    ]
+    return response

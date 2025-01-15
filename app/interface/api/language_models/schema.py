@@ -38,3 +38,14 @@ class LanguageModelExpandedResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class LanguageModelUpdateRequest(BaseModel):
+    language_model_id: str
+    language_model_tag: str
+
+
+class LanguageModelSettingUpdateRequest(BaseModel):
+    language_model_id: str
+    setting_key: str
+    setting_value: str
