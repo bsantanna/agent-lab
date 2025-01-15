@@ -1,5 +1,7 @@
 from contextlib import AbstractContextManager
+from datetime import datetime
 from typing import Callable, Iterator
+from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
@@ -15,29 +17,61 @@ class AgentRepository:
 
     def get_all(self) -> Iterator[Agent]:
         with self.session_factory() as session:
-            return session.query(Agent).all()
+            return session.query(Agent).filter(Agent.is_active).all()
 
-    def get_by_id(self, agent_id: int) -> Agent:
+    def get_by_id(self, agent_id: str) -> Agent:
         with self.session_factory() as session:
-            agent = session.query(Agent).filter(Agent.id == agent_id).first()
+            agent = (
+                session.query(Agent)
+                .filter(Agent.id == agent_id, Agent.is_active)
+                .first()
+            )
             if not agent:
                 raise AgentNotFoundError(agent_id)
             return agent
 
-    def add(self, email: str, password: str, is_active: bool = True) -> Agent:
+    def add(self, agent_name: str, agent_type: str, language_model_id: str) -> Agent:
+        gen_id = uuid4()
         with self.session_factory() as session:
-            agent = Agent(email=email, hashed_password=password, is_active=is_active)
+            agent = Agent(
+                id=str(gen_id),
+                is_active=True,
+                created_at=datetime.now(),
+                agent_name=agent_name,
+                agent_type=agent_type,
+                language_model_id=language_model_id,
+            )
             session.add(agent)
             session.commit()
             session.refresh(agent)
             return agent
 
-    def delete_by_id(self, agent_id: int) -> None:
+    def update_agent(self, agent_id: str, agent_name: str) -> Agent:
         with self.session_factory() as session:
-            entity: Agent = session.query(Agent).filter(Agent.id == agent_id).first()
+            entity: Agent = (
+                session.query(Agent)
+                .filter(Agent.id == agent_id, Agent.is_active)
+                .first()
+            )
             if not entity:
                 raise AgentNotFoundError(agent_id)
-            session.delete(entity)
+
+            entity.agent_name = agent_name
+            session.commit()
+            session.refresh(entity)
+            return entity
+
+    def delete_by_id(self, agent_id: str) -> None:
+        with self.session_factory() as session:
+            entity: Agent = (
+                session.query(Agent)
+                .filter(Agent.id == agent_id, Agent.is_active)
+                .first()
+            )
+            if not entity:
+                raise AgentNotFoundError(agent_id)
+
+            entity.is_active = False
             session.commit()
 
 
@@ -51,42 +85,47 @@ class AgentSettingRepository:
     ) -> None:
         self.session_factory = session_factory
 
-    def get_all(self) -> Iterator[AgentSetting]:
+    def get_all(self, agent_id: str) -> Iterator[AgentSetting]:
         with self.session_factory() as session:
-            return session.query(AgentSetting).all()
-
-    def get_by_id(self, agent_setting_id: int) -> AgentSetting:
-        with self.session_factory() as session:
-            agent_setting = (
+            return (
                 session.query(AgentSetting)
-                .filter(AgentSetting.id == agent_setting_id)
-                .first()
+                .filter(AgentSetting.agent_id == agent_id)
+                .all()
             )
-            if not agent_setting:
-                raise AgentSettingNotFoundError(agent_setting_id)
-            return agent_setting
 
-    def add(self, email: str, password: str, is_active: bool = True) -> AgentSetting:
+    def add(self, agent_id: str, setting_key: str, setting_value: str) -> AgentSetting:
+        gen_id = uuid4()
         with self.session_factory() as session:
             agent_setting = AgentSetting(
-                email=email, hashed_password=password, is_active=is_active
+                id=str(gen_id),
+                agent_id=agent_id,
+                setting_key=setting_key,
+                setting_value=setting_value,
             )
             session.add(agent_setting)
             session.commit()
             session.refresh(agent_setting)
             return agent_setting
 
-    def delete_by_id(self, agent_setting_id: int) -> None:
+    def update_by_key(
+        self, agent_id: str, setting_key: str, setting_value: str
+    ) -> AgentSetting:
         with self.session_factory() as session:
             entity: AgentSetting = (
                 session.query(AgentSetting)
-                .filter(AgentSetting.id == agent_setting_id)
+                .filter(
+                    AgentSetting.agent_id == agent_id,
+                    AgentSetting.setting_key == setting_key,
+                )
                 .first()
             )
             if not entity:
-                raise AgentSettingNotFoundError(agent_setting_id)
-            session.delete(entity)
+                raise AgentSettingNotFoundError(agent_id)
+
+            entity.setting_value = setting_value
             session.commit()
+            session.refresh(entity)
+            return entity
 
 
 class AgentSettingNotFoundError(NotFoundError):

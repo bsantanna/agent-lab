@@ -47,7 +47,7 @@ class AgentSetting(Base):
     id = Column(String, primary_key=True)
     agent_id = Column(String, ForeignKey("agents.id"))
     setting_key = Column(String)
-    setting_value = Column(String)
+    setting_value = Column(Text)
 
     agent = relationship("Agent", back_populates="settings")
 

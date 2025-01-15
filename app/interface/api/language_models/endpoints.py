@@ -96,7 +96,7 @@ def update_tag(
     ),
 ):
     try:
-        language_model = language_model_service.update_language_model_tag(
+        language_model = language_model_service.update_language_model(
             language_model_id=language_model_data.language_model_id,
             language_model_tag=language_model_data.language_model_tag,
         )

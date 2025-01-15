@@ -13,3 +13,8 @@ class InvalidFieldError(HTTPException):
         super().__init__(
             status_code=400, detail=f"Field {field_name} is invalid, reason: {reason}"
         )
+
+
+class ResourceNotFoundError(HTTPException):
+    def __init__(self, file_path):
+        super().__init__(status_code=500, detail=f"file not found in path {file_path}")

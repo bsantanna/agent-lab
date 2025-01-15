@@ -89,9 +89,9 @@ class LanguageModelService:
     def delete_language_model_by_id(self, language_model_id: str) -> None:
         return self._repository.delete_by_id(language_model_id)
 
-    def update_language_model_tag(
+    def update_language_model(
         self, language_model_id: str, language_model_tag: str
     ) -> LanguageModel:
-        return self._repository.update_language_model_tag(
+        return self._repository.update_language_model(
             language_model_id=language_model_id, language_model_tag=language_model_tag
         )
