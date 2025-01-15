@@ -136,7 +136,7 @@ def update_setting(
 def _format_expanded_response(
     language_model: LanguageModel,
     language_model_setting_service: LanguageModelSettingService,
-):
+) -> LanguageModelExpandedResponse:
     settings = language_model_setting_service.get_language_model_settings(
         language_model.id
     )

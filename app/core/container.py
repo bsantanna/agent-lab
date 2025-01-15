@@ -47,24 +47,6 @@ class Container(containers.DeclarativeContainer):
 
     redis_client = providers.Singleton(RedisClient, redis_url=config.cache.url)
 
-    agent_repository = providers.Factory(
-        AgentRepository, session_factory=db.provided.session
-    )
-
-    agent_service = providers.Factory(
-        AgentService,
-        agent_repository=agent_repository,
-    )
-
-    agent_setting_repository = providers.Factory(
-        AgentSettingRepository, session_factory=db.provided.session
-    )
-
-    agent_setting_service = providers.Factory(
-        AgentSettingService,
-        agent_setting_repository=agent_setting_repository,
-    )
-
     attachment_repository = providers.Factory(
         AttachmentRepository, session_factory=db.provided.session
     )
@@ -104,6 +86,26 @@ class Container(containers.DeclarativeContainer):
         language_model_repository=language_model_repository,
         language_model_setting_service=language_model_setting_service,
         integration_service=integration_service,
+    )
+
+    agent_setting_repository = providers.Factory(
+        AgentSettingRepository, session_factory=db.provided.session
+    )
+
+    agent_setting_service = providers.Factory(
+        AgentSettingService,
+        agent_setting_repository=agent_setting_repository,
+    )
+
+    agent_repository = providers.Factory(
+        AgentRepository, session_factory=db.provided.session
+    )
+
+    agent_service = providers.Factory(
+        AgentService,
+        agent_repository=agent_repository,
+        agent_setting_service=agent_setting_service,
+        language_model_service=language_model_service,
     )
 
     message_repository = providers.Factory(
