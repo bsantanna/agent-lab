@@ -89,7 +89,7 @@ def remove(
 
 @router.post(path="/update", response_model=LanguageModelResponse)
 @inject
-def update_tag(
+def update(
     language_model_data: LanguageModelUpdateRequest = Body(...),
     language_model_service: LanguageModelService = Depends(
         Provide[Container.language_model_service]

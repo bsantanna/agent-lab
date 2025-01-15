@@ -49,3 +49,14 @@ class AgentExpandedResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class AgentUpdateRequest(BaseModel):
+    agent_id: str
+    agent_name: str
+
+
+class AgentSettingUpdateRequest(BaseModel):
+    agent_id: str
+    setting_key: str
+    setting_value: str

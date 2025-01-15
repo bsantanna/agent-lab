@@ -12,6 +12,8 @@ from app.interface.api.agents.schema import (
     AgentExpandedResponse,
     AgentSettingResponse,
     AgentCreateRequest,
+    AgentUpdateRequest,
+    AgentSettingUpdateRequest,
 )
 
 router = APIRouter()
@@ -71,6 +73,46 @@ def remove(
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     else:
         return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(path="/update", response_model=AgentResponse)
+@inject
+def update(
+    agent_data: AgentUpdateRequest = Body(...),
+    agent_service: AgentService = Depends(Provide[Container.agent_service]),
+):
+    try:
+        agent = agent_service.update_agent(
+            agent_id=agent_data.agent_id,
+            agent_name=agent_data.agent_name,
+        )
+        return AgentResponse.model_validate(agent)
+    except NotFoundError:
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+
+
+@router.post(path="/update_setting", response_model=AgentExpandedResponse)
+@inject
+def update_setting(
+    agent_data: AgentSettingUpdateRequest = Body(...),
+    agent_service: AgentService = Depends(Provide[Container.agent_service]),
+    agent_setting_service: AgentSettingService = Depends(
+        Provide[Container.agent_setting_service]
+    ),
+):
+    try:
+        agent_setting_service.update_by_key(
+            agent_id=agent_data.agent_id,
+            setting_key=agent_data.setting_key,
+            setting_value=agent_data.setting_value,
+        )
+
+        agent = agent_service.get_agent_by_id(agent_id=agent_data.agent_id)
+
+        return _format_expanded_response(agent, agent_setting_service)
+
+    except NotFoundError:
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
 
 
 def _format_expanded_response(

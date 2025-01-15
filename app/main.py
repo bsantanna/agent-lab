@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 def create_app():
     application = FastAPI(
-        title="Agent Lab",
+        title="Agent-Lab",
         version="0.1.0",
         dependencies=[],
     )
