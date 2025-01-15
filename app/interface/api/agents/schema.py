@@ -45,7 +45,7 @@ class AgentExpandedResponse(BaseModel):
     agent_type: str
     agent_summary: str
     language_model_id: str
-    ag_settings: Optional[List[AgentSettingResponse]]
+    ag_settings: Optional[List[AgentSettingResponse]] = None
 
     class Config:
         from_attributes = True

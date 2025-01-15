@@ -39,6 +39,7 @@ class AgentRepository:
                 created_at=datetime.now(),
                 agent_name=agent_name,
                 agent_type=agent_type,
+                agent_summary="",
                 language_model_id=language_model_id,
             )
             session.add(agent)
