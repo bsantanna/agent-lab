@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List, Optional
 
 from pydantic import BaseModel, field_validator
@@ -29,6 +30,7 @@ class AgentSettingResponse(BaseModel):
 class AgentResponse(BaseModel):
     id: str
     is_active: bool
+    created_at: datetime
     agent_name: str
     agent_type: str
     agent_summary: str
@@ -41,6 +43,7 @@ class AgentResponse(BaseModel):
 class AgentExpandedResponse(BaseModel):
     id: str
     is_active: bool
+    created_at: datetime
     agent_name: str
     agent_type: str
     agent_summary: str
