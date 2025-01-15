@@ -1,6 +1,6 @@
 from typing import Iterator
 
-from app.application.services.integrations import IntegrationService
+from app.services.integrations import IntegrationService
 from app.domain.exceptions.base import InvalidFieldError
 from app.domain.models import LanguageModel, LanguageModelSetting
 from app.domain.repositories.integrations import IntegrationNotFoundError

@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import Iterator
 
-from app.application.services.language_models import LanguageModelService
+from app.services.language_models import LanguageModelService
 from app.domain.exceptions.base import InvalidFieldError, ResourceNotFoundError
 from app.domain.models import Agent, AgentSetting
 from app.domain.repositories.agents import AgentRepository, AgentSettingRepository

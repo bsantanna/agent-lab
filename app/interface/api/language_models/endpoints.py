@@ -3,7 +3,7 @@ from typing import List
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Body, Depends, Response, status
 
-from app.application.services.language_models import (
+from app.services.language_models import (
     LanguageModelService,
     LanguageModelSettingService,
 )

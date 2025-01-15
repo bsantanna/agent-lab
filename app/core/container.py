@@ -2,14 +2,14 @@ import os
 
 from dependency_injector import containers, providers
 
-from app.application.services.agents import AgentService, AgentSettingService
-from app.application.services.attachments import AttachmentService
-from app.application.services.integrations import IntegrationService
-from app.application.services.language_models import (
+from app.services.agents import AgentService, AgentSettingService
+from app.services.attachments import AttachmentService
+from app.services.integrations import IntegrationService
+from app.services.language_models import (
     LanguageModelService,
     LanguageModelSettingService,
 )
-from app.application.services.messages import MessageService
+from app.services.messages import MessageService
 from app.core.logging import logger
 from app.domain.repositories.agents import AgentRepository, AgentSettingRepository
 from app.domain.repositories.attachments import AttachmentRepository

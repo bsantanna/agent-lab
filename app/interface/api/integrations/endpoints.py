@@ -3,7 +3,7 @@ from typing import List
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Body, Depends, Response, status
 
-from app.application.services.integrations import IntegrationService
+from app.services.integrations import IntegrationService
 from app.core.container import Container
 from app.domain.exceptions.base import NotFoundError
 from app.interface.api.integrations.schema import (
