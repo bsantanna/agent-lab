@@ -1,5 +1,7 @@
 from contextlib import AbstractContextManager
+from datetime import datetime
 from typing import Callable, Iterator
+from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
@@ -13,21 +15,42 @@ class MessageRepository:
     ) -> None:
         self.session_factory = session_factory
 
-    def get_all(self) -> Iterator[Message]:
+    def get_all(self, agent_id: str) -> Iterator[Message]:
         with self.session_factory() as session:
-            return session.query(Message).all()
+            return (
+                session.query(Message)
+                .filter(Message.agent_id == agent_id, Message.is_active)
+                .all()
+            )
 
-    def get_by_id(self, message_id: int) -> Message:
+    def get_by_id(self, message_id: str) -> Message:
         with self.session_factory() as session:
-            message = session.query(Message).filter(Message.id == message_id).first()
+            message = (
+                session.query(Message)
+                .filter(Message.id == message_id, Message.is_active)
+                .first()
+            )
             if not message:
                 raise MessageNotFoundError(message_id)
             return message
 
-    def add(self, email: str, password: str, is_active: bool = True) -> Message:
+    def add(
+        self,
+        message_content: str,
+        message_role: str,
+        agent_id: str,
+        attachment_id: str = None,
+    ) -> Message:
+        gen_id = uuid4()
         with self.session_factory() as session:
             message = Message(
-                email=email, hashed_password=password, is_active=is_active
+                id=str(gen_id),
+                is_active=True,
+                created_at=datetime.now(),
+                message_role=message_role,
+                message_content=message_content,
+                agent_id=agent_id,
+                attachment_id=attachment_id,
             )
             session.add(message)
             session.commit()
@@ -37,11 +60,14 @@ class MessageRepository:
     def delete_by_id(self, message_id: int) -> None:
         with self.session_factory() as session:
             entity: Message = (
-                session.query(Message).filter(Message.id == message_id).first()
+                session.query(Message)
+                .filter(Message.id == message_id, Message.is_active)
+                .first()
             )
             if not entity:
                 raise MessageNotFoundError(message_id)
-            session.delete(entity)
+
+            entity.is_active = False
             session.commit()
 
 
