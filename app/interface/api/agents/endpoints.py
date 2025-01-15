@@ -1,5 +1,7 @@
+from typing import List
+
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Response, status, Body
 
 from app.application.services.agents import AgentService, AgentSettingService
 from app.core.container import Container
@@ -9,12 +11,13 @@ from app.interface.api.agents.schema import (
     AgentResponse,
     AgentExpandedResponse,
     AgentSettingResponse,
+    AgentCreateRequest,
 )
 
 router = APIRouter()
 
 
-@router.get("/list")
+@router.get("/list", response_model=List[AgentResponse])
 @inject
 def get_list(
     agent_service: AgentService = Depends(Provide[Container.agent_service]),
@@ -23,7 +26,7 @@ def get_list(
     return [AgentResponse.model_validate(agent) for agent in agents]
 
 
-@router.get("/{agent_id}")
+@router.get("/{agent_id}", response_model=AgentExpandedResponse)
 @inject
 def get_by_id(
     agent_id: str,
@@ -40,12 +43,20 @@ def get_by_id(
         return Response(status_code=status.HTTP_404_NOT_FOUND)
 
 
-@router.post("/create", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/create", status_code=status.HTTP_201_CREATED, response_model=AgentResponse
+)
 @inject
 def add(
+    agent_data: AgentCreateRequest = Body(...),
     agent_service: AgentService = Depends(Provide[Container.agent_service]),
 ):
-    return agent_service.create_agent()
+    agent = agent_service.create_agent(
+        language_model_id=agent_data.language_model_id,
+        agent_name=agent_data.agent_name,
+        agent_type=agent_data.agent_type,
+    )
+    return AgentResponse.model_validate(agent)
 
 
 @router.delete("/delete/{agent_id}", status_code=status.HTTP_204_NO_CONTENT)
