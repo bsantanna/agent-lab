@@ -1,6 +1,21 @@
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
+
+from app.domain.exceptions.base import InvalidFieldError
+
+
+class AgentCreateRequest(BaseModel):
+    agent_name: str
+    agent_type: str
+    language_model_id: str
+
+    @validator("agent_type")
+    def validate_agent_type(cls, v):
+        valid_types = ["three_phase_react"]
+        if v not in valid_types:
+            raise InvalidFieldError("agent_type", "not supported")
+        return v
 
 
 class AgentSettingResponse(BaseModel):

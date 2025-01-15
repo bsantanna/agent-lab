@@ -84,7 +84,7 @@ class AgentService:
     def _create_default_settings_for_agent_type(self, agent_id: str, agent_type: str):
         current_dir = Path(__file__).parent
 
-        if agent_type == "three_step_react":
+        if agent_type == "three_phase_react":
             preparation_prompt = self._read_file_content(
                 f"{current_dir}/agent_types/{agent_type}/default_preparation_system_prompt.txt"
             )
