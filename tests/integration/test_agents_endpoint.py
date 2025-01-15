@@ -78,3 +78,63 @@ class TestAgentsEndpoints:
 
         # then
         assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_create_and_delete_success(self, client):
+        # given
+        create_agent_response = self._create_agent(client)
+        agent_id = create_agent_response.json()["id"]
+
+        # when
+        delete_agent_response = client.delete(f"/agents/delete/{agent_id}")
+
+        # then
+        assert delete_agent_response.status_code == 204
+
+    @pytest.mark.asyncio
+    async def test_delete_not_found(self, client):
+        # given
+        agent_id = "not_existing_id"
+
+        # when
+        response = client.delete(f"/agents/delete/{agent_id}")
+
+        # then
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_create_invalid_agent_type_bad_request(self, client):
+        # given
+        create_agent_response = self._create_agent(client)
+        language_model_id = create_agent_response.json()["language_model_id"]
+
+        # when
+        error_response = client.post(
+            url="/agents/create",
+            json={
+                "language_model_id": language_model_id,
+                "agent_type": "an_invalid_agent_type",
+                "agent_name": f"agent-{uuid4()}",
+            },
+        )
+
+        # then
+        assert error_response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_create_invalid_language_model_bas_request(self, client):
+        # given
+        language_model_id = "an_invalid_language_model_id"
+
+        # when
+        error_response = client.post(
+            url="/agents/create",
+            json={
+                "language_model_id": language_model_id,
+                "agent_type": "three_phase_react",
+                "agent_name": f"agent-{uuid4()}",
+            },
+        )
+
+        # then
+        assert error_response.status_code == 400
