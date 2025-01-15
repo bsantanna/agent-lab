@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 from app.domain.exceptions.base import InvalidFieldError
 
@@ -10,7 +10,7 @@ class AgentCreateRequest(BaseModel):
     agent_type: str
     language_model_id: str
 
-    @validator("agent_type")
+    @field_validator("agent_type")
     def validate_agent_type(cls, v):
         valid_types = ["three_phase_react"]
         if v not in valid_types:

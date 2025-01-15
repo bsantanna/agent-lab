@@ -1,7 +1,7 @@
 from datetime import datetime
 from urllib.parse import urlparse
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 from app.domain.exceptions.base import InvalidFieldError
 
@@ -11,14 +11,14 @@ class IntegrationCreateRequest(BaseModel):
     api_endpoint: str
     api_key: str
 
-    @validator("api_endpoint")
+    @field_validator("api_endpoint")
     def validate_api_endpoint(cls, v):
         parsed = urlparse(v)
         if not all([parsed.scheme, parsed.netloc]):
             raise InvalidFieldError("api_endpoint", "invalid url format")
         return v
 
-    @validator("integration_type")
+    @field_validator("integration_type")
     def validate_integration_type(cls, v):
         valid_types = [
             "anthropic_api_v1",
