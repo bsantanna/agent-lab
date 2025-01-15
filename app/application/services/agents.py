@@ -90,7 +90,7 @@ class AgentService:
             )
             self._setting_service.create_agent_setting(
                 agent_id=agent_id,
-                setting_key="preparation_prompt",
+                setting_key="preparation_system_prompt",
                 setting_value=preparation_prompt,
             )
 
@@ -99,7 +99,7 @@ class AgentService:
             )
             self._setting_service.create_agent_setting(
                 agent_id=agent_id,
-                setting_key="execution_prompt",
+                setting_key="execution_system_prompt",
                 setting_value=execution_prompt,
             )
 
@@ -108,7 +108,7 @@ class AgentService:
             )
             self._setting_service.create_agent_setting(
                 agent_id=agent_id,
-                setting_key="conclusion_prompt",
+                setting_key="conclusion_system_prompt",
                 setting_value=conclusion_prompt,
             )
 

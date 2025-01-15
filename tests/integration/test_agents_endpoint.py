@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -9,68 +11,60 @@ def client():
     yield TestClient(app)
 
 
-# class TestAgentsEndpoints:
-#     @pytest.mark.asyncio
-#     async def test_get_list(self, client):
-#         # when
-#         response = client.get("/agents/list")
-#
-#         # then
-#         assert response.status_code == 200
-#         assert isinstance(response.json(), list)
-#
-#     @pytest.mark.asyncio
-#     async def test_get_by_id_success(self, client):
-#         # given
-#         response = client.post("/agents/create")
-#         agent_id = response.json()["id"]
-#
-#         # when
-#         response_2 = client.get(f"/agents/{agent_id}")
-#
-#         # then
-#         assert response_2.status_code == 200
-#         assert "id" in response_2.json()
-#
-#     @pytest.mark.asyncio
-#     async def test_get_by_id_not_found(self, client):
-#         # given
-#         agent_id = 9999
-#
-#         # when
-#         response = client.get(f"/agents/{agent_id}")
-#
-#         # then
-#         assert response.status_code == 404
-#
-#     @pytest.mark.asyncio
-#     async def test_add_item(self, client):
-#         # when
-#         response = client.post("/agents/create")
-#
-#         # then
-#         assert response.status_code == 201
-#         assert "id" in response.json()
-#
-#     @pytest.mark.asyncio
-#     async def test_remove_agent_success(self, client):
-#         # given
-#         response = client.post("/agents/create")
-#         agent_id = response.json()["id"]
-#
-#         # when
-#         response_2 = client.delete(f"/agents/delete/{agent_id}")
-#
-#         # then
-#         assert response_2.status_code == 204
-#
-#     @pytest.mark.asyncio
-#     async def test_remove_agent_not_found(self, client):
-#         # given
-#         agent_id = 9999
-#
-#         # when
-#         response = client.delete(f"/agents/delete/{agent_id}")
-#
-#         # then
-#         assert response.status_code == 404
+class TestAgentsEndpoints:
+    def create_agent(self, client):
+        # create integration
+        response = client.post(
+            url="/integrations/create",
+            json={
+                "api_endpoint": "https://example.com",
+                "api_key": "an_invalid_key",
+                "integration_type": "openai_api_v1",
+            },
+        )
+        integration_id = response.json()["id"]
+
+        # create llm
+        response_2 = client.post(
+            url="/llms/create",
+            json={
+                "integration_id": integration_id,
+                "language_model_tag": "an_invalid_tag",
+            },
+        )
+        language_model_id = response_2.json()["id"]
+
+        # create agent
+        return client.post(
+            url="/agents/create",
+            json={
+                "language_model_id": language_model_id,
+                "agent_type": "three_phase_react",
+                "agent_name": f"agent-{uuid4()}",
+            },
+        )
+
+    @pytest.mark.asyncio
+    async def test_get_list(self, client):
+        # when
+        response = client.get("/agents/list")
+
+        # then
+        assert response.status_code == 200
+        assert isinstance(response.json(), list)
+
+    async def test_create_and_read_success(self, client):
+        # given
+        create_agent_response = self.create_agent(client)
+        agent_id = create_agent_response.json()["id"]
+
+        # when
+        read_agent_response = client.get(f"/agents/{agent_id}")
+
+        # then
+        assert read_agent_response.status_code == 200
+        response_json = read_agent_response.json()
+        assert "ag_settings" in response_json
+        assert "conclusion_system_prompt" in response_json["ag_settings"]
+        assert "execution_system_prompt" in response_json["ag_settings"]
+        assert "preparation_system_prompt" in response_json["ag_settings"]
