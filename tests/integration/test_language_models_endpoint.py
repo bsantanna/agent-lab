@@ -125,7 +125,7 @@ class TestLanguageModelsEndpoint:
 
         # when
         response = client.post(
-            url="/llms/update_tag",
+            url="/llms/update",
             json={
                 "language_model_id": language_model_id,
                 "language_model_tag": "any_tag",
@@ -159,7 +159,7 @@ class TestLanguageModelsEndpoint:
 
         # when
         response_3 = client.post(
-            url="/llms/update_tag",
+            url="/llms/update",
             json={
                 "language_model_id": language_model_id,
                 "language_model_tag": "another_tag",

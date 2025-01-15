@@ -87,7 +87,7 @@ def remove(
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.post(path="/update_tag", response_model=LanguageModelResponse)
+@router.post(path="/update", response_model=LanguageModelResponse)
 @inject
 def update_tag(
     language_model_data: LanguageModelUpdateRequest = Body(...),
