@@ -138,3 +138,102 @@ class TestAgentsEndpoints:
 
         # then
         assert error_response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_update_agent_not_found(self, client):
+        # given
+        agent_id = "not_existing_id"
+
+        # when
+        response = client.post(
+            url="/agents/update",
+            json={
+                "agent_id": agent_id,
+                "agent_name": "a_name",
+            },
+        )
+
+        # then
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_update_success(self, client):
+        # given
+        create_response = self._create_agent(client)
+        agent_id = create_response.json()["id"]
+
+        # when
+        update_response = client.post(
+            url="/agents/update",
+            json={
+                "agent_id": agent_id,
+                "agent_name": "a_modified_name",
+            },
+        )
+
+        # then
+        assert update_response.status_code == 200
+        assert "id" in update_response.json()
+        assert "a_modified_name" == update_response.json()["agent_name"]
+
+    @pytest.mark.asyncio
+    async def test_update_setting_not_found(self, client):
+        # given
+        agent_id = "not_existing_id"
+
+        # when
+        response = client.post(
+            url="/agents/update_setting",
+            json={
+                "agent_id": agent_id,
+                "setting_key": "a_key",
+                "setting_value": "a_value",
+            },
+        )
+
+        # then
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_update_setting_key_not_found(self, client):
+        # given
+        create_response = self._create_agent(client)
+        agent_id = create_response.json()["id"]
+
+        # when
+        update_response = client.post(
+            url="/agents/update_setting",
+            json={
+                "agent_id": agent_id,
+                "setting_key": "a_key",
+                "setting_value": "a_value",
+            },
+        )
+
+        # then
+        assert update_response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_update_setting_success(self, client):
+        # given
+        client_response = self._create_agent(client)
+        agent_id = client_response.json()["id"]
+
+        # when
+        update_response = client.post(
+            url="/agents/update_setting",
+            json={
+                "agent_id": agent_id,
+                "setting_key": "execution_system_prompt",
+                "setting_value": "other_instruction",
+            },
+        )
+
+        # then
+        assert update_response.status_code == 200
+        response_json = update_response.json()
+        assert "id" in response_json
+        assert any(
+            setting["setting_value"] == "other_instruction"
+            for setting in response_json["ag_settings"]
+        )
