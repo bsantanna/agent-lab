@@ -2,14 +2,6 @@ import os
 
 from dependency_injector import containers, providers
 
-from app.application.services.agents import AgentService, AgentSettingService
-from app.application.services.attachments import AttachmentService
-from app.application.services.integrations import IntegrationService
-from app.application.services.language_models import (
-    LanguageModelService,
-    LanguageModelSettingService,
-)
-from app.application.services.messages import MessageService
 from app.core.logging import logger
 from app.domain.repositories.agents import AgentRepository, AgentSettingRepository
 from app.domain.repositories.attachments import AttachmentRepository
@@ -21,6 +13,17 @@ from app.domain.repositories.language_models import (
 from app.domain.repositories.messages import MessageRepository
 from app.infrastructure.cache.redis import RedisClient
 from app.infrastructure.database.config import Database
+from app.services.agent_settings import AgentSettingService
+from app.services.agent_types.registry import AgentRegistry
+from app.services.agent_types.three_phase_react.three_phase_react_agent import (
+    ThreePhaseReactAgent,
+)
+from app.services.agents import AgentService
+from app.services.attachments import AttachmentService
+from app.services.integrations import IntegrationService
+from app.services.language_model_settings import LanguageModelSettingService
+from app.services.language_models import LanguageModelService
+from app.services.messages import MessageService
 
 
 class Container(containers.DeclarativeContainer):
@@ -101,10 +104,18 @@ class Container(containers.DeclarativeContainer):
         AgentRepository, session_factory=db.provided.session
     )
 
+    tp_react_agent = providers.Factory(
+        ThreePhaseReactAgent,
+        agent_setting_service=agent_setting_service,
+    )
+
+    agent_registry = providers.Factory(AgentRegistry, tp_react_agent=tp_react_agent)
+
     agent_service = providers.Factory(
         AgentService,
         agent_repository=agent_repository,
         agent_setting_service=agent_setting_service,
+        agent_registry=agent_registry,
         language_model_service=language_model_service,
     )
 

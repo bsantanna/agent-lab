@@ -1,20 +1,21 @@
 from typing import List
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends, Response, status, Body
+from fastapi import APIRouter, Body, Depends, Response, status
 
-from app.application.services.agents import AgentService, AgentSettingService
 from app.core.container import Container
 from app.domain.exceptions.base import NotFoundError
 from app.domain.models import Agent
 from app.interface.api.agents.schema import (
-    AgentResponse,
-    AgentExpandedResponse,
-    AgentSettingResponse,
     AgentCreateRequest,
-    AgentUpdateRequest,
+    AgentExpandedResponse,
+    AgentResponse,
+    AgentSettingResponse,
     AgentSettingUpdateRequest,
+    AgentUpdateRequest,
 )
+from app.services.agent_settings import AgentSettingService
+from app.services.agents import AgentService
 
 router = APIRouter()
 
