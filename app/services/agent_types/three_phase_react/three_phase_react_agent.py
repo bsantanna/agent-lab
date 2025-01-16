@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from app.interface.api.messages.schema import MessageRequest, MessageResponse
+from app.interface.api.messages.schema import MessageRequest, MessageBase
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.base import AgentBase
 
@@ -39,5 +39,5 @@ class ThreePhaseReactAgent(AgentBase):
             setting_value=conclusion_prompt,
         )
 
-    def process_message(self, message_request: MessageRequest) -> MessageResponse:
+    def process_message(self, message_request: MessageRequest) -> MessageBase:
         pass  # todo

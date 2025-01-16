@@ -32,6 +32,7 @@ class Container(containers.DeclarativeContainer):
             "app.interface.api.agents.endpoints",
             "app.interface.api.integrations.endpoints",
             "app.interface.api.language_models.endpoints",
+            "app.interface.api.messages.endpoints",
         ]
     )
 
