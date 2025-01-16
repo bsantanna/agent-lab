@@ -18,3 +18,7 @@ class MessageBase(BaseModel):
 
 class MessageRequest(MessageBase):
     attachment_id: str
+
+
+class MessageListRequest(BaseModel):
+    agent_id: str

@@ -127,4 +127,5 @@ class Container(containers.DeclarativeContainer):
     message_service = providers.Factory(
         MessageService,
         message_repository=message_repository,
+        agent_service=agent_service,
     )
