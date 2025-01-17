@@ -39,7 +39,7 @@ class TestMessagesEndpoints:
             url="/agents/create",
             json={
                 "language_model_id": language_model_id,
-                "agent_type": "three_phase_react",
+                "agent_type": "test_echo",
                 "agent_name": f"agent-{uuid4()}",
             },
         )

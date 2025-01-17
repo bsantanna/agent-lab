@@ -15,6 +15,7 @@ from app.infrastructure.cache.redis import RedisClient
 from app.infrastructure.database.config import Database
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.registry import AgentRegistry
+from app.services.agent_types.test_echo.test_echo_agent import TestEchoAgent
 from app.services.agent_types.three_phase_react.three_phase_react_agent import (
     ThreePhaseReactAgent,
 )
@@ -105,12 +106,21 @@ class Container(containers.DeclarativeContainer):
         AgentRepository, session_factory=db.provided.session
     )
 
-    tp_react_agent = providers.Factory(
+    three_phase_react_agent = providers.Factory(
         ThreePhaseReactAgent,
         agent_setting_service=agent_setting_service,
     )
 
-    agent_registry = providers.Factory(AgentRegistry, tp_react_agent=tp_react_agent)
+    test_echo_agent = providers.Factory(
+        TestEchoAgent,
+        agent_setting_service=agent_setting_service,
+    )
+
+    agent_registry = providers.Factory(
+        AgentRegistry,
+        test_echo_agent=test_echo_agent,
+        three_phase_react_agent=three_phase_react_agent,
+    )
 
     agent_service = providers.Factory(
         AgentService,
