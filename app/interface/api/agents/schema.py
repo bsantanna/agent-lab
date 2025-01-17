@@ -40,18 +40,8 @@ class AgentResponse(BaseModel):
         from_attributes = True
 
 
-class AgentExpandedResponse(BaseModel):
-    id: str
-    is_active: bool
-    created_at: datetime
-    agent_name: str
-    agent_type: str
-    agent_summary: str
-    language_model_id: str
+class AgentExpandedResponse(AgentResponse):
     ag_settings: Optional[List[AgentSettingResponse]] = None
-
-    class Config:
-        from_attributes = True
 
 
 class AgentUpdateRequest(BaseModel):
