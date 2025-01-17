@@ -1,4 +1,5 @@
 from contextlib import AbstractContextManager
+from datetime import datetime
 from typing import Callable
 from uuid import uuid4
 
@@ -33,6 +34,7 @@ class AttachmentRepository:
             attachment = Attachment(
                 id=str(gen_id),
                 is_active=True,
+                created_at=datetime.now(),
                 file_name=file_name,
                 raw_content=raw_content,
                 parsed_content=parsed_content,

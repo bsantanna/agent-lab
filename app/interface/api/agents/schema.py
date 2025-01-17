@@ -13,7 +13,7 @@ class AgentCreateRequest(BaseModel):
 
     @field_validator("agent_type")
     def validate_agent_type(cls, v):
-        valid_types = ["three_phase_react"]
+        valid_types = ["test_echo", "three_phase_react"]
         if v not in valid_types:
             raise InvalidFieldError("agent_type", "not supported")
         return v
@@ -40,18 +40,8 @@ class AgentResponse(BaseModel):
         from_attributes = True
 
 
-class AgentExpandedResponse(BaseModel):
-    id: str
-    is_active: bool
-    created_at: datetime
-    agent_name: str
-    agent_type: str
-    agent_summary: str
-    language_model_id: str
+class AgentExpandedResponse(AgentResponse):
     ag_settings: Optional[List[AgentSettingResponse]] = None
-
-    class Config:
-        from_attributes = True
 
 
 class AgentUpdateRequest(BaseModel):

@@ -28,16 +28,8 @@ class LanguageModelResponse(BaseModel):
         from_attributes = True
 
 
-class LanguageModelExpandedResponse(BaseModel):
-    id: str
-    created_at: datetime
-    is_active: bool
-    language_model_tag: str
-    integration_id: str
+class LanguageModelExpandedResponse(LanguageModelResponse):
     lm_settings: Optional[List[LanguageModelSettingResponse]] = None
-
-    class Config:
-        from_attributes = True
 
 
 class LanguageModelUpdateRequest(BaseModel):

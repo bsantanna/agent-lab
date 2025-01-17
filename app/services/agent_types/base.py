@@ -2,7 +2,7 @@ import os
 from abc import ABC, abstractmethod
 
 from app.domain.exceptions.base import ResourceNotFoundError
-from app.interface.api.messages.schema import MessageRequest, MessageResponse
+from app.interface.api.messages.schema import MessageRequest, MessageBase
 from app.services.agent_settings import AgentSettingService
 
 
@@ -15,7 +15,7 @@ class AgentBase(ABC):
         pass
 
     @abstractmethod
-    def process_message(self, message_request: MessageRequest) -> MessageResponse:
+    def process_message(self, message_request: MessageRequest) -> MessageBase:
         pass
 
     def read_file_content(self, file_path: str) -> str:

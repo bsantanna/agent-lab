@@ -1,14 +1,25 @@
 from typing import Iterator
 
+from app.domain.exceptions.base import InvalidFieldError
 from app.domain.models import Message
+from app.domain.repositories.agents import AgentNotFoundError
 from app.domain.repositories.messages import MessageRepository
+from app.services.agents import AgentService
 
 
 class MessageService:
-    def __init__(self, message_repository: MessageRepository) -> None:
+    def __init__(
+        self, message_repository: MessageRepository, agent_service: AgentService
+    ) -> None:
         self._repository: MessageRepository = message_repository
+        self._agent_service: AgentService = agent_service
 
     def get_messages(self, agent_id: str) -> Iterator[Message]:
+        # verify agent
+        try:
+            self._agent_service.get_agent_by_id(agent_id)
+        except AgentNotFoundError:
+            raise InvalidFieldError(field_name="agent_id", reason="agent not found")
         return self._repository.get_all(agent_id)
 
     def get_message_by_id(self, message_id: str) -> Message:
@@ -21,6 +32,12 @@ class MessageService:
         agent_id: str,
         attachment_id: str = None,
     ) -> Message:
+        # verify agent
+        try:
+            self._agent_service.get_agent_by_id(agent_id)
+        except AgentNotFoundError:
+            raise InvalidFieldError(field_name="agent_id", reason="agent not found")
+
         return self._repository.add(
             message_role=message_role,
             message_content=message_content,

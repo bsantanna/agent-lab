@@ -15,3 +15,7 @@ contributions to the open-source community have significantly enhanced the
 functionality and reliability of this project. Without their dedication and hard
 work, building and maintaining this project would not have been possible. Thank
 you for your continuous support and innovation.
+
+## Datasets
+
+- [Project Gutenberg - The Art of War by active 6th century B.C. Sunzi](https://www.gutenberg.org/ebooks/132)

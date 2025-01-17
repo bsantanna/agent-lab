@@ -1,6 +1,7 @@
 import os
 
 from dependency_injector import containers, providers
+from markitdown import MarkItDown
 
 from app.core.logging import logger
 from app.domain.repositories.agents import AgentRepository, AgentSettingRepository
@@ -15,6 +16,7 @@ from app.infrastructure.cache.redis import RedisClient
 from app.infrastructure.database.config import Database
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.registry import AgentRegistry
+from app.services.agent_types.test_echo.test_echo_agent import TestEchoAgent
 from app.services.agent_types.three_phase_react.three_phase_react_agent import (
     ThreePhaseReactAgent,
 )
@@ -32,6 +34,7 @@ class Container(containers.DeclarativeContainer):
             "app.interface.api.agents.endpoints",
             "app.interface.api.integrations.endpoints",
             "app.interface.api.language_models.endpoints",
+            "app.interface.api.messages.endpoints",
         ]
     )
 
@@ -50,6 +53,8 @@ class Container(containers.DeclarativeContainer):
 
     redis_client = providers.Singleton(RedisClient, redis_url=config.cache.url)
 
+    markdown = providers.Singleton(MarkItDown)
+
     attachment_repository = providers.Factory(
         AttachmentRepository, session_factory=db.provided.session
     )
@@ -57,6 +62,7 @@ class Container(containers.DeclarativeContainer):
     attachment_service = providers.Factory(
         AttachmentService,
         attachment_repository=attachment_repository,
+        markdown=markdown,
     )
 
     integration_repository = providers.Factory(
@@ -104,12 +110,21 @@ class Container(containers.DeclarativeContainer):
         AgentRepository, session_factory=db.provided.session
     )
 
-    tp_react_agent = providers.Factory(
+    three_phase_react_agent = providers.Factory(
         ThreePhaseReactAgent,
         agent_setting_service=agent_setting_service,
     )
 
-    agent_registry = providers.Factory(AgentRegistry, tp_react_agent=tp_react_agent)
+    test_echo_agent = providers.Factory(
+        TestEchoAgent,
+        agent_setting_service=agent_setting_service,
+    )
+
+    agent_registry = providers.Factory(
+        AgentRegistry,
+        test_echo_agent=test_echo_agent,
+        three_phase_react_agent=three_phase_react_agent,
+    )
 
     agent_service = providers.Factory(
         AgentService,
@@ -126,4 +141,5 @@ class Container(containers.DeclarativeContainer):
     message_service = providers.Factory(
         MessageService,
         message_repository=message_repository,
+        agent_service=agent_service,
     )

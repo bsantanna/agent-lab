@@ -39,7 +39,7 @@ class TestAgentsEndpoints:
             url="/agents/create",
             json={
                 "language_model_id": language_model_id,
-                "agent_type": "three_phase_react",
+                "agent_type": "test_echo",
                 "agent_name": f"agent-{uuid4()}",
             },
         )
@@ -131,7 +131,7 @@ class TestAgentsEndpoints:
             url="/agents/create",
             json={
                 "language_model_id": language_model_id,
-                "agent_type": "three_phase_react",
+                "agent_type": "test_echo",
                 "agent_name": f"agent-{uuid4()}",
             },
         )
@@ -224,8 +224,8 @@ class TestAgentsEndpoints:
             url="/agents/update_setting",
             json={
                 "agent_id": agent_id,
-                "setting_key": "execution_system_prompt",
-                "setting_value": "other_instruction",
+                "setting_key": "dummy_setting",
+                "setting_value": "another_dummy_value",
             },
         )
 
@@ -234,6 +234,6 @@ class TestAgentsEndpoints:
         response_json = update_response.json()
         assert "id" in response_json
         assert any(
-            setting["setting_value"] == "other_instruction"
+            setting["setting_value"] == "another_dummy_value"
             for setting in response_json["ag_settings"]
         )
