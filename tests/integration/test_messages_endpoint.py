@@ -144,3 +144,14 @@ class TestMessagesEndpoints:
         assert get_message_response.status_code == 200
         assert upload_filename == message_response_json["attachment"]["file_name"]
         assert message_response_json["attachment"]["parsed_content"] is not None
+
+    @pytest.mark.asyncio
+    async def test_get_message_not_found(self, client):
+        # given
+        message_id = "unknown"
+
+        # when
+        response = client.get(f"/messages/{message_id}")
+
+        # then
+        assert response.status_code == 404
