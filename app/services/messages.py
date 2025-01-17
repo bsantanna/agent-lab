@@ -48,4 +48,9 @@ class MessageService:
         )
 
     def delete_message_by_id(self, message_id: str) -> None:
+        message = self.get_message_by_id(message_id)
+
+        if message.replies_to is not None:
+            self._repository.delete_by_id(message.replies_to)
+
         return self._repository.delete_by_id(message_id)

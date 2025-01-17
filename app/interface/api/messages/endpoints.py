@@ -107,6 +107,20 @@ async def get_by_id(
         return Response(status_code=status.HTTP_404_NOT_FOUND)
 
 
+@router.delete("/delete/{message_id}", status_code=status.HTTP_204_NO_CONTENT)
+@inject
+async def remove(
+    message_id: str,
+    message_service: MessageService = Depends(Provide[Container.message_service]),
+):
+    try:
+        message_service.delete_message_by_id(message_id)
+    except NotFoundError:
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+    else:
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 def _format_expanded_response(
     agent_message: Message,
     human_message: Message,

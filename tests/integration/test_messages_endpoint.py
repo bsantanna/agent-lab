@@ -155,3 +155,15 @@ class TestMessagesEndpoints:
 
         # then
         assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_create_and_delete_success(self, client):
+        # given
+        create_message_response = self._create_message(client)
+        message_id = create_message_response.json()["id"]
+
+        # when
+        delete_message_response = client.delete(f"/messages/delete/{message_id}")
+
+        # then
+        assert delete_message_response.status_code == 204
