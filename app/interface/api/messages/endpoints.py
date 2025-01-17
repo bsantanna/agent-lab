@@ -56,9 +56,6 @@ async def post_message(
     agent_service: AgentService = Depends(Provide[Container.agent_service]),
     agent_registry: AgentRegistry = Depends(Provide[Container.agent_registry]),
     message_service: MessageService = Depends(Provide[Container.message_service]),
-    attachment_service: AttachmentService = Depends(
-        Provide[Container.attachment_service]
-    ),
 ):
     # search matching agent
     try:

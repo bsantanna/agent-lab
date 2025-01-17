@@ -1,3 +1,6 @@
+import os
+from uuid import uuid4
+
 from fastapi import File
 from markitdown import MarkItDown
 
@@ -16,7 +19,7 @@ class AttachmentService:
         return self._repository.get_by_id(attachment_id)
 
     async def create_attachment(self, file: File) -> Attachment:
-        temp_file_path = f"temp_{file.filename}"
+        temp_file_path = f"temp-{uuid4()}"
 
         with open(temp_file_path, "wb") as buffer:
             raw_content = await file.read()
@@ -24,11 +27,15 @@ class AttachmentService:
 
         parsed_content = self._markdown.convert(temp_file_path)
 
-        return self._repository.add(
+        attachment = self._repository.add(
             file_name=file.filename,
             raw_content=raw_content,
             parsed_content=parsed_content.text_content,
         )
+
+        os.remove(temp_file_path)
+
+        return attachment
 
     def delete_attachment_by_id(self, attachment_id: str) -> None:
         return self._repository.delete_by_id(attachment_id)
