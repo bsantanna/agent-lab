@@ -32,7 +32,7 @@ class MessageBase(BaseModel):
 
 
 class MessageRequest(MessageBase):
-    attachment_id: Optional[str]
+    attachment_id: Optional[str] = None
 
 
 class MessageListRequest(BaseModel):
@@ -43,6 +43,7 @@ class MessageResponse(MessageBase):
     id: str
     is_active: bool
     created_at: datetime
+    replies_to: Optional[str] = None
 
     class Config:
         from_attributes = True
