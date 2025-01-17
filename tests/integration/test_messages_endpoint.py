@@ -1,3 +1,4 @@
+from pathlib import Path
 from uuid import uuid4
 
 import pytest
@@ -46,8 +47,8 @@ class TestMessagesEndpoints:
 
     @pytest.mark.asyncio
     async def test_get_list(self, client):
-        create_request = self._create_agent(client)
-        agent_id = create_request.json()["id"]
+        create_response = self._create_agent(client)
+        agent_id = create_response.json()["id"]
 
         # when
         response = client.post(url="/messages/list", json={"agent_id": agent_id})
@@ -65,3 +66,41 @@ class TestMessagesEndpoints:
 
         # then
         assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_post_message_with_attachment(self, client):
+        # given
+        current_dir = Path(__file__).parent
+        file_path = f"{current_dir}/sun_tzu_the_art_of_war.html"
+
+        # when
+        with open(file_path, "rb") as file:
+            upload_response = client.post(
+                url="/messages/attachment/upload",
+                files={"file": ("sun_tzu_the_art_of_war.html", file, "text/html")},
+            )
+
+        # then
+        assert upload_response.status_code == 201
+
+        # given
+        create_response = self._create_agent(client)
+        agent_id = create_response.json()["id"]
+        attachment_id = upload_response.json()["id"]
+
+        # when
+        create_message_response = client.post(
+            "/messages/post",
+            json={
+                "message_role": "human",
+                "message_content": "a_message",
+                "agent_id": agent_id,
+                "attachment_id": attachment_id,
+            },
+        )
+
+        # then
+        assert create_message_response.status_code == 200
+        assert "id" in create_message_response.json()
+        assert agent_id == create_message_response.json()["agent_id"]
+        assert "assistant" == create_message_response.json()["message_role"]

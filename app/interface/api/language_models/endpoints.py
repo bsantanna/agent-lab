@@ -22,7 +22,7 @@ router = APIRouter()
 
 @router.get("/list", response_model=List[LanguageModelResponse])
 @inject
-def get_list(
+async def get_list(
     language_model_service: LanguageModelService = Depends(
         Provide[Container.language_model_service]
     ),
@@ -33,7 +33,7 @@ def get_list(
 
 @router.get("/{language_model_id}", response_model=LanguageModelExpandedResponse)
 @inject
-def get_by_id(
+async def get_by_id(
     language_model_id: str,
     language_model_service: LanguageModelService = Depends(
         Provide[Container.language_model_service]
@@ -56,7 +56,7 @@ def get_by_id(
     "/create", status_code=status.HTTP_201_CREATED, response_model=LanguageModelResponse
 )
 @inject
-def add(
+async def add(
     language_model_data: LanguageModelCreateRequest = Body(...),
     language_model_service: LanguageModelService = Depends(
         Provide[Container.language_model_service]
@@ -71,7 +71,7 @@ def add(
 
 @router.delete("/delete/{language_model_id}", status_code=status.HTTP_204_NO_CONTENT)
 @inject
-def remove(
+async def remove(
     language_model_id: str,
     language_model_service: LanguageModelService = Depends(
         Provide[Container.language_model_service]
@@ -87,7 +87,7 @@ def remove(
 
 @router.post(path="/update", response_model=LanguageModelResponse)
 @inject
-def update(
+async def update(
     language_model_data: LanguageModelUpdateRequest = Body(...),
     language_model_service: LanguageModelService = Depends(
         Provide[Container.language_model_service]
@@ -105,7 +105,7 @@ def update(
 
 @router.post(path="/update_setting", response_model=LanguageModelExpandedResponse)
 @inject
-def update_setting(
+async def update_setting(
     language_model_data: LanguageModelSettingUpdateRequest = Body(...),
     language_model_service: LanguageModelService = Depends(
         Provide[Container.language_model_service]

@@ -8,5 +8,5 @@ class AgentRegistry:
             "three_phase_react": three_phase_react_agent,
         }
 
-    def get_agent(self, agent_type: str):
+    def get_agent(self, agent_type: str) -> AgentBase:
         return self._registry[agent_type]

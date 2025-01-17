@@ -1,6 +1,7 @@
 import os
 
 from dependency_injector import containers, providers
+from markitdown import MarkItDown
 
 from app.core.logging import logger
 from app.domain.repositories.agents import AgentRepository, AgentSettingRepository
@@ -52,6 +53,8 @@ class Container(containers.DeclarativeContainer):
 
     redis_client = providers.Singleton(RedisClient, redis_url=config.cache.url)
 
+    markdown = providers.Singleton(MarkItDown)
+
     attachment_repository = providers.Factory(
         AttachmentRepository, session_factory=db.provided.session
     )
@@ -59,6 +62,7 @@ class Container(containers.DeclarativeContainer):
     attachment_service = providers.Factory(
         AttachmentService,
         attachment_repository=attachment_repository,
+        markdown=markdown,
     )
 
     integration_repository = providers.Factory(

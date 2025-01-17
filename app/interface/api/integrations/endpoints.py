@@ -16,7 +16,7 @@ router = APIRouter()
 
 @router.get(path="/list", response_model=List[IntegrationResponse])
 @inject
-def get_list(
+async def get_list(
     integration_service: IntegrationService = Depends(
         Provide[Container.integration_service]
     ),
@@ -29,7 +29,7 @@ def get_list(
 
 @router.get(path="/{integration_id}", response_model=IntegrationResponse)
 @inject
-def get_by_id(
+async def get_by_id(
     integration_id: str,
     integration_service: IntegrationService = Depends(
         Provide[Container.integration_service]
@@ -46,7 +46,7 @@ def get_by_id(
     "/create", status_code=status.HTTP_201_CREATED, response_model=IntegrationResponse
 )
 @inject
-def add(
+async def add(
     integration_data: IntegrationCreateRequest = Body(...),
     integration_service: IntegrationService = Depends(
         Provide[Container.integration_service]
@@ -63,7 +63,7 @@ def add(
 
 @router.delete("/delete/{integration_id}", status_code=status.HTTP_204_NO_CONTENT)
 @inject
-def remove(
+async def remove(
     integration_id: str,
     integration_service: IntegrationService = Depends(
         Provide[Container.integration_service]

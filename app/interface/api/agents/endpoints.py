@@ -22,7 +22,7 @@ router = APIRouter()
 
 @router.get("/list", response_model=List[AgentResponse])
 @inject
-def get_list(
+async def get_list(
     agent_service: AgentService = Depends(Provide[Container.agent_service]),
 ):
     agents = agent_service.get_agents()
@@ -31,7 +31,7 @@ def get_list(
 
 @router.get("/{agent_id}", response_model=AgentExpandedResponse)
 @inject
-def get_by_id(
+async def get_by_id(
     agent_id: str,
     agent_service: AgentService = Depends(Provide[Container.agent_service]),
     agent_setting_service: AgentSettingService = Depends(
@@ -50,7 +50,7 @@ def get_by_id(
     "/create", status_code=status.HTTP_201_CREATED, response_model=AgentResponse
 )
 @inject
-def add(
+async def add(
     agent_data: AgentCreateRequest = Body(...),
     agent_service: AgentService = Depends(Provide[Container.agent_service]),
 ):
@@ -64,7 +64,7 @@ def add(
 
 @router.delete("/delete/{agent_id}", status_code=status.HTTP_204_NO_CONTENT)
 @inject
-def remove(
+async def remove(
     agent_id: str,
     agent_service: AgentService = Depends(Provide[Container.agent_service]),
 ):
@@ -78,7 +78,7 @@ def remove(
 
 @router.post(path="/update", response_model=AgentResponse)
 @inject
-def update(
+async def update(
     agent_data: AgentUpdateRequest = Body(...),
     agent_service: AgentService = Depends(Provide[Container.agent_service]),
 ):
@@ -94,7 +94,7 @@ def update(
 
 @router.post(path="/update_setting", response_model=AgentExpandedResponse)
 @inject
-def update_setting(
+async def update_setting(
     agent_data: AgentSettingUpdateRequest = Body(...),
     agent_service: AgentService = Depends(Provide[Container.agent_service]),
     agent_setting_service: AgentSettingService = Depends(

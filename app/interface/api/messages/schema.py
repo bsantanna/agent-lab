@@ -14,6 +14,9 @@ class AttachmentResponse(BaseModel):
     parsed_content: str
     embeddings_id: Optional[str]
 
+    class Config:
+        from_attributes = True
+
 
 class MessageBase(BaseModel):
     message_role: str
@@ -29,7 +32,7 @@ class MessageBase(BaseModel):
 
 
 class MessageRequest(MessageBase):
-    attachment_id: str
+    attachment_id: Optional[str]
 
 
 class MessageListRequest(BaseModel):
@@ -46,4 +49,4 @@ class MessageResponse(MessageBase):
 
 
 class MessageExpandedResponse(MessageResponse):
-    attachment: AttachmentResponse
+    att: Optional[AttachmentResponse]

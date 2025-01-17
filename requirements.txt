@@ -3,6 +3,7 @@ fastapi[standard]
 flake8
 hvac
 isort
+markitdown
 pre-commit
 psutil
 psycopg2-binary
