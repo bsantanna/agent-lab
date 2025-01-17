@@ -7,7 +7,6 @@ from app.core.container import Container
 from app.domain.exceptions.base import NotFoundError
 from app.domain.models import Message
 from app.interface.api.messages.schema import (
-    MessageBase,
     MessageListRequest,
     MessageExpandedResponse,
     AttachmentResponse,
@@ -29,7 +28,7 @@ async def get_list(
     message_service: MessageService = Depends(Provide[Container.message_service]),
 ):
     messages = message_service.get_messages(message_data.agent_id)
-    return [MessageBase.model_validate(message) for message in messages]
+    return [MessageResponse.model_validate(message) for message in messages]
 
 
 @router.post(
