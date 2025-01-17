@@ -71,13 +71,13 @@ class TestMessagesEndpoints:
     async def test_post_message_with_attachment(self, client):
         # given
         current_dir = Path(__file__).parent
-        file_path = f"{current_dir}/sun_tzu_the_art_of_war.html"
+        file_path = f"{current_dir}/sun_tzu_the_art_of_war.zip"
 
         # when
         with open(file_path, "rb") as file:
             upload_response = client.post(
                 url="/messages/attachment/upload",
-                files={"file": ("sun_tzu_the_art_of_war.html", file, "text/html")},
+                files={"file": ("sun_tzu_the_art_of_war.zip", file, "application/zip")},
             )
 
         # then
