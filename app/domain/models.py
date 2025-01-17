@@ -112,6 +112,7 @@ class Message(Base):
     message_role = Column(message_role)
     message_content = Column(Text)
     attachment_id = Column(String, ForeignKey("attachments.id"))
+    replies_to = Column(String)
 
     agent = relationship("Agent", back_populates="messages")
     attachment = relationship("Attachment", back_populates="messages")

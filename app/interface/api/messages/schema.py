@@ -49,4 +49,5 @@ class MessageResponse(MessageBase):
 
 
 class MessageExpandedResponse(MessageResponse):
-    att: Optional[AttachmentResponse]
+    replies_to: Optional[MessageResponse]
+    attachment: Optional[AttachmentResponse]
