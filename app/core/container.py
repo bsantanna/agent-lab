@@ -142,4 +142,5 @@ class Container(containers.DeclarativeContainer):
         MessageService,
         message_repository=message_repository,
         agent_service=agent_service,
+        attachment_service=attachment_service,
     )

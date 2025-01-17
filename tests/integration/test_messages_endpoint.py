@@ -157,9 +157,12 @@ class TestMessagesEndpoints:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_create_and_delete_success(self, client):
+    async def test_create_with_attachment_and_delete_success(self, client):
         # given
-        create_message_response = self._create_message(client)
+        upload_filename = "sun_tzu_the_art_of_war.zip"
+        upload_response = self._upload_file(client, upload_filename, "application/zip")
+        attachment_id = upload_response.json()["id"]
+        create_message_response = self._create_message(client, attachment_id)
         message_id = create_message_response.json()["id"]
 
         # when

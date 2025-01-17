@@ -5,14 +5,19 @@ from app.domain.models import Message
 from app.domain.repositories.agents import AgentNotFoundError
 from app.domain.repositories.messages import MessageRepository
 from app.services.agents import AgentService
+from app.services.attachments import AttachmentService
 
 
 class MessageService:
     def __init__(
-        self, message_repository: MessageRepository, agent_service: AgentService
+        self,
+        message_repository: MessageRepository,
+        agent_service: AgentService,
+        attachment_service: AttachmentService,
     ) -> None:
         self._repository: MessageRepository = message_repository
         self._agent_service: AgentService = agent_service
+        self._attachment_service: AttachmentService = attachment_service
 
     def get_messages(self, agent_id: str) -> Iterator[Message]:
         # verify agent
@@ -51,6 +56,16 @@ class MessageService:
         message = self.get_message_by_id(message_id)
 
         if message.replies_to is not None:
+            parent_message = self._repository.get_by_id(message.replies_to)
             self._repository.delete_by_id(message.replies_to)
+            if parent_message.attachment_id is not None:
+                self._attachment_service.delete_attachment_by_id(
+                    attachment_id=parent_message.attachment_id
+                )
+
+        else:
+            raise InvalidFieldError(
+                field_name="replies_to", reason="replies_to is None"
+            )
 
         return self._repository.delete_by_id(message_id)
