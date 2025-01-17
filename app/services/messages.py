@@ -31,6 +31,7 @@ class MessageService:
         message_content: str,
         agent_id: str,
         attachment_id: str = None,
+        replies_to: Message = None,
     ) -> Message:
         # verify agent
         try:
@@ -43,6 +44,7 @@ class MessageService:
             message_content=message_content,
             agent_id=agent_id,
             attachment_id=attachment_id,
+            replies_to=replies_to,
         )
 
     def delete_message_by_id(self, message_id: str) -> None:

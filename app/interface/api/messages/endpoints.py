@@ -65,7 +65,7 @@ async def post_message(
         return Response(status_code=status.HTTP_404_NOT_FOUND)
 
     # store human message
-    message_service.create_message(
+    human_message = message_service.create_message(
         message_role=message_data.message_role,
         message_content=message_data.message_content,
         agent_id=message_data.agent_id,
@@ -80,6 +80,7 @@ async def post_message(
         message_role="assistant",
         message_content=processed_message.message_content,
         agent_id=processed_message.agent_id,
+        replies_to=human_message,
     )
 
     return MessageResponse.model_validate(assistant_message)
@@ -95,20 +96,39 @@ async def get_by_id(
     ),
 ):
     try:
-        message = message_service.get_message_by_id(message_id)
+        assistant_message = message_service.get_message_by_id(message_id)
+        human_message = message_service.get_message_by_id(assistant_message.replies_to)
 
-        return _format_expanded_response(message, attachment_service)
+        return _format_expanded_response(
+            assistant_message, human_message, attachment_service
+        )
+
     except NotFoundError:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
 
 
 def _format_expanded_response(
-    message: Message, attachment_service: AttachmentService
+    agent_message: Message,
+    human_message: Message,
+    attachment_service: AttachmentService,
 ) -> MessageExpandedResponse:
-    response = MessageExpandedResponse.model_validate(message)
+    attachment_response = None
 
-    if message.attachment_id is not None:
-        attachment = attachment_service.get_attachment_by_id(message.attachment_id)
-        response.att = AttachmentResponse.model_validate(attachment)
+    if human_message.attachment_id is not None:
+        attachment = attachment_service.get_attachment_by_id(
+            human_message.attachment_id
+        )
+        attachment_response = AttachmentResponse.model_validate(attachment)
+
+    response = MessageExpandedResponse(
+        id=agent_message.id,
+        is_active=agent_message.is_active,
+        created_at=agent_message.created_at,
+        agent_id=agent_message.agent_id,
+        message_role=agent_message.message_role,
+        message_content=agent_message.message_content,
+        replies_to=MessageResponse.model_validate(human_message),
+        attachment=attachment_response,
+    )
 
     return response

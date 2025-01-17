@@ -40,6 +40,7 @@ class MessageRepository:
         message_role: str,
         agent_id: str,
         attachment_id: str = None,
+        replies_to: Message = None,
     ) -> Message:
         gen_id = uuid4()
         with self.session_factory() as session:
@@ -51,6 +52,7 @@ class MessageRepository:
                 message_content=message_content,
                 agent_id=agent_id,
                 attachment_id=attachment_id,
+                replies_to=replies_to.id if replies_to is not None else None,
             )
             session.add(message)
             session.commit()
