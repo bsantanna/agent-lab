@@ -1,5 +1,3 @@
-cache:
-  url: "redis://redis:6379/0"
 db:
   url: "postgresql://postgres:postgres@postgres:5432/agent_lab"
 vault:

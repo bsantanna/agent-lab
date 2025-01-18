@@ -12,7 +12,7 @@ from app.domain.repositories.language_models import (
     LanguageModelSettingRepository,
 )
 from app.domain.repositories.messages import MessageRepository
-from app.infrastructure.database.config import Database
+from app.infrastructure.database.sql import Database
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.registry import AgentRegistry
 from app.services.agent_types.test_echo.test_echo_agent import TestEchoAgent

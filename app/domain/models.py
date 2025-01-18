@@ -10,7 +10,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
-from app.infrastructure.database.config import Base
+from app.infrastructure.database.sql import Base
 
 agent_type = Enum("test_echo", "three_phase_react", name="agent_type")
 

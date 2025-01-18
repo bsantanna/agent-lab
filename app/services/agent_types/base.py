@@ -24,3 +24,13 @@ class AgentBase(ABC):
 
         with open(file_path, "r") as file:
             return file.read().strip()
+
+
+class WorkflowAgent(AgentBase, ABC):
+    def __init__(self, agent_setting_service: AgentSettingService):
+        super().__init__(agent_setting_service)
+        self.workflow_builder = self.get_workflow_builder()
+
+    @abstractmethod
+    def get_workflow_builder(self):
+        pass
