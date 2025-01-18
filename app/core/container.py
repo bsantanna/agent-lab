@@ -12,7 +12,6 @@ from app.domain.repositories.language_models import (
     LanguageModelSettingRepository,
 )
 from app.domain.repositories.messages import MessageRepository
-from app.infrastructure.cache.redis import RedisClient
 from app.infrastructure.database.config import Database
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.registry import AgentRegistry
@@ -50,8 +49,6 @@ class Container(containers.DeclarativeContainer):
     config = providers.Configuration(yaml_files=[config_file])
 
     db = providers.Singleton(Database, db_url=config.db.url)
-
-    redis_client = providers.Singleton(RedisClient, redis_url=config.cache.url)
 
     markdown = providers.Singleton(MarkItDown)
 

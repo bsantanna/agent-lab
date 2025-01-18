@@ -17,7 +17,7 @@ ruff
 slowapi
 sqlalchemy
 starlette
+testcontainers[ollama]
 testcontainers[postgresql]
-testcontainers[redis]
 testcontainers[vault]
 uvicorn
