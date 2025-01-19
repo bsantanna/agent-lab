@@ -22,7 +22,7 @@ class IntegrationCreateRequest(BaseModel):
     def validate_integration_type(cls, v):
         valid_types = [
             "anthropic_api_v1",
-            "grok_api_v1",
+            "xai_api_v1",
             "openai_api_v1",
             "ollama_api_v1",
         ]

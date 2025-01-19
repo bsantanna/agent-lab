@@ -16,9 +16,9 @@ agent_type = Enum("test_echo", "three_phase_react", name="agent_type")
 
 integration_type = Enum(
     "anthropic_api_v1",
-    "grok_api_v1",
     "openai_api_v1",
     "ollama_api_v1",
+    "xai_api_v1",
     name="integration_type",
 )
 

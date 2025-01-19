@@ -1,6 +1,12 @@
 import os
 from abc import ABC, abstractmethod
 
+from langchain_anthropic import ChatAnthropic
+from langchain_core.language_models import BaseChatModel
+from langchain_ollama import ChatOllama
+from langchain_openai import ChatOpenAI
+from langchain_xai import ChatXAI
+
 from app.domain.exceptions.base import ResourceNotFoundError
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.interface.api.messages.schema import MessageRequest, MessageBase
@@ -33,6 +39,52 @@ class AgentBase(ABC):
     @abstractmethod
     def process_message(self, message_request: MessageRequest) -> MessageBase:
         pass
+
+    def get_chat_model(self, agent_id) -> BaseChatModel:
+        agent = self.agent_service.get_agent_by_id(agent_id)
+
+        lm_settings = self.language_model_setting_service.get_language_model_settings(
+            agent.language_model_id
+        )
+        temperature_setting = next(
+            float(setting.setting_value)
+            if setting.setting_key == " temperature"
+            else 0.5
+            for setting in lm_settings
+        )
+
+        language_model = self.language_model_service.get_language_model_by_id(
+            agent.language_model_id
+        )
+        integration = self.integration_service.get_integration_by_id(
+            language_model.integration_id
+        )
+
+        if integration.integration_type == "openai_api_v1":
+            return ChatOpenAI(
+                model_name=language_model.language_model_tag,
+                temperature=temperature_setting,
+                # base_url= get from vault
+                # api_key= get from vault
+            )
+        elif integration.integration_type == "anthropic_api_v1":
+            return ChatAnthropic(
+                model=language_model.language_model_tag,
+                temperature=temperature_setting,
+                # base_url= get from vault
+                # api_key= get from vault
+            )
+        elif integration.integration_type == "xai_api_v1":
+            return ChatXAI(
+                model_name=language_model.language_model_tag,
+                temperature=temperature_setting,
+                # xai_api_base= get from vault
+                # xai_api_key= get from vault
+            )
+        else:
+            return ChatOllama(
+                model=language_model.language_model_tag, temperature=temperature_setting
+            )
 
     def read_file_content(self, file_path: str) -> str:
         if not os.path.exists(file_path):

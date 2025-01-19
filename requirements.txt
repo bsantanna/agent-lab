@@ -4,9 +4,11 @@ flake8
 hvac
 isort
 langchain
+langchain-anthropic
 langchain-core
 langchain-ollama
 langchain-openai
+langchain-xai
 langgraph
 langgraph-checkpoint-postgres
 markitdown
