@@ -12,11 +12,12 @@ from app.domain.repositories.language_models import (
     LanguageModelSettingRepository,
 )
 from app.domain.repositories.messages import MessageRepository
+from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.sql import Database
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.registry import AgentRegistry
 from app.services.agent_types.test_echo.test_echo_agent import TestEchoAgent
-from app.services.agent_types.three_phase_react.three_phase_react_agent import (
+from app.services.agent_types.three_phase_react.agent import (
     ThreePhaseReactAgent,
 )
 from app.services.agents import AgentService
@@ -49,6 +50,10 @@ class Container(containers.DeclarativeContainer):
     config = providers.Configuration(yaml_files=[config_file])
 
     db = providers.Singleton(Database, db_url=config.db.url)
+
+    graph_persistence_factory = providers.Singleton(
+        GraphPersistenceFactory, db_checkpoints=config.db.checkpoints
+    )
 
     markdown = providers.Singleton(MarkItDown)
 

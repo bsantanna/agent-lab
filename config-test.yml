@@ -1,5 +1,6 @@
 db:
   url: "sqlite:///./agent_lab.db"
+  checkpoints: "postgresql://postgres:postgres@localhost:15432/agent_lab_checkpoints"
 vault:
   url: "http://localhost:18200"
   token: "dev-only-token"

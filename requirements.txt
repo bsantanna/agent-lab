@@ -3,9 +3,16 @@ fastapi[standard]
 flake8
 hvac
 isort
+langchain
+langchain-ollama
+langchain-openai
+langgraph
+langgraph-checkpoint-postgres
 markitdown
 pre-commit
 psutil
+psycopg-binary
+psycopg-pool
 psycopg2-binary
 pydantic
 pytest

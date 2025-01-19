@@ -1,5 +1,6 @@
 db:
   url: "postgresql://postgres:postgres@postgres:5432/agent_lab"
+  checkpoints: "postgresql://postgres:postgres@postgres:5432/agent_lab_checkpoints"
 vault:
   url: "http://vault:8200"
   token: "dev-only-token"
