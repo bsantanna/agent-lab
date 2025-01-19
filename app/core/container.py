@@ -1,5 +1,6 @@
 import os
 
+import hvac
 from dependency_injector import containers, providers
 from markitdown import MarkItDown
 
@@ -57,6 +58,10 @@ class Container(containers.DeclarativeContainer):
 
     markdown = providers.Singleton(MarkItDown)
 
+    vault_client = providers.Singleton(
+        hvac.Client, url=config.vault.url, token=config.vault.token
+    )
+
     attachment_repository = providers.Factory(
         AttachmentRepository, session_factory=db.provided.session
     )
@@ -70,8 +75,7 @@ class Container(containers.DeclarativeContainer):
     integration_repository = providers.Factory(
         IntegrationRepository,
         session_factory=db.provided.session,
-        vault_url=config.vault.url,
-        vault_token=config.vault.token,
+        vault_client=vault_client,
     )
 
     integration_service = providers.Factory(

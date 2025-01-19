@@ -14,11 +14,10 @@ class IntegrationRepository:
     def __init__(
         self,
         session_factory: Callable[..., AbstractContextManager[Session]],
-        vault_url: str,
-        vault_token: str,
+        vault_client: hvac.Client,
     ) -> None:
         self.session_factory = session_factory
-        self.hvac_client = hvac.Client(url=vault_url, token=vault_token)
+        self.vault_client = vault_client
 
     def get_all(self) -> Iterator[Integration]:
         with self.session_factory() as session:
@@ -39,7 +38,7 @@ class IntegrationRepository:
         self, integration_type: str, api_endpoint: str, api_key: str
     ) -> Integration:
         gen_id = uuid4()
-        self.hvac_client.secrets.kv.v2.create_or_update_secret(
+        self.vault_client.secrets.kv.v2.create_or_update_secret(
             path=f"integration_{gen_id}",
             secret={"api_endpoint": api_endpoint, "api_key": api_key},
         )
