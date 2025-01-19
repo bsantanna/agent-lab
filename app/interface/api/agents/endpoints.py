@@ -15,6 +15,7 @@ from app.interface.api.agents.schema import (
     AgentUpdateRequest,
 )
 from app.services.agent_settings import AgentSettingService
+from app.services.agent_types.registry import AgentRegistry
 from app.services.agents import AgentService
 
 router = APIRouter()
@@ -53,11 +54,15 @@ async def get_by_id(
 async def add(
     agent_data: AgentCreateRequest = Body(...),
     agent_service: AgentService = Depends(Provide[Container.agent_service]),
+    agent_registry: AgentRegistry = Depends(Provide[Container.agent_registry]),
 ):
     agent = agent_service.create_agent(
         language_model_id=agent_data.language_model_id,
         agent_name=agent_data.agent_name,
         agent_type=agent_data.agent_type,
+    )
+    agent_registry.get_agent(agent_data.agent_type).create_default_settings(
+        agent_id=agent.id
     )
     return AgentResponse.model_validate(agent)
 

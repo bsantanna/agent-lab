@@ -4,6 +4,7 @@ flake8
 hvac
 isort
 langchain
+langchain-core
 langchain-ollama
 langchain-openai
 langgraph

@@ -1,18 +1,47 @@
 from pathlib import Path
+from typing import TypedDict, List, Annotated
+
+from langchain_core.messages import AnyMessage
+from langgraph.graph import StateGraph, add_messages
 
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.interface.api.messages.schema import MessageRequest
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.base import WorkflowAgent
+from app.services.agents import AgentService
+from app.services.integrations import IntegrationService
+from app.services.language_model_settings import LanguageModelSettingService
+from app.services.language_models import LanguageModelService
+
+
+class AgentState(TypedDict):
+    query: str
+    generation: str
+    documents: List[str]
+    messages: Annotated[List[AnyMessage], add_messages]
+    preparation_system_prompt: str
+    execution_system_prompt: str
+    conclusion_system_prompt: str
 
 
 class ThreePhaseReactAgent(WorkflowAgent):
     def __init__(
         self,
+        agent_service: AgentService,
         agent_setting_service: AgentSettingService,
+        language_model_service: LanguageModelService,
+        language_model_setting_service: LanguageModelSettingService,
+        integration_service: IntegrationService,
         graph_persistence_factory: GraphPersistenceFactory,
     ):
-        super().__init__(agent_setting_service, graph_persistence_factory)
+        super().__init__(
+            agent_service=agent_service,
+            agent_setting_service=agent_setting_service,
+            language_model_service=language_model_service,
+            language_model_setting_service=language_model_setting_service,
+            integration_service=integration_service,
+            graph_persistence_factory=graph_persistence_factory,
+        )
 
     def create_default_settings(self, agent_id: str):
         current_dir = Path(__file__).parent
@@ -20,7 +49,7 @@ class ThreePhaseReactAgent(WorkflowAgent):
         preparation_prompt = self.read_file_content(
             f"{current_dir}/default_preparation_system_prompt.txt"
         )
-        self.setting_service.create_agent_setting(
+        self.agent_setting_service.create_agent_setting(
             agent_id=agent_id,
             setting_key="preparation_system_prompt",
             setting_value=preparation_prompt,
@@ -29,7 +58,7 @@ class ThreePhaseReactAgent(WorkflowAgent):
         execution_prompt = self.read_file_content(
             f"{current_dir}/default_execution_system_prompt.txt"
         )
-        self.setting_service.create_agent_setting(
+        self.agent_setting_service.create_agent_setting(
             agent_id=agent_id,
             setting_key="execution_system_prompt",
             setting_value=execution_prompt,
@@ -38,14 +67,16 @@ class ThreePhaseReactAgent(WorkflowAgent):
         conclusion_prompt = self.read_file_content(
             f"{current_dir}/default_conclusion_system_prompt.txt"
         )
-        self.setting_service.create_agent_setting(
+        self.agent_setting_service.create_agent_setting(
             agent_id=agent_id,
             setting_key="conclusion_system_prompt",
             setting_value=conclusion_prompt,
         )
 
-    def get_workflow_builder(self):
-        pass
+    def get_workflow_builder(self, agent_id: str):
+        workflow_builder = StateGraph(AgentState)
+
+        return workflow_builder
 
     def get_input_params(self, message_request: MessageRequest):
         pass

@@ -112,29 +112,36 @@ class Container(containers.DeclarativeContainer):
         AgentRepository, session_factory=db.provided.session
     )
 
+    agent_service = providers.Factory(
+        AgentService,
+        agent_repository=agent_repository,
+        agent_setting_service=agent_setting_service,
+        language_model_service=language_model_service,
+    )
+
     three_phase_react_agent = providers.Factory(
         ThreePhaseReactAgent,
+        agent_service=agent_service,
         agent_setting_service=agent_setting_service,
+        language_model_service=language_model_service,
+        language_model_setting_service=language_model_setting_service,
+        integration_service=integration_service,
         graph_persistence_factory=graph_persistence_factory,
     )
 
     test_echo_agent = providers.Factory(
         TestEchoAgent,
+        agent_service=agent_service,
         agent_setting_service=agent_setting_service,
+        language_model_service=language_model_service,
+        language_model_setting_service=language_model_setting_service,
+        integration_service=integration_service,
     )
 
     agent_registry = providers.Singleton(
         AgentRegistry,
         test_echo_agent=test_echo_agent,
         three_phase_react_agent=three_phase_react_agent,
-    )
-
-    agent_service = providers.Factory(
-        AgentService,
-        agent_repository=agent_repository,
-        agent_setting_service=agent_setting_service,
-        agent_registry=agent_registry,
-        language_model_service=language_model_service,
     )
 
     message_repository = providers.Factory(

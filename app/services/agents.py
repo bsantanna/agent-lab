@@ -5,7 +5,6 @@ from app.domain.models import Agent
 from app.domain.repositories.agents import AgentRepository
 from app.domain.repositories.language_models import LanguageModelNotFoundError
 from app.services.agent_settings import AgentSettingService
-from app.services.agent_types.registry import AgentRegistry
 from app.services.language_models import LanguageModelService
 
 
@@ -14,19 +13,17 @@ class AgentService:
         self,
         agent_repository: AgentRepository,
         agent_setting_service: AgentSettingService,
-        agent_registry: AgentRegistry,
         language_model_service: LanguageModelService,
     ) -> None:
-        self.repository: AgentRepository = agent_repository
-        self.setting_service: AgentSettingService = agent_setting_service
-        self.registry: AgentRegistry = agent_registry
+        self.agent_repository: AgentRepository = agent_repository
+        self.agent_setting_service: AgentSettingService = agent_setting_service
         self.language_model_service: LanguageModelService = language_model_service
 
     def get_agents(self) -> Iterator[Agent]:
-        return self.repository.get_all()
+        return self.agent_repository.get_all()
 
     def get_agent_by_id(self, agent_id: str) -> Agent:
-        return self.repository.get_by_id(agent_id)
+        return self.agent_repository.get_by_id(agent_id)
 
     def create_agent(
         self,
@@ -43,19 +40,18 @@ class AgentService:
             )
 
         # create agent
-        agent = self.repository.add(
+        agent = self.agent_repository.add(
             agent_name=agent_name,
             agent_type=agent_type,
             language_model_id=language_model_id,
         )
 
-        # default settings for given agent_type
-        self.registry.get_agent(agent_type).create_default_settings(agent_id=agent.id)
-
         return agent
 
     def delete_agent_by_id(self, agent_id: str) -> None:
-        return self.repository.delete_by_id(agent_id)
+        return self.agent_repository.delete_by_id(agent_id)
 
     def update_agent(self, agent_id: str, agent_name: str) -> Agent:
-        return self.repository.update_agent(agent_id=agent_id, agent_name=agent_name)
+        return self.agent_repository.update_agent(
+            agent_id=agent_id, agent_name=agent_name
+        )
