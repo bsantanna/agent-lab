@@ -123,7 +123,7 @@ class Container(containers.DeclarativeContainer):
         agent_setting_service=agent_setting_service,
     )
 
-    agent_registry = providers.Factory(
+    agent_registry = providers.Singleton(
         AgentRegistry,
         test_echo_agent=test_echo_agent,
         three_phase_react_agent=three_phase_react_agent,
