@@ -14,21 +14,21 @@ Base = declarative_base()
 
 class Database:
     def __init__(self, db_url: str) -> None:
-        self._engine = create_engine(db_url, echo=True)
-        self._session_factory = orm.scoped_session(
+        self.engine = create_engine(db_url, echo=True)
+        self.session_factory = orm.scoped_session(
             orm.sessionmaker(
                 autocommit=False,
                 autoflush=False,
-                bind=self._engine,
+                bind=self.engine,
             ),
         )
 
     def create_database(self) -> None:
-        Base.metadata.create_all(self._engine)
+        Base.metadata.create_all(self.engine)
 
     @contextmanager
     def session(self) -> Callable[..., AbstractContextManager[Session]]:
-        session: Session = self._session_factory()
+        session: Session = self.session_factory()
         try:
             yield session
         except Exception:

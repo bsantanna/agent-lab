@@ -15,20 +15,20 @@ class MessageService:
         agent_service: AgentService,
         attachment_service: AttachmentService,
     ) -> None:
-        self._repository: MessageRepository = message_repository
-        self._agent_service: AgentService = agent_service
-        self._attachment_service: AttachmentService = attachment_service
+        self.repository: MessageRepository = message_repository
+        self.agent_service: AgentService = agent_service
+        self.attachment_service: AttachmentService = attachment_service
 
     def get_messages(self, agent_id: str) -> Iterator[Message]:
         # verify agent
         try:
-            self._agent_service.get_agent_by_id(agent_id)
+            self.agent_service.get_agent_by_id(agent_id)
         except AgentNotFoundError:
             raise InvalidFieldError(field_name="agent_id", reason="agent not found")
-        return self._repository.get_all(agent_id)
+        return self.repository.get_all(agent_id)
 
     def get_message_by_id(self, message_id: str) -> Message:
-        return self._repository.get_by_id(message_id)
+        return self.repository.get_by_id(message_id)
 
     def create_message(
         self,
@@ -40,11 +40,11 @@ class MessageService:
     ) -> Message:
         # verify agent
         try:
-            self._agent_service.get_agent_by_id(agent_id)
+            self.agent_service.get_agent_by_id(agent_id)
         except AgentNotFoundError:
             raise InvalidFieldError(field_name="agent_id", reason="agent not found")
 
-        return self._repository.add(
+        return self.repository.add(
             message_role=message_role,
             message_content=message_content,
             agent_id=agent_id,
@@ -56,10 +56,10 @@ class MessageService:
         message = self.get_message_by_id(message_id)
 
         if message.replies_to is not None:
-            parent_message = self._repository.get_by_id(message.replies_to)
-            self._repository.delete_by_id(message.replies_to)
+            parent_message = self.repository.get_by_id(message.replies_to)
+            self.repository.delete_by_id(message.replies_to)
             if parent_message.attachment_id is not None:
-                self._attachment_service.delete_attachment_by_id(
+                self.attachment_service.delete_attachment_by_id(
                     attachment_id=parent_message.attachment_id
                 )
 
@@ -68,4 +68,4 @@ class MessageService:
                 field_name="replies_to", reason="replies_to is None"
             )
 
-        return self._repository.delete_by_id(message_id)
+        return self.repository.delete_by_id(message_id)
