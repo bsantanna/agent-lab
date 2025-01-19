@@ -115,6 +115,7 @@ class Container(containers.DeclarativeContainer):
     three_phase_react_agent = providers.Factory(
         ThreePhaseReactAgent,
         agent_setting_service=agent_setting_service,
+        graph_persistence_factory=graph_persistence_factory,
     )
 
     test_echo_agent = providers.Factory(

@@ -15,9 +15,12 @@ ollama = OllamaContainer(ollama_home=f"{Path.home()}/.ollama").with_bind_ports(
     container=11434, host=21434
 )
 
-postgres = PostgresContainer("pgvector/pgvector:pg16").with_bind_ports(
-    container=5432, host=15432
-)
+postgres = PostgresContainer(
+    image="pgvector/pgvector:pg16",
+    username="postgres",
+    password="postgres",
+    dbname="agent_lab_checkpoints",
+).with_bind_ports(container=5432, host=15432)
 
 vault = (
     VaultContainer("hashicorp/vault:1.18.1")

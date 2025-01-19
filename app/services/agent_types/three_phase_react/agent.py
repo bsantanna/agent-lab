@@ -1,13 +1,17 @@
 from pathlib import Path
 
-from app.interface.api.messages.schema import MessageRequest, MessageBase
+from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.services.agent_settings import AgentSettingService
-from app.services.agent_types.base import AgentBase
+from app.services.agent_types.base import WorkflowAgent
 
 
-class ThreePhaseReactAgent(AgentBase):
-    def __init__(self, agent_setting_service: AgentSettingService):
-        super().__init__(agent_setting_service)
+class ThreePhaseReactAgent(WorkflowAgent):
+    def __init__(
+        self,
+        agent_setting_service: AgentSettingService,
+        graph_persistence_factory: GraphPersistenceFactory,
+    ):
+        super().__init__(agent_setting_service, graph_persistence_factory)
 
     def create_default_settings(self, agent_id: str):
         current_dir = Path(__file__).parent
@@ -39,5 +43,5 @@ class ThreePhaseReactAgent(AgentBase):
             setting_value=conclusion_prompt,
         )
 
-    def process_message(self, message_request: MessageRequest) -> MessageBase:
-        pass  # todo
+    def get_workflow_builder(self):
+        pass
