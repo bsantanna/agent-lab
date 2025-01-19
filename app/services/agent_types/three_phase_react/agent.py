@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
+from app.interface.api.messages.schema import MessageRequest
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.base import WorkflowAgent
 
@@ -44,4 +45,7 @@ class ThreePhaseReactAgent(WorkflowAgent):
         )
 
     def get_workflow_builder(self):
+        pass
+
+    def get_input_params(self, message_request: MessageRequest):
         pass

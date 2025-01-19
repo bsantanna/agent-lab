@@ -40,7 +40,18 @@ class WorkflowAgent(AgentBase, ABC):
     def get_workflow_builder(self):
         pass
 
+    @abstractmethod
+    def get_input_params(self, message_request: MessageRequest):
+        pass
+
     def process_message(self, message_request: MessageRequest) -> MessageBase:
         checkpointer = self.graph_persistence_factory.build_checkpoint_saver()
-        self.get_workflow_builder().compile(checkpointer=checkpointer)
-        return None
+        workflow = self.get_workflow_builder().compile(checkpointer=checkpointer)
+        config = {"configurable": {"thread_id": message_request.agent_id}}
+        inputs = self.get_input_params(message_request)
+        workflow_result = workflow.invoke(inputs, config)
+        return MessageBase(
+            message_role="assistant",
+            message_content=workflow_result["generation"],
+            agent_id=message_request.agent_id,
+        )
