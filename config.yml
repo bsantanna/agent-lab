@@ -4,3 +4,6 @@ db:
 vault:
   url: "http://localhost:8200"
   token: "dev-only-token"
+tracer:
+  service_name: "agent-lab-app"
+  collector_endpoint: "http://localhost:4318"

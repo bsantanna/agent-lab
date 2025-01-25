@@ -14,6 +14,7 @@ from app.domain.repositories.language_models import (
 from app.domain.repositories.messages import MessageRepository
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.sql import Database
+from app.infrastructure.metrics.tracer import Tracer
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.registry import AgentRegistry
 from app.services.agent_types.test_echo.test_echo_agent import TestEchoAgent
@@ -154,4 +155,10 @@ class Container(containers.DeclarativeContainer):
         message_repository=message_repository,
         agent_service=agent_service,
         attachment_service=attachment_service,
+    )
+
+    tracer = providers.Singleton(
+        Tracer,
+        collector_endpoint=config.tracer.collector_endpoint,
+        service_name=config.tracer.service_name,
     )

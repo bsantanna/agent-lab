@@ -67,9 +67,15 @@ def setup_database(container: Container):
     db.create_database()
 
 
+def setup_tracing(container: Container, application: FastAPI):
+    tracer = container.tracer()
+    tracer.setup(application)
+
+
 def setup_dependency_injection(application: FastAPI):
     container = Container()
     setup_database(container)
+    setup_tracing(container, application)
     application.container = container
 
 

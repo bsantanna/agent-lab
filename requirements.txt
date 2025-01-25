@@ -12,6 +12,10 @@ langchain-xai
 langgraph
 langgraph-checkpoint-postgres
 markitdown
+opentelemetry-api
+opentelemetry-exporter-otlp-proto-http
+opentelemetry-instrumentation-fastapi
+opentelemetry-sdk
 pre-commit
 psutil
 psycopg-binary
