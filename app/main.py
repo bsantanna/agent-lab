@@ -75,9 +75,9 @@ def setup_tracing(container: Container, application: FastAPI):
 
 
 def setup_dependency_injection(container: Container, application: FastAPI):
+    application.container = container
     setup_database(container)
     setup_tracing(container, application)
-    application.container = container
 
 
 def setup_middleware(application: FastAPI):

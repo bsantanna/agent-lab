@@ -8,6 +8,7 @@ services:
       - "18000:8000"
     environment:
       DOCKER: 1
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
     depends_on:
       opensearch:
         condition: service_healthy

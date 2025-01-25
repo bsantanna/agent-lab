@@ -157,8 +157,4 @@ class Container(containers.DeclarativeContainer):
         attachment_service=attachment_service,
     )
 
-    tracer = providers.Singleton(
-        Tracer,
-        collector_endpoint=config.tracer.collector_endpoint,
-        service_name=config.tracer.service_name,
-    )
+    tracer = providers.Singleton(Tracer)
