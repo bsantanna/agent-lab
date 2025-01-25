@@ -44,10 +44,5 @@ class Tracer:
             handlers=[console_handler, otlp_handler],
         )
 
-        self.logger = logging.getLogger(__name__)
-
     def setup(self, app):
         FastAPIInstrumentor.instrument_app(app)
-
-    def log(self):
-        return self.logger

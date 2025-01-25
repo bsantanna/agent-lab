@@ -19,15 +19,17 @@ logger = logging.getLogger(__name__)
 
 
 def create_app():
+    container = Container()
+
     application = FastAPI(
         title="Agent-Lab",
         version="0.1.0",
         dependencies=[],
     )
 
+    setup_dependency_injection(container, application)
     setup_exception_handlers(application)
-    setup_dependency_injection(application)
-    setup_middlewares(application)
+    setup_middleware(application)
     setup_routers(application)
 
     return application
@@ -72,14 +74,13 @@ def setup_tracing(container: Container, application: FastAPI):
     tracer.setup(application)
 
 
-def setup_dependency_injection(application: FastAPI):
-    container = Container()
+def setup_dependency_injection(container: Container, application: FastAPI):
     setup_database(container)
     setup_tracing(container, application)
     application.container = container
 
 
-def setup_middlewares(application: FastAPI):
+def setup_middleware(application: FastAPI):
     application.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
