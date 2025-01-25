@@ -4,7 +4,6 @@ import hvac
 from dependency_injector import containers, providers
 from markitdown import MarkItDown
 
-from app.core.logging import logger
 from app.domain.repositories.agents import AgentRepository, AgentSettingRepository
 from app.domain.repositories.attachments import AttachmentRepository
 from app.domain.repositories.integrations import IntegrationRepository
@@ -45,8 +44,6 @@ class Container(containers.DeclarativeContainer):
         config_file = "config-test.yml"
     else:
         config_file = "config.yml"
-
-    logger.info(f"Using configuration file: {config_file}")
 
     config = providers.Configuration(yaml_files=[config_file])
 
