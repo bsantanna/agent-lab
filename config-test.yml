@@ -1,7 +1,9 @@
-cache:
-  url: "redis://localhost:16379/0"
 db:
   url: "sqlite:///./agent_lab.db"
+  checkpoints: "postgresql://postgres:postgres@localhost:15432/agent_lab_checkpoints"
 vault:
   url: "http://localhost:18200"
   token: "dev-only-token"
+tracer:
+  service_name: "agent-lab-app"
+  collector_endpoint: ""

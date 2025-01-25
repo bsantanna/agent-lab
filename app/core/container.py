@@ -1,9 +1,9 @@
 import os
 
+import hvac
 from dependency_injector import containers, providers
 from markitdown import MarkItDown
 
-from app.core.logging import logger
 from app.domain.repositories.agents import AgentRepository, AgentSettingRepository
 from app.domain.repositories.attachments import AttachmentRepository
 from app.domain.repositories.integrations import IntegrationRepository
@@ -12,11 +12,13 @@ from app.domain.repositories.language_models import (
     LanguageModelSettingRepository,
 )
 from app.domain.repositories.messages import MessageRepository
-from app.infrastructure.database.config import Database
+from app.infrastructure.database.checkpoints import GraphPersistenceFactory
+from app.infrastructure.database.sql import Database
+from app.infrastructure.metrics.tracer import Tracer
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.registry import AgentRegistry
 from app.services.agent_types.test_echo.test_echo_agent import TestEchoAgent
-from app.services.agent_types.three_phase_react.three_phase_react_agent import (
+from app.services.agent_types.three_phase_react.agent import (
     ThreePhaseReactAgent,
 )
 from app.services.agents import AgentService
@@ -44,13 +46,19 @@ class Container(containers.DeclarativeContainer):
     else:
         config_file = "config.yml"
 
-    logger.info(f"Using configuration file: {config_file}")
-
     config = providers.Configuration(yaml_files=[config_file])
 
     db = providers.Singleton(Database, db_url=config.db.url)
 
+    graph_persistence_factory = providers.Singleton(
+        GraphPersistenceFactory, db_checkpoints=config.db.checkpoints
+    )
+
     markdown = providers.Singleton(MarkItDown)
+
+    vault_client = providers.Singleton(
+        hvac.Client, url=config.vault.url, token=config.vault.token
+    )
 
     attachment_repository = providers.Factory(
         AttachmentRepository, session_factory=db.provided.session
@@ -65,8 +73,7 @@ class Container(containers.DeclarativeContainer):
     integration_repository = providers.Factory(
         IntegrationRepository,
         session_factory=db.provided.session,
-        vault_url=config.vault.url,
-        vault_token=config.vault.token,
+        vault_client=vault_client,
     )
 
     integration_service = providers.Factory(
@@ -107,28 +114,36 @@ class Container(containers.DeclarativeContainer):
         AgentRepository, session_factory=db.provided.session
     )
 
-    three_phase_react_agent = providers.Factory(
-        ThreePhaseReactAgent,
-        agent_setting_service=agent_setting_service,
-    )
-
-    test_echo_agent = providers.Factory(
-        TestEchoAgent,
-        agent_setting_service=agent_setting_service,
-    )
-
-    agent_registry = providers.Factory(
-        AgentRegistry,
-        test_echo_agent=test_echo_agent,
-        three_phase_react_agent=three_phase_react_agent,
-    )
-
     agent_service = providers.Factory(
         AgentService,
         agent_repository=agent_repository,
         agent_setting_service=agent_setting_service,
-        agent_registry=agent_registry,
         language_model_service=language_model_service,
+    )
+
+    three_phase_react_agent = providers.Factory(
+        ThreePhaseReactAgent,
+        agent_service=agent_service,
+        agent_setting_service=agent_setting_service,
+        language_model_service=language_model_service,
+        language_model_setting_service=language_model_setting_service,
+        integration_service=integration_service,
+        graph_persistence_factory=graph_persistence_factory,
+    )
+
+    test_echo_agent = providers.Factory(
+        TestEchoAgent,
+        agent_service=agent_service,
+        agent_setting_service=agent_setting_service,
+        language_model_service=language_model_service,
+        language_model_setting_service=language_model_setting_service,
+        integration_service=integration_service,
+    )
+
+    agent_registry = providers.Singleton(
+        AgentRegistry,
+        test_echo_agent=test_echo_agent,
+        three_phase_react_agent=three_phase_react_agent,
     )
 
     message_repository = providers.Factory(
@@ -141,3 +156,5 @@ class Container(containers.DeclarativeContainer):
         agent_service=agent_service,
         attachment_service=attachment_service,
     )
+
+    tracer = providers.Singleton(Tracer)
