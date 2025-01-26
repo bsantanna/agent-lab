@@ -2,9 +2,10 @@ import os
 from abc import ABC, abstractmethod
 
 from langchain_anthropic import ChatAnthropic
+from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseChatModel
-from langchain_ollama import ChatOllama
-from langchain_openai import ChatOpenAI
+from langchain_ollama import ChatOllama, OllamaEmbeddings
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_xai import ChatXAI
 
 from app.domain.exceptions.base import ResourceNotFoundError
@@ -39,6 +40,19 @@ class AgentBase(ABC):
     @abstractmethod
     def process_message(self, message_request: MessageRequest) -> MessageBase:
         pass
+
+    def get_embeddings_model(self, agent_id) -> Embeddings:
+        agent = self.agent_service.get_agent_by_id(agent_id)
+        language_model = self.language_model_service.get_language_model_by_id(
+            agent.language_model_id
+        )
+        integration = self.integration_service.get_integration_by_id(
+            language_model.integration_id
+        )
+        if integration.integration_type == "openai_api_v1":
+            return OpenAIEmbeddings()
+        else:
+            return OllamaEmbeddings(model=language_model.language_model_tag)
 
     def get_chat_model(self, agent_id) -> BaseChatModel:
         agent = self.agent_service.get_agent_by_id(agent_id)
