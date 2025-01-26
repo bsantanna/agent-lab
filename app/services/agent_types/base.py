@@ -64,9 +64,7 @@ class AgentBase(ABC):
                 openai_api_key=api_key,
             )
         else:
-            return OllamaEmbeddings(
-                model=language_model.language_model_tag, base_url=api_endpoint
-            )
+            return OllamaEmbeddings(model="phi3", base_url=api_endpoint)
 
     def get_chat_model(self, agent_id) -> BaseChatModel:
         agent = self.agent_service.get_agent_by_id(agent_id)
