@@ -119,6 +119,7 @@ services:
       bash -c '
         echo "CREATE DATABASE agent_lab;" | psql -h postgres -U postgres
         echo "CREATE DATABASE agent_lab_checkpoints;" | psql -h postgres -U postgres
+        echo "CREATE DATABASE agent_lab_vectors;" | psql -h postgres -U postgres
       '
     depends_on:
       postgres:

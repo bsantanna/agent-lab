@@ -5,6 +5,7 @@ from langgraph.graph import add_messages, StateGraph
 from typing import Annotated, List, TypedDict
 
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
+from app.infrastructure.database.vectors import DocumentRepository
 from app.interface.api.messages.schema import MessageRequest
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.base import WorkflowAgent
@@ -32,6 +33,7 @@ class AdaptiveRagAgent(WorkflowAgent):
         language_model_setting_service: LanguageModelSettingService,
         integration_service: IntegrationService,
         graph_persistence_factory: GraphPersistenceFactory,
+        document_repository: DocumentRepository,
     ):
         super().__init__(
             agent_service=agent_service,
@@ -41,6 +43,7 @@ class AdaptiveRagAgent(WorkflowAgent):
             integration_service=integration_service,
             graph_persistence_factory=graph_persistence_factory,
         )
+        self.document_repository = document_repository
 
     def create_default_settings(self, agent_id: str):
         current_dir = Path(__file__).parent

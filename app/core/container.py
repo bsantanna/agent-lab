@@ -14,6 +14,7 @@ from app.domain.repositories.language_models import (
 from app.domain.repositories.messages import MessageRepository
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.sql import Database
+from app.infrastructure.database.vectors import DocumentRepository
 from app.infrastructure.metrics.tracer import Tracer
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.adaptive_rag.agent import AdaptiveRagAgent
@@ -60,6 +61,8 @@ class Container(containers.DeclarativeContainer):
     vault_client = providers.Singleton(
         hvac.Client, url=config.vault.url, token=config.vault.token
     )
+
+    document_repository = providers.Factory(DocumentRepository, db_url=config.db.url)
 
     attachment_repository = providers.Factory(
         AttachmentRepository, session_factory=db.provided.session
@@ -130,6 +133,7 @@ class Container(containers.DeclarativeContainer):
         language_model_setting_service=language_model_setting_service,
         integration_service=integration_service,
         graph_persistence_factory=graph_persistence_factory,
+        document_repository=document_repository,
     )
 
     three_phase_react_agent = providers.Factory(
@@ -140,6 +144,7 @@ class Container(containers.DeclarativeContainer):
         language_model_setting_service=language_model_setting_service,
         integration_service=integration_service,
         graph_persistence_factory=graph_persistence_factory,
+        document_repository=document_repository,
     )
 
     test_echo_agent = providers.Factory(
