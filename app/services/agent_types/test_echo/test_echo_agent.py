@@ -1,3 +1,5 @@
+import hvac
+
 from app.interface.api.messages.schema import MessageRequest, MessageBase
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.base import AgentBase
@@ -15,6 +17,7 @@ class TestEchoAgent(AgentBase):
         language_model_service: LanguageModelService,
         language_model_setting_service: LanguageModelSettingService,
         integration_service: IntegrationService,
+        vault_client: hvac.Client,
     ):
         super().__init__(
             agent_service=agent_service,
@@ -22,6 +25,7 @@ class TestEchoAgent(AgentBase):
             language_model_service=language_model_service,
             language_model_setting_service=language_model_setting_service,
             integration_service=integration_service,
+            vault_client=vault_client,
         )
 
     def create_default_settings(self, agent_id: str):

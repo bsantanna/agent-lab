@@ -132,6 +132,7 @@ class Container(containers.DeclarativeContainer):
         language_model_service=language_model_service,
         language_model_setting_service=language_model_setting_service,
         integration_service=integration_service,
+        vault_client=vault_client,
         graph_persistence_factory=graph_persistence_factory,
         document_repository=document_repository,
     )
@@ -143,6 +144,7 @@ class Container(containers.DeclarativeContainer):
         language_model_service=language_model_service,
         language_model_setting_service=language_model_setting_service,
         integration_service=integration_service,
+        vault_client=vault_client,
         graph_persistence_factory=graph_persistence_factory,
         document_repository=document_repository,
     )
@@ -154,6 +156,7 @@ class Container(containers.DeclarativeContainer):
         language_model_service=language_model_service,
         language_model_setting_service=language_model_setting_service,
         integration_service=integration_service,
+        vault_client=vault_client,
     )
 
     agent_registry = providers.Singleton(

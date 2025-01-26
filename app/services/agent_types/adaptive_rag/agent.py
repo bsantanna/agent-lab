@@ -1,4 +1,6 @@
 from pathlib import Path
+
+import hvac
 from langchain_core.messages import AnyMessage
 from langgraph.graph import add_messages, StateGraph
 
@@ -32,6 +34,7 @@ class AdaptiveRagAgent(WorkflowAgent):
         language_model_service: LanguageModelService,
         language_model_setting_service: LanguageModelSettingService,
         integration_service: IntegrationService,
+        vault_client: hvac.Client,
         graph_persistence_factory: GraphPersistenceFactory,
         document_repository: DocumentRepository,
     ):
@@ -41,6 +44,7 @@ class AdaptiveRagAgent(WorkflowAgent):
             language_model_service=language_model_service,
             language_model_setting_service=language_model_setting_service,
             integration_service=integration_service,
+            vault_client=vault_client,
             graph_persistence_factory=graph_persistence_factory,
         )
         self.document_repository = document_repository
