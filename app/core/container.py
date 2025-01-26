@@ -16,6 +16,7 @@ from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.sql import Database
 from app.infrastructure.metrics.tracer import Tracer
 from app.services.agent_settings import AgentSettingService
+from app.services.agent_types.adaptive_rag.agent import AdaptiveRagAgent
 from app.services.agent_types.registry import AgentRegistry
 from app.services.agent_types.test_echo.test_echo_agent import TestEchoAgent
 from app.services.agent_types.three_phase_react.agent import (
@@ -121,6 +122,16 @@ class Container(containers.DeclarativeContainer):
         language_model_service=language_model_service,
     )
 
+    adaptive_rag_agent = providers.Factory(
+        AdaptiveRagAgent,
+        agent_service=agent_service,
+        agent_setting_service=agent_setting_service,
+        language_model_service=language_model_service,
+        language_model_setting_service=language_model_setting_service,
+        integration_service=integration_service,
+        graph_persistence_factory=graph_persistence_factory,
+    )
+
     three_phase_react_agent = providers.Factory(
         ThreePhaseReactAgent,
         agent_service=agent_service,
@@ -142,6 +153,7 @@ class Container(containers.DeclarativeContainer):
 
     agent_registry = providers.Singleton(
         AgentRegistry,
+        adaptive_rag_agent=adaptive_rag_agent,
         test_echo_agent=test_echo_agent,
         three_phase_react_agent=three_phase_react_agent,
     )
