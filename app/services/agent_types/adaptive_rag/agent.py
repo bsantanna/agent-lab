@@ -69,5 +69,31 @@ class AdaptiveRagAgent(WorkflowAgent):
 
         return workflow_builder
 
+    # def retrieve(self, state):
+    #     """
+    #     Retrieve documents
+
+    #     Args:
+    #         state (dict): The current graph state
+
+    #     Returns:
+    #         state (dict): New key added to state, documents, that contains retrieved documents
+    #     """
+    #     question = state["question"]
+    #     assistant_name = state["assistant_name"]
+    #     instructions = state["instructions"]
+    #     domain = state["domain"]
+    #     hits = vector_store_builder.build(assistant_name).search(
+    #         question,
+    #         search_type="similarity",
+    #     )
+    #     return {
+    #         "documents": hits,  # [doc.page_content for doc in hits],
+    #         "question": question,
+    #         "assistant_name": assistant_name,
+    #         "instructions": instructions,
+    #         "domain": domain,
+    #     }
+
     def get_input_params(self, message_request: MessageRequest):
         return {}

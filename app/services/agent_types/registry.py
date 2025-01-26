@@ -9,7 +9,7 @@ class AgentRegistry:
         three_phase_react_agent: AgentBase,
     ):
         self.registry = {
-            "adaptive_rag_agent": adaptive_rag_agent,
+            "adaptive_rag": adaptive_rag_agent,
             "test_echo": test_echo_agent,
             "three_phase_react": three_phase_react_agent,
         }

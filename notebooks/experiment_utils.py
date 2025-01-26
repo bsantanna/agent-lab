@@ -7,11 +7,12 @@ def print_graph(graph):
     display(Image(graph.get_graph(xray=True).draw_mermaid_png()))
 
 
-def create_ollama_agent(llm_tag: str = "smollm2", agent_type: str = "test_echo") -> str:
-    base_url = "http://localhost"
-    ollama_endpoint = f"{base_url}:11434/v1"
-    agent_lab_endpoint = f"{base_url}:18000"
-
+def create_ollama_agent(
+    llm_tag: str = "smollm2",
+    agent_type: str = "test_echo",
+    agent_lab_endpoint: str = "http://localhost:18000",
+    ollama_endpoint: str = "http://localhost:11434/v1",
+) -> str:
     integration_params = {
         "integration_type": "ollama_api_v1",
         "api_endpoint": ollama_endpoint,
