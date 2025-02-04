@@ -100,7 +100,19 @@ class AdaptiveRagAgent(WorkflowAgent):
         structured_llm_router = llm.with_structured_output(RouteQuery)
         route_prompt = ChatPromptTemplate.from_messages(
             [
-                ("system", preparation_system_prompt),
+                (
+                    "system",
+                    f"""
+                {preparation_system_prompt}
+                No explanation necessary only selection.
+                You are not supposed to answer user query, you are supposed to select *exactly one* of the
+                following items that best match the input query:
+                - "static_data"
+                - "structured_data"
+                - "temporal_data"
+                - "api_data"
+                """,
+                ),
                 ("human", "{query}"),
             ]
         )
@@ -114,7 +126,7 @@ class AdaptiveRagAgent(WorkflowAgent):
         knowledge_base = self.get_query_router(
             chat_model, preparation_system_prompt
         ).invoke({"query": query})
-        return {knowledge_base: knowledge_base}
+        return knowledge_base
 
     def get_hallucination_grader(self, llm):
         # LLM with function call
