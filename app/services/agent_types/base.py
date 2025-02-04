@@ -115,6 +115,7 @@ class AgentBase(ABC):
                 model=language_model.language_model_tag,
                 temperature=temperature_setting,
                 base_url=api_endpoint,
+                format="json",
             )
 
     def read_file_content(self, file_path: str) -> str:

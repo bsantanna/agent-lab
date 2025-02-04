@@ -101,7 +101,7 @@ class AdaptiveRagAgent(WorkflowAgent):
         route_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", preparation_system_prompt),
-                ("human", "{question}"),
+                ("human", "{query}"),
             ]
         )
         return route_prompt | structured_llm_router
@@ -201,14 +201,12 @@ class AdaptiveRagAgent(WorkflowAgent):
 
         return workflow_builder
 
-    def get_rag_chain(self, chat_model):
-        system = """
-        You are an assistant for question-answering tasks. Use the following pieces of retrieved
-        context to answer the question. If you don't know the answer, just say that you don't know.
-        Use three sentences maximum and keep the answer concise.
-        """
+    def get_rag_chain(self, chat_model, execution_system_prompt):
         generate_prompt = ChatPromptTemplate.from_messages(
-            [("system", system), ("human", "Question: {query}\n Context: {context}")]
+            [
+                ("system", execution_system_prompt),
+                ("human", "Question: {query}\n Context: {context}"),
+            ]
         )
         return generate_prompt | chat_model | StrOutputParser()
 
@@ -216,8 +214,9 @@ class AdaptiveRagAgent(WorkflowAgent):
         agent_id = state["agent_id"]
         query = state["query"]
         documents = state["documents"]
+        execution_system_prompt = state["execution_system_prompt"]
         chat_model = self.get_chat_model(agent_id)
-        generation = self.get_rag_chain(chat_model).invoke(
+        generation = self.get_rag_chain(chat_model, execution_system_prompt).invoke(
             {"context": documents, "query": query}
         )
         return {generation: generation}
@@ -291,4 +290,16 @@ class AdaptiveRagAgent(WorkflowAgent):
             return "generate"
 
     def get_input_params(self, message_request: MessageRequest):
-        return {}
+        settings = self.agent_setting_service.get_agent_settings(
+            message_request.agent_id
+        )
+        settings_dict = {
+            setting.setting_key: setting.setting_value for setting in settings
+        }
+
+        return {
+            "agent_id": message_request.agent_id,
+            "query": message_request.message_content,
+            "preparation_system_prompt": settings_dict["preparation_system_prompt"],
+            "execution_system_prompt": settings_dict["execution_system_prompt"],
+        }

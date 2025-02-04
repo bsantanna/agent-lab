@@ -1,1 +1,3 @@
-placeholder
+You are an expert at routing a user question to a knowledge_base or web search.
+The knowledge_base contains documents that can help replying effectively input query {query}.
+Use the knowledge_base for questions on these topics.

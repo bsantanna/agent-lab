@@ -22,7 +22,9 @@ class GradeHallucinations(BaseModel):
 class RouteQuery(BaseModel):
     """Route user query matching the most relevant knowledge_base."""
 
-    knowledge_base: Literal["philosophy", "???", "???"] = Field(
+    knowledge_base: Literal[
+        "synthetic_data", "static_data", "structured_data", "temporal_data", "api_data"
+    ] = Field(
         ...,
         description="Given a user query choose a class matching most appropriate knowledge base.",
     )
