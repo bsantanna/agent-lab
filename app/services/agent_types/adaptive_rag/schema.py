@@ -1,4 +1,4 @@
-from typing import Literal, TypedDict, Annotated
+from typing import TypedDict, Annotated
 
 
 class GradeDocuments(TypedDict):
@@ -19,7 +19,5 @@ class RouteQuery(TypedDict):
     """Route user query matching the most relevant knowledge_base."""
 
     knowledge_base: Annotated[
-        Literal["static_data", "structured_data", "temporal_data", "api_data"],
-        ...,
-        "Given a user query choose a class matching most appropriate knowledge base.",
+        str, ..., "Given a user query choose a most appropriate knowledge base."
     ]

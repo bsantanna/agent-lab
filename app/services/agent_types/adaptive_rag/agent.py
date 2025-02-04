@@ -102,16 +102,7 @@ class AdaptiveRagAgent(WorkflowAgent):
             [
                 (
                     "system",
-                    f"""
-                {preparation_system_prompt}
-                No explanation necessary only selection.
-                You are not supposed to answer user query, you are supposed to select *exactly one* of the
-                following items that best match the input query:
-                - "static_data"
-                - "structured_data"
-                - "temporal_data"
-                - "api_data"
-                """,
+                    f"{preparation_system_prompt}",
                 ),
                 ("human", "{query}"),
             ]
