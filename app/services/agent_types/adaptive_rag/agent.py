@@ -149,9 +149,9 @@ class AdaptiveRagAgent(WorkflowAgent):
         structured_llm_grader = llm.with_structured_output(GradeAnswer)
 
         # Prompt
-        system = """You are a grader assessing whether an answer addresses / resolves a query \n
+        system = """You are a grader assessing whether an answer addresses a query \n
             No explanation necessary. Give a binary score 'yes' or 'no'.
-            Yes' means that the answer resolves the query."""
+            Yes' means that the answer addresses the query."""
         answer_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", system),
@@ -171,6 +171,10 @@ class AdaptiveRagAgent(WorkflowAgent):
         score = self.get_hallucination_grader(chat_model).invoke(
             {"documents": documents, "generation": generation}
         )
+
+        if score is None:
+            score = {"binary_score": "yes"}
+
         grade = score["binary_score"]
 
         # Check hallucination
@@ -179,6 +183,10 @@ class AdaptiveRagAgent(WorkflowAgent):
             score = self.get_answer_grader(chat_model).invoke(
                 {"query": query, "generation": generation}
             )
+
+            if score is None:
+                score = {"binary_score": "yes"}
+
             grade = score["binary_score"]
             if grade == "yes":
                 return "useful"
@@ -279,7 +287,11 @@ class AdaptiveRagAgent(WorkflowAgent):
             score = self.get_retrieval_grader(chat_model).invoke(
                 {"query": query, "document": d.page_content}
             )
+
+            if score is None:
+                score = {"binary_score": "yes"}
             grade = score["binary_score"]
+
             if grade == "yes":
                 filtered_docs.append(d)
             else:
