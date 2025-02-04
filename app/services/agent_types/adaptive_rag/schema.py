@@ -1,6 +1,12 @@
 from typing import TypedDict, Annotated
 
 
+class GradeAnswer(TypedDict):
+    """Binary score to assess answer addresses question."""
+
+    binary_score: Annotated[str, ..., "Answer addresses the question, 'yes' or 'no'"]
+
+
 class GradeDocuments(TypedDict):
     """Binary score for relevance check on retrieved documents."""
 

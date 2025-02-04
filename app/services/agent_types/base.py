@@ -53,7 +53,7 @@ class AgentBase(ABC):
             language_model.integration_id
         )
         secrets = self.vault_client.secrets.kv.read_secret_version(
-            path=f"integration_{integration.id}"
+            path=f"integration_{integration.id}", raise_on_deleted_version=False
         )
         api_endpoint = secrets["data"]["data"]["api_endpoint"]
         api_key = secrets["data"]["data"]["api_key"]
@@ -84,7 +84,7 @@ class AgentBase(ABC):
             language_model.integration_id
         )
         secrets = self.vault_client.secrets.kv.read_secret_version(
-            path=f"integration_{integration.id}"
+            raise_on_deleted_version=False, path=f"integration_{integration.id}"
         )
         api_endpoint = secrets["data"]["data"]["api_endpoint"]
         api_key = secrets["data"]["data"]["api_key"]

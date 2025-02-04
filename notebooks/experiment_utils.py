@@ -1,10 +1,34 @@
+import os
 from uuid import uuid4
 from IPython.display import Image, display
 import requests
+from langchain_community.document_loaders import UnstructuredMarkdownLoader
+from langchain_core.embeddings import Embeddings
+from markitdown import MarkItDown
+
+from app.infrastructure.database.vectors import DocumentRepository
 
 
 def print_graph(graph):
     display(Image(graph.get_graph(xray=True).draw_mermaid_png()))
+
+
+def create_static_document(
+    embeddings_model: Embeddings,
+    document_repository: DocumentRepository,
+    file_path: str,
+):
+    md = MarkItDown()
+    result = md.convert(file_path)
+    md_file_path = f"{file_path}.md"
+    with open(md_file_path, "w") as md_file:
+        md_file.write(result.text_content)
+
+    loader = UnstructuredMarkdownLoader(md_file_path)
+    documents = loader.load_and_split()
+    document_repository.add(embeddings_model, "static_document_data", documents)
+
+    os.remove(md_file_path)
 
 
 def create_ollama_agent(

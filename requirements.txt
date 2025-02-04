@@ -35,4 +35,5 @@ starlette
 testcontainers[ollama]
 testcontainers[postgresql]
 testcontainers[vault]
+unstructured[md]
 uvicorn

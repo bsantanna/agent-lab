@@ -16,6 +16,7 @@ from app.services.agent_types.adaptive_rag.schema import (
     GradeDocuments,
     RouteQuery,
     GradeHallucinations,
+    GradeAnswer,
 )
 from app.services.agent_types.base import WorkflowAgent
 from app.services.agents import AgentService
@@ -81,15 +82,17 @@ class AdaptiveRagAgent(WorkflowAgent):
 
     def get_query_rewriter(self, chat_model):
         system = """
-            You a question re-writer that converts an input question to a better version that is
+            You a query re-writer that converts an input query to a better version that is
             optimized for vectorstore retrieval. Look at the input and try to reason about the underlying
-            semantic intent / meaning."""
+            semantic intent / meaning.
+            No explanation necessary, answer only with adapted version.
+            """
         re_write_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", system),
                 (
                     "human",
-                    "Here is the initial question: \n\n {query} \n Formulate an improved question.",
+                    "Here is the initial query: \n\n {query} \n Formulate an improved query.",
                 ),
             ]
         )
@@ -127,8 +130,8 @@ class AdaptiveRagAgent(WorkflowAgent):
         system = """
         You are a grader assessing whether an LLM generation is grounded in / supported by one or
         more retrieved facts. \n
-        Give a binary score 'yes' or 'no'. 'Yes' means that the answer is grounded in / supported by
-        facts."""
+        No explanation necessary. Give a binary score 'yes' or 'no'.
+        'Yes' means that the answer is grounded in / supported by facts."""
         hallucination_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", system),
@@ -141,6 +144,23 @@ class AdaptiveRagAgent(WorkflowAgent):
 
         return hallucination_prompt | structured_llm_grader
 
+    def get_answer_grader(self, llm):
+        # LLM with function call
+        structured_llm_grader = llm.with_structured_output(GradeAnswer)
+
+        # Prompt
+        system = """You are a grader assessing whether an answer addresses / resolves a query \n
+            No explanation necessary. Give a binary score 'yes' or 'no'.
+            Yes' means that the answer resolves the query."""
+        answer_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", system),
+                ("human", "User query: \n\n {query} \n\n LLM generation: {generation}"),
+            ]
+        )
+
+        return answer_prompt | structured_llm_grader
+
     def grade_generation_v_documents_and_question(self, state: AgentState):
         agent_id = state["agent_id"]
         query = state["query"]
@@ -151,7 +171,7 @@ class AdaptiveRagAgent(WorkflowAgent):
         score = self.get_hallucination_grader(chat_model).invoke(
             {"documents": documents, "generation": generation}
         )
-        grade = score.binary_score
+        grade = score["binary_score"]
 
         # Check hallucination
         if grade == "yes":
@@ -159,7 +179,7 @@ class AdaptiveRagAgent(WorkflowAgent):
             score = self.get_answer_grader(chat_model).invoke(
                 {"query": query, "generation": generation}
             )
-            grade = score.binary_score
+            grade = score["binary_score"]
             if grade == "yes":
                 return "useful"
             else:
@@ -191,7 +211,7 @@ class AdaptiveRagAgent(WorkflowAgent):
                 "generate": "generate",
             },
         )
-        workflow_builder.add_edge("transform_query", "retrieve")
+        workflow_builder.add_edge("transform_query", "determine_knowledge_base")
         workflow_builder.add_conditional_edges(
             "generate",
             self.grade_generation_v_documents_and_question,
@@ -222,25 +242,26 @@ class AdaptiveRagAgent(WorkflowAgent):
         generation = self.get_rag_chain(chat_model, execution_system_prompt).invoke(
             {"context": documents, "query": query}
         )
-        return {generation: generation}
+        return {"generation": generation}
 
     def get_retrieval_grader(self, chat_model):
         # LLM with function call
         structured_llm_grader = chat_model.with_structured_output(GradeDocuments)
 
         # Prompt
-        system = """You are a grader assessing relevance of a retrieved document to a user question. \n
-            If the document contains keyword(s) or semantic meaning related to the user question,
+        system = """You are a grader assessing relevance of a retrieved document to a user query. \n
+            If the document contains keyword(s) or semantic meaning related to the user query,
             grade it as relevant. \n
             It does not need to be a stringent test. The goal is to filter out erroneous retrievals. \n
-            Give a binary score 'yes' or 'no' score to indicate whether the document is relevant to
-            the question."""
+            You are not supposed to answer user query, you are supposed to select *exactly one* of the
+            items in binary score 'yes' or 'no' score to indicate whether the document is relevant to
+            the query."""
         grade_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", system),
                 (
                     "human",
-                    "Retrieved document: \n\n {document} \n\n User question: {question}",
+                    "Retrieved document: \n\n {document} \n\n User query: {query}",
                 ),
             ]
         )
@@ -258,7 +279,7 @@ class AdaptiveRagAgent(WorkflowAgent):
             score = self.get_retrieval_grader(chat_model).invoke(
                 {"query": query, "document": d.page_content}
             )
-            grade = score.binary_score
+            grade = score["binary_score"]
             if grade == "yes":
                 filtered_docs.append(d)
             else:
@@ -280,7 +301,7 @@ class AdaptiveRagAgent(WorkflowAgent):
         query = state["query"]
         chat_model = self.get_chat_model(agent_id)
         better_query = self.get_query_rewriter(chat_model).invoke({"query": query})
-        return {query: better_query}
+        return {"query": better_query}
 
     def decide_to_generate(self, state: AgentState):
         filtered_documents = state["documents"]
