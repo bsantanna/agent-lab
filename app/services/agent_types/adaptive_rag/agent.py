@@ -15,7 +15,6 @@ from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.adaptive_rag.schema import (
     GradeDocuments,
     RouteQuery,
-    GradeHallucinations,
     GradeAnswer,
 )
 from app.services.agent_types.base import WorkflowAgent
@@ -82,11 +81,12 @@ class AdaptiveRagAgent(WorkflowAgent):
 
     def get_query_rewriter(self, chat_model):
         system = """
-            You a query re-writer that converts an input query to a better version that is
-            optimized for vectorstore retrieval. Look at the input and try to reason about the underlying
-            semantic intent / meaning.
-            No explanation necessary, answer only with adapted version.
-            """
+        You a query re-writer that converts an input query to a better version that is
+        optimized for vectorstore retrieval. Look at the input and try to reason about the underlying
+        semantic intent / meaning.
+        No explanation necessary, answer only with adapted version.
+        """
+
         re_write_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", system),
@@ -122,36 +122,17 @@ class AdaptiveRagAgent(WorkflowAgent):
         ).invoke({"query": query})
         return knowledge_base
 
-    def get_hallucination_grader(self, llm):
-        # LLM with function call
-        structured_llm_grader = llm.with_structured_output(GradeHallucinations)
-
-        # Prompt
-        system = """
-        You are a grader assessing whether an LLM generation is grounded in / supported by one or
-        more retrieved facts. \n
-        No explanation necessary. Give a binary score 'yes' or 'no'.
-        'Yes' means that the answer is grounded in / supported by facts."""
-        hallucination_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", system),
-                (
-                    "human",
-                    "Set of facts: \n\n {documents} \n\n LLM generation: {generation}",
-                ),
-            ]
-        )
-
-        return hallucination_prompt | structured_llm_grader
-
     def get_answer_grader(self, llm):
         # LLM with function call
         structured_llm_grader = llm.with_structured_output(GradeAnswer)
 
         # Prompt
-        system = """You are a grader assessing whether an answer addresses a query \n
-            No explanation necessary. Give a binary score 'yes' or 'no'.
-            Yes' means that the answer addresses the query."""
+        system = """
+        You are a grader assessing whether an answer addresses or resolves the given query \n
+        No explanation necessary. Give a binary score 'yes' or 'no'.
+        'yes' means that the answer is helpful.
+        Answer must be *exactly one* of the values 'yes' or 'no'.
+        """
         answer_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", system),
@@ -165,35 +146,21 @@ class AdaptiveRagAgent(WorkflowAgent):
         agent_id = state["agent_id"]
         query = state["query"]
         chat_model = self.get_chat_model(agent_id)
-        documents = state["documents"]
         generation = state["generation"]
 
-        score = self.get_hallucination_grader(chat_model).invoke(
-            {"documents": documents, "generation": generation}
+        # Check question-answering
+        score = self.get_answer_grader(chat_model).invoke(
+            {"query": query, "generation": generation}
         )
 
-        if score is None:
-            score = {"binary_score": "yes"}
-
-        grade = score["binary_score"]
-
-        # Check hallucination
-        if grade == "yes":
-            # Check question-answering
-            score = self.get_answer_grader(chat_model).invoke(
-                {"query": query, "generation": generation}
-            )
-
-            if score is None:
-                score = {"binary_score": "yes"}
-
+        grade = None
+        if score is not None:
             grade = score["binary_score"]
-            if grade == "yes":
-                return "useful"
-            else:
-                return "not useful"
-        else:
-            return "not supported"
+
+        if grade == "yes":
+            return "useful"
+
+        return "not useful"
 
     def get_workflow_builder(self, agent_id: str):
         workflow_builder = StateGraph(AgentState)
@@ -224,11 +191,11 @@ class AdaptiveRagAgent(WorkflowAgent):
             "generate",
             self.grade_generation_v_documents_and_question,
             {
-                "not supported": "generate",
                 "useful": END,
                 "not useful": "transform_query",
             },
         )
+        # workflow_builder.add_edge("generate",END)
 
         return workflow_builder
 
@@ -236,7 +203,7 @@ class AdaptiveRagAgent(WorkflowAgent):
         generate_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", execution_system_prompt),
-                ("human", "Question: {query}\n Context: {context}"),
+                ("human", "Query: {query}\n Context: {context}"),
             ]
         )
         return generate_prompt | chat_model | StrOutputParser()
@@ -257,13 +224,16 @@ class AdaptiveRagAgent(WorkflowAgent):
         structured_llm_grader = chat_model.with_structured_output(GradeDocuments)
 
         # Prompt
-        system = """You are a grader assessing relevance of a retrieved document to a user query. \n
-            If the document contains keyword(s) or semantic meaning related to the user query,
-            grade it as relevant. \n
-            It does not need to be a stringent test. The goal is to filter out erroneous retrievals. \n
-            You are not supposed to answer user query, you are supposed to select *exactly one* of the
-            items in binary score 'yes' or 'no' score to indicate whether the document is relevant to
-            the query."""
+        system = """
+        You are a grader assessing relevance of a retrieved document to a user query. \n
+        Document can be of general nature like books, presentations, structural data, backend api data, etc.
+        If the document contains information related to the user query, grade it as relevant. \n
+        It does not need to be a stringent test. The goal is to filter out erroneous retrievals. \n
+        You are not supposed to answer user query, only filter documents for further analysis.
+        Give a binary score 'yes' or 'no' score to indicate whether the document is relevant to the query.
+        Answer must be *exactly one* of the values 'yes' or 'no'.
+        """
+
         grade_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", system),
@@ -288,9 +258,9 @@ class AdaptiveRagAgent(WorkflowAgent):
                 {"query": query, "document": d.page_content}
             )
 
-            if score is None:
-                score = {"binary_score": "yes"}
-            grade = score["binary_score"]
+            grade = None
+            if score is not None:
+                grade = score["binary_score"]
 
             if grade == "yes":
                 filtered_docs.append(d)
@@ -304,7 +274,10 @@ class AdaptiveRagAgent(WorkflowAgent):
         knowledge_base = state["knowledge_base"]
         embeddings = self.get_embeddings_model(agent_id)
         documents = self.document_repository.search(
-            embeddings_model=embeddings, collection_name=knowledge_base, query=query
+            embeddings_model=embeddings,
+            collection_name=knowledge_base,
+            query=query,
+            size=1,
         )
         return {"documents": documents}
 

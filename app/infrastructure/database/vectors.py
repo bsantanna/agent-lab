@@ -20,9 +20,15 @@ class DocumentRepository:
         vector_store = self.get_vector_store(embeddings_model, collection_name)
         vector_store.add_documents(documents)
 
-    def search(self, embeddings_model: Embeddings, collection_name: str, query: str):
+    def search(
+        self,
+        embeddings_model: Embeddings,
+        collection_name: str,
+        query: str,
+        size: int = 5,
+    ):
         vector_store = self.get_vector_store(embeddings_model, collection_name)
-        return vector_store.search(query, self.search_type, k=10)
+        return vector_store.search(query, self.search_type, k=size)
 
     def get_vector_store(
         self,

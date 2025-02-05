@@ -34,7 +34,7 @@ def create_static_document(
 def create_ollama_agent(
     llm_tag: str = "smollm2",
     agent_type: str = "test_echo",
-    agent_lab_endpoint: str = "http://localhost:18000",
+    agent_lab_endpoint: str = "http://localhost:8000",
     ollama_endpoint: str = "http://localhost:11434/v1",
 ) -> str:
     integration_params = {
