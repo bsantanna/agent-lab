@@ -4,6 +4,7 @@ from IPython.display import Image, display
 import requests
 from langchain_community.document_loaders import UnstructuredMarkdownLoader
 from langchain_core.embeddings import Embeddings
+from langchain_text_splitters import CharacterTextSplitter
 from markitdown import MarkItDown
 
 from app.infrastructure.database.vectors import DocumentRepository
@@ -25,7 +26,9 @@ def create_static_document(
         md_file.write(result.text_content)
 
     loader = UnstructuredMarkdownLoader(md_file_path)
-    documents = loader.load_and_split()
+    documents = loader.load_and_split(
+        CharacterTextSplitter(chunk_size=512, chunk_overlap=64)
+    )
     document_repository.add(embeddings_model, "static_document_data", documents)
 
     os.remove(md_file_path)

@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Annotated, List, TypedDict
 
 import hvac
+from langchain_core.documents import Document
 from langchain_core.messages import AnyMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
@@ -22,6 +23,7 @@ from app.services.agents import AgentService
 from app.services.integrations import IntegrationService
 from app.services.language_model_settings import LanguageModelSettingService
 from app.services.language_models import LanguageModelService
+from app.services.messages import MessageService
 
 
 class AgentState(TypedDict):
@@ -45,6 +47,7 @@ class AdaptiveRagAgent(WorkflowAgent):
         integration_service: IntegrationService,
         vault_client: hvac.Client,
         graph_persistence_factory: GraphPersistenceFactory,
+        message_service: MessageService,
         document_repository: DocumentRepository,
     ):
         super().__init__(
@@ -56,6 +59,7 @@ class AdaptiveRagAgent(WorkflowAgent):
             vault_client=vault_client,
             graph_persistence_factory=graph_persistence_factory,
         )
+        self.message_service = message_service
         self.document_repository = document_repository
 
     def create_default_settings(self, agent_id: str):
@@ -195,7 +199,6 @@ class AdaptiveRagAgent(WorkflowAgent):
                 "not useful": "transform_query",
             },
         )
-        # workflow_builder.add_edge("generate",END)
 
         return workflow_builder
 
@@ -227,7 +230,7 @@ class AdaptiveRagAgent(WorkflowAgent):
         system = """
         You are a grader assessing relevance of a retrieved document to a user query. \n
         Document can be of general nature like books, presentations, structural data, backend api data, etc.
-        If the document contains information related to the user query, grade it as relevant. \n
+        If the document can support a solution to the user query, grade it as relevant. \n
         It does not need to be a stringent test. The goal is to filter out erroneous retrievals. \n
         You are not supposed to answer user query, only filter documents for further analysis.
         Give a binary score 'yes' or 'no' score to indicate whether the document is relevant to the query.
@@ -272,13 +275,22 @@ class AdaptiveRagAgent(WorkflowAgent):
         agent_id = state["agent_id"]
         query = state["query"]
         knowledge_base = state["knowledge_base"]
-        embeddings = self.get_embeddings_model(agent_id)
-        documents = self.document_repository.search(
-            embeddings_model=embeddings,
-            collection_name=knowledge_base,
-            query=query,
-            size=1,
-        )
+
+        if knowledge_base == "previous_conversations":
+            messages = self.message_service.get_messages(agent_id)
+            documents = [
+                Document(page_content=message.message_content) for message in messages
+            ]
+
+        else:
+            embeddings = self.get_embeddings_model(agent_id)
+            documents = self.document_repository.search(
+                embeddings_model=embeddings,
+                collection_name=knowledge_base,
+                query=query,
+                size=3,
+            )
+
         return {"documents": documents}
 
     def transform_query(self, state: AgentState):

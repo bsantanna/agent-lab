@@ -125,6 +125,17 @@ class Container(containers.DeclarativeContainer):
         language_model_service=language_model_service,
     )
 
+    message_repository = providers.Factory(
+        MessageRepository, session_factory=db.provided.session
+    )
+
+    message_service = providers.Factory(
+        MessageService,
+        message_repository=message_repository,
+        agent_service=agent_service,
+        attachment_service=attachment_service,
+    )
+
     adaptive_rag_agent = providers.Factory(
         AdaptiveRagAgent,
         agent_service=agent_service,
@@ -134,6 +145,7 @@ class Container(containers.DeclarativeContainer):
         integration_service=integration_service,
         vault_client=vault_client,
         graph_persistence_factory=graph_persistence_factory,
+        message_service=message_service,
         document_repository=document_repository,
     )
 
@@ -146,6 +158,7 @@ class Container(containers.DeclarativeContainer):
         integration_service=integration_service,
         vault_client=vault_client,
         graph_persistence_factory=graph_persistence_factory,
+        message_service=message_service,
         document_repository=document_repository,
     )
 
@@ -164,17 +177,6 @@ class Container(containers.DeclarativeContainer):
         adaptive_rag_agent=adaptive_rag_agent,
         test_echo_agent=test_echo_agent,
         three_phase_react_agent=three_phase_react_agent,
-    )
-
-    message_repository = providers.Factory(
-        MessageRepository, session_factory=db.provided.session
-    )
-
-    message_service = providers.Factory(
-        MessageService,
-        message_repository=message_repository,
-        agent_service=agent_service,
-        attachment_service=attachment_service,
     )
 
     tracer = providers.Singleton(Tracer)
