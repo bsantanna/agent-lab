@@ -71,12 +71,12 @@ def test_config(request):
             "sh",
             "-c",
             f"""
-    {main_db_command} &&
-    {checkpoints_db_command} &&
-    {vectors_db_command} &&
-    {copy_dump_command} &&
-    {restore_dump_command}
-    """,
+            {main_db_command} &&
+            {checkpoints_db_command} &&
+            {vectors_db_command} &&
+            {copy_dump_command} &&
+            {restore_dump_command}
+            """,
         ]
     )
 

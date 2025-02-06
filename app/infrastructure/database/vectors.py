@@ -9,7 +9,7 @@ from langchain_postgres import PGVector
 class DocumentRepository:
     def __init__(self, db_url: str):
         self.search_type = "similarity"
-        self.db_url = f"{db_url}_vectors"
+        self.db_url = f"{db_url}"
 
     def add(
         self,

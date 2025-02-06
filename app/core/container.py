@@ -62,7 +62,9 @@ class Container(containers.DeclarativeContainer):
         hvac.Client, url=config.vault.url, token=config.vault.token
     )
 
-    document_repository = providers.Factory(DocumentRepository, db_url=config.db.url)
+    document_repository = providers.Factory(
+        DocumentRepository, db_url=config.db.vectors
+    )
 
     attachment_repository = providers.Factory(
         AttachmentRepository, session_factory=db.provided.session
