@@ -20,7 +20,7 @@ postgres = (
         image="pgvector/pgvector:pg16", username="postgres", password="postgres"
     )
     .with_bind_ports(container=5432, host=15432)
-    .with_volume_mapping(f"{Path.cwd()}/tests/integration","/mnt/integration")
+    .with_volume_mapping(f"{Path.cwd()}/tests/integration", "/mnt/integration")
 )
 vault = (
     VaultContainer("hashicorp/vault:1.18.1")
@@ -57,14 +57,27 @@ def test_config(request):
     psql_command = "PGPASSWORD='postgres' psql --username postgres --host 127.0.0.1"
     create_database_command = f"{psql_command} -c 'create database ?;'"
     main_db_command = create_database_command.replace("?", "agent_lab")
-    checkpoints_db_command = create_database_command.replace("?", "agent_lab_checkpoints")
+    checkpoints_db_command = create_database_command.replace(
+        "?", "agent_lab_checkpoints"
+    )
     vectors_db_command = create_database_command.replace("?", "agent_lab_vectors")
     copy_dump_command = "cp /mnt/integration/pgvector_dump.sql.gz /tmp/ && gunzip /tmp/pgvector_dump.sql.gz"
-    restore_dump_command = f"{psql_command} -d agent_lab_vectors < /tmp/pgvector_dump.sql"
-    postgres.exec(["sh", "-c", main_db_command])
-    postgres.exec(["sh", "-c", checkpoints_db_command])
-    postgres.exec(["sh", "-c", vectors_db_command])
-    postgres.exec(["sh", "-c", copy_dump_command])
-    postgres.exec(["sh", "-c", restore_dump_command])
+    restore_dump_command = (
+        f"{psql_command} -d agent_lab_vectors < /tmp/pgvector_dump.sql"
+    )
+
+    postgres.exec(
+        [
+            "sh",
+            "-c",
+            f"""
+    {main_db_command} &&
+    {checkpoints_db_command} &&
+    {vectors_db_command} &&
+    {copy_dump_command} &&
+    {restore_dump_command}
+    """,
+        ]
+    )
 
     yield
