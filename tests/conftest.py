@@ -15,10 +15,13 @@ ollama = OllamaContainer(ollama_home=f"{Path.home()}/.ollama").with_bind_ports(
     container=11434, host=21434
 )
 
-postgres = PostgresContainer(
-    image="pgvector/pgvector:pg16", username="postgres", password="postgres"
-).with_bind_ports(container=5432, host=15432)
-
+postgres = (
+    PostgresContainer(
+        image="pgvector/pgvector:pg16", username="postgres", password="postgres"
+    )
+    .with_bind_ports(container=5432, host=15432)
+    .with_volume_mapping(f"{Path.cwd()}/tests/integration","/mnt/integration")
+)
 vault = (
     VaultContainer("hashicorp/vault:1.18.1")
     .with_bind_ports(container=8200, host=18200)
@@ -51,18 +54,17 @@ def test_config(request):
         ollama.pull_model(llm_tag)
 
     # setup databases
-    create_database_command = "PGPASSWORD='postgres' psql --username postgres --host 127.0.0.1 -c 'create database ?;'"
-    main_db_create_command = create_database_command.replace("?", "agent_lab")
-    postgres.exec(["sh", "-c", main_db_create_command])
-
-    checkpoints_db_create_command = create_database_command.replace(
-        "?", "agent_lab_checkpoints"
-    )
-    postgres.exec(["sh", "-c", checkpoints_db_create_command])
-
-    vectors_db_create_command = create_database_command.replace(
-        "?", "agent_lab_vectors"
-    )
-    postgres.exec(["sh", "-c", vectors_db_create_command])
+    psql_command = "PGPASSWORD='postgres' psql --username postgres --host 127.0.0.1"
+    create_database_command = f"{psql_command} -c 'create database ?;'"
+    main_db_command = create_database_command.replace("?", "agent_lab")
+    checkpoints_db_command = create_database_command.replace("?", "agent_lab_checkpoints")
+    vectors_db_command = create_database_command.replace("?", "agent_lab_vectors")
+    copy_dump_command = "cp /mnt/integration/pgvector_dump.sql.gz /tmp/ && gunzip /tmp/pgvector_dump.sql.gz"
+    restore_dump_command = f"{psql_command} -d agent_lab_vectors < /tmp/pgvector_dump.sql"
+    postgres.exec(["sh", "-c", main_db_command])
+    postgres.exec(["sh", "-c", checkpoints_db_command])
+    postgres.exec(["sh", "-c", vectors_db_command])
+    postgres.exec(["sh", "-c", copy_dump_command])
+    postgres.exec(["sh", "-c", restore_dump_command])
 
     yield
