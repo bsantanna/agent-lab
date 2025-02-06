@@ -18,6 +18,7 @@ services:
 
   data-prepper:
     image: opensearchproject/data-prepper:latest
+    #image: opensearch-data-prepper:2.11.0-SNAPSHOT # https://github.com/opensearch-project/data-prepper/blob/main/docs/developer_guide.md#building-the-docker-image
     networks:
       - agent-lab
     ports:
@@ -35,6 +36,7 @@ services:
       - ./otel/dataprepper/pipelines.yml:/usr/share/data-prepper/pipelines/pipelines.yaml
       - ./otel/dataprepper/config.yml:/usr/share/data-prepper/config/data-prepper-config.yaml
     depends_on:
+      - opensearch
       - opensearch-dashboards
 
   opensearch:
