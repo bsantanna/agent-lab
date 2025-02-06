@@ -60,4 +60,9 @@ def test_config(request):
     )
     postgres.exec(["sh", "-c", checkpoints_db_create_command])
 
+    vectors_db_create_command = create_database_command.replace(
+        "?", "agent_lab_vectors"
+    )
+    postgres.exec(["sh", "-c", vectors_db_create_command])
+
     yield
