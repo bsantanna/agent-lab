@@ -5,6 +5,7 @@ hvac
 isort
 langchain
 langchain-anthropic
+langchain-community
 langchain-core
 langchain-ollama
 langchain-openai
