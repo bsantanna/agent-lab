@@ -16,10 +16,7 @@ ollama = OllamaContainer(ollama_home=f"{Path.home()}/.ollama").with_bind_ports(
 )
 
 postgres = PostgresContainer(
-    image="pgvector/pgvector:pg16",
-    username="postgres",
-    password="postgres",
-    dbname="agent_lab_checkpoints",
+    image="pgvector/pgvector:pg16", username="postgres", password="postgres"
 ).with_bind_ports(container=5432, host=15432)
 
 vault = (
@@ -52,5 +49,15 @@ def test_config(request):
     if llm_tag not in [e["name"] for e in ollama.list_models()]:
         print(f"Pulling {llm_tag} model")
         ollama.pull_model(llm_tag)
+
+    # setup databases
+    create_database_command = "PGPASSWORD='postgres' psql --username postgres --host 127.0.0.1 -c 'create database ?;'"
+    main_db_create_command = create_database_command.replace("?", "agent_lab")
+    postgres.exec(["sh", "-c", main_db_create_command])
+
+    checkpoints_db_create_command = create_database_command.replace(
+        "?", "agent_lab_checkpoints"
+    )
+    postgres.exec(["sh", "-c", checkpoints_db_create_command])
 
     yield
