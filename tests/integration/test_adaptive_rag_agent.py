@@ -63,8 +63,8 @@ class TestAdaptiveRagAgent:
         # given
         message_content = (
             "You have access to this book 'The Art of War - Sun Tzu' available at static_document_data, "
-            "I want to ask you to summarize in one sentence how a military commander can succeed in "
-            "battle, it does not need to be an extensive list just one or two remarks are sufficient."
+            "I want to ask you to summarize in one sentence what is the pinnacle of excellence, "
+            "it does not need to be an extensive list, a few remarks are sufficient, with excerpts from the book. "
         )
 
         # when
