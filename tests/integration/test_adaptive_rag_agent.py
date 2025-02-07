@@ -61,7 +61,11 @@ class TestAdaptiveRagAgent:
     @pytest.mark.asyncio
     async def test_post_message(self, client):
         # given
-        message_content = "Mention a few takeaways from static_document_data."
+        message_content = (
+            "You have access to this book 'The Art of War - Sun Tzu' available at static_document_data, "
+            "I want to ask you to summarize in one sentence how a military commander can succeed in "
+            "battle, it does not need to be an extensive list just one or two remarks are sufficient."
+        )
 
         # when
         create_message_response = self._create_message(client, message_content)
