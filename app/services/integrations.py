@@ -1,4 +1,4 @@
-from typing import Iterator
+from typing_extensions import Iterator
 
 from app.domain.models import Integration
 from app.domain.repositories.integrations import IntegrationRepository

@@ -1,4 +1,4 @@
-from typing import List
+from typing_extensions import List
 
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings

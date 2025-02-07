@@ -1,3 +1,4 @@
+import os
 from uuid import uuid4
 
 import pytest
@@ -17,7 +18,7 @@ class TestAdaptiveRagAgent:
         response = client.post(
             url="/integrations/create",
             json={
-                "api_endpoint": "http://localhost:21434",
+                "api_endpoint": os.environ["OLLAMA_ENDPOINT"],
                 "api_key": "ollama",
                 "integration_type": "ollama_api_v1",
             },
@@ -29,7 +30,7 @@ class TestAdaptiveRagAgent:
             url="/llms/create",
             json={
                 "integration_id": integration_id,
-                "language_model_tag": "qwen2.5:1.5b",
+                "language_model_tag": os.environ["OLLAMA_MODEL"],
             },
         )
         language_model_id = response_2.json()["id"]
@@ -57,16 +58,15 @@ class TestAdaptiveRagAgent:
             },
         )
 
-    # @pytest.mark.asyncio
-    # async def test_post_message(self, client):
-    # given
-    # message_content = "What is the title of the book?"
+    @pytest.mark.asyncio
+    async def test_post_message(self, client):
+        # given
+        message_content = "Mention a few takeaways from static_document_data."
 
-    # when
-    # create_message_response = self._create_message(client, message_content)
+        # when
+        create_message_response = self._create_message(client, message_content)
 
-    # # then
-    # assert create_message_response.status_code == 200
-    # assert "id" in create_message_response.json()
-    # assert "assistant" == create_message_response.json()["message_role"]
-    # assert create_message_response.json()["message_content"].lowercase().contains("war")
+        # then
+        assert create_message_response.status_code == 200
+        assert "id" in create_message_response.json()
+        assert "assistant" == create_message_response.json()["message_role"]

@@ -141,15 +141,6 @@ services:
     entrypoint: vault server -dev
 
 
-  ollama:
-    image: ollama/ollama:latest
-    networks:
-      - agent-lab
-    ports:
-      - "11434:11434"
-    volumes:
-      - ${HOME}/.ollama:/root/.ollama
-
 networks:
   agent-lab:
     name: agent-lab

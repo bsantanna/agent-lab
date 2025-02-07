@@ -1,4 +1,4 @@
-from typing import TypedDict, Annotated
+from typing_extensions import TypedDict, Annotated
 
 
 class GradeAnswer(TypedDict):

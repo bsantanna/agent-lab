@@ -1,4 +1,4 @@
-from typing import List
+from typing_extensions import List
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Body, Depends, Response, status

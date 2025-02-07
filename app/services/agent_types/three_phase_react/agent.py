@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import TypedDict, List, Annotated
+from typing_extensions import TypedDict, List, Annotated
 
 import hvac
 from langchain_core.messages import AnyMessage

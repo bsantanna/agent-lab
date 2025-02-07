@@ -1,4 +1,4 @@
-from typing import Iterator
+from typing_extensions import Iterator
 
 from app.domain.models import AgentSetting
 from app.domain.repositories.agents import AgentSettingRepository

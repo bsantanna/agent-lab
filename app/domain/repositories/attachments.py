@@ -1,6 +1,6 @@
 from contextlib import AbstractContextManager
 from datetime import datetime
-from typing import Callable
+from typing_extensions import Callable
 from uuid import uuid4
 
 from sqlalchemy.orm import Session

@@ -1,4 +1,4 @@
-from typing import Iterator
+from typing_extensions import Iterator
 
 from app.domain.exceptions.base import InvalidFieldError
 from app.domain.models import LanguageModel
