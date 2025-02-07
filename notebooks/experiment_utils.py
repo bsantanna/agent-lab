@@ -34,18 +34,9 @@ def create_static_document(
     os.remove(md_file_path)
 
 
-def create_ollama_agent(
-    llm_tag: str = "smollm2",
-    agent_type: str = "test_echo",
-    agent_lab_endpoint: str = "http://localhost:8000",
-    ollama_endpoint: str = "http://localhost:11434/v1",
-) -> str:
-    integration_params = {
-        "integration_type": "ollama_api_v1",
-        "api_endpoint": ollama_endpoint,
-        "api_key": "ollama",
-    }
-
+def create_agent_with_integration(
+    llm_tag: str, agent_type: str, agent_lab_endpoint: str, integration_params: dict
+):
     integration_response = requests.post(
         f"{agent_lab_endpoint}/integrations/create", json=integration_params
     )
@@ -74,3 +65,37 @@ def create_ollama_agent(
     agent_result = agent_response.json()
 
     return agent_result["id"]
+
+
+def create_ollama_agent(
+    llm_tag: str = "smollm2",
+    agent_type: str = "test_echo",
+    agent_lab_endpoint: str = "http://localhost:18000",
+    ollama_endpoint: str = "http://localhost:11434/v1",
+) -> str:
+    integration_params = {
+        "integration_type": "ollama_api_v1",
+        "api_endpoint": ollama_endpoint,
+        "api_key": "ollama",
+    }
+
+    return create_agent_with_integration(
+        llm_tag, agent_type, agent_lab_endpoint, integration_params
+    )
+
+
+def create_xai_agent(
+    llm_tag: str = "grok-2-latest",
+    agent_type: str = "test_echo",
+    agent_lab_endpoint: str = "http://localhost:18000",
+    api_key: str = "",
+) -> str:
+    integration_params = {
+        "integration_type": "xai_api_v1",
+        "api_endpoint": "https://api.x.ai/v1/",
+        "api_key": api_key,
+    }
+
+    return create_agent_with_integration(
+        llm_tag, agent_type, agent_lab_endpoint, integration_params
+    )
