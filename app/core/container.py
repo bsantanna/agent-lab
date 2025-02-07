@@ -14,8 +14,10 @@ from app.domain.repositories.language_models import (
 from app.domain.repositories.messages import MessageRepository
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.sql import Database
+from app.infrastructure.database.vectors import DocumentRepository
 from app.infrastructure.metrics.tracer import Tracer
 from app.services.agent_settings import AgentSettingService
+from app.services.agent_types.adaptive_rag.agent import AdaptiveRagAgent
 from app.services.agent_types.registry import AgentRegistry
 from app.services.agent_types.test_echo.test_echo_agent import TestEchoAgent
 from app.services.agent_types.three_phase_react.agent import (
@@ -58,6 +60,10 @@ class Container(containers.DeclarativeContainer):
 
     vault_client = providers.Singleton(
         hvac.Client, url=config.vault.url, token=config.vault.token
+    )
+
+    document_repository = providers.Factory(
+        DocumentRepository, db_url=config.db.vectors
     )
 
     attachment_repository = providers.Factory(
@@ -121,31 +127,6 @@ class Container(containers.DeclarativeContainer):
         language_model_service=language_model_service,
     )
 
-    three_phase_react_agent = providers.Factory(
-        ThreePhaseReactAgent,
-        agent_service=agent_service,
-        agent_setting_service=agent_setting_service,
-        language_model_service=language_model_service,
-        language_model_setting_service=language_model_setting_service,
-        integration_service=integration_service,
-        graph_persistence_factory=graph_persistence_factory,
-    )
-
-    test_echo_agent = providers.Factory(
-        TestEchoAgent,
-        agent_service=agent_service,
-        agent_setting_service=agent_setting_service,
-        language_model_service=language_model_service,
-        language_model_setting_service=language_model_setting_service,
-        integration_service=integration_service,
-    )
-
-    agent_registry = providers.Singleton(
-        AgentRegistry,
-        test_echo_agent=test_echo_agent,
-        three_phase_react_agent=three_phase_react_agent,
-    )
-
     message_repository = providers.Factory(
         MessageRepository, session_factory=db.provided.session
     )
@@ -155,6 +136,49 @@ class Container(containers.DeclarativeContainer):
         message_repository=message_repository,
         agent_service=agent_service,
         attachment_service=attachment_service,
+    )
+
+    adaptive_rag_agent = providers.Factory(
+        AdaptiveRagAgent,
+        agent_service=agent_service,
+        agent_setting_service=agent_setting_service,
+        language_model_service=language_model_service,
+        language_model_setting_service=language_model_setting_service,
+        integration_service=integration_service,
+        vault_client=vault_client,
+        graph_persistence_factory=graph_persistence_factory,
+        message_service=message_service,
+        document_repository=document_repository,
+    )
+
+    three_phase_react_agent = providers.Factory(
+        ThreePhaseReactAgent,
+        agent_service=agent_service,
+        agent_setting_service=agent_setting_service,
+        language_model_service=language_model_service,
+        language_model_setting_service=language_model_setting_service,
+        integration_service=integration_service,
+        vault_client=vault_client,
+        graph_persistence_factory=graph_persistence_factory,
+        message_service=message_service,
+        document_repository=document_repository,
+    )
+
+    test_echo_agent = providers.Factory(
+        TestEchoAgent,
+        agent_service=agent_service,
+        agent_setting_service=agent_setting_service,
+        language_model_service=language_model_service,
+        language_model_setting_service=language_model_setting_service,
+        integration_service=integration_service,
+        vault_client=vault_client,
+    )
+
+    agent_registry = providers.Singleton(
+        AgentRegistry,
+        adaptive_rag_agent=adaptive_rag_agent,
+        test_echo_agent=test_echo_agent,
+        three_phase_react_agent=three_phase_react_agent,
     )
 
     tracer = providers.Singleton(Tracer)

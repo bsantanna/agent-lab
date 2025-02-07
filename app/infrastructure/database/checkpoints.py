@@ -11,6 +11,7 @@ class GraphPersistenceFactory:
         }
 
         self.pool = ConnectionPool(
+            open=True,
             conninfo=db_checkpoints,
             max_size=20,
             kwargs=self.connection_kwargs,

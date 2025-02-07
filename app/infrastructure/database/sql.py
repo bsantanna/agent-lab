@@ -2,7 +2,7 @@
 
 import logging
 from contextlib import AbstractContextManager, contextmanager
-from typing import Callable
+from typing_extensions import Callable
 
 from sqlalchemy import create_engine, orm
 from sqlalchemy.orm import Session, declarative_base
@@ -14,7 +14,7 @@ Base = declarative_base()
 
 class Database:
     def __init__(self, db_url: str) -> None:
-        self.engine = create_engine(db_url, echo=True)
+        self.engine = create_engine(db_url)
         self.session_factory = orm.scoped_session(
             orm.sessionmaker(
                 autocommit=False,

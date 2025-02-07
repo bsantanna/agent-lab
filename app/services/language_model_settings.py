@@ -1,4 +1,4 @@
-from typing import Iterator
+from typing_extensions import Iterator
 
 from app.domain.models import LanguageModelSetting
 from app.domain.repositories.language_models import LanguageModelSettingRepository

@@ -1,11 +1,12 @@
 import os
 from abc import ABC, abstractmethod
 
+import hvac
 from langchain_anthropic import ChatAnthropic
+from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseChatModel
-from langchain_ollama import ChatOllama
-from langchain_openai import ChatOpenAI
-from langchain_xai import ChatXAI
+from langchain_ollama import ChatOllama, OllamaEmbeddings
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 from app.domain.exceptions.base import ResourceNotFoundError
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
@@ -25,12 +26,14 @@ class AgentBase(ABC):
         language_model_service: LanguageModelService,
         language_model_setting_service: LanguageModelSettingService,
         integration_service: IntegrationService,
+        vault_client: hvac.Client,
     ):
         self.agent_service = agent_service
         self.agent_setting_service = agent_setting_service
         self.language_model_service = language_model_service
         self.language_model_setting_service = language_model_setting_service
         self.integration_service = integration_service
+        self.vault_client = vault_client
 
     @abstractmethod
     def create_default_settings(self, agent_id: str):
@@ -40,9 +43,38 @@ class AgentBase(ABC):
     def process_message(self, message_request: MessageRequest) -> MessageBase:
         pass
 
+    def get_embeddings_model(self, agent_id) -> Embeddings:
+        agent = self.agent_service.get_agent_by_id(agent_id)
+        language_model = self.language_model_service.get_language_model_by_id(
+            agent.language_model_id
+        )
+        integration = self.integration_service.get_integration_by_id(
+            language_model.integration_id
+        )
+        secrets = self.vault_client.secrets.kv.read_secret_version(
+            path=f"integration_{integration.id}", raise_on_deleted_version=False
+        )
+        api_endpoint = secrets["data"]["data"]["api_endpoint"]
+        api_key = secrets["data"]["data"]["api_key"]
+
+        if integration.integration_type == "openai_api_v1":
+            return OpenAIEmbeddings(
+                openai_api_base=api_endpoint,
+                openai_api_key=api_key,
+            )
+        # not available in my account
+        # if integration.integration_type == "xai_api_v1":
+        #    return OpenAIEmbeddings(model="v1", base_url=api_endpoint, api_key=api_key)
+        else:
+            return OllamaEmbeddings(
+                model="phi3", base_url=f"{os.getenv('OLLAMA_ENDPOINT')}"
+            )
+
     def get_chat_model(self, agent_id) -> BaseChatModel:
         agent = self.agent_service.get_agent_by_id(agent_id)
-
+        language_model = self.language_model_service.get_language_model_by_id(
+            agent.language_model_id
+        )
         lm_settings = self.language_model_setting_service.get_language_model_settings(
             agent.language_model_id
         )
@@ -52,38 +84,37 @@ class AgentBase(ABC):
             else 0.5
             for setting in lm_settings
         )
-
-        language_model = self.language_model_service.get_language_model_by_id(
-            agent.language_model_id
-        )
         integration = self.integration_service.get_integration_by_id(
             language_model.integration_id
         )
+        secrets = self.vault_client.secrets.kv.read_secret_version(
+            raise_on_deleted_version=False, path=f"integration_{integration.id}"
+        )
+        api_endpoint = secrets["data"]["data"]["api_endpoint"]
+        api_key = secrets["data"]["data"]["api_key"]
 
-        if integration.integration_type == "openai_api_v1":
+        if (
+            integration.integration_type == "openai_api_v1"
+            or integration.integration_type == "xai_api_v1"
+        ):
             return ChatOpenAI(
                 model_name=language_model.language_model_tag,
                 temperature=temperature_setting,
-                # base_url= get from vault
-                # api_key= get from vault
+                openai_api_base=api_endpoint,
+                openai_api_key=api_key,
             )
         elif integration.integration_type == "anthropic_api_v1":
             return ChatAnthropic(
                 model=language_model.language_model_tag,
                 temperature=temperature_setting,
-                # base_url= get from vault
-                # api_key= get from vault
-            )
-        elif integration.integration_type == "xai_api_v1":
-            return ChatXAI(
-                model_name=language_model.language_model_tag,
-                temperature=temperature_setting,
-                # xai_api_base= get from vault
-                # xai_api_key= get from vault
+                anthropic_api_url=api_endpoint,
+                anthropic_api_key=api_key,
             )
         else:
             return ChatOllama(
-                model=language_model.language_model_tag, temperature=temperature_setting
+                model=language_model.language_model_tag,
+                temperature=temperature_setting,
+                base_url=api_endpoint,
             )
 
     def read_file_content(self, file_path: str) -> str:
@@ -102,6 +133,7 @@ class WorkflowAgent(AgentBase, ABC):
         language_model_service: LanguageModelService,
         language_model_setting_service: LanguageModelSettingService,
         integration_service: IntegrationService,
+        vault_client: hvac.Client,
         graph_persistence_factory: GraphPersistenceFactory,
     ):
         super().__init__(
@@ -110,6 +142,7 @@ class WorkflowAgent(AgentBase, ABC):
             language_model_service=language_model_service,
             language_model_setting_service=language_model_setting_service,
             integration_service=integration_service,
+            vault_client=vault_client,
         )
         self.graph_persistence_factory = graph_persistence_factory
 

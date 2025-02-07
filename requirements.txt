@@ -5,9 +5,11 @@ hvac
 isort
 langchain
 langchain-anthropic
+langchain-community
 langchain-core
 langchain-ollama
 langchain-openai
+langchain-postgres
 langchain-xai
 langgraph
 langgraph-checkpoint-postgres
@@ -34,4 +36,5 @@ starlette
 testcontainers[ollama]
 testcontainers[postgresql]
 testcontainers[vault]
+unstructured[md]
 uvicorn

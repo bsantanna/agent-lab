@@ -1,7 +1,8 @@
-from typing import List
+from typing_extensions import List
 
 from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends, Body, Response, status, File
+from langchain import globals as langchain_globals
 
 from app.core.container import Container
 from app.domain.exceptions.base import NotFoundError
@@ -72,7 +73,9 @@ async def post_message(
     )
 
     # process human message
+    langchain_globals.set_debug(True)
     processed_message = matching_agent.process_message(message_data)
+    langchain_globals.set_debug(False)
 
     # store assistant message
     assistant_message = message_service.create_message(

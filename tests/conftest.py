@@ -8,20 +8,21 @@ from testcontainers.postgres import PostgresContainer
 from testcontainers.vault import VaultContainer
 
 os.environ["TESTING"] = "1"
+os.environ["OLLAMA_ENDPOINT"] = "http://localhost:21434"
 
-llm_tag = "smollm2"
+llm_tag = "phi3"
 
-ollama = OllamaContainer(ollama_home=f"{Path.home()}/.ollama").with_bind_ports(
-    container=11434, host=21434
+ollama = OllamaContainer(
+    ollama_home=f"{Path.home()}/.ollama", image="ollama/ollama:latest"
+).with_bind_ports(container=11434, host=21434)
+
+postgres = (
+    PostgresContainer(
+        image="pgvector/pgvector:pg16", username="postgres", password="postgres"
+    )
+    .with_bind_ports(container=5432, host=15432)
+    .with_volume_mapping(f"{Path.cwd()}/tests/integration", "/mnt/integration")
 )
-
-postgres = PostgresContainer(
-    image="pgvector/pgvector:pg16",
-    username="postgres",
-    password="postgres",
-    dbname="agent_lab_checkpoints",
-).with_bind_ports(container=5432, host=15432)
-
 vault = (
     VaultContainer("hashicorp/vault:1.18.1")
     .with_bind_ports(container=8200, host=18200)
@@ -46,6 +47,33 @@ def test_config(request):
     wait_for_logs(postgres, "database system is ready to accept connections")
     wait_for_logs(
         vault, "Development mode should NOT be used in production installations!"
+    )
+
+    # setup databases
+    psql_command = "PGPASSWORD='postgres' psql --username postgres --host 127.0.0.1"
+    create_database_command = f"{psql_command} -c 'create database ?;'"
+    main_db_command = create_database_command.replace("?", "agent_lab")
+    checkpoints_db_command = create_database_command.replace(
+        "?", "agent_lab_checkpoints"
+    )
+    vectors_db_command = create_database_command.replace("?", "agent_lab_vectors")
+    copy_dump_command = "cp /mnt/integration/pgvector_dump.sql.gz /tmp/ && gunzip /tmp/pgvector_dump.sql.gz"
+    restore_dump_command = (
+        f"{psql_command} -d agent_lab_vectors < /tmp/pgvector_dump.sql"
+    )
+
+    postgres.exec(
+        [
+            "sh",
+            "-c",
+            f"""
+            {main_db_command} &&
+            {checkpoints_db_command} &&
+            {vectors_db_command} &&
+            {copy_dump_command} &&
+            {restore_dump_command}
+            """,
+        ]
     )
 
     # pull llm from registry
