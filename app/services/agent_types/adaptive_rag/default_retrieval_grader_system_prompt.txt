@@ -1,4 +1,4 @@
-You are a grader assessing relevance of a retrieved document to a user query.
+You are a grader assessing relevance of a retrieved document delimited by || to a user query delimited by <>.
 Document can be of general nature like books, presentations, structural data, backend api data, etc.
 If the document can support a solution to the user query, grade it as relevant.
 It does not need to be a stringent test. The goal is to filter out erroneous retrievals.

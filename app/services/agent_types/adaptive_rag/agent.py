@@ -119,7 +119,7 @@ class AdaptiveRagAgent(WorkflowAgent):
                 ("system", query_rewriter_system_prompt),
                 (
                     "human",
-                    "Here is the initial query: \n\n {query} \n Formulate an improved query.",
+                    "Here is the initial query: <{query}> \n Formulate an improved query.",
                 ),
             ]
         )
@@ -134,7 +134,7 @@ class AdaptiveRagAgent(WorkflowAgent):
                     "system",
                     f"{preparation_system_prompt}",
                 ),
-                ("human", "{query}"),
+                ("human", "Query: <{query}>"),
             ]
         )
         return route_prompt | structured_llm_router
@@ -223,7 +223,7 @@ class AdaptiveRagAgent(WorkflowAgent):
         generate_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", execution_system_prompt),
-                ("human", "Query: {query}\n Context: {context}"),
+                ("human", "Query: <{query}>\n Context: |{context}|"),
             ]
         )
         return generate_prompt | chat_model | StrOutputParser()
@@ -248,7 +248,7 @@ class AdaptiveRagAgent(WorkflowAgent):
                 ("system", retrieval_grader_system_prompt),
                 (
                     "human",
-                    "Retrieved document: \n\n {document} \n\n User query: {query}",
+                    "Retrieved document: |{document}| \n User query: <{query}>",
                 ),
             ]
         )
