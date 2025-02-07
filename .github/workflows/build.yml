@@ -36,6 +36,8 @@ jobs:
       - name: Test
         run: |
           pytest --cov=app --cov-report=xml
+        env:
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
       - name: SonarQube
         uses: SonarSource/sonarqube-scan-action@v4
         env:
