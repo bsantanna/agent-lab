@@ -17,33 +17,34 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 collector_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
 resource = Resource(attributes={SERVICE_NAME: "agent-lab-app"})
 
-# traces
-trace_provider = TracerProvider(resource=resource)
-trace.set_tracer_provider(trace_provider)
-processor = BatchSpanProcessor(
-    OTLPSpanExporter(endpoint=f"{collector_endpoint}/v1/traces")
-)
-trace_provider.add_span_processor(processor)
-trace.set_tracer_provider(trace_provider)
+if collector_endpoint is not None:
+    # traces
+    trace_provider = TracerProvider(resource=resource)
+    trace.set_tracer_provider(trace_provider)
+    processor = BatchSpanProcessor(
+        OTLPSpanExporter(endpoint=f"{collector_endpoint}/v1/traces")
+    )
+    trace_provider.add_span_processor(processor)
+    trace.set_tracer_provider(trace_provider)
 
-# metrics
-reader = PeriodicExportingMetricReader(
-    OTLPMetricExporter(endpoint=f"{collector_endpoint}/v1/metrics")
-)
-meter_provider = MeterProvider(resource=resource, metric_readers=[reader])
-metrics.set_meter_provider(meter_provider)
+    # metrics
+    reader = PeriodicExportingMetricReader(
+        OTLPMetricExporter(endpoint=f"{collector_endpoint}/v1/metrics")
+    )
+    meter_provider = MeterProvider(resource=resource, metric_readers=[reader])
+    metrics.set_meter_provider(meter_provider)
 
-# logs
-log_exporter = OTLPLogExporter(endpoint=f"{collector_endpoint}/v1/logs")
-logger_provider = LoggerProvider(resource=resource)
-logger_provider.add_log_record_processor(BatchLogRecordProcessor(log_exporter))
-otlp_handler = LoggingHandler(logger_provider=logger_provider)
-console_handler = logging.StreamHandler()
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[console_handler, otlp_handler],
-)
+    # logs
+    log_exporter = OTLPLogExporter(endpoint=f"{collector_endpoint}/v1/logs")
+    logger_provider = LoggerProvider(resource=resource)
+    logger_provider.add_log_record_processor(BatchLogRecordProcessor(log_exporter))
+    otlp_handler = LoggingHandler(logger_provider=logger_provider)
+    console_handler = logging.StreamHandler()
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=[console_handler, otlp_handler],
+    )
 
 
 class Tracer:

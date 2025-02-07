@@ -62,11 +62,12 @@ class AgentBase(ABC):
                 openai_api_base=api_endpoint,
                 openai_api_key=api_key,
             )
+        # not available in my account
         # if integration.integration_type == "xai_api_v1":
         #    return OpenAIEmbeddings(model="v1", base_url=api_endpoint, api_key=api_key)
         else:
             return OllamaEmbeddings(
-                model="phi3", base_url=f"{os.environ['OLLAMA_ENDPOINT']}"
+                model="phi3", base_url=f"{os.getenv('OLLAMA_ENDPOINT')}"
             )
 
     def get_chat_model(self, agent_id) -> BaseChatModel:
@@ -114,7 +115,6 @@ class AgentBase(ABC):
                 model=language_model.language_model_tag,
                 temperature=temperature_setting,
                 base_url=api_endpoint,
-                # format="json",
             )
 
     def read_file_content(self, file_path: str) -> str:
