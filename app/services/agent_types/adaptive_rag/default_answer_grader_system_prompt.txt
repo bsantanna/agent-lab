@@ -1,4 +1,4 @@
-You are a grader assessing whether an answer addresses or resolves the given query.
+You are a grader assessing whether an answer addresses or resolves the given query delimited by <>.
 No explanation necessary. Give a binary score 'yes' or 'no'.
 'yes' means that the answer is helpful.
 Answer must be *exactly one* of the values 'yes' or 'no'.
