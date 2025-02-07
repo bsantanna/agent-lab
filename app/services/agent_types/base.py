@@ -7,7 +7,6 @@ from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseChatModel
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_xai import ChatXAI
 
 from app.domain.exceptions.base import ResourceNotFoundError
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
@@ -63,8 +62,12 @@ class AgentBase(ABC):
                 openai_api_base=api_endpoint,
                 openai_api_key=api_key,
             )
+        # if integration.integration_type == "xai_api_v1":
+        #    return OpenAIEmbeddings(model="v1", base_url=api_endpoint, api_key=api_key)
         else:
-            return OllamaEmbeddings(model="phi3", base_url=api_endpoint)
+            return OllamaEmbeddings(
+                model="phi3", base_url=f"{os.environ['OLLAMA_ENDPOINT']}"
+            )
 
     def get_chat_model(self, agent_id) -> BaseChatModel:
         agent = self.agent_service.get_agent_by_id(agent_id)
@@ -89,7 +92,10 @@ class AgentBase(ABC):
         api_endpoint = secrets["data"]["data"]["api_endpoint"]
         api_key = secrets["data"]["data"]["api_key"]
 
-        if integration.integration_type == "openai_api_v1":
+        if (
+            integration.integration_type == "openai_api_v1"
+            or integration.integration_type == "xai_api_v1"
+        ):
             return ChatOpenAI(
                 model_name=language_model.language_model_tag,
                 temperature=temperature_setting,
@@ -102,13 +108,6 @@ class AgentBase(ABC):
                 temperature=temperature_setting,
                 anthropic_api_url=api_endpoint,
                 anthropic_api_key=api_key,
-            )
-        elif integration.integration_type == "xai_api_v1":
-            return ChatXAI(
-                model_name=language_model.language_model_tag,
-                temperature=temperature_setting,
-                xai_api_base=api_endpoint,
-                xai_api_key=api_key,
             )
         else:
             return ChatOllama(

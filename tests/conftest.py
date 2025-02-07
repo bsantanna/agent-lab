@@ -3,12 +3,18 @@ from pathlib import Path
 
 import pytest
 from testcontainers.core.waiting_utils import wait_for_logs
+from testcontainers.ollama import OllamaContainer
 from testcontainers.postgres import PostgresContainer
 from testcontainers.vault import VaultContainer
 
 os.environ["TESTING"] = "1"
-os.environ["OLLAMA_ENDPOINT"] = "http://localhost:11434"
-os.environ["OLLAMA_MODEL"] = "mistral-small:24b"
+os.environ["OLLAMA_ENDPOINT"] = "http://localhost:21434"
+
+llm_tag = "phi3"
+
+ollama = OllamaContainer(
+    ollama_home=f"{Path.home()}/.ollama", image="ollama/ollama:latest"
+).with_bind_ports(container=11434, host=21434)
 
 postgres = (
     PostgresContainer(
@@ -27,14 +33,17 @@ vault = (
 
 @pytest.fixture(scope="session", autouse=True)
 def test_config(request):
+    ollama.start()
     postgres.start()
     vault.start()
 
     def remove_container():
+        ollama.stop()
         postgres.stop()
         vault.stop()
 
     request.addfinalizer(remove_container)
+    wait_for_logs(ollama, "Listening on")
     wait_for_logs(postgres, "database system is ready to accept connections")
     wait_for_logs(
         vault, "Development mode should NOT be used in production installations!"
@@ -66,5 +75,10 @@ def test_config(request):
             """,
         ]
     )
+
+    # pull llm from registry
+    if llm_tag not in [e["name"] for e in ollama.list_models()]:
+        print(f"Pulling {llm_tag} model")
+        ollama.pull_model(llm_tag)
 
     yield

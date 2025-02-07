@@ -18,9 +18,9 @@ class TestAdaptiveRagAgent:
         response = client.post(
             url="/integrations/create",
             json={
-                "api_endpoint": os.environ["OLLAMA_ENDPOINT"],
-                "api_key": "ollama",
-                "integration_type": "ollama_api_v1",
+                "api_endpoint": "https://api.x.ai/v1/",
+                "api_key": os.environ["XAI_API_KEY"],
+                "integration_type": "xai_api_v1",
             },
         )
         integration_id = response.json()["id"]
@@ -30,7 +30,7 @@ class TestAdaptiveRagAgent:
             url="/llms/create",
             json={
                 "integration_id": integration_id,
-                "language_model_tag": os.environ["OLLAMA_MODEL"],
+                "language_model_tag": "grok-2-1212",
             },
         )
         language_model_id = response_2.json()["id"]
