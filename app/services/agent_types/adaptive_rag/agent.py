@@ -1,9 +1,11 @@
 from pathlib import Path
+
+from langchain_core.messages import AIMessage
+from langchain_text_splitters import CharacterTextSplitter
 from typing_extensions import Annotated, List, TypedDict
 
 import hvac
 from langchain_core.documents import Document
-from langchain_core.messages import AnyMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.constants import START, END
@@ -17,13 +19,13 @@ from app.services.agent_types.adaptive_rag.schema import (
     GradeDocuments,
     RouteQuery,
     GradeAnswer,
+    GenerateAnswer,
 )
 from app.services.agent_types.base import WorkflowAgent
 from app.services.agents import AgentService
 from app.services.integrations import IntegrationService
 from app.services.language_model_settings import LanguageModelSettingService
 from app.services.language_models import LanguageModelService
-from app.services.messages import MessageService
 
 
 class AgentState(TypedDict):
@@ -32,7 +34,7 @@ class AgentState(TypedDict):
     knowledge_base: str
     generation: str
     documents: List[str]
-    messages: Annotated[List[AnyMessage], add_messages]
+    messages: Annotated[List, add_messages]
     preparation_system_prompt: str
     execution_system_prompt: str
     query_rewriter_system_prompt: str
@@ -50,7 +52,6 @@ class AdaptiveRagAgent(WorkflowAgent):
         integration_service: IntegrationService,
         vault_client: hvac.Client,
         graph_persistence_factory: GraphPersistenceFactory,
-        message_service: MessageService,
         document_repository: DocumentRepository,
     ):
         super().__init__(
@@ -62,7 +63,6 @@ class AdaptiveRagAgent(WorkflowAgent):
             vault_client=vault_client,
             graph_persistence_factory=graph_persistence_factory,
         )
-        self.message_service = message_service
         self.document_repository = document_repository
 
     def create_default_settings(self, agent_id: str):
@@ -119,7 +119,7 @@ class AdaptiveRagAgent(WorkflowAgent):
                 ("system", query_rewriter_system_prompt),
                 (
                     "human",
-                    "Here is the initial query: <{query}> \n Formulate an improved query.",
+                    "Here is the initial query: <query>{query}</query> \n Formulate an improved query.",
                 ),
             ]
         )
@@ -134,7 +134,7 @@ class AdaptiveRagAgent(WorkflowAgent):
                     "system",
                     f"{preparation_system_prompt}",
                 ),
-                ("human", "Query: <{query}>"),
+                ("human", "<query>{query}</query>"),
             ]
         )
         return route_prompt | structured_llm_router
@@ -156,7 +156,7 @@ class AdaptiveRagAgent(WorkflowAgent):
         answer_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", answer_grader_system_prompt),
-                ("human", "User query: \n\n {query} \n\n LLM generation: {generation}"),
+                ("human", "<query>{query}</query>\n<answer>{generation}</answer>"),
             ]
         )
 
@@ -219,14 +219,15 @@ class AdaptiveRagAgent(WorkflowAgent):
 
         return workflow_builder
 
-    def get_rag_chain(self, chat_model, execution_system_prompt):
+    def get_rag_chain(self, llm, execution_system_prompt):
+        structured_llm_generator = llm.with_structured_output(GenerateAnswer)
         generate_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", execution_system_prompt),
-                ("human", "Query: <{query}>\n Context: |{context}|"),
+                ("human", "<query>{query}</query>\n<context>{context}</context>"),
             ]
         )
-        return generate_prompt | chat_model | StrOutputParser()
+        return generate_prompt | self.process_response(structured_llm_generator)
 
     def generate(self, state: AgentState):
         agent_id = state["agent_id"]
@@ -237,7 +238,9 @@ class AdaptiveRagAgent(WorkflowAgent):
         generation = self.get_rag_chain(chat_model, execution_system_prompt).invoke(
             {"context": documents, "query": query}
         )
-        return {"generation": generation}
+        ai_message = AIMessage(content=generation["generation"])
+        generation["messages"].append(ai_message)
+        return generation
 
     def get_retrieval_grader(self, chat_model, retrieval_grader_system_prompt):
         # LLM with function call
@@ -248,7 +251,7 @@ class AdaptiveRagAgent(WorkflowAgent):
                 ("system", retrieval_grader_system_prompt),
                 (
                     "human",
-                    "Retrieved document: |{document}| \n User query: <{query}>",
+                    "<document>{document}</document>\n<query>{query}</query>",
                 ),
             ]
         )
@@ -281,12 +284,15 @@ class AdaptiveRagAgent(WorkflowAgent):
         agent_id = state["agent_id"]
         query = state["query"]
         knowledge_base = state["knowledge_base"]
+        messages = state["messages"]
 
         if knowledge_base == "previous_conversations":
-            messages = self.message_service.get_messages(agent_id)
-            documents = [
-                Document(page_content=message.message_content) for message in messages
-            ]
+            text_splitter = CharacterTextSplitter()
+            history = ""
+            for message in messages:
+                history = f"{history}\n{message.type}: {message.content}"
+            chunks = text_splitter.split_text(history)
+            documents = [Document(page_content=chunk) for chunk in chunks]
 
         else:
             embeddings = self.get_embeddings_model(agent_id)
@@ -339,4 +345,5 @@ class AdaptiveRagAgent(WorkflowAgent):
             "retrieval_grader_system_prompt": settings_dict[
                 "retrieval_grader_system_prompt"
             ],
+            "messages": [],
         }

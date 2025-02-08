@@ -14,7 +14,6 @@ from app.services.agents import AgentService
 from app.services.integrations import IntegrationService
 from app.services.language_model_settings import LanguageModelSettingService
 from app.services.language_models import LanguageModelService
-from app.services.messages import MessageService
 
 
 class AgentState(TypedDict):
@@ -37,7 +36,6 @@ class ThreePhaseReactAgent(AdaptiveRagAgent):
         integration_service: IntegrationService,
         vault_client: hvac.Client,
         graph_persistence_factory: GraphPersistenceFactory,
-        message_service: MessageService,
         document_repository: DocumentRepository,
     ):
         super().__init__(
@@ -48,7 +46,6 @@ class ThreePhaseReactAgent(AdaptiveRagAgent):
             integration_service=integration_service,
             vault_client=vault_client,
             graph_persistence_factory=graph_persistence_factory,
-            message_service=message_service,
             document_repository=document_repository,
         )
 
