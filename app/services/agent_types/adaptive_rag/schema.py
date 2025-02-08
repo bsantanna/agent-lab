@@ -27,3 +27,9 @@ class RouteQuery(TypedDict):
     knowledge_base: Annotated[
         str, ..., "Given a user query choose a most appropriate knowledge base."
     ]
+
+
+class GenerateAnswer(TypedDict):
+    """Generate a good answer to user query based on context and previous_messages."""
+
+    generation: Annotated[str, ..., "A generated good answer to user query."]

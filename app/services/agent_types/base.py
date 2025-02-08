@@ -5,6 +5,8 @@ import hvac
 from langchain_anthropic import ChatAnthropic
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import SystemMessage
+from langchain_core.runnables import RunnableLambda
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
@@ -166,4 +168,20 @@ class WorkflowAgent(AgentBase, ABC):
             message_role="assistant",
             message_content=workflow_result["generation"],
             agent_id=message_request.agent_id,
+        )
+
+    def add_messages(self, response, structured_output_result):
+        response["messages"] = [
+            message
+            for message in structured_output_result.messages
+            if not isinstance(message, SystemMessage)
+        ]
+        return response
+
+    def process_response(self, structured_llm_output):
+        return RunnableLambda(
+            lambda structured_output_result: self.add_messages(
+                structured_llm_output.invoke(structured_output_result),
+                structured_output_result,
+            )
         )
