@@ -87,7 +87,7 @@ def create_ollama_agent(
 def create_xai_agent(
     llm_tag: str = "grok-2-latest",
     agent_type: str = "test_echo",
-    agent_lab_endpoint: str = "http://localhost:18000",
+    agent_lab_endpoint: str = "http://localhost:8000",
     api_key: str = "",
 ) -> str:
     integration_params = {

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, HumanMessage
 from langchain_text_splitters import CharacterTextSplitter
 from typing_extensions import Annotated, List, TypedDict
 
@@ -224,22 +224,28 @@ class AdaptiveRagAgent(WorkflowAgent):
         generate_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", execution_system_prompt),
-                ("human", "<query>{query}</query>\n<context>{context}</context>"),
+                (
+                    "human",
+                    "<query>{query}</query>\n<context>{context}</context>\n<knowledge_base>{knowledge_base}</knowledge_base>",
+                ),
             ]
         )
-        return generate_prompt | self.process_response(structured_llm_generator)
+        return generate_prompt | structured_llm_generator
 
     def generate(self, state: AgentState):
         agent_id = state["agent_id"]
         query = state["query"]
         documents = state["documents"]
         execution_system_prompt = state["execution_system_prompt"]
+        knowledge_base = state["knowledge_base"]
         chat_model = self.get_chat_model(agent_id)
         generation = self.get_rag_chain(chat_model, execution_system_prompt).invoke(
-            {"context": documents, "query": query}
+            {"context": documents, "query": query, "knowledge_base": knowledge_base}
         )
-        ai_message = AIMessage(content=generation["generation"])
-        generation["messages"].append(ai_message)
+        generation["messages"] = [
+            HumanMessage(content=query),
+            AIMessage(content=generation["generation"]),
+        ]
         return generation
 
     def get_retrieval_grader(self, chat_model, retrieval_grader_system_prompt):
@@ -251,7 +257,7 @@ class AdaptiveRagAgent(WorkflowAgent):
                 ("system", retrieval_grader_system_prompt),
                 (
                     "human",
-                    "<document>{document}</document>\n<query>{query}</query>",
+                    ("<document>{document}</document>\n" "<query>{query}</query>"),
                 ),
             ]
         )
@@ -264,6 +270,11 @@ class AdaptiveRagAgent(WorkflowAgent):
         documents = state["documents"]
         chat_model = self.get_chat_model(agent_id)
         retrieval_grader_system_prompt = state["retrieval_grader_system_prompt"]
+        knowledge_base = state["knowledge_base"]
+
+        if knowledge_base == "previous_conversations":
+            return {"documents": documents}
+
         filtered_docs = []
         for d in documents:
             score = self.get_retrieval_grader(
@@ -310,10 +321,11 @@ class AdaptiveRagAgent(WorkflowAgent):
         query = state["query"]
         chat_model = self.get_chat_model(agent_id)
         query_rewriter_system_prompt = state["query_rewriter_system_prompt"]
-        better_query = self.get_query_rewriter(
+        transformed_query = self.get_query_rewriter(
             chat_model, query_rewriter_system_prompt
         ).invoke({"query": query})
-        return {"query": better_query}
+        messages = [AIMessage(content=f"Transformed query: {transformed_query}")]
+        return {"query": transformed_query, "messages": messages}
 
     def decide_to_generate(self, state: AgentState):
         filtered_documents = state["documents"]
