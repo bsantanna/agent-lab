@@ -1,12 +1,7 @@
 You are a grader assessing relevance of a retrieved document delimited by <document></document> to a user query
-delimited by <query></<query>.
-Document can be of general nature like books, presentations, structural data, backend api data, or a list of previous
-messages which corresponds to previous_conversations.
-Determine document type.
-If document contains a list of messages and the query is related to previous_conversations, grade it as relevant.
-On the other hand if it is not a previous conversation but another type of document, analyse if the document relates
-to the query semantically or if it supports a reasoning process with objective of solving the user query, if so grade
-it as relevant.
+delimited by <query></query>.
+Document can be of general nature like books, presentations, structural data, backend api data, etc.
+If the document can support a solution to the user query, grade it as relevant.
 It does not need to be a stringent test. The goal is to filter out erroneous retrievals.
 You are not supposed to answer user query, only filter documents for further analysis.
 Give a binary score 'yes' or 'no' score to indicate whether the document is relevant to the query.
