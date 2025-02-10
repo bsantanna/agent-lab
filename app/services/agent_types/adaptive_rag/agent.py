@@ -2,7 +2,8 @@ from pathlib import Path
 
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_text_splitters import CharacterTextSplitter
-from typing_extensions import Annotated, List, TypedDict
+from langgraph.managed import RemainingSteps
+from typing_extensions import Annotated, List, TypedDict, Literal
 
 import hvac
 from langchain_core.documents import Document
@@ -35,6 +36,7 @@ class AgentState(TypedDict):
     generation: str
     documents: List[str]
     messages: Annotated[List, add_messages]
+    remaining_steps: RemainingSteps
     preparation_system_prompt: str
     execution_system_prompt: str
     query_rewriter_system_prompt: str
@@ -162,13 +164,16 @@ class AdaptiveRagAgent(WorkflowAgent):
 
         return answer_prompt | structured_llm_grader
 
-    def grade_generation_v_documents_and_question(self, state: AgentState):
+    def grade_generation_v_documents_and_question(
+        self, state: AgentState
+    ) -> Literal["complete_answer", "incomplete_answer"]:
         agent_id = state["agent_id"]
         query = state["query"]
         chat_model = self.get_chat_model(agent_id)
         generation = state["generation"]
+        remaining_steps = state["remaining_steps"]
         answer_grader_system_prompt = state["answer_grader_system_prompt"]
-
+        limit_remaining_steps = 5
         # Check question-answering
         score = self.get_answer_grader(chat_model, answer_grader_system_prompt).invoke(
             {"query": query, "generation": generation}
@@ -178,10 +183,10 @@ class AdaptiveRagAgent(WorkflowAgent):
         if score is not None:
             grade = score["binary_score"]
 
-        if grade == "yes":
-            return "useful"
+        if grade == "yes" or remaining_steps <= limit_remaining_steps:
+            return "complete_answer"
 
-        return "not useful"
+        return "incomplete_answer"
 
     def get_workflow_builder(self, agent_id: str):
         workflow_builder = StateGraph(AgentState)
@@ -212,8 +217,8 @@ class AdaptiveRagAgent(WorkflowAgent):
             "generate",
             self.grade_generation_v_documents_and_question,
             {
-                "useful": END,
-                "not useful": "transform_query",
+                "complete_answer": END,
+                "incomplete_answer": "transform_query",
             },
         )
 
@@ -257,7 +262,7 @@ class AdaptiveRagAgent(WorkflowAgent):
                 ("system", retrieval_grader_system_prompt),
                 (
                     "human",
-                    ("<document>{document}</document>\n" "<query>{query}</query>"),
+                    "<document>{document}</document>\n<query>{query}</query>",
                 ),
             ]
         )
@@ -316,7 +321,9 @@ class AdaptiveRagAgent(WorkflowAgent):
 
         return {"documents": documents}
 
-    def transform_query(self, state: AgentState):
+    def transform_query(
+        self, state: AgentState
+    ) -> Literal["transform_query", "generate"]:
         agent_id = state["agent_id"]
         query = state["query"]
         chat_model = self.get_chat_model(agent_id)
@@ -329,12 +336,13 @@ class AdaptiveRagAgent(WorkflowAgent):
 
     def decide_to_generate(self, state: AgentState):
         filtered_documents = state["documents"]
-        if not filtered_documents:
-            # All documents have been filtered check_relevance
+        remaining_steps = state["remaining_steps"]
+        if not filtered_documents and remaining_steps > 1:
+            # All documents have been filtered check_relevance and there are still attempts left
             # We will re-generate a new query
             return "transform_query"
         else:
-            # We have relevant documents, so generate answer
+            # We have relevant documents or no attempts left, so generate answer
             return "generate"
 
     def get_input_params(self, message_request: MessageRequest):
