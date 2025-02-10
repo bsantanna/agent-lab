@@ -159,7 +159,12 @@ class WorkflowAgent(AgentBase, ABC):
         workflow = self.get_workflow_builder(message_request.agent_id).compile(
             checkpointer=checkpointer
         )
-        config = {"configurable": {"thread_id": message_request.agent_id}}
+        config = {
+            "configurable": {
+                "thread_id": message_request.agent_id,
+            },
+            "recursion_limit": 12,
+        }
         inputs = self.get_input_params(message_request)
         workflow_result = workflow.invoke(inputs, config)
         return MessageBase(
