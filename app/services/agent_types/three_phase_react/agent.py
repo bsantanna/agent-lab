@@ -1,8 +1,10 @@
 from pathlib import Path
+
+from langgraph.constants import START, END
+from langgraph.managed import RemainingSteps
 from typing_extensions import TypedDict, List, Annotated
 
 import hvac
-from langchain_core.messages import AnyMessage
 from langgraph.graph import StateGraph, add_messages
 
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
@@ -17,10 +19,13 @@ from app.services.language_models import LanguageModelService
 
 
 class AgentState(TypedDict):
+    agent_id: str
     query: str
     generation: str
     documents: List[str]
-    messages: Annotated[List[AnyMessage], add_messages]
+    messages: Annotated[List, add_messages]
+    remaining_steps: RemainingSteps
+    knowledge_base: str
     preparation_system_prompt: str
     execution_system_prompt: str
     conclusion_system_prompt: str
@@ -50,9 +55,26 @@ class ThreePhaseReactAgent(AdaptiveRagAgent):
         )
 
     def create_default_settings(self, agent_id: str):
-        super().create_default_settings(agent_id)
-
         current_dir = Path(__file__).parent
+
+        preparation_prompt = self.read_file_content(
+            f"{current_dir}/default_conclusion_system_prompt.txt"
+        )
+        self.agent_setting_service.create_agent_setting(
+            agent_id=agent_id,
+            setting_key="preparation_system_prompt",
+            setting_value=preparation_prompt,
+        )
+
+        execution_prompt = self.read_file_content(
+            f"{current_dir}/default_execution_system_prompt.txt"
+        )
+        self.agent_setting_service.create_agent_setting(
+            agent_id=agent_id,
+            setting_key="execution_system_prompt",
+            setting_value=execution_prompt,
+        )
+
         conclusion_prompt = self.read_file_content(
             f"{current_dir}/default_conclusion_system_prompt.txt"
         )
@@ -62,10 +84,42 @@ class ThreePhaseReactAgent(AdaptiveRagAgent):
             setting_value=conclusion_prompt,
         )
 
+        knowledge_base = self.read_file_content(
+            f"{current_dir}/default_knowledge_base.txt"
+        )
+        self.agent_setting_service.create_agent_setting(
+            agent_id=agent_id,
+            setting_key="knowledge_base",
+            setting_value=knowledge_base,
+        )
+
     def get_workflow_builder(self, agent_id: str):
         workflow_builder = StateGraph(AgentState)
+
+        # node definitions
+
+        # edge definitions
+        workflow_builder.add_edge(START, "preparation_agent")
+        workflow_builder.add_edge("preparation_agent", "execution_agent")
+        workflow_builder.add_edge("execution_agent", "conclusion_agent")
+        workflow_builder.add_edge("conclusion_agent", END)
 
         return workflow_builder
 
     def get_input_params(self, message_request: MessageRequest):
-        pass
+        settings = self.agent_setting_service.get_agent_settings(
+            message_request.agent_id
+        )
+        settings_dict = {
+            setting.setting_key: setting.setting_value for setting in settings
+        }
+
+        return {
+            "agent_id": message_request.agent_id,
+            "query": message_request.message_content,
+            "knowledge_base": settings_dict["knowledge_base"],
+            "preparation_system_prompt": settings_dict["preparation_system_prompt"],
+            "execution_system_prompt": settings_dict["execution_system_prompt"],
+            "conclusion_system_prompt": settings_dict["conclusion_system_prompt"],
+            "messages": [],
+        }
