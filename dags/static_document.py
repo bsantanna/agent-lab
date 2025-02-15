@@ -1,7 +1,6 @@
 from airflow.decorators import dag, task
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
-from airflow.models.xcom_arg import XComArg
 from airflow.utils.task_group import TaskGroup
 
 import os
@@ -111,10 +110,11 @@ def etl_load_dag():
     files = fetch_files()
     queues = filter_files(files)
 
-    # Use XComArg to get the actual value from the task result
+    # Use .expand for dynamic task mapping
     with TaskGroup("process_files_group") as process_files_group:
-        for file_type, file_list in XComArg(queues):
-            for file in file_list:
-                process_file(file_path=f'/mnt/network-data/storage/projects/{file}', file_type=file_type)
+        process_tasks = process_file.expand(
+            file_path=[f"/mnt/network-data/storage/projects/{file}" for file_type, files in queues for file in files],
+            file_type=[file_type for file_type, files in queues for _ in files]
+        )
 
 etl_load_dag = etl_load_dag()
