@@ -39,7 +39,7 @@ volume_mount = V1VolumeMount(
 
 @task.kubernetes(
     image="bsantanna/compute-document-utils",
-    namespace="default",
+    namespace="compute",
     volumes=[volume],
     volume_mounts=[volume_mount],
     executor_config={
@@ -71,12 +71,12 @@ def process_files(files_dict):
 
 @task.kubernetes(image="bsantanna/compute-document-utils", volumes=[volume], volume_mounts=[volume_mount])
 def convert_to_pdf(file_path):
-    command = f"libreoffice --headless --convert-to pdf {file_path}"
+    command = f"echo {file_path}"
     os.system(command)
 
 @task.kubernetes(image="bsantanna/compute-document-utils", volumes=[volume], volume_mounts=[volume_mount])
 def pdf_to_jpg(pdf_path):
-    command = f"pdftoppm -jpeg {pdf_path} {os.path.splitext(pdf_path)[0]}"
+    command = f"echo {pdf_path}"
     os.system(command)
 
 @task.kubernetes(image="bsantanna/compute-document-utils", volumes=[volume], volume_mounts=[volume_mount])
