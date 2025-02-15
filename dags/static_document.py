@@ -1,6 +1,8 @@
 from airflow.decorators import dag, task
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
+from airflow.utils.task_group import TaskGroup
+
 
 import os
 from datetime import datetime, timedelta
@@ -111,11 +113,10 @@ def etl_load_dag():
     files = fetch_files()
     queues = filter_files(files)
 
-    # Use expand for dynamic task mapping
-    process_files = process_file.expand(
-        file_path=[f'/mnt/network-data/{file}' for queue in queues.values() for file in queue],
-        file_type=[file_type for file_type, queue in queues.items() for _ in queue]
-    )
+    with TaskGroup("process_files_group") as process_files_group:
+        for file_type, file_list in queues:
+            for file in file_list:
+                process_file(file_path=f'/mnt/network-data/{file}', file_type=file_type)
 
 
 etl_load_dag = etl_load_dag()
