@@ -1,10 +1,13 @@
 from airflow.decorators import dag, task
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
+
 import os
 from datetime import datetime, timedelta
 import base64
 import json
+from kubernetes.client import models as k8s
+
 
 default_args = {
     "owner": "airflow",
@@ -26,17 +29,24 @@ def etl_load_dag():
         name="fetch-files",
         is_delete_operator_pod=True,
         in_cluster=True,
-        volume_mounts=[{"name": "nfs-volume", "mountPath": "/mnt/network-data"}],
+        volume_mounts=[
+            k8s.V1VolumeMount(
+                name="nfs-volume",
+                mount_path="/mnt/network-data"
+            )
+        ],
         volumes=[
-            {
-                "name": "nfs-volume",
-                "nfs": {"server": "venus.btech.software", "path": "/mnt/network-data"},
-            }
+            k8s.V1Volume(
+                name="nfs-volume",
+                nfs=k8s.V1NFSVolumeSource(
+                    server="venus.btech.software",
+                    path="/mnt/network-data"
+                )
+            )
         ],
     )
     def fetch_files():
-        # This task will fetch all files from the mounted NFS drive
-        root_dir = "/mnt/network-data/storage/projects/vf/data"
+        root_dir = "/mnt/network-data/storage/projects/"
         return [
             f for f in os.listdir(root_dir) if os.path.isfile(os.path.join(root_dir, f))
         ]
