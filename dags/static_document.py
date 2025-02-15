@@ -1,15 +1,14 @@
 from airflow.decorators import dag, task
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
+from airflow.models import XComArg
 from airflow.utils.task_group import TaskGroup
-
 
 import os
 from datetime import datetime, timedelta
 import base64
 import json
 from kubernetes.client import models as k8s
-
 
 default_args = {
     "owner": "airflow",
@@ -20,7 +19,6 @@ default_args = {
     "retries": 1,
     "retry_delay": timedelta(minutes=5),
 }
-
 
 @dag(default_args=default_args, schedule_interval="@daily", catchup=False)
 def etl_load_dag():
@@ -113,10 +111,10 @@ def etl_load_dag():
     files = fetch_files()
     queues = filter_files(files)
 
+    # Use XComArg to get the actual value from the task result
     with TaskGroup("process_files_group") as process_files_group:
-        for file_type, file_list in queues:
+        for file_type, file_list in XComArg(queues):
             for file in file_list:
-                process_file(file_path=f'/mnt/network-data/{file}', file_type=file_type)
-
+                process_file(file_path=f'/mnt/network-data/storage/projects/{file}', file_type=file_type)
 
 etl_load_dag = etl_load_dag()
