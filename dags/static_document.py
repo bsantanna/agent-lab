@@ -39,7 +39,7 @@ volume_mount = V1VolumeMount(
 
 @task.kubernetes(
     image="bsantanna/compute-document-utils",
-    namespace="default",  # Adjust according to your Kubernetes setup
+    namespace="default",
     volumes=[volume],
     volume_mounts=[volume_mount],
     executor_config={
@@ -57,14 +57,25 @@ def fetch_and_sort_files():
     return files
 
 @task.kubernetes(image="bsantanna/compute-document-utils", volumes=[volume], volume_mounts=[volume_mount])
+def process_files(files_dict):
+    for file_type, file_list in files_dict.items():
+        for file in file_list:
+            if file_type in ['pptx', 'docx']:
+                convert_to_pdf(file)
+            elif file_type == 'pdf':
+                pdf_to_jpg(file)
+            elif file_type == 'jpg':
+                process_jpg(file)
+            elif file_type == 'json':
+                process_json(file)
+
+@task.kubernetes(image="bsantanna/compute-document-utils", volumes=[volume], volume_mounts=[volume_mount])
 def convert_to_pdf(file_path):
-    # Example command to convert docx to pdf using libreoffice
     command = f"libreoffice --headless --convert-to pdf {file_path}"
     os.system(command)
 
 @task.kubernetes(image="bsantanna/compute-document-utils", volumes=[volume], volume_mounts=[volume_mount])
 def pdf_to_jpg(pdf_path):
-    # Example command to convert PDF to JPG, might require additional tools like pdftoppm
     command = f"pdftoppm -jpeg {pdf_path} {os.path.splitext(pdf_path)[0]}"
     os.system(command)
 
@@ -72,35 +83,14 @@ def pdf_to_jpg(pdf_path):
 def process_jpg(jpg_path):
     with open(jpg_path, "rb") as image_file:
         encoded_string = base64.b64encode(image_file.read()).decode()
-        # Here you would call your Python script with the base64 encoded string
         print(f"Processing {jpg_path} with base64 content")
 
 @task.kubernetes(image="bsantanna/compute-document-utils", volumes=[volume], volume_mounts=[volume_mount])
 def process_json(json_path):
     with open(json_path, 'r') as file:
         data = json.load(file)
-        # Here you would call your Python script with the JSON data
         print(f"Processing JSON from {json_path}")
 
 with dag:
     files = fetch_and_sort_files()
-    print(files)
-    #
-    # # Process PPTX to PDF
-    # for file in files['pptx']:
-    #     convert_to_pdf(file)
-    #
-    # # Process DOCX to PDF
-    # for file in files['docx']:
-    #     convert_to_pdf(file)
-    #
-    # # Process PDF to JPG
-    # for file in files['pdf']:
-    #     pdf_to_jpg(file)
-    #
-    # # Process JPG
-    # for file in files['jpg']:
-    #     process_jpg(file)
-    #
-    # for file in files['json']:
-    #     process_json(file)
+    process_files(files)
