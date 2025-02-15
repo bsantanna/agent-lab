@@ -25,7 +25,7 @@ def etl_load_dag():
     @task.kubernetes(
         image="bsantanna/compute-document-utils",
         namespace="default",  # Replace with your namespace
-        image_pull_policy="IfNotPresent",
+        image_pull_policy="Always",
         name="fetch-files",
         is_delete_operator_pod=True,
         in_cluster=True,
@@ -53,8 +53,8 @@ def etl_load_dag():
 
     @task.kubernetes(
         image="bsantanna/compute-document-utils",
-        namespace="default",
-        image_pull_policy="IfNotPresent",
+        namespace="compute",
+        image_pull_policy="Always",
         name="filter-files",
         is_delete_operator_pod=True,
         in_cluster=True,
@@ -71,8 +71,8 @@ def etl_load_dag():
 
     @task.kubernetes(
         image="bsantanna/compute-document-utils",
-        namespace="default",
-        image_pull_policy="IfNotPresent",
+        namespace="compute",
+        image_pull_policy="Always",
         name="task-{{ params.file_type }}",
         is_delete_operator_pod=True,
         in_cluster=True,
@@ -111,9 +111,11 @@ def etl_load_dag():
     files = fetch_files()
     queues = filter_files(files)
 
-    for file_type, file_list in queues.items():
-        for file in file_list:
-            process_file(file_path=f"/mnt/network-data/{file}", file_type=file_type)
+    # Use expand for dynamic task mapping
+    process_files = process_file.expand(
+        file_path=[f'/mnt/network-data/{file}' for queue in queues.values() for file in queue],
+        file_type=[file_type for file_type, queue in queues.items() for _ in queue]
+    )
 
 
 etl_load_dag = etl_load_dag()
