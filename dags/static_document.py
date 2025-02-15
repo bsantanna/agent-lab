@@ -25,7 +25,7 @@ dag = DAG(
 volume = V1Volume(
     name='network-data',
     nfs=V1NFSVolumeSource(
-        server='venus.btech.software',
+        server='192.168.2.197',
         path='/mnt/network-data'
     )
 )
