@@ -84,22 +84,23 @@ def process_json(json_path):
 
 with dag:
     files = fetch_and_sort_files()
-
-    # Process PPTX to PDF
-    for file in files['pptx']:
-        convert_to_pdf(file)
-
-    # Process DOCX to PDF
-    for file in files['docx']:
-        convert_to_pdf(file)
-
-    # Process PDF to JPG
-    for file in files['pdf']:
-        pdf_to_jpg(file)
-
-    # Process JPG
-    for file in files['jpg']:
-        process_jpg(file)
-
-    for file in files['json']:
-        process_json(file)
+    print(files)
+    #
+    # # Process PPTX to PDF
+    # for file in files['pptx']:
+    #     convert_to_pdf(file)
+    #
+    # # Process DOCX to PDF
+    # for file in files['docx']:
+    #     convert_to_pdf(file)
+    #
+    # # Process PDF to JPG
+    # for file in files['pdf']:
+    #     pdf_to_jpg(file)
+    #
+    # # Process JPG
+    # for file in files['jpg']:
+    #     process_jpg(file)
+    #
+    # for file in files['json']:
+    #     process_json(file)
