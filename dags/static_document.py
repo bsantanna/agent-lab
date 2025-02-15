@@ -1,120 +1,100 @@
-from airflow.decorators import dag, task
+from airflow import DAG
+from airflow.decorators import task
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
-from airflow.utils.task_group import TaskGroup
-
-import os
-from datetime import datetime, timedelta
+from kubernetes.client import V1Volume, V1VolumeMount, V1NFSVolumeSource
 import base64
 import json
-from kubernetes.client import models as k8s
+import os
+from datetime import datetime
 
 default_args = {
-    "owner": "airflow",
-    "depends_on_past": False,
-    "start_date": datetime(2024, 1, 1),
-    "email_on_failure": False,
-    "email_on_retry": False,
-    "retries": 1,
-    "retry_delay": timedelta(minutes=5),
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'start_date': datetime(2025, 1, 1),
+    'retries': 1,
 }
 
-@dag(default_args=default_args, schedule_interval="@daily", catchup=False)
-def etl_load_dag():
-    @task.kubernetes(
-        image="bsantanna/compute-document-utils",
-        namespace="default",  # Replace with your namespace
-        image_pull_policy="Always",
-        name="fetch-files",
-        is_delete_operator_pod=True,
-        in_cluster=True,
-        volume_mounts=[
-            k8s.V1VolumeMount(
-                name="nfs-volume",
-                mount_path="/mnt/network-data"
-            )
-        ],
-        volumes=[
-            k8s.V1Volume(
-                name="nfs-volume",
-                nfs=k8s.V1NFSVolumeSource(
-                    server="venus.btech.software",
-                    path="/mnt/network-data"
-                )
-            )
-        ],
+dag = DAG(
+    'static_document_data',
+    default_args=default_args,
+    schedule_interval='@daily',
+    catchup=False,
+)
+
+volume = V1Volume(
+    name='network-data',
+    nfs=V1NFSVolumeSource(
+        server='venus.btech.software',
+        path='/mnt/network-data'
     )
-    def fetch_files():
-        root_dir = "/mnt/network-data/storage/projects/"
-        return [
-            f for f in os.listdir(root_dir) if os.path.isfile(os.path.join(root_dir, f))
-        ]
+)
 
-    @task.kubernetes(
-        image="bsantanna/compute-document-utils",
-        namespace="compute",
-        image_pull_policy="Always",
-        name="filter-files",
-        is_delete_operator_pod=True,
-        in_cluster=True,
-    )
-    def filter_files(files):
-        # Split files by extension
-        queues = {}
-        for file in files:
-            ext = file.split(".")[-1]
-            if ext not in queues:
-                queues[ext] = []
-            queues[ext].append(file)
-        return queues
+volume_mount = V1VolumeMount(
+    name='network-data',
+    mount_path='/mnt/data',
+    sub_path=None,
+    read_only=True
+)
 
-    @task.kubernetes(
-        image="bsantanna/compute-document-utils",
-        namespace="compute",
-        image_pull_policy="Always",
-        name="task-{{ params.file_type }}",
-        is_delete_operator_pod=True,
-        in_cluster=True,
-    )
-    def process_file(file_path, file_type):
-        if file_type in ["pptx", "docx"]:
-            return BashOperator(
-                task_id=f"convert_{file_type}_to_pdf",
-                bash_command=f"echo processing {file_path}",
-            ).execute(context={})
+@task.kubernetes(
+    image="bsantanna/compute-document-utils",
+    namespace="default",  # Adjust according to your Kubernetes setup
+    volumes=[volume],
+    volume_mounts=[volume_mount],
+    executor_config={
+        "pod_override": {}
+    }
+)
+def fetch_and_sort_files():
+    import os
+    files = {'pptx': [], 'docx': [], 'pdf': [], 'jpg': [], 'json': []}
+    for root, _, filenames in os.walk('/mnt/data'):
+        for filename in filenames:
+            ext = os.path.splitext(filename)[1].lower()[1:]  # Remove the dot
+            if ext in files:
+                files[ext].append(os.path.join(root, filename))
+    return files
 
-        elif file_type == "pdf":
-            return BashOperator(
-                task_id="export_pdf_to_jpg", bash_command=f"echo processing {file_path}"
-            ).execute(context={})
+@task.kubernetes(image="bsantanna/compute-document-utils", volumes=[volume], volume_mounts=[volume_mount])
+def convert_to_pdf(file_path):
+    # Example command to convert docx to pdf using libreoffice
+    command = f"libreoffice --headless --convert-to pdf {file_path}"
+    os.system(command)
 
-        elif file_type == "jpg":
-            with open(file_path, "rb") as image_file:
-                encoded_string = base64.b64encode(image_file.read()).decode()
-            return PythonOperator(
-                task_id="process_jpg",
-                python_callable=lambda: print(f"Processing JPG: {encoded_string}"),
-                op_args=[encoded_string],
-            ).execute(context={})
+@task.kubernetes(image="bsantanna/compute-document-utils", volumes=[volume], volume_mounts=[volume_mount])
+def pdf_to_jpg(pdf_path):
+    # Example command to convert PDF to JPG, might require additional tools like pdftoppm
+    command = f"pdftoppm -jpeg {pdf_path} {os.path.splitext(pdf_path)[0]}"
+    os.system(command)
 
-        elif file_type == "json":
-            with open(file_path, "r") as json_file:
-                data = json.load(json_file)
-            return PythonOperator(
-                task_id="process_json",
-                python_callable=lambda: print(f"Processing JSON: {data}"),
-                op_args=[data],
-            ).execute(context={})
+@task.kubernetes(image="bsantanna/compute-document-utils", volumes=[volume], volume_mounts=[volume_mount])
+def process_jpg(jpg_path):
+    with open(jpg_path, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode()
+        # Here you would call your Python script with the base64 encoded string
+        print(f"Processing {jpg_path} with base64 content")
 
-    # Define the workflow
-    files = fetch_files()
-    queues = filter_files(files)
+@task.kubernetes(image="bsantanna/compute-document-utils", volumes=[volume], volume_mounts=[volume_mount])
+def process_json(json_path):
+    with open(json_path, 'r') as file:
+        data = json.load(file)
+        # Here you would call your Python script with the JSON data
+        print(f"Processing JSON from {json_path}")
 
-    # Use .expand for dynamic task mapping
-    with TaskGroup("process_files_group") as process_files_group:
-        process_tasks = process_file.expand(
-            file_path=[f"/mnt/network-data/storage/projects/{file}" for file_type, files in queues for file in files],
-            file_type=[file_type for file_type, files in queues for _ in files]
-        )
+with dag:
+    files = fetch_and_sort_files()
 
-etl_load_dag = etl_load_dag()
+    # Process PPTX and DOCX to PDF
+    for file in files['pptx'] + files['docx']:
+        convert_to_pdf(file)
+
+    # Process PDF to JPG
+    for pdf in files['pdf']:
+        pdf_to_jpg(pdf)
+
+    # Process JPG and JSON
+    for jpg in files['jpg']:
+        process_jpg(jpg)
+    for json_file in files['json']:
+        process_json(json_file)
