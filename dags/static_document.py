@@ -65,7 +65,7 @@ volume_mount = V1VolumeMount(
         }
     }
 )
-def fetch_and_sort_files():
+def process_files():
     import os
     files = {'pptx': [], 'docx': [], 'pdf': [], 'jpg': [], 'json': []}
     for root, _, filenames in os.walk('/mnt/data'):
@@ -73,43 +73,7 @@ def fetch_and_sort_files():
             ext = os.path.splitext(filename)[1].lower()[1:]
             if ext in files:
                 files[ext].append(os.path.join(root, filename))
-    return files
-
-@task.kubernetes(image="bsantanna/compute-document-utils", volumes=[volume], volume_mounts=[volume_mount])
-def process_files(files_dict):
-    for file_type, file_list in files_dict.items():
-        for file in file_list:
-            if file_type in ['pptx', 'docx']:
-                convert_to_pdf(file)
-            elif file_type == 'pdf':
-                pdf_to_jpg(file)
-            elif file_type == 'jpg':
-                process_jpg(file)
-            elif file_type == 'json':
-                process_json(file)
-
-@task.kubernetes(image="bsantanna/compute-document-utils", volumes=[volume], volume_mounts=[volume_mount])
-def convert_to_pdf(file_path):
-    command = f"echo {file_path}"
-    os.system(command)
-
-@task.kubernetes(image="bsantanna/compute-document-utils", volumes=[volume], volume_mounts=[volume_mount])
-def pdf_to_jpg(pdf_path):
-    command = f"echo {pdf_path}"
-    os.system(command)
-
-@task.kubernetes(image="bsantanna/compute-document-utils", volumes=[volume], volume_mounts=[volume_mount])
-def process_jpg(jpg_path):
-    with open(jpg_path, "rb") as image_file:
-        encoded_string = base64.b64encode(image_file.read()).decode()
-        print(f"Processing {jpg_path} with base64 content")
-
-@task.kubernetes(image="bsantanna/compute-document-utils", volumes=[volume], volume_mounts=[volume_mount])
-def process_json(json_path):
-    with open(json_path, 'r') as file:
-        data = json.load(file)
-        print(f"Processing JSON from {json_path}")
+    print(files)
 
 with dag:
-    files = fetch_and_sort_files()
-    process_files(files)
+    process_files()
