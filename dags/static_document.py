@@ -2,7 +2,8 @@ from airflow import DAG
 from airflow.decorators import task
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
-from kubernetes.client import V1Volume, V1VolumeMount, V1NFSVolumeSource
+from kubernetes.client import V1Volume, V1VolumeMount, V1PersistentVolumeClaimVolumeSource
+from kubernetes.client import V1PersistentVolumeClaim, V1ResourceRequirements
 import base64
 import json
 import os
@@ -22,12 +23,24 @@ dag = DAG(
     catchup=False,
 )
 
+pvc = V1PersistentVolumeClaim(
+    metadata={
+        "name": "nfs-data-claim",
+        "namespace": "compute"
+    },
+    spec={
+        "accessModes": ["ReadWriteOnce"],
+        "resources": V1ResourceRequirements(
+            requests={"storage": "5Gi"}
+        ),
+        "storageClassName": "nfs-client"
+    }
+)
+
 volume = V1Volume(
     name='network-data',
-    nfs=V1NFSVolumeSource(
-        server='192.168.2.197',
-        path='/mnt/network-data',
-        read_only=False
+    persistent_volume_claim=V1PersistentVolumeClaimVolumeSource(
+        claim_name='nfs-data-claim'
     )
 )
 
@@ -44,7 +57,12 @@ volume_mount = V1VolumeMount(
     volumes=[volume],
     volume_mounts=[volume_mount],
     executor_config={
-        "pod_override": {}
+        "pod_override": {
+            "spec": {
+                "volumes": [volume.to_dict()],
+                "persistentVolumeClaims": [pvc.to_dict()]
+            }
+        }
     }
 )
 def fetch_and_sort_files():
@@ -52,7 +70,7 @@ def fetch_and_sort_files():
     files = {'pptx': [], 'docx': [], 'pdf': [], 'jpg': [], 'json': []}
     for root, _, filenames in os.walk('/mnt/data'):
         for filename in filenames:
-            ext = os.path.splitext(filename)[1].lower()[1:]  # Remove the dot
+            ext = os.path.splitext(filename)[1].lower()[1:]
             if ext in files:
                 files[ext].append(os.path.join(root, filename))
     return files
