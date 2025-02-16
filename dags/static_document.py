@@ -1,12 +1,6 @@
 from airflow import DAG
 from airflow.decorators import task
-from airflow.operators.bash import BashOperator
-from airflow.operators.python import PythonOperator
 from kubernetes.client import V1Volume, V1VolumeMount, V1PersistentVolumeClaimVolumeSource
-from kubernetes.client import V1PersistentVolumeClaim, V1ResourceRequirements
-import base64
-import json
-import os
 from datetime import datetime
 
 default_args = {
@@ -23,19 +17,19 @@ dag = DAG(
     catchup=False,
 )
 
-pvc = V1PersistentVolumeClaim(
-    metadata={
-        "name": "nfs-data-claim",
-        "namespace": "compute"
-    },
-    spec={
-        "accessModes": ["ReadWriteMany"],
-        "resources": V1ResourceRequirements(
-            requests={"storage": "5Gi"}
-        ),
-        "storageClassName": "nfs-client"
-    }
-)
+# pvc = V1PersistentVolumeClaim(
+#     metadata={
+#         "name": "nfs-data-claim",
+#         "namespace": "compute"
+#     },
+#     spec={
+#         "accessModes": ["ReadWriteMany"],
+#         "resources": V1ResourceRequirements(
+#             requests={"storage": "5Gi"}
+#         ),
+#         "storageClassName": "nfs-client"
+#     }
+# )
 
 volume = V1Volume(
     name='network-data',
@@ -56,14 +50,14 @@ volume_mount = V1VolumeMount(
     namespace="compute",
     volumes=[volume],
     volume_mounts=[volume_mount],
-    executor_config={
-        "pod_override": {
-            "spec": {
-                "volumes": [volume.to_dict()],
-                "persistentVolumeClaims": [pvc.to_dict()]
-            }
-        }
-    }
+    # executor_config={
+    #     "pod_override": {
+    #         "spec": {
+    #             "volumes": [volume.to_dict()],
+    #             "persistentVolumeClaims": [pvc.to_dict()]
+    #         }
+    #     }
+    # }
 )
 def process_files():
     import os
