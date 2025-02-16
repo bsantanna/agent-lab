@@ -26,7 +26,9 @@ volume = V1Volume(
     name='network-data',
     nfs=V1NFSVolumeSource(
         server='192.168.2.197',
-        path='/mnt/network-data'
+        path='/mnt/network-data',
+        read_only=False,
+        mount_options=["nfsvers=4.2", "port=2767-5535"]
     )
 )
 
@@ -34,7 +36,7 @@ volume_mount = V1VolumeMount(
     name='network-data',
     mount_path='/mnt/data',
     sub_path=None,
-    read_only=True
+    read_only=False
 )
 
 @task.kubernetes(
