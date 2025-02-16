@@ -29,7 +29,7 @@ pvc = V1PersistentVolumeClaim(
         "namespace": "compute"
     },
     spec={
-        "accessModes": ["ReadWriteOnce"],
+        "accessModes": ["ReadWriteMany"],
         "resources": V1ResourceRequirements(
             requests={"storage": "5Gi"}
         ),
