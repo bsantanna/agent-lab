@@ -17,20 +17,6 @@ dag = DAG(
     catchup=False,
 )
 
-# pvc = V1PersistentVolumeClaim(
-#     metadata={
-#         "name": "nfs-data-claim",
-#         "namespace": "compute"
-#     },
-#     spec={
-#         "accessModes": ["ReadWriteMany"],
-#         "resources": V1ResourceRequirements(
-#             requests={"storage": "5Gi"}
-#         ),
-#         "storageClassName": "nfs-client"
-#     }
-# )
-
 volume = V1Volume(
     name='network-data',
     persistent_volume_claim=V1PersistentVolumeClaimVolumeSource(
@@ -49,15 +35,7 @@ volume_mount = V1VolumeMount(
     image="bsantanna/compute-document-utils",
     namespace="compute",
     volumes=[volume],
-    volume_mounts=[volume_mount],
-    # executor_config={
-    #     "pod_override": {
-    #         "spec": {
-    #             "volumes": [volume.to_dict()],
-    #             "persistentVolumeClaims": [pvc.to_dict()]
-    #         }
-    #     }
-    # }
+    volume_mounts=[volume_mount]
 )
 def process_files():
     import os
