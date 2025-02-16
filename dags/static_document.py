@@ -27,8 +27,7 @@ volume = V1Volume(
     nfs=V1NFSVolumeSource(
         server='192.168.2.197',
         path='/mnt/network-data',
-        read_only=False,
-        mount_options=["nfsvers=4.2", "port=2767-5535"]
+        read_only=False
     )
 )
 
