@@ -105,10 +105,7 @@ def process_jpg_files(ti=None):
 
 with dag:
     mapped_files = map_files()
-    pptx_task = process_pptx_files(mapped_files)
-    docx_task = process_docx_files(mapped_files)
-    pdf_task = process_pdf_files(mapped_files)
-    jpg_task = process_jpg_files(mapped_files)
-
-    # Set task dependencies
-    mapped_files >> [pptx_task, docx_task, pdf_task, jpg_task]
+    process_pptx_files(mapped_files)
+    process_docx_files(mapped_files)
+    process_pdf_files(mapped_files)
+    process_jpg_files(mapped_files)
