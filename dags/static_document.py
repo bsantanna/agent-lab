@@ -61,7 +61,7 @@ def map_files():
     volumes=[volume],
     volume_mounts=[volume_mount],
 )
-def process_pptx_files(ti):
+def process_pptx_files(ti=None):
     files_dict = ti.xcom_pull(task_ids='map_files')
     pptx_files = files_dict['pptx']
     print(f"Processing the following pptx files: {pptx_files}")
@@ -73,7 +73,7 @@ def process_pptx_files(ti):
     volumes=[volume],
     volume_mounts=[volume_mount],
 )
-def process_docx_files(ti):
+def process_docx_files(ti=None):
     files_dict = ti.xcom_pull(task_ids='map_files')
     docx_files = files_dict['docx']
     print(f"Processing the following docx files: {docx_files}")
@@ -85,7 +85,7 @@ def process_docx_files(ti):
     volumes=[volume],
     volume_mounts=[volume_mount],
 )
-def process_pdf_files(ti):
+def process_pdf_files(ti=None):
     files_dict = ti.xcom_pull(task_ids='map_files')
     pdf_files = files_dict['pdf']
     print(f"Processing the following pdf files: {pdf_files}")
@@ -105,10 +105,10 @@ def process_jpg_files(ti=None):
 
 with dag:
     mapped_files = map_files()
-    pptx_task = process_pptx_files()
-    docx_task = process_docx_files()
-    pdf_task = process_pdf_files()
-    jpg_task = process_jpg_files()
+    pptx_task = process_pptx_files(mapped_files)
+    docx_task = process_docx_files(mapped_files)
+    pdf_task = process_pdf_files(mapped_files)
+    jpg_task = process_jpg_files(mapped_files)
 
     # Set task dependencies
     mapped_files >> [pptx_task, docx_task, pdf_task, jpg_task]
