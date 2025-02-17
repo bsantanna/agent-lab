@@ -39,28 +39,6 @@ volume_mount = V1VolumeMount(
     volumes=[volume],
     volume_mounts=[volume_mount],
 )
-def process_files():
-    import os
-
-    files = {"pptx": [], "docx": [], "pdf": [], "jpg": []}
-    for root, _, filenames in os.walk("/mnt/data"):
-        for filename in filenames:
-            ext = os.path.splitext(filename)[1].lower()[1:]
-            if ext in files:
-                files[ext].append(os.path.join(root, filename))
-
-    process_pptx_files(files["pptx"])
-    process_docx_files(files["docx"])
-    process_pdf_files(files["pdf"])
-    process_jpg_files(files["jpg"])
-
-
-@task.kubernetes(
-    image="bsantanna/compute-document-utils",
-    namespace="compute",
-    volumes=[volume],
-    volume_mounts=[volume_mount],
-)
 def process_pptx_files(pptx_files):
     print(f"Processing the following pptx files: {pptx_files}")
 
@@ -93,6 +71,29 @@ def process_pdf_files(pdf_files):
 )
 def process_jpg_files(jpg_files):
     print(f"Processing the following jpg files: {jpg_files}")
+
+
+@task.kubernetes(
+    image="bsantanna/compute-document-utils",
+    namespace="compute",
+    volumes=[volume],
+    volume_mounts=[volume_mount],
+)
+def process_files():
+    import os
+
+    files = {"pptx": [], "docx": [], "pdf": [], "jpg": []}
+    for root, _, filenames in os.walk("/mnt/data"):
+        for filename in filenames:
+            ext = os.path.splitext(filename)[1].lower()[1:]
+            if ext in files:
+                files[ext].append(os.path.join(root, filename))
+
+    process_pptx_files(files["pptx"])
+    process_docx_files(files["docx"])
+    process_pdf_files(files["pdf"])
+    process_jpg_files(files["jpg"])
+
 
 
 with dag:
