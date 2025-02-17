@@ -43,6 +43,7 @@ volume_mount = V1VolumeMount(
 )
 def process_pptx_files():
     import os
+    import subprocess
     pptx_files = []
     for root, _, filenames in os.walk("/mnt/data"):
         for filename in filenames:
@@ -50,7 +51,18 @@ def process_pptx_files():
             if ext == "pptx":
                 pptx_files.append(os.path.join(root, filename))
 
-    print(f"Processing the following pptx files: {pptx_files}")
+    input_data = '\n'.join(pptx_files) + '\n'
+    try:
+        result = subprocess.run(
+            ['convert_to_pdf'],
+            input=input_data,
+            text=True,
+            capture_output=True,
+            check=True
+        )
+        print("Result:", result.stdout)
+    except subprocess.CalledProcessError as e:
+        print("An error occurred:", e.stderr)
 
 
 @task.kubernetes(
@@ -61,13 +73,27 @@ def process_pptx_files():
 )
 def process_docx_files():
     import os
+    import subprocess
     docx_files = []
     for root, _, filenames in os.walk("/mnt/data"):
         for filename in filenames:
             ext = os.path.splitext(filename)[1].lower()[1:]
             if ext == "docx":
                 docx_files.append(os.path.join(root, filename))
-    print(f"Processing the following docx files: {docx_files}")
+
+    input_data = '\n'.join(docx_files) + '\n'
+    try:
+        result = subprocess.run(
+            ['convert_to_pdf'],
+            input=input_data,
+            text=True,
+            capture_output=True,
+            check=True
+        )
+        print("Result:", result.stdout)
+    except subprocess.CalledProcessError as e:
+        print("An error occurred:", e.stderr)
+
 
 
 @task.kubernetes(
@@ -78,13 +104,26 @@ def process_docx_files():
 )
 def process_pdf_files():
     import os
+    import subprocess
     pdf_files = []
     for root, _, filenames in os.walk("/mnt/data"):
         for filename in filenames:
             ext = os.path.splitext(filename)[1].lower()[1:]
             if ext == "pdf":
                 pdf_files.append(os.path.join(root, filename))
-    print(f"Processing the following pdf files: {pdf_files}")
+
+    input_data = '\n'.join(pdf_files) + '\n'
+    try:
+        result = subprocess.run(
+            ['extract_images'],
+            input=input_data,
+            text=True,
+            capture_output=True,
+            check=True
+        )
+        print("Result:", result.stdout)
+    except subprocess.CalledProcessError as e:
+        print("An error occurred:", e.stderr)
 
 
 @task.kubernetes(
