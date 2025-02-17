@@ -61,7 +61,7 @@ def map_files():
     volumes=[volume],
     volume_mounts=[volume_mount],
 )
-def process_pptx_files(ti=None):
+def process_pptx_files(ti):
     files_dict = ti.xcom_pull(task_ids='map_files')
     pptx_files = files_dict['pptx']
     print(f"Processing the following pptx files: {pptx_files}")
@@ -73,7 +73,7 @@ def process_pptx_files(ti=None):
     volumes=[volume],
     volume_mounts=[volume_mount],
 )
-def process_docx_files(ti=None):
+def process_docx_files(ti):
     files_dict = ti.xcom_pull(task_ids='map_files')
     docx_files = files_dict['docx']
     print(f"Processing the following docx files: {docx_files}")
@@ -85,7 +85,7 @@ def process_docx_files(ti=None):
     volumes=[volume],
     volume_mounts=[volume_mount],
 )
-def process_pdf_files(ti=None):
+def process_pdf_files(ti):
     files_dict = ti.xcom_pull(task_ids='map_files')
     pdf_files = files_dict['pdf']
     print(f"Processing the following pdf files: {pdf_files}")
