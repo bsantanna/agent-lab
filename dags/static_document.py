@@ -35,35 +35,21 @@ volume_mount = V1VolumeMount(
     read_only=False
 )
 
-
 @task.kubernetes(
     image="bsantanna/compute-document-utils",
     namespace="compute",
     volumes=[volume],
     volume_mounts=[volume_mount],
 )
-def map_files():
+def process_pptx_files():
     import os
-
-    files = {"pptx": [], "docx": [], "pdf": [], "jpg": []}
+    pptx_files = []
     for root, _, filenames in os.walk("/mnt/data"):
         for filename in filenames:
             ext = os.path.splitext(filename)[1].lower()[1:]
-            if ext in files:
-                files[ext].append(os.path.join(root, filename))
+            if ext == "pptx":
+                pptx_files.append(os.path.join(root, filename))
 
-    return files
-
-
-@task.kubernetes(
-    image="bsantanna/compute-document-utils",
-    namespace="compute",
-    volumes=[volume],
-    volume_mounts=[volume_mount],
-)
-def process_pptx_files(ti=None):
-    files_dict = ti.xcom_pull(task_ids='map_files')
-    pptx_files = files_dict['pptx']
     print(f"Processing the following pptx files: {pptx_files}")
 
 
@@ -73,9 +59,14 @@ def process_pptx_files(ti=None):
     volumes=[volume],
     volume_mounts=[volume_mount],
 )
-def process_docx_files(ti=None):
-    files_dict = ti.xcom_pull(task_ids='map_files')
-    docx_files = files_dict['docx']
+def process_docx_files():
+    import os
+    docx_files = []
+    for root, _, filenames in os.walk("/mnt/data"):
+        for filename in filenames:
+            ext = os.path.splitext(filename)[1].lower()[1:]
+            if ext == "docx":
+                docx_files.append(os.path.join(root, filename))
     print(f"Processing the following docx files: {docx_files}")
 
 
@@ -85,9 +76,14 @@ def process_docx_files(ti=None):
     volumes=[volume],
     volume_mounts=[volume_mount],
 )
-def process_pdf_files(ti=None):
-    files_dict = ti.xcom_pull(task_ids='map_files')
-    pdf_files = files_dict['pdf']
+def process_pdf_files():
+    import os
+    pdf_files = []
+    for root, _, filenames in os.walk("/mnt/data"):
+        for filename in filenames:
+            ext = os.path.splitext(filename)[1].lower()[1:]
+            if ext == "pdf":
+                pdf_files.append(os.path.join(root, filename))
     print(f"Processing the following pdf files: {pdf_files}")
 
 
@@ -97,15 +93,21 @@ def process_pdf_files(ti=None):
     volumes=[volume],
     volume_mounts=[volume_mount],
 )
-def process_jpg_files(ti=None):
-    files_dict = ti.xcom_pull(task_ids='map_files')
-    jpg_files = files_dict['jpg']
+def process_jpg_files():
+    import os
+    jpg_files = []
+    for root, _, filenames in os.walk("/mnt/data"):
+        for filename in filenames:
+            ext = os.path.splitext(filename)[1].lower()[1:]
+            if ext == "jpg":
+                jpg_files.append(os.path.join(root, filename))
     print(f"Processing the following jpg files: {jpg_files}")
 
 
 with dag:
-    mapped_files = map_files()
-    process_pptx_files(mapped_files)
-    process_docx_files(mapped_files)
-    process_pdf_files(mapped_files)
-    process_jpg_files(mapped_files)
+    pptx_task = process_pptx_files()
+    docx_task = process_docx_files()
+    pdf_task = process_pdf_files()
+    jpg_task = process_jpg_files()
+
+    [pptx_task, docx_task] >> pdf_task >> jpg_task
