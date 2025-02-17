@@ -79,7 +79,7 @@ def process_jpg_files(jpg_files):
     volumes=[volume],
     volume_mounts=[volume_mount],
 )
-def process_files():
+def map_files():
     import os
 
     files = {"pptx": [], "docx": [], "pdf": [], "jpg": []}
@@ -89,12 +89,13 @@ def process_files():
             if ext in files:
                 files[ext].append(os.path.join(root, filename))
 
-    process_pptx_files(files["pptx"])
-    process_docx_files(files["docx"])
-    process_pdf_files(files["pdf"])
-    process_jpg_files(files["jpg"])
+    return files
 
 
 
 with dag:
-    process_files()
+    mapped_files = map_files()
+    process_pptx_files(mapped_files['pptx'])
+    process_docx_files(mapped_files['docx'])
+    process_pdf_files(mapped_files['pdf'])
+    process_jpg_files(mapped_files['jpg'])
