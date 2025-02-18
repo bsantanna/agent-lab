@@ -182,6 +182,7 @@ class Container(containers.DeclarativeContainer):
         integration_service=integration_service,
         vault_client=vault_client,
         graph_persistence_factory=graph_persistence_factory,
+        attachment_service=attachment_service,
     )
 
     agent_registry = providers.Singleton(
