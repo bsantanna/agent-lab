@@ -1,13 +1,17 @@
 from pathlib import Path
 
 import hvac
-from langgraph.graph import add_messages
+from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.prompts import ChatPromptTemplate
+from langgraph.constants import START, END
+from langgraph.graph import add_messages, StateGraph
 from typing_extensions import TypedDict, List, Annotated
 
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.interface.api.messages.schema import MessageRequest
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.base import WorkflowAgent
+from app.services.agent_types.vision_document.schema import ImageAnalysis
 from app.services.agents import AgentService
 from app.services.attachments import AttachmentService
 from app.services.integrations import IntegrationService
@@ -47,8 +51,45 @@ class VisionDocumentAgent(WorkflowAgent):
         )
         self.attachment_service = attachment_service
 
+    def get_image_analysis_chain(self, llm, execution_system_prompt):
+        structured_llm_generator = llm.with_structured_output(ImageAnalysis)
+        generate_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", execution_system_prompt),
+                (
+                    "human",
+                    "<query>{query}</query>",
+                ),
+            ]
+        )
+        return generate_prompt | structured_llm_generator
+
+    def generate(self, state: AgentState):
+        agent_id = state["agent_id"]
+        query = state["query"]
+        execution_system_prompt = state["execution_system_prompt"]
+        image_base64 = state["image_base64"]
+        chat_model = self.get_chat_model(agent_id)
+        generation = self.get_image_analysis_chain(
+            chat_model, execution_system_prompt
+        ).invoke({"query": query, "image_base64": image_base64})
+        generation["messages"] = [
+            HumanMessage(content=query),
+            AIMessage(content=generation["generation"]),
+        ]
+        return generation
+
     def get_workflow_builder(self, agent_id: str):
-        pass
+        workflow_builder = StateGraph(AgentState)
+
+        # node definitions
+        workflow_builder.add_node("generate", self.generate)
+
+        # edge definitions
+        workflow_builder.add_edge(START, "generate")
+        workflow_builder.add_edge("generate", END)
+
+        return workflow_builder
 
     def get_input_params(self, message_request: MessageRequest):
         settings = self.agent_setting_service.get_agent_settings(
