@@ -6,6 +6,7 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.instrumentation.langchain import LangchainInstrumentor
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs._internal.export import BatchLogRecordProcessor
 from opentelemetry.sdk.metrics import MeterProvider
@@ -50,3 +51,4 @@ if collector_endpoint is not None:
 class Tracer:
     def setup(self, app):
         FastAPIInstrumentor.instrument_app(app)
+        LangchainInstrumentor().instrument()
