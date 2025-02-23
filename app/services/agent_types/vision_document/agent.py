@@ -1,16 +1,15 @@
 from pathlib import Path
 
 import hvac
-from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.constants import START, END
-from langgraph.graph import add_messages, StateGraph
+from langgraph.graph import StateGraph
 from typing_extensions import TypedDict, List, Annotated
 
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.interface.api.messages.schema import MessageRequest
 from app.services.agent_settings import AgentSettingService
-from app.services.agent_types.base import WorkflowAgent
+from app.services.agent_types.base import WorkflowAgent, join_messages
 from app.services.agent_types.vision_document.schema import ImageAnalysis
 from app.services.agents import AgentService
 from app.services.attachments import AttachmentService
@@ -23,7 +22,7 @@ class AgentState(TypedDict):
     agent_id: str
     query: str
     generation: str
-    messages: Annotated[List, add_messages]
+    messages: Annotated[List, join_messages]
     image_base64: str
     execution_system_prompt: str
 
@@ -74,8 +73,11 @@ class VisionDocumentAgent(WorkflowAgent):
             chat_model, execution_system_prompt
         ).invoke({"query": query, "image_base64": image_base64})
         generation["messages"] = [
-            HumanMessage(content=query),
-            AIMessage(content=generation["generation"]),
+            self.create_thought_chain(
+                human_input=query,
+                ai_response=generation["generation"],
+                connection=generation["connection"],
+            )
         ]
         return generation
 
