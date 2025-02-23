@@ -17,6 +17,7 @@ markitdown
 opentelemetry-api
 opentelemetry-exporter-otlp-proto-http
 opentelemetry-instrumentation-fastapi
+opentelemetry-instrumentation-langchain
 opentelemetry-sdk
 pre-commit
 psutil

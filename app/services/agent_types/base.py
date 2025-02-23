@@ -7,6 +7,7 @@ from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseChatModel
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from typing_extensions import List
 
 from app.domain.exceptions.base import ResourceNotFoundError
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
@@ -16,6 +17,15 @@ from app.services.agents import AgentService
 from app.services.integrations import IntegrationService
 from app.services.language_model_settings import LanguageModelSettingService
 from app.services.language_models import LanguageModelService
+
+
+def join_messages(left: List, right: List) -> List:
+    if not isinstance(left, list):
+        left = [left]
+    if not isinstance(right, list):
+        right = [right]
+
+    return left + right
 
 
 class AgentBase(ABC):
@@ -154,6 +164,28 @@ class WorkflowAgent(AgentBase, ABC):
     def get_input_params(self, message_request: MessageRequest):
         pass
 
+    def create_thought_chain(self, human_input: str, ai_response: str, connection: str):
+        """
+        Creates a chain of thought from a human message and an AI response.
+
+        Args:
+            human_input (str): The human's input message
+            ai_response (str): The AI's response message
+            connection  (str): The connection between input and response.
+
+        Returns:
+            str: A formatted chain of thought connecting the two messages
+        """
+
+        # Build the chain of thought
+        thought_chain = (
+            f"First: The human asked or stated - {human_input}\n"
+            f"Then: The AI responded with - {ai_response}\n"
+            f"Connection: {connection}"
+        )
+
+        return thought_chain
+
     def process_message(self, message_request: MessageRequest) -> MessageBase:
         checkpointer = self.graph_persistence_factory.build_checkpoint_saver()
         workflow = self.get_workflow_builder(message_request.agent_id).compile(
@@ -163,7 +195,7 @@ class WorkflowAgent(AgentBase, ABC):
             "configurable": {
                 "thread_id": message_request.agent_id,
             },
-            "recursion_limit": 12,
+            "recursion_limit": 30,
         }
         inputs = self.get_input_params(message_request)
         workflow_result = workflow.invoke(inputs, config)
