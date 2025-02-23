@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from langchain_core.messages import AIMessage, HumanMessage
 from langchain_text_splitters import CharacterTextSplitter
 from langgraph.managed import RemainingSteps
 from typing_extensions import Annotated, List, TypedDict, Literal
@@ -10,7 +9,7 @@ from langchain_core.documents import Document
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.constants import START, END
-from langgraph.graph import add_messages, StateGraph
+from langgraph.graph import StateGraph
 
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.vectors import DocumentRepository
@@ -22,7 +21,7 @@ from app.services.agent_types.adaptive_rag.schema import (
     GradeAnswer,
     GenerateAnswer,
 )
-from app.services.agent_types.base import WorkflowAgent
+from app.services.agent_types.base import WorkflowAgent, join_messages
 from app.services.agents import AgentService
 from app.services.integrations import IntegrationService
 from app.services.language_model_settings import LanguageModelSettingService
@@ -34,8 +33,9 @@ class AgentState(TypedDict):
     query: str
     knowledge_base: str
     generation: str
+    connection: str
     documents: List[str]
-    messages: Annotated[List, add_messages]
+    messages: Annotated[List, join_messages]
     remaining_steps: RemainingSteps
     preparation_system_prompt: str
     execution_system_prompt: str
@@ -173,7 +173,7 @@ class AdaptiveRagAgent(WorkflowAgent):
         generation = state["generation"]
         remaining_steps = state["remaining_steps"]
         answer_grader_system_prompt = state["answer_grader_system_prompt"]
-        limit_remaining_steps = 5
+        limit_remaining_steps = 10
         # Check question-answering
         score = self.get_answer_grader(chat_model, answer_grader_system_prompt).invoke(
             {"query": query, "generation": generation}
@@ -248,8 +248,11 @@ class AdaptiveRagAgent(WorkflowAgent):
             {"context": documents, "query": query, "knowledge_base": knowledge_base}
         )
         generation["messages"] = [
-            HumanMessage(content=query),
-            AIMessage(content=generation["generation"]),
+            self.create_thought_chain(
+                human_input=query,
+                ai_response=generation["generation"],
+                connection=generation["connection"],
+            )
         ]
         return generation
 
@@ -306,7 +309,7 @@ class AdaptiveRagAgent(WorkflowAgent):
             text_splitter = CharacterTextSplitter()
             history = ""
             for message in messages:
-                history = f"{history}\n{message.type}: {message.content}"
+                history = f"{history}\n---\n{message}"
             chunks = text_splitter.split_text(history)
             documents = [Document(page_content=chunk) for chunk in chunks]
 
@@ -331,7 +334,14 @@ class AdaptiveRagAgent(WorkflowAgent):
         transformed_query = self.get_query_rewriter(
             chat_model, query_rewriter_system_prompt
         ).invoke({"query": query})
-        messages = [AIMessage(content=f"Transformed query: {transformed_query}")]
+        # messages = [AIMessage(content=f"Transformed query: {transformed_query}")]
+        messages = [
+            self.create_thought_chain(
+                human_input=query,
+                ai_response=f"Transformed query: {transformed_query}",
+                connection="Transformed query can help generating a better answer.",
+            )
+        ]
         return {"query": transformed_query, "messages": messages}
 
     def decide_to_generate(self, state: AgentState):
