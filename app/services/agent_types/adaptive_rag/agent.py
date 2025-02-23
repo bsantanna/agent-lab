@@ -334,7 +334,6 @@ class AdaptiveRagAgent(WorkflowAgent):
         transformed_query = self.get_query_rewriter(
             chat_model, query_rewriter_system_prompt
         ).invoke({"query": query})
-        # messages = [AIMessage(content=f"Transformed query: {transformed_query}")]
         messages = [
             self.create_thought_chain(
                 human_input=query,
