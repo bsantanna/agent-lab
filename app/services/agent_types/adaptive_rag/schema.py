@@ -32,4 +32,9 @@ class RouteQuery(TypedDict):
 class GenerateAnswer(TypedDict):
     """Generate a good answer to user query based on context and previous_messages."""
 
+    connection: Annotated[
+        str,
+        ...,
+        "A brief and solid argument connecting user query and generated answer.",
+    ]
     generation: Annotated[str, ..., "A generated good answer to user query."]
