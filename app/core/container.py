@@ -23,6 +23,7 @@ from app.services.agent_types.test_echo.test_echo_agent import TestEchoAgent
 from app.services.agent_types.three_phase_react.agent import (
     ThreePhaseReactAgent,
 )
+from app.services.agent_types.vision_document.agent import VisionDocumentAgent
 from app.services.agents import AgentService
 from app.services.attachments import AttachmentService
 from app.services.integrations import IntegrationService
@@ -172,11 +173,24 @@ class Container(containers.DeclarativeContainer):
         vault_client=vault_client,
     )
 
+    vision_document_agent = providers.Factory(
+        VisionDocumentAgent,
+        agent_service=agent_service,
+        agent_setting_service=agent_setting_service,
+        language_model_service=language_model_service,
+        language_model_setting_service=language_model_setting_service,
+        integration_service=integration_service,
+        vault_client=vault_client,
+        graph_persistence_factory=graph_persistence_factory,
+        attachment_service=attachment_service,
+    )
+
     agent_registry = providers.Singleton(
         AgentRegistry,
         adaptive_rag_agent=adaptive_rag_agent,
         test_echo_agent=test_echo_agent,
         three_phase_react_agent=three_phase_react_agent,
+        vision_document_agent=vision_document_agent,
     )
 
     tracer = providers.Singleton(Tracer)

@@ -13,7 +13,12 @@ class AgentCreateRequest(BaseModel):
 
     @field_validator("agent_type")
     def validate_agent_type(cls, v):
-        valid_types = ["adaptive_rag", "test_echo", "three_phase_react"]
+        valid_types = [
+            "adaptive_rag",
+            "test_echo",
+            "three_phase_react",
+            "vision_document",
+        ]
         if v not in valid_types:
             raise InvalidFieldError("agent_type", "not supported")
         return v

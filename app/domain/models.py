@@ -12,7 +12,13 @@ from sqlalchemy.orm import relationship
 
 from app.infrastructure.database.sql import Base
 
-agent_type = Enum("adaptive_rag", "test_echo", "three_phase_react", name="agent_type")
+agent_type = Enum(
+    "adaptive_rag",
+    "test_echo",
+    "three_phase_react",
+    "vision_document",
+    name="agent_type",
+)
 
 integration_type = Enum(
     "anthropic_api_v1",

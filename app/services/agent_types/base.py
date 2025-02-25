@@ -164,23 +164,25 @@ class WorkflowAgent(AgentBase, ABC):
     def get_input_params(self, message_request: MessageRequest):
         pass
 
-    def create_thought_chain(self, human_input: str, ai_response: str, connection: str):
-        """
-        Creates a chain of thought from a human message and an AI response.
-
-        Args:
-            human_input (str): The human's input message
-            ai_response (str): The AI's response message
-            connection  (str): The connection between input and response.
-
-        Returns:
-            str: A formatted chain of thought connecting the two messages
-        """
-
+    def create_thought_chain(
+        self,
+        human_input: str,
+        ai_response: str,
+        connection: str,
+        llm: BaseChatModel = None,
+        token_limit: int = 1024,
+    ):
         # Build the chain of thought
+        prompt = (
+            f"Summarize the text delimited by <ai_resp></ai_resp> using at most {token_limit} tokens.\n"
+            f"<ai_resp>{ai_response}</ai_resp>"
+        )
+        processed_response = (
+            llm.invoke(prompt).content if llm is not None else ai_response
+        )
         thought_chain = (
             f"First: The human asked or stated - {human_input}\n"
-            f"Then: The AI responded with - {ai_response}\n"
+            f"Then: The AI responded with - {processed_response}\n"
             f"Connection: {connection}"
         )
 

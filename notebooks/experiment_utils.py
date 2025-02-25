@@ -99,3 +99,16 @@ def create_xai_agent(
     return create_agent_with_integration(
         llm_tag, agent_type, agent_lab_endpoint, integration_params
     )
+
+
+def create_attachment(
+    file_path: str,
+    content_type: str,
+    agent_lab_endpoint: str = "http://localhost:18000",
+) -> str:
+    with open(file_path, "rb") as file:
+        attachment_response = requests.post(
+            f"{agent_lab_endpoint}/messages/attachment/upload",
+            files={"file": (file_path, file, content_type)},
+        )
+        return attachment_response.json()["id"]

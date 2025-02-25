@@ -7,11 +7,13 @@ class AgentRegistry:
         adaptive_rag_agent: AgentBase,
         test_echo_agent: AgentBase,
         three_phase_react_agent: AgentBase,
+        vision_document_agent: AgentBase,
     ):
         self.registry = {
             "adaptive_rag": adaptive_rag_agent,
             "test_echo": test_echo_agent,
             "three_phase_react": three_phase_react_agent,
+            "vision_document": vision_document_agent,
         }
 
     def get_agent(self, agent_type: str) -> AgentBase:
