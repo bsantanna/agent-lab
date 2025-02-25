@@ -1,3 +1,5 @@
+import base64
+import mimetypes
 from pathlib import Path
 
 import hvac
@@ -10,7 +12,6 @@ from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.interface.api.messages.schema import MessageRequest
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.base import WorkflowAgent, join_messages
-from app.services.agent_types.vision_document.schema import ImageAnalysis
 from app.services.agents import AgentService
 from app.services.attachments import AttachmentService
 from app.services.integrations import IntegrationService
@@ -21,9 +22,10 @@ from app.services.language_models import LanguageModelService
 class AgentState(TypedDict):
     agent_id: str
     query: str
-    generation: str
+    generation: dict
     messages: Annotated[List, join_messages]
     image_base64: str
+    image_content_type: str
     execution_system_prompt: str
 
 
@@ -50,14 +52,25 @@ class VisionDocumentAgent(WorkflowAgent):
         )
         self.attachment_service = attachment_service
 
-    def get_image_analysis_chain(self, llm, execution_system_prompt):
-        structured_llm_generator = llm.with_structured_output(ImageAnalysis)
+    def get_image_analysis_chain(
+        self, llm, execution_system_prompt, image_content_type
+    ):
+        structured_llm_generator = (
+            llm  # TODO llm.with_structured_output(ImageAnalysis, method="json_mode")
+        )
         generate_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", execution_system_prompt),
                 (
                     "human",
-                    "<query>{query}</query>",
+                    [
+                        {"type": "text", "text": "<query>{query}</query>"},
+                        {
+                            "type": "image_url",
+                            "image_url": f"data:{image_content_type};base64,"
+                            + "{image_base64}",
+                        },
+                    ],
                 ),
             ]
         )
@@ -68,18 +81,20 @@ class VisionDocumentAgent(WorkflowAgent):
         query = state["query"]
         execution_system_prompt = state["execution_system_prompt"]
         image_base64 = state["image_base64"]
+        image_content_type = state["image_content_type"]
+        messages = state["messages"]
         chat_model = self.get_chat_model(agent_id)
         generation = self.get_image_analysis_chain(
-            chat_model, execution_system_prompt
-        ).invoke({"query": query, "image_base64": image_base64})
-        generation["messages"] = [
+            chat_model, execution_system_prompt, image_content_type
+        ).invoke({"query": query, "context": messages, "image_base64": image_base64})
+        cot_messages = [
             self.create_thought_chain(
                 human_input=query,
-                ai_response=generation["generation"],
-                connection=generation["connection"],
+                ai_response=generation.content,
+                connection="Image analysis",
             )
         ]
-        return generation
+        return {"generation": generation.content, "messages": cot_messages}
 
     def get_workflow_builder(self, agent_id: str):
         workflow_builder = StateGraph(AgentState)
@@ -101,10 +116,19 @@ class VisionDocumentAgent(WorkflowAgent):
             setting.setting_key: setting.setting_value for setting in settings
         }
 
+        attachment = self.attachment_service.get_attachment_by_id(
+            message_request.attachment_id
+        )
+
+        image_base64 = base64.b64encode(attachment.raw_content).decode("utf-8")
+        image_content_type = mimetypes.guess_type(attachment.file_name)[0]
+
         return {
             "agent_id": message_request.agent_id,
             "query": message_request.message_content,
             "execution_system_prompt": settings_dict["execution_system_prompt"],
+            "image_base64": image_base64,
+            "image_content_type": image_content_type,
         }
 
     def create_default_settings(self, agent_id: str):
