@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from uuid import uuid4
 
 import pytest
@@ -12,7 +13,7 @@ def client():
     yield TestClient(app)
 
 
-class TestAdaptiveRagAgent:
+class TestVisionDocumentAgent:
     def _create_agent(self, client):
         # create integration
         response = client.post(
@@ -30,7 +31,7 @@ class TestAdaptiveRagAgent:
             url="/llms/create",
             json={
                 "integration_id": integration_id,
-                "language_model_tag": "grok-2",
+                "language_model_tag": "grok-2-vision",
             },
         )
         language_model_id = response_2.json()["id"]
@@ -40,12 +41,12 @@ class TestAdaptiveRagAgent:
             url="/agents/create",
             json={
                 "language_model_id": language_model_id,
-                "agent_type": "adaptive_rag",
+                "agent_type": "vision_document",
                 "agent_name": f"agent-{uuid4()}",
             },
         )
 
-    def _create_message(self, client, message_content):
+    def _create_message(self, client, message_content, attachment_id):
         create_agent_response = self._create_agent(client)
         agent_id = create_agent_response.json()["id"]
 
@@ -55,21 +56,38 @@ class TestAdaptiveRagAgent:
                 "message_role": "human",
                 "message_content": message_content,
                 "agent_id": agent_id,
+                "attachment_id": attachment_id,
             },
         )
+
+    def _upload_file(self, client, filename: str, content_type: str):
+        current_dir = Path(__file__).parent
+        file_path = f"{current_dir}/{filename}"
+
+        # when
+        with open(file_path, "rb") as file:
+            upload_response = client.post(
+                url="/messages/attachment/upload",
+                files={"file": (filename, file, content_type)},
+            )
+
+        return upload_response
 
     @pytest.mark.asyncio
     async def test_post_message(self, client):
         # given
-        message_content = (
-            "You have access to this book 'The Art of War - Sun Tzu' available at static_document_data, "
-            "I want to ask you to summarize in one sentence what is the pinnacle of excellence."
-        )
+        upload_filename = "vision_document_02.png"
+        upload_response = self._upload_file(client, upload_filename, "image/png")
+        attachment_id = upload_response.json()["id"]
+        message_content = "You have this image containing a code snippet, which programming language names can you identify?"
 
         # when
-        create_message_response = self._create_message(client, message_content)
+        create_message_response = self._create_message(
+            client, message_content, attachment_id
+        )
 
         # then
         assert create_message_response.status_code == 200
-        assert "id" in create_message_response.json()
-        assert "assistant" == create_message_response.json()["message_role"]
+        response_dict = create_message_response.json()
+        assert "id" in response_dict
+        assert "assistant" == response_dict["message_role"]

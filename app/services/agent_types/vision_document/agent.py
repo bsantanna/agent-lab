@@ -87,7 +87,7 @@ class VisionDocumentAgent(WorkflowAgent):
 
         # summarize context
         context = "\n---\n".join(previous_messages)
-        if len(previous_messages) > 10:
+        if len(previous_messages) > 5:
             token_limit = 10240
             prompt = (
                 f"Summarize the text delimited by <context></context> using at most {token_limit} tokens.\n"
