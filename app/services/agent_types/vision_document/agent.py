@@ -55,16 +55,16 @@ class VisionDocumentAgent(WorkflowAgent):
     def get_image_analysis_chain(
         self, llm, execution_system_prompt, image_content_type
     ):
-        structured_llm_generator = (
-            llm  # TODO llm.with_structured_output(ImageAnalysis, method="json_mode")
-        )
         generate_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", execution_system_prompt),
                 (
                     "human",
                     [
-                        {"type": "text", "text": "<query>{query}</query>"},
+                        {
+                            "type": "text",
+                            "text": "<query>{query}</query>\n<context>{context}</context>",
+                        },
                         {
                             "type": "image_url",
                             "image_url": f"data:{image_content_type};base64,"
@@ -74,7 +74,7 @@ class VisionDocumentAgent(WorkflowAgent):
                 ),
             ]
         )
-        return generate_prompt | structured_llm_generator
+        return generate_prompt | llm
 
     def generate(self, state: AgentState):
         agent_id = state["agent_id"]
@@ -82,19 +82,34 @@ class VisionDocumentAgent(WorkflowAgent):
         execution_system_prompt = state["execution_system_prompt"]
         image_base64 = state["image_base64"]
         image_content_type = state["image_content_type"]
-        messages = state["messages"]
+        previous_messages = state["messages"]
         chat_model = self.get_chat_model(agent_id)
+
+        # summarize context
+        context = "\n---\n".join(previous_messages)
+        if len(previous_messages) > 10:
+            token_limit = 10240
+            prompt = (
+                f"Summarize the text delimited by <context></context> using at most {token_limit} tokens.\n"
+                f"<context>{context}</context>"
+            )
+            messages = chat_model.invoke(prompt)
+        else:
+            messages = context
+
         generation = self.get_image_analysis_chain(
             chat_model, execution_system_prompt, image_content_type
         ).invoke({"query": query, "context": messages, "image_base64": image_base64})
-        cot_messages = [
+
+        processed_messages = [
             self.create_thought_chain(
                 human_input=query,
                 ai_response=generation.content,
                 connection="Image analysis",
+                llm=chat_model,
             )
         ]
-        return {"generation": generation.content, "messages": cot_messages}
+        return {"generation": generation.content, "messages": processed_messages}
 
     def get_workflow_builder(self, agent_id: str):
         workflow_builder = StateGraph(AgentState)
