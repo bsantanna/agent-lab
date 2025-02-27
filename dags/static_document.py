@@ -7,8 +7,6 @@ from kubernetes.client import (
 )
 from datetime import datetime
 
-from typing_extensions import List
-
 default_args = {
     "owner": "airflow",
     "depends_on_past": False,
@@ -19,7 +17,7 @@ default_args = {
 dag = DAG(
     "static_document_data",
     default_args=default_args,
-    schedule_interval="@daily",
+    schedule="@daily",
     catchup=False,
 )
 
@@ -143,18 +141,28 @@ def process_pdf_files():
     volumes=[volume],
     volume_mounts=[volume_mount],
 )
-def process_jpg_files(
-        agent_lab_endpoint:str,
-        instructions:str,
-        model_tag:str,
-        integration_endpoints:List[str],
-        max_workers:int):
+def process_jpg_files():
 
     import os
     import requests
     from uuid import uuid4
     from itertools import cycle
     from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    # constants
+    agent_lab_endpoint = "http://neptune.btech.software:18080"
+    instructions = (
+        "Identify important features and information. "
+        "You should produce study material from the input prompt, "
+        "so anyone interested in the content can catch up and have "
+        "valuable information at hand."
+    )
+    model_tag = "llava:latest"
+    integration_endpoints = [
+        "http://moon.btech.software:11432",
+        "http://jupiter.btech.software:11432"
+    ]
+    max_workers = 3
 
     # internal functions
     def create_task_agent(api_endpoint:str):
@@ -281,20 +289,6 @@ with dag:
     pptx_task = process_pptx_files()
     docx_task = process_docx_files()
     pdf_task = process_pdf_files()
-    jpg_task = process_jpg_files(
-        agent_lab_endpoint="http://neptune.btech.software:18080",
-        instructions=(
-            "Identify important features and information. "
-            "You should produce study material from the input prompt, "
-            "so anyone interested in the content can catch up and have "
-            "valuable information at hand."
-        ),
-        model_tag="llava:latest",
-        integration_endpoints=[
-            "http://moon.btech.software:11432",
-            "http://jupiter.btech.software:11432"
-        ],
-        max_workers=3
-    )
+    jpg_task = process_jpg_files()
 
     [pptx_task, docx_task] >> pdf_task >> jpg_task

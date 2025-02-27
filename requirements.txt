@@ -1,3 +1,5 @@
+apache-airflow
+apache-airflow[kubernetes]
 dependency-injector
 fastapi[standard]
 flake8
