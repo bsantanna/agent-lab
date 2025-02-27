@@ -24,16 +24,14 @@ dag = DAG(
 volume = V1Volume(
     name="network-data",
     persistent_volume_claim=V1PersistentVolumeClaimVolumeSource(
-        claim_name="nfs-data-claim"
+        claim_name="nfs-data-claim"  # on minikube with https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner/
     ),
 )
 
 volume_mount = V1VolumeMount(
-    name="network-data",
-    mount_path="/mnt/data",
-    sub_path=None,
-    read_only=False
+    name="network-data", mount_path="/mnt/data", sub_path=None, read_only=False
 )
+
 
 @task.kubernetes(
     image="bsantanna/compute-document-utils",
@@ -61,7 +59,7 @@ def process_pptx_files():
             input=input_data,
             text=True,
             capture_output=True,
-            check=True
+            check=True,
         )
         print("Result:", result.stdout)
     except subprocess.CalledProcessError as e:
@@ -94,12 +92,11 @@ def process_docx_files():
             input=input_data,
             text=True,
             capture_output=True,
-            check=True
+            check=True,
         )
         print("Result:", result.stdout)
     except subprocess.CalledProcessError as e:
         print("An error occurred:", e.stderr)
-
 
 
 @task.kubernetes(
@@ -128,7 +125,7 @@ def process_pdf_files():
             input=input_data,
             text=True,
             capture_output=True,
-            check=True
+            check=True,
         )
         print("Result:", result.stdout)
     except subprocess.CalledProcessError as e:
@@ -142,7 +139,6 @@ def process_pdf_files():
     volume_mounts=[volume_mount],
 )
 def process_jpg_files():
-
     import os
     import json
     import requests
@@ -154,7 +150,7 @@ def process_jpg_files():
     agent_lab_endpoint = "http://neptune.btech.software:18000"
     integration_endpoints = [
         "http://moon.btech.software:11434",
-        "http://jupiter.btech.software:11434"
+        "http://jupiter.btech.software:11434",
     ]
     model_tag = "llava:latest"
     instructions = (
@@ -166,7 +162,7 @@ def process_jpg_files():
     max_workers = 3
 
     # internal functions
-    def create_task_agent(api_endpoint:str):
+    def create_task_agent(api_endpoint: str):
         integration_response = requests.post(
             url=f"{agent_lab_endpoint}/integrations/create",
             json={
@@ -204,7 +200,13 @@ def process_jpg_files():
                 with open(file_path, "rb") as jpg_file:
                     upload_response = requests.post(
                         url=f"{agent_lab_endpoint}/messages/attachment/upload",
-                        files={"file": (os.path.basename(file_path), jpg_file, "image/jpeg")}
+                        files={
+                            "file": (
+                                os.path.basename(file_path),
+                                jpg_file,
+                                "image/jpeg",
+                            )
+                        },
                     )
                     attachment_id = upload_response.json()["id"]
 
@@ -230,7 +232,6 @@ def process_jpg_files():
 
         return (False, file_path, f"Error processing: {file_path}", task_agent)
 
-
     # map jpg files
     jpg_files = []
     for root, _, filenames in os.walk("/mnt/data"):
@@ -251,7 +252,7 @@ def process_jpg_files():
             "successful": 0,
             "failed": 0,
             "errors": [],
-            "agent_usage": {task_agent: 0 for task_agent in task_agents}
+            "agent_usage": {task_agent: 0 for task_agent in task_agents},
         }
 
         # Create a cyclic iterator for round-robin agent selection
@@ -274,15 +275,17 @@ def process_jpg_files():
                     print(f"Successfully processed: {jpg_file} using {used_agent}")
                 else:
                     results["failed"] += 1
-                    results["errors"].append({
-                        "jpg_file": jpg_file,
-                        "error": error_msg,
-                        "agent": used_agent
-                    })
-                    print(f"Failed to process {jpg_file} using {used_agent}: {error_msg}")
+                    results["errors"].append(
+                        {"jpg_file": jpg_file, "error": error_msg, "agent": used_agent}
+                    )
+                    print(
+                        f"Failed to process {jpg_file} using {used_agent}: {error_msg}"
+                    )
 
         # Log summary
-        print(f"Processing complete - Successful: {results['successful']}, Failed: {results['failed']}")
+        print(
+            f"Processing complete - Successful: {results['successful']}, Failed: {results['failed']}"
+        )
         print(f"Endpoint usage: {results['agent_usage']}")
 
 
