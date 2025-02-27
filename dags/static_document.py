@@ -11,7 +11,7 @@ default_args = {
     "owner": "airflow",
     "depends_on_past": False,
     "start_date": datetime(2025, 1, 1),
-    "retries": 1,
+    "retries": 0,
 }
 
 dag = DAG(
@@ -54,10 +54,10 @@ def process_pptx_files():
                 pptx_files.append(os.path.join(root, filename))
 
     # convert files using subprocess
-    input_data = '\n'.join(pptx_files) + '\n'
+    input_data = "\n".join(pptx_files) + "\n"
     try:
         result = subprocess.run(
-            ['convert_to_pdf'],
+            ["convert_to_pdf"],
             input=input_data,
             text=True,
             capture_output=True,
@@ -87,10 +87,10 @@ def process_docx_files():
                 docx_files.append(os.path.join(root, filename))
 
     # convert files using subprocess
-    input_data = '\n'.join(docx_files) + '\n'
+    input_data = "\n".join(docx_files) + "\n"
     try:
         result = subprocess.run(
-            ['convert_to_pdf'],
+            ["convert_to_pdf"],
             input=input_data,
             text=True,
             capture_output=True,
@@ -121,10 +121,10 @@ def process_pdf_files():
                 pdf_files.append(os.path.join(root, filename))
 
     # convert files using subprocess
-    input_data = '\n'.join(pdf_files) + '\n'
+    input_data = "\n".join(pdf_files) + "\n"
     try:
         result = subprocess.run(
-            ['extract_images'],
+            ["extract_images"],
             input=input_data,
             text=True,
             capture_output=True,
@@ -197,13 +197,13 @@ def process_jpg_files():
 
     def process_jpg_file(file_path: str, task_agent_iterator):
         task_agent = next(task_agent_iterator)
-        json_file_path = os.path.splitext(file_path)[0] + '.json'
+        json_file_path = f"{os.path.splitext(file_path)[0]}.json"
         try:
             if not os.path.exists(json_file_path):
-                with open(file_path, 'rb') as jpg_file:
+                with open(file_path, "rb") as jpg_file:
                     upload_response = requests.post(
                         url=f"{agent_lab_endpoint}/messages/attachment/upload",
-                        files={'image': (os.path.basename(file_path), jpg_file, 'image/jpeg')}
+                        files={"file": (os.path.basename(file_path), jpg_file, "image/jpeg")}
                     )
                     attachment_id = upload_response.json()["id"]
 
@@ -217,7 +217,7 @@ def process_jpg_files():
                         },
                     )
                     if message_response.status_code == 200:
-                        with open(json_file_path, 'w') as json_file:
+                        with open(json_file_path, "w") as json_file:
                             json_file.write(message_response.json())
 
                     return (True, file_path, None, task_agent)
@@ -246,11 +246,11 @@ def process_jpg_files():
 
         # Results tracking
         results = {
-            'total_files': len(jpg_files),
-            'successful': 0,
-            'failed': 0,
-            'errors': [],
-            'agent_usage': {task_agent: 0 for task_agent in task_agents}
+            "total_files": len(jpg_files),
+            "successful": 0,
+            "failed": 0,
+            "errors": [],
+            "agent_usage": {task_agent: 0 for task_agent in task_agents}
         }
 
         # Create a cyclic iterator for round-robin agent selection
@@ -266,17 +266,17 @@ def process_jpg_files():
             for future in as_completed(future_to_file):
                 success, jpg_file, error_msg, used_agent = future.result()
 
-                results['agent_usage'][used_agent] += 1
+                results["agent_usage"][used_agent] += 1
 
                 if success:
-                    results['successful'] += 1
+                    results["successful"] += 1
                     print(f"Successfully processed: {jpg_file} using {used_agent}")
                 else:
-                    results['failed'] += 1
-                    results['errors'].append({
-                        'jpg_file': jpg_file,
-                        'error': error_msg,
-                        'agent': used_agent
+                    results["failed"] += 1
+                    results["errors"].append({
+                        "jpg_file": jpg_file,
+                        "error": error_msg,
+                        "agent": used_agent
                     })
                     print(f"Failed to process {jpg_file} using {used_agent}: {error_msg}")
 
