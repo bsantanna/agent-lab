@@ -150,7 +150,7 @@ def process_jpg_files():
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
     # constants
-    agent_lab_endpoint = "http://neptune.btech.software:18080"
+    agent_lab_endpoint = "http://neptune.btech.software:18000"
     instructions = (
         "Identify important features and information. "
         "You should produce study material from the input prompt, "
