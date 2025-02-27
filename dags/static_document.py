@@ -144,6 +144,7 @@ def process_pdf_files():
 def process_jpg_files():
 
     import os
+    import json
     import requests
     from uuid import uuid4
     from itertools import cycle
@@ -151,17 +152,17 @@ def process_jpg_files():
 
     # constants
     agent_lab_endpoint = "http://neptune.btech.software:18000"
+    integration_endpoints = [
+        "http://moon.btech.software:11434",
+        "http://jupiter.btech.software:11434"
+    ]
+    model_tag = "llava:latest"
     instructions = (
         "Identify important features and information. "
         "You should produce study material from the input prompt, "
         "so anyone interested in the content can catch up and have "
         "valuable information at hand."
     )
-    model_tag = "llava:latest"
-    integration_endpoints = [
-        "http://moon.btech.software:11432",
-        "http://jupiter.btech.software:11432"
-    ]
     max_workers = 3
 
     # internal functions
@@ -218,7 +219,7 @@ def process_jpg_files():
                     )
                     if message_response.status_code == 200:
                         with open(json_file_path, "w") as json_file:
-                            json_file.write(message_response.json())
+                            json.dump(message_response.json(), json_file)
 
                     return (True, file_path, None, task_agent)
             else:
