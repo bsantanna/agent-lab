@@ -224,8 +224,8 @@ def process_jpg_files():
             else:
                 return (False, file_path, f"File {json_file_path} in place", task_agent)
 
-        except Exception:
-            print(f"Error while processing {file_path}")
+        except Exception as e:
+            print(f"Error while processing {file_path}: {e}")
 
         return (False, file_path, f"Error processing: {file_path}", task_agent)
 
@@ -282,7 +282,7 @@ def process_jpg_files():
 
         # Log summary
         print(f"Processing complete - Successful: {results['successful']}, Failed: {results['failed']}")
-        print(f"Endpoint usage: {results['endpoint_usage']}")
+        print(f"Endpoint usage: {results['agent_usage']}")
 
 
 with dag:
