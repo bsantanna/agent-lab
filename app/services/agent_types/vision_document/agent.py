@@ -106,7 +106,6 @@ class VisionDocumentAgent(WorkflowAgent):
                 human_input=query,
                 ai_response=generation.content,
                 connection="Image analysis",
-                llm=chat_model,
             )
         ]
         return {"generation": generation.content, "messages": processed_messages}
