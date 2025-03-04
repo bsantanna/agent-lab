@@ -67,17 +67,31 @@ class AgentBase(ABC):
         api_endpoint = secrets["data"]["data"]["api_endpoint"]
         api_key = secrets["data"]["data"]["api_key"]
 
+        lm_settings = self.language_model_setting_service.get_language_model_settings(
+            agent.language_model_id
+        )
+
+        lm_settings_dict = {
+            setting.setting_key: setting.setting_value for setting in lm_settings
+        }
+
         if integration.integration_type == "openai_api_v1":
             return OpenAIEmbeddings(
+                model=lm_settings_dict["embeddings"],
                 openai_api_base=api_endpoint,
                 openai_api_key=api_key,
             )
-        # not available in my account
+        # not available
         # if integration.integration_type == "xai_api_v1":
-        #    return OpenAIEmbeddings(model="v1", base_url=api_endpoint, api_key=api_key)
+        #    return OpenAIEmbeddings(
+        #       model=lm_settings_dict["embeddings"],
+        #       base_url=api_endpoint,
+        #       api_key=api_key
+        #    )
         else:
             return OllamaEmbeddings(
-                model="phi3", base_url=f"{os.getenv('OLLAMA_ENDPOINT')}"
+                model=lm_settings_dict["embeddings"],
+                base_url=f"{os.getenv('OLLAMA_ENDPOINT')}",
             )
 
     def get_chat_model(self, agent_id) -> BaseChatModel:
@@ -89,9 +103,7 @@ class AgentBase(ABC):
             agent.language_model_id
         )
         temperature_setting = next(
-            float(setting.setting_value)
-            if setting.setting_key == " temperature"
-            else 0.5
+            float(setting.setting_value) if setting.setting_key == "temperature" else 0
             for setting in lm_settings
         )
         integration = self.integration_service.get_integration_by_id(
