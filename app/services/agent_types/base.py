@@ -102,10 +102,9 @@ class AgentBase(ABC):
         lm_settings = self.language_model_setting_service.get_language_model_settings(
             agent.language_model_id
         )
-        temperature_setting = next(
-            float(setting.setting_value) if setting.setting_key == "temperature" else 0
-            for setting in lm_settings
-        )
+        lm_settings_dict = {
+            setting.setting_key: setting.setting_value for setting in lm_settings
+        }
         integration = self.integration_service.get_integration_by_id(
             language_model.integration_id
         )
@@ -121,21 +120,21 @@ class AgentBase(ABC):
         ):
             return ChatOpenAI(
                 model_name=language_model.language_model_tag,
-                temperature=temperature_setting,
+                temperature=float(lm_settings_dict["temperature"]),
                 openai_api_base=api_endpoint,
                 openai_api_key=api_key,
             )
         elif integration.integration_type == "anthropic_api_v1":
             return ChatAnthropic(
                 model=language_model.language_model_tag,
-                temperature=temperature_setting,
+                temperature=float(lm_settings_dict["temperature"]),
                 anthropic_api_url=api_endpoint,
                 anthropic_api_key=api_key,
             )
         else:
             return ChatOllama(
                 model=language_model.language_model_tag,
-                temperature=temperature_setting,
+                temperature=float(lm_settings_dict["temperature"]),
                 base_url=api_endpoint,
             )
 
