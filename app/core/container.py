@@ -108,6 +108,8 @@ class Container(containers.DeclarativeContainer):
         document_repository=document_repository,
         language_model_service=language_model_service,
         language_model_setting_service=language_model_setting_service,
+        integration_service=integration_service,
+        vault_client=vault_client,
         markdown=markdown,
     )
 
