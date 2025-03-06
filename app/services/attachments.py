@@ -3,8 +3,10 @@ from uuid import uuid4
 
 import hvac
 from fastapi import File
+from langchain_community.document_loaders import UnstructuredMarkdownLoader
 from langchain_ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings
+from langchain_text_splitters import CharacterTextSplitter
 from markitdown import MarkItDown
 
 from app.domain.models import Attachment
@@ -59,15 +61,22 @@ class AttachmentService:
     def delete_attachment_by_id(self, attachment_id: str) -> None:
         return self.attachment_repository.delete_by_id(attachment_id)
 
-    def create_embeddings(
-        self, attachment_id: str, language_model_id: str
+    async def create_embeddings(
+        self, attachment_id: str, language_model_id: str, collection_name: str
     ) -> Attachment:
+        language_model = self.language_model_service.get_language_model_by_id(
+            language_model_id
+        )
+        lm_settings = self.language_model_setting_service.get_language_model_settings(
+            language_model.id
+        )
+        lm_settings_dict = {
+            setting.setting_key: setting.setting_value for setting in lm_settings
+        }
 
-        language_model = self.language_model_service.get_language_model_by_id(language_model_id)
-        lm_settings=self.language_model_setting_service.get_language_model_settings(language_model.id)
-        lm_settings_dict = { setting.setting_key: setting.setting_value for setting in lm_settings }
-
-        integration = self.integration_service.get_integration_by_id(language_model.integration_id)
+        integration = self.integration_service.get_integration_by_id(
+            language_model.integration_id
+        )
         secrets = self.vault_client.secrets.kv.read_secret_version(
             path=f"integration_{integration.id}", raise_on_deleted_version=False
         )
@@ -76,25 +85,37 @@ class AttachmentService:
         api_key = secrets["data"]["data"]["api_key"]
 
         if integration.integration_type == "openai_api_v1":
-            embeddings = OpenAIEmbeddings(
+            embeddings_model = OpenAIEmbeddings(
                 model=lm_settings_dict["embeddings"],
                 openai_api_base=api_endpoint,
                 openai_api_key=api_key,
             )
         # not available
         # if integration.integration_type == "xai_api_v1":
-        #    embeddings = OpenAIEmbeddings(
+        #    embeddings_model = OpenAIEmbeddings(
         #       model=lm_settings_dict["embeddings"],
         #       base_url=api_endpoint,
         #       api_key=api_key
         #    )
         else:
-            embeddings = OllamaEmbeddings(
+            embeddings_model = OllamaEmbeddings(
                 model=lm_settings_dict["embeddings"],
                 base_url=f"{os.getenv('OLLAMA_ENDPOINT')}",
             )
 
         attachment = self.attachment_repository.get_by_id(attachment_id)
+        temp_file_path = f"temp-{uuid4()}"
+        with open(temp_file_path, "wb") as buffer:
+            buffer.write(attachment.raw_content)
 
-        # TODO generate embedding, store embedding, format result
-        pass
+        loader = UnstructuredMarkdownLoader(temp_file_path)
+        documents = loader.load_and_split(
+            CharacterTextSplitter(chunk_size=512, chunk_overlap=64)
+        )
+        self.document_repository.add(embeddings_model, collection_name, documents)
+        updated_attachment = self.attachment_repository.update_attachment(
+            attachment_id, collection_name
+        )
+
+        os.remove(temp_file_path)
+        return updated_attachment
