@@ -67,7 +67,7 @@ class Attachment(Base):
     file_name = Column(String)
     raw_content = Column(LargeBinary)
     parsed_content = Column(Text)
-    embeddings_id = Column(String)
+    embeddings_collection = Column(String)
 
     messages = relationship("Message", back_populates="attachment")
 
