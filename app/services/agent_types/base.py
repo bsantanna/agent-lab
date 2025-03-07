@@ -82,12 +82,16 @@ class AgentBase(ABC):
                 openai_api_key=api_key,
             )
         # not available
-        # if integration.integration_type == "xai_api_v1":
+        # elif integration.integration_type == "xai_api_v1":
         #    return OpenAIEmbeddings(
         #       model=lm_settings_dict["embeddings"],
         #       base_url=api_endpoint,
         #       api_key=api_key
         #    )
+        elif integration.integration_type == "ollama_api_v1":
+            return OllamaEmbeddings(
+                model=lm_settings_dict["embeddings"], base_url=api_endpoint
+            )
         else:
             return OllamaEmbeddings(
                 model=lm_settings_dict["embeddings"],

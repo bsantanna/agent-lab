@@ -1,41 +1,16 @@
-import os
 from uuid import uuid4
 from IPython.display import Image, display
 import requests
-from langchain_community.document_loaders import UnstructuredMarkdownLoader
-from langchain_core.embeddings import Embeddings
-from langchain_text_splitters import CharacterTextSplitter
-from markitdown import MarkItDown
-
-from app.infrastructure.database.vectors import DocumentRepository
 
 
 def print_graph(graph):
     display(Image(graph.get_graph(xray=True).draw_mermaid_png()))
 
 
-def create_static_document(
-    embeddings_model: Embeddings,
-    document_repository: DocumentRepository,
-    file_path: str,
-):
-    md = MarkItDown()
-    result = md.convert(file_path)
-    md_file_path = f"{file_path}.md"
-    with open(md_file_path, "w") as md_file:
-        md_file.write(result.text_content)
-
-    loader = UnstructuredMarkdownLoader(md_file_path)
-    documents = loader.load_and_split(
-        CharacterTextSplitter(chunk_size=512, chunk_overlap=64)
-    )
-    document_repository.add(embeddings_model, "static_document_data", documents)
-
-    os.remove(md_file_path)
-
-
-def create_agent_with_integration(
-    llm_tag: str, agent_type: str, agent_lab_endpoint: str, integration_params: dict
+def create_llm_with_integration(
+    llm_tag: str,
+    integration_params: dict,
+    agent_lab_endpoint: str = "http://localhost:18000",
 ):
     integration_response = requests.post(
         f"{agent_lab_endpoint}/integrations/create", json=integration_params
@@ -50,7 +25,20 @@ def create_agent_with_integration(
 
     llm_response = requests.post(f"{agent_lab_endpoint}/llms/create", json=llm_params)
     llm_response.raise_for_status()
-    llm_result = llm_response.json()
+    return llm_response.json()
+
+
+def create_agent_with_integration(
+    llm_tag: str,
+    agent_type: str,
+    integration_params: dict,
+    agent_lab_endpoint: str = "http://localhost:18000",
+):
+    llm_result = create_llm_with_integration(
+        llm_tag=llm_tag,
+        integration_params=integration_params,
+        agent_lab_endpoint=agent_lab_endpoint,
+    )
 
     agent_params = {
         "agent_name": f"agent_{uuid4()}",
@@ -80,7 +68,10 @@ def create_ollama_agent(
     }
 
     return create_agent_with_integration(
-        llm_tag, agent_type, agent_lab_endpoint, integration_params
+        llm_tag,
+        agent_type,
+        integration_params,
+        agent_lab_endpoint,
     )
 
 
@@ -97,7 +88,10 @@ def create_xai_agent(
     }
 
     return create_agent_with_integration(
-        llm_tag, agent_type, agent_lab_endpoint, integration_params
+        llm_tag,
+        agent_type,
+        integration_params,
+        agent_lab_endpoint,
     )
 
 
@@ -108,7 +102,24 @@ def create_attachment(
 ) -> str:
     with open(file_path, "rb") as file:
         attachment_response = requests.post(
-            f"{agent_lab_endpoint}/messages/attachment/upload",
+            f"{agent_lab_endpoint}/attachments/upload",
             files={"file": (file_path, file, content_type)},
         )
         return attachment_response.json()["id"]
+
+
+def create_embeddings(
+    attachment_id: str,
+    language_model_id: str,
+    collection_name: str,
+    agent_lab_endpoint: str = "http://localhost:18000",
+) -> dict:
+    embeddings_response = requests.post(
+        f"{agent_lab_endpoint}/attachments/embeddings",
+        json={
+            "attachment_id": attachment_id,
+            "language_model_id": language_model_id,
+            "collection_name": collection_name,
+        },
+    )
+    return embeddings_response.json()

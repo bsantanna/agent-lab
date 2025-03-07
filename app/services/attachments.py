@@ -91,12 +91,16 @@ class AttachmentService:
                 openai_api_key=api_key,
             )
         # not available
-        # if integration.integration_type == "xai_api_v1":
+        # elif integration.integration_type == "xai_api_v1":
         #    embeddings_model = OpenAIEmbeddings(
         #       model=lm_settings_dict["embeddings"],
         #       base_url=api_endpoint,
         #       api_key=api_key
         #    )
+        elif integration.integration_type == "ollama_api_v1":
+            embeddings_model = OllamaEmbeddings(
+                model=lm_settings_dict["embeddings"], base_url=api_endpoint
+            )
         else:
             embeddings_model = OllamaEmbeddings(
                 model=lm_settings_dict["embeddings"],
@@ -106,7 +110,7 @@ class AttachmentService:
         attachment = self.attachment_repository.get_by_id(attachment_id)
         temp_file_path = f"temp-{uuid4()}"
         with open(temp_file_path, "wb") as buffer:
-            buffer.write(attachment.raw_content)
+            buffer.write(attachment.parsed_content.encode())
 
         loader = UnstructuredMarkdownLoader(temp_file_path)
         documents = loader.load_and_split(
