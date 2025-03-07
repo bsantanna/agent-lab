@@ -12,13 +12,6 @@ from sqlalchemy.orm import relationship
 
 from app.infrastructure.database.sql import Base
 
-agent_type = Enum(
-    "adaptive_rag",
-    "test_echo",
-    "three_phase_react",
-    "vision_document",
-    name="agent_type",
-)
 
 integration_type = Enum(
     "anthropic_api_v1",
@@ -28,7 +21,7 @@ integration_type = Enum(
     name="integration_type",
 )
 
-message_role = Enum("assistant", "human", "system", "tool", name="message_role")
+message_role = Enum("assistant", "human", name="message_role")
 
 
 class Agent(Base):
@@ -38,7 +31,7 @@ class Agent(Base):
     created_at = Column(TIMESTAMP)
     is_active = Column(Boolean)
     agent_name = Column(String)
-    agent_type = Column(agent_type)
+    agent_type = Column(String)
     agent_summary = Column(Text)
     language_model_id = Column(String, ForeignKey("language_models.id"))
 

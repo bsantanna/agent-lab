@@ -199,7 +199,7 @@ def process_jpg_files():
             if not os.path.exists(json_file_path):
                 with open(file_path, "rb") as jpg_file:
                     upload_response = requests.post(
-                        url=f"{agent_lab_endpoint}/messages/attachment/upload",
+                        url=f"{agent_lab_endpoint}/attachments/upload",
                         files={
                             "file": (
                                 os.path.basename(file_path),

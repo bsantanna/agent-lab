@@ -36,6 +36,7 @@ class Container(containers.DeclarativeContainer):
     wiring_config = containers.WiringConfiguration(
         modules=[
             "app.interface.api.agents.endpoints",
+            "app.interface.api.attachments.endpoints",
             "app.interface.api.integrations.endpoints",
             "app.interface.api.language_models.endpoints",
             "app.interface.api.messages.endpoints",

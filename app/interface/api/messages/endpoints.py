@@ -1,15 +1,15 @@
 from typing_extensions import List
 
 from dependency_injector.wiring import inject, Provide
-from fastapi import APIRouter, Depends, Body, Response, status, File
+from fastapi import APIRouter, Depends, Body, Response, status
 
 from app.core.container import Container
 from app.domain.exceptions.base import NotFoundError
 from app.domain.models import Message
+from app.interface.api.attachments.schema import AttachmentResponse
 from app.interface.api.messages.schema import (
     MessageListRequest,
     MessageExpandedResponse,
-    AttachmentResponse,
     MessageResponse,
     MessageRequest,
 )
@@ -29,23 +29,6 @@ async def get_list(
 ):
     messages = message_service.get_messages(message_data.agent_id)
     return [MessageResponse.model_validate(message) for message in messages]
-
-
-@router.post(
-    "/attachment/upload",
-    status_code=status.HTTP_201_CREATED,
-    response_model=AttachmentResponse,
-)
-@inject
-async def upload_attachment(
-    file=File(...),
-    attachment_service: AttachmentService = Depends(
-        Provide[Container.attachment_service]
-    ),
-):
-    attachment = await attachment_service.create_attachment(file=file)
-
-    return AttachmentResponse.model_validate(attachment)
 
 
 @router.post("/post", response_model=MessageResponse)
