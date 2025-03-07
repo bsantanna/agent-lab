@@ -10,7 +10,7 @@ class AttachmentResponse(BaseModel):
     created_at: datetime
     file_name: str
     parsed_content: str
-    embeddings_id: Optional[str]
+    embeddings_collection: Optional[str]
 
     class Config:
         from_attributes = True
