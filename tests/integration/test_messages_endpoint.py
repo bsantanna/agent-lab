@@ -124,7 +124,7 @@ class TestMessagesEndpoints:
     @pytest.mark.asyncio
     async def test_post_and_read_message_with_attachment(self, client):
         # given
-        upload_filename = "sun_tzu_the_art_of_war.zip"
+        upload_filename = "attachment.zip"
         upload_response = self._upload_file(client, upload_filename, "application/zip")
         attachment_id = upload_response.json()["id"]
 
@@ -159,7 +159,7 @@ class TestMessagesEndpoints:
     @pytest.mark.asyncio
     async def test_create_with_attachment_and_delete_success(self, client):
         # given
-        upload_filename = "sun_tzu_the_art_of_war.zip"
+        upload_filename = "attachment.zip"
         upload_response = self._upload_file(client, upload_filename, "application/zip")
         attachment_id = upload_response.json()["id"]
         create_message_response = self._create_message(client, attachment_id)
