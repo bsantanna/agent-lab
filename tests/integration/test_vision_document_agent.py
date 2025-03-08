@@ -67,7 +67,7 @@ class TestVisionDocumentAgent:
         # when
         with open(file_path, "rb") as file:
             upload_response = client.post(
-                url="/messages/attachment/upload",
+                url="/attachments/upload",
                 files={"file": (filename, file, content_type)},
             )
 

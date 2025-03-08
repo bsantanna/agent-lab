@@ -36,6 +36,7 @@ class Container(containers.DeclarativeContainer):
     wiring_config = containers.WiringConfiguration(
         modules=[
             "app.interface.api.agents.endpoints",
+            "app.interface.api.attachments.endpoints",
             "app.interface.api.integrations.endpoints",
             "app.interface.api.language_models.endpoints",
             "app.interface.api.messages.endpoints",
@@ -67,16 +68,6 @@ class Container(containers.DeclarativeContainer):
         DocumentRepository, db_url=config.db.vectors
     )
 
-    attachment_repository = providers.Factory(
-        AttachmentRepository, session_factory=db.provided.session
-    )
-
-    attachment_service = providers.Factory(
-        AttachmentService,
-        attachment_repository=attachment_repository,
-        markdown=markdown,
-    )
-
     integration_repository = providers.Factory(
         IntegrationRepository,
         session_factory=db.provided.session,
@@ -106,6 +97,21 @@ class Container(containers.DeclarativeContainer):
         language_model_repository=language_model_repository,
         language_model_setting_service=language_model_setting_service,
         integration_service=integration_service,
+    )
+
+    attachment_repository = providers.Factory(
+        AttachmentRepository, session_factory=db.provided.session
+    )
+
+    attachment_service = providers.Factory(
+        AttachmentService,
+        attachment_repository=attachment_repository,
+        document_repository=document_repository,
+        language_model_service=language_model_service,
+        language_model_setting_service=language_model_setting_service,
+        integration_service=integration_service,
+        vault_client=vault_client,
+        markdown=markdown,
     )
 
     agent_setting_repository = providers.Factory(

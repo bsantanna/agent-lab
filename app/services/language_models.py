@@ -32,7 +32,7 @@ class LanguageModelService:
     ) -> LanguageModel:
         # verify integration
         try:
-            self.integration_service.get_integration_by_id(integration_id)
+            integration = self.integration_service.get_integration_by_id(integration_id)
         except IntegrationNotFoundError:
             raise InvalidFieldError(
                 field_name="integration_id", reason="integration not found"
@@ -49,6 +49,27 @@ class LanguageModelService:
             setting_key="temperature",
             setting_value="0.5",
         )
+
+        # default embeddings model setting
+        if integration.integration_type == "openai_api_v1":
+            self.setting_service.create_language_model_setting(
+                language_model_id=language_model.id,
+                setting_key="embeddings",
+                setting_value="text-embedding-3-large",
+            )
+        # not available
+        # if integration.integration_type == "xai_api_v1":
+        #     self.setting_service.create_language_model_setting(
+        #         language_model_id=language_model.id,
+        #         setting_key="embeddings",
+        #         setting_value="v1",
+        #     )
+        else:
+            self.setting_service.create_language_model_setting(
+                language_model_id=language_model.id,
+                setting_key="embeddings",
+                setting_value="phi3",
+            )
 
         return language_model
 

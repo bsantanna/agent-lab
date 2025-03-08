@@ -56,7 +56,7 @@ class AttachmentRepository:
             session.delete(entity)
             session.commit()
 
-    def update_attachment(self, attachment_id: str, embeddings_id: str) -> Attachment:
+    def update_attachment(self, attachment_id: str, embeddings_collection: str) -> Attachment:
         with self.session_factory() as session:
             entity: Attachment = (
                 session.query(Attachment)
@@ -66,7 +66,7 @@ class AttachmentRepository:
             if not entity:
                 raise AttachmentNotFoundError(attachment_id)
 
-            entity.embeddings_id = embeddings_id
+            entity.embeddings_collection = embeddings_collection
             session.commit()
             session.refresh(entity)
             return entity

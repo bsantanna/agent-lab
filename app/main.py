@@ -9,6 +9,7 @@ from starlette.responses import JSONResponse
 
 from app.core.container import Container
 from app.interface.api.agents.endpoints import router as agents_router
+from app.interface.api.attachments.endpoints import router as attachments_router
 from app.interface.api.integrations.endpoints import router as integrations_router
 from app.interface.api.language_models.endpoints import router as language_models_router
 from app.interface.api.messages.endpoints import router as messages_router
@@ -37,6 +38,9 @@ def create_app():
 
 def setup_routers(application: FastAPI):
     application.include_router(agents_router, prefix="/agents", tags=["agents"])
+    application.include_router(
+        attachments_router, prefix="/attachments", tags=["attachments"]
+    )
     application.include_router(
         integrations_router, prefix="/integrations", tags=["integrations"]
     )
