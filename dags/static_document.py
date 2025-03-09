@@ -289,10 +289,21 @@ def process_jpg_files():
         print(f"Endpoint usage: {results['agent_usage']}")
 
 
+@task.kubernetes(
+    image="bsantanna/compute-document-utils",
+    namespace="compute",
+    volumes=[volume],
+    volume_mounts=[volume_mount],
+)
+def process_embeddings():
+    pass
+
+
 with dag:
     pptx_task = process_pptx_files()
     docx_task = process_docx_files()
     pdf_task = process_pdf_files()
     jpg_task = process_jpg_files()
+    embeddings_task = process_embeddings()
 
-    [pptx_task, docx_task] >> pdf_task >> jpg_task
+    [pptx_task, docx_task] >> pdf_task >> jpg_task >> embeddings_task
