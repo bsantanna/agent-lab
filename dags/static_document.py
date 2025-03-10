@@ -296,7 +296,68 @@ def process_jpg_files():
     volume_mounts=[volume_mount],
 )
 def process_embeddings():
-    pass
+    import os
+    import zipfile
+
+    source_dir = "/mnt/data"
+    output_dir = "/mnt/data/embeddings"
+    max_zip_size = 14 * 1024 * 1024  # 14MB
+
+    def get_files_sorted_by_size(directory):
+        file_list = []
+        for root, _, files in os.walk(directory):
+            for file in files:
+                file_path = os.path.join(root, file)
+                file_size = os.path.getsize(file_path)
+                file_list.append((file_size, file_path))
+
+        return sorted(file_list)
+
+    def process_files(files, output_dir, max_zip_size):
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        current_zip_index = 1
+        current_zip_size = 0
+        zip_file_list = []
+
+        for file_size, file_path in files:
+            if current_zip_size + file_size > max_zip_size:
+                # Create a new zip file when limit is reached
+                zip_filename = os.path.join(
+                    output_dir, f"archive_{current_zip_index}.zip"
+                )
+                with zipfile.ZipFile(zip_filename, "w", zipfile.ZIP_DEFLATED) as zipf:
+                    for f in zip_file_list:
+                        arcname = os.path.relpath(
+                            f, os.path.commonpath(zip_file_list)
+                        )  # Preserve folder structure
+                        zipf.write(f, arcname)
+                print(f"Created: {zip_filename}")
+
+                # Reset for next zip
+                current_zip_index += 1
+                current_zip_size = 0
+                zip_file_list = []
+
+            # Add the current file to the zip batch
+            zip_file_list.append(file_path)
+            current_zip_size += file_size
+
+        # Zip remaining files (if any)
+        if zip_file_list:
+            zip_filename = os.path.join(output_dir, f"archive_{current_zip_index}.zip")
+            with zipfile.ZipFile(zip_filename, "w", zipfile.ZIP_DEFLATED) as zipf:
+                for f in zip_file_list:
+                    arcname = os.path.relpath(f, os.path.commonpath(zip_file_list))
+                    zipf.write(f, arcname)
+
+            print(f"Created: {zip_filename}")
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        files = get_files_sorted_by_size(source_dir)
+        process_files(files, output_dir, max_zip_size)
 
 
 with dag:
