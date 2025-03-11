@@ -152,7 +152,7 @@ def process_jpg_files():
         "http://moon.btech.software:11434",
         "http://jupiter.btech.software:11434",
     ]
-    model_tag = "llava:latest"
+    model_tag = "granite3.2-vision:latest"
     instructions = (
         "Identify important features and information. "
         "You should produce study material from the input prompt, "
@@ -295,7 +295,7 @@ def process_jpg_files():
     volumes=[volume],
     volume_mounts=[volume_mount],
 )
-def process_embeddings():
+def process_zip_files():
     import os
     import zipfile
 
@@ -365,6 +365,6 @@ with dag:
     docx_task = process_docx_files()
     pdf_task = process_pdf_files()
     jpg_task = process_jpg_files()
-    embeddings_task = process_embeddings()
+    zip_task = process_zip_files()
 
-    [pptx_task, docx_task] >> pdf_task >> jpg_task >> embeddings_task
+    [pptx_task, docx_task] >> pdf_task >> jpg_task >> zip_task
