@@ -295,7 +295,7 @@ def process_jpg_files():
     volumes=[volume],
     volume_mounts=[volume_mount],
 )
-def process_zip_files():
+def package_zip_files():
     import os
     import zipfile
 
@@ -360,11 +360,22 @@ def process_zip_files():
         process_files(files, output_dir, max_zip_size)
 
 
+@task.kubernetes(
+    image="bsantanna/compute-document-utils",
+    namespace="compute",
+    volumes=[volume],
+    volume_mounts=[volume_mount],
+)
+def process_zip_files():
+    pass
+
+
 with dag:
     pptx_task = process_pptx_files()
     docx_task = process_docx_files()
     pdf_task = process_pdf_files()
     jpg_task = process_jpg_files()
+    package_task = package_zip_files()
     zip_task = process_zip_files()
 
-    [pptx_task, docx_task] >> pdf_task >> jpg_task >> zip_task
+    [pptx_task, docx_task] >> pdf_task >> jpg_task >> package_task >> zip_task
