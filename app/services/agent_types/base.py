@@ -183,7 +183,7 @@ class WorkflowAgent(AgentBase, ABC):
         self,
         human_input: str,
         ai_response: str,
-        connection: str,
+        connection: str = None,
         llm: BaseChatModel = None,
         token_limit: int = 1024,
     ):
@@ -199,6 +199,8 @@ class WorkflowAgent(AgentBase, ABC):
             f"First: The human asked or stated - {human_input}\n"
             f"Then: The AI responded with - {processed_response}\n"
             f"Connection: {connection}"
+            if connection is not None
+            else ""
         )
 
         return thought_chain

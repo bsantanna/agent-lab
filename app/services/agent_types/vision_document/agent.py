@@ -55,6 +55,8 @@ class VisionDocumentAgent(WorkflowAgent):
     def get_image_analysis_chain(
         self, llm, execution_system_prompt, image_content_type
     ):
+        # llm_with_structured_output = llm.with_structured_output(ImageAnalysis, include_raw=True)
+
         generate_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", execution_system_prompt),
@@ -105,7 +107,6 @@ class VisionDocumentAgent(WorkflowAgent):
             self.create_thought_chain(
                 human_input=query,
                 ai_response=generation.content,
-                connection="Image analysis",
             )
         ]
         return {"generation": generation.content, "messages": processed_messages}
