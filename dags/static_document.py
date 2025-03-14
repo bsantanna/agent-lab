@@ -148,16 +148,11 @@ def process_jpg_files():
 
     # constants
     agent_lab_endpoint = "http://neptune.btech.software:18000"
-    integration_endpoints = [
-        "http://moon.btech.software:11434",
-        "http://jupiter.btech.software:11434",
-    ]
+    integration_endpoints = ["http://moon.btech.software:11434"]
     model_tag = "granite3.2-vision:latest"
     instructions = (
-        "Identify important features and information. "
-        "You should produce study material from the input prompt, "
-        "so anyone interested in the content can catch up and have "
-        "valuable information at hand."
+        "Describe this image, generate data for study material. "
+        "You can use up to three paragraphs to describe."
     )
     max_workers = 3
 
