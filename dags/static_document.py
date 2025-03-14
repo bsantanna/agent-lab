@@ -148,13 +148,19 @@ def process_jpg_files():
 
     # constants
     agent_lab_endpoint = "http://neptune.btech.software:18000"
-    integration_endpoints = ["http://moon.btech.software:11434"]
+    integration_endpoints = [
+        "http://moon.btech.software:11434",
+        "http://jupiter.btech.software:11434",
+    ]
     model_tag = "granite3.2-vision:latest"
     instructions = (
-        "Describe this image, generate data for study material. "
-        "You can use up to three paragraphs to describe."
+        "Describe this image, "
+        "generate data for study material based on this image. "
+        "If it is a long text, summarize the content. "
+        "If it is a chart, interpret the chart figures. "
+        "If it is a presentation or promotional material, summarize the content as Screen Reader. "
+        "Use a few paragraphs to describe."
     )
-    max_workers = 3
 
     # internal functions
     def create_task_agent(api_endpoint: str):
@@ -254,7 +260,7 @@ def process_jpg_files():
         task_agent_cycle = cycle(task_agents)
 
         # Execute in parallel with ThreadPoolExecutor
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        with ThreadPoolExecutor(max_workers=len(integration_endpoints) + 1) as executor:
             future_to_file = {
                 executor.submit(process_jpg_file, jpg_file, task_agent_cycle): jpg_file
                 for jpg_file in jpg_files
