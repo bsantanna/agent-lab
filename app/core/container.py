@@ -18,6 +18,7 @@ from app.infrastructure.database.vectors import DocumentRepository
 from app.infrastructure.metrics.tracer import Tracer
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.adaptive_rag.agent import AdaptiveRagAgent
+from app.services.agent_types.react_rag.agent import ReactRagAgent
 from app.services.agent_types.registry import AgentRegistry
 from app.services.agent_types.test_echo.test_echo_agent import TestEchoAgent
 from app.services.agent_types.three_phase_react.agent import (
@@ -157,6 +158,19 @@ class Container(containers.DeclarativeContainer):
         document_repository=document_repository,
     )
 
+    react_rag_agent = providers.Factory(
+        ReactRagAgent,
+        agent_service=agent_service,
+        agent_setting_service=agent_setting_service,
+        language_model_service=language_model_service,
+        language_model_setting_service=language_model_setting_service,
+        integration_service=integration_service,
+        vault_client=vault_client,
+        graph_persistence_factory=graph_persistence_factory,
+        attachment_service=attachment_service,
+        document_repository=document_repository,
+    )
+
     three_phase_react_agent = providers.Factory(
         ThreePhaseReactAgent,
         agent_service=agent_service,
@@ -197,6 +211,7 @@ class Container(containers.DeclarativeContainer):
         test_echo_agent=test_echo_agent,
         three_phase_react_agent=three_phase_react_agent,
         vision_document_agent=vision_document_agent,
+        react_rag_agent=react_rag_agent,
     )
 
     tracer = providers.Singleton(Tracer)

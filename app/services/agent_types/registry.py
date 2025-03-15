@@ -8,9 +8,11 @@ class AgentRegistry:
         test_echo_agent: AgentBase,
         three_phase_react_agent: AgentBase,
         vision_document_agent: AgentBase,
+        react_rag_agent: AgentBase,
     ):
         self.registry = {
             "adaptive_rag": adaptive_rag_agent,
+            "react_rag": react_rag_agent,
             "test_echo": test_echo_agent,
             "three_phase_react": three_phase_react_agent,
             "vision_document": vision_document_agent,
