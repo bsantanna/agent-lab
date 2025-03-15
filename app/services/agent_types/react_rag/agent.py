@@ -1,14 +1,11 @@
 from pathlib import Path
-from typing_extensions import TypedDict, List, Annotated
 
 import hvac
-from langgraph.graph import StateGraph
 
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.vectors import DocumentRepository
 from app.interface.api.messages.schema import MessageRequest
 from app.services.agent_settings import AgentSettingService
-from app.services.agent_types.base import join_messages
 from app.services.agent_types.vision_document.agent import VisionDocumentAgent
 from app.services.agents import AgentService
 from app.services.attachments import AttachmentService
@@ -16,17 +13,7 @@ from app.services.integrations import IntegrationService
 from app.services.language_model_settings import LanguageModelSettingService
 from app.services.language_models import LanguageModelService
 
-
-class AgentState(TypedDict):
-    agent_id: str
-    query: str
-    generation: dict
-    documents: List[str]
-    messages: Annotated[List, join_messages]
-    image_base64: str
-    image_content_type: str
-    execution_system_prompt: str
-
+from langgraph.prebuilt import create_react_agent
 
 class ReactRagAgent(VisionDocumentAgent):
     def __init__(
@@ -67,8 +54,18 @@ class ReactRagAgent(VisionDocumentAgent):
         )
 
     def get_workflow_builder(self, agent_id: str):
-        workflow_builder = StateGraph(AgentState)
-        # TODO
+        chat_model = self.get_chat_model(agent_id)
+        settings = self.agent_setting_service.get_agent_settings(agent_id)
+        settings_dict = {
+            setting.setting_key: setting.setting_value for setting in settings
+        }
+        checkpointer = self.graph_persistence_factory.build_checkpoint_saver()
+        workflow_builder = create_react_agent(
+            model=chat_model,
+            tools=[],
+            prompt=settings_dict["execution_system_prompt"],
+            checkpointer=checkpointer,
+        )
         return workflow_builder
 
     def get_input_params(self, message_request: MessageRequest):
