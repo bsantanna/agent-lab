@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import hvac
+from langchain_core.tools import tool
 
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.vectors import DocumentRepository
@@ -49,6 +50,13 @@ class ReactRagAgent(AgentBase):
             setting_value=prompt,
         )
 
+    @tool
+    def search(self, thread_id:str, input:str, collection:str) -> str:
+        """Use this to search for more information in a given collection"""
+
+        #TODO
+        return ''
+
     def get_workflow(self, agent_id: str):
         chat_model = self.get_chat_model(agent_id)
         settings = self.agent_setting_service.get_agent_settings(agent_id)
@@ -56,13 +64,12 @@ class ReactRagAgent(AgentBase):
             setting.setting_key: setting.setting_value for setting in settings
         }
         checkpointer = self.graph_persistence_factory.build_checkpoint_saver()
-        workflow_builder = create_react_agent(
+        return create_react_agent(
             model=chat_model,
-            tools=[],
+            tools=[self.search],
             prompt=settings_dict["execution_system_prompt"],
             checkpointer=checkpointer,
         )
-        return workflow_builder
 
     def get_input_params(self, message_request: MessageRequest) -> dict:
         return {
