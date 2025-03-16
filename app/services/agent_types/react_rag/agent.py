@@ -39,8 +39,6 @@ class ReactRagAgent(AgentBase):
         self.document_repository = document_repository
 
     def create_default_settings(self, agent_id: str):
-        super().create_default_settings(agent_id)
-
         current_dir = Path(__file__).parent
         prompt = self.read_file_content(
             f"{current_dir}/default_execution_system_prompt.txt"
