@@ -35,6 +35,9 @@ class TestEchoAgent(AgentBase):
             setting_value="dummy_value",
         )
 
+    def get_input_params(self, message_request: MessageRequest) -> dict:
+        return {}
+
     def process_message(self, message_request: MessageRequest) -> MessageBase:
         return MessageBase(
             message_role="assistant",

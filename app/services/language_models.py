@@ -68,7 +68,7 @@ class LanguageModelService:
             self.setting_service.create_language_model_setting(
                 language_model_id=language_model.id,
                 setting_key="embeddings",
-                setting_value="phi3",
+                setting_value="bge-m3",
             )
 
         return language_model

@@ -15,6 +15,7 @@ class AgentCreateRequest(BaseModel):
     def validate_agent_type(cls, v):
         valid_types = [
             "adaptive_rag",
+            "react_rag",
             "test_echo",
             "three_phase_react",
             "vision_document",

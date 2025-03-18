@@ -10,7 +10,7 @@ from testcontainers.vault import VaultContainer
 os.environ["TESTING"] = "1"
 os.environ["OLLAMA_ENDPOINT"] = "http://localhost:21434"
 
-llm_tag = "phi3"
+llm_tag = "bge-m3"
 
 ollama = OllamaContainer(
     ollama_home=f"{Path.home()}/.ollama", image="ollama/ollama:latest"

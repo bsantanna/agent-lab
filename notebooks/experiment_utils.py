@@ -52,7 +52,7 @@ def create_agent_with_integration(
     agent_response.raise_for_status()
     agent_result = agent_response.json()
 
-    return agent_result["id"]
+    return agent_result
 
 
 def create_ollama_agent(

@@ -53,6 +53,10 @@ class AgentBase(ABC):
     def process_message(self, message_request: MessageRequest) -> MessageBase:
         pass
 
+    @abstractmethod
+    def get_input_params(self, message_request: MessageRequest) -> dict:
+        pass
+
     def get_embeddings_model(self, agent_id) -> Embeddings:
         agent = self.agent_service.get_agent_by_id(agent_id)
         language_model = self.language_model_service.get_language_model_by_id(

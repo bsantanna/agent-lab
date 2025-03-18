@@ -149,8 +149,7 @@ def process_jpg_files():
     # constants
     agent_lab_endpoint = "http://neptune.btech.software:18000"
     integration_endpoints = [
-        "http://moon.btech.software:11434",
-        "http://jupiter.btech.software:11434",
+        "http://moon.btech.software:11434"
     ]
     model_tag = "granite3.2-vision:latest"
     instructions = (
