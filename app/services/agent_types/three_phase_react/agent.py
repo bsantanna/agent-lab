@@ -1,15 +1,13 @@
-from pathlib import Path
 from typing_extensions import TypedDict, List, Annotated
 
 import hvac
 from langchain_core.messages import AnyMessage
-from langgraph.graph import StateGraph, add_messages
+from langgraph.graph import  add_messages
 
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.vectors import DocumentRepository
-from app.interface.api.messages.schema import MessageRequest
 from app.services.agent_settings import AgentSettingService
-from app.services.agent_types.adaptive_rag.agent import AdaptiveRagAgent
+from app.services.agent_types.react_rag.agent import ReactRagAgent
 from app.services.agents import AgentService
 from app.services.integrations import IntegrationService
 from app.services.language_model_settings import LanguageModelSettingService
@@ -26,7 +24,7 @@ class AgentState(TypedDict):
     conclusion_system_prompt: str
 
 
-class ThreePhaseReactAgent(AdaptiveRagAgent):
+class ThreePhaseReactAgent(ReactRagAgent):
     def __init__(
         self,
         agent_service: AgentService,
@@ -50,22 +48,9 @@ class ThreePhaseReactAgent(AdaptiveRagAgent):
         )
 
     def create_default_settings(self, agent_id: str):
-        super().create_default_settings(agent_id)
-
-        current_dir = Path(__file__).parent
-        conclusion_prompt = self.read_file_content(
-            f"{current_dir}/default_conclusion_system_prompt.txt"
-        )
-        self.agent_setting_service.create_agent_setting(
-            agent_id=agent_id,
-            setting_key="conclusion_system_prompt",
-            setting_value=conclusion_prompt,
-        )
+        # TODO
+        pass
 
     def get_workflow_builder(self, agent_id: str):
-        workflow_builder = StateGraph(AgentState)
-
-        return workflow_builder
-
-    def get_input_params(self, message_request: MessageRequest):
+        # TODO
         pass

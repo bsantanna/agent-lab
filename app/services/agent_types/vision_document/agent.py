@@ -55,8 +55,6 @@ class VisionDocumentAgent(WorkflowAgent):
     def get_image_analysis_chain(
         self, llm, execution_system_prompt, image_content_type
     ):
-        # llm_with_structured_output = llm.with_structured_output(ImageAnalysis, include_raw=True)
-
         generate_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", execution_system_prompt),
