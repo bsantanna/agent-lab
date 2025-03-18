@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import hvac
-from langchain_core.tools import tool
 
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.vectors import DocumentRepository
@@ -49,13 +48,14 @@ class ReactRagAgent(AgentBase):
             setting_key="execution_system_prompt",
             setting_value=prompt,
         )
-
-    @tool
-    def search(self, thread_id:str, input:str, collection:str) -> str:
-        """Use this to search for more information in a given collection"""
-
-        #TODO
-        return ''
+        collection_name = self.read_file_content(
+            f"{current_dir}/default_collection_name.txt"
+        )
+        self.agent_setting_service.create_agent_setting(
+            agent_id=agent_id,
+            setting_key="collection_name",
+            setting_value=collection_name,
+        )
 
     def get_workflow(self, agent_id: str):
         chat_model = self.get_chat_model(agent_id)
@@ -64,16 +64,35 @@ class ReactRagAgent(AgentBase):
             setting.setting_key: setting.setting_value for setting in settings
         }
         checkpointer = self.graph_persistence_factory.build_checkpoint_saver()
+
         return create_react_agent(
             model=chat_model,
-            tools=[self.search],
             prompt=settings_dict["execution_system_prompt"],
+            tools=[],
             checkpointer=checkpointer,
         )
 
     def get_input_params(self, message_request: MessageRequest) -> dict:
+        query = message_request.message_content
+        embeddings_model = self.get_embeddings_model(message_request.agent_id)
+        settings = self.agent_setting_service.get_agent_settings(
+            message_request.agent_id
+        )
+        settings_dict = {
+            setting.setting_key: setting.setting_value for setting in settings
+        }
+        collection_name = settings_dict["collection_name"]
+        documents = self.document_repository.search(
+            embeddings_model=embeddings_model,
+            collection_name=collection_name,
+            query=query,
+            size=7,
+        )
+        context = "\n---\n".join(document.page_content for document in documents)
         return {
-            "messages": [("user", message_request.message_content)],
+            "messages": [
+                ("user", f"<query>{query}</query> <context>{context}</context>")
+            ],
         }
 
     def process_message(self, message_request: MessageRequest) -> MessageBase:
