@@ -35,6 +35,8 @@ jobs:
           helm repo index helm-repo --url https://bsantanna.github.io/agent-lab/
 
       - name: Publish to gh-pages
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           git config --global user.email "github-action@users.noreply.github.com"
           git config --global user.name "GitHub Action"
@@ -43,4 +45,4 @@ jobs:
           mv helm-repo/* .
           git add .
           git commit -m "Update Helm chart repository"
-          git push https://${{ secrets.GH_TOKEN }}@github.com/bsantanna/agent-lab.git gh-pages
+          git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/bsantanna/agent-lab.git gh-pages
