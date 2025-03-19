@@ -9,19 +9,23 @@ startup_time = time.time()
 router = APIRouter()
 
 
-@router.get(
-    "/health",
-)
-def health():
+@router.get("/liveness", include_in_schema=False)
+def liveness():
     """
-    Returns the health status of the application.
+    Liveness probe endpoint for Kubernetes.
+    Returns a 200 OK response with {"status": "ok"} if the application is running.
     """
-    return {"msg": "success"}
+    return {"status": "ok"}
 
+@router.get("/readiness", include_in_schema=False)
+def readiness():
+    """
+    Readiness probe endpoint for Kubernetes.
+    Returns a 200 OK response with {"status": "ok"} if the application is ready.
+    """
+    return {"status": "ok"}
 
-@router.get(
-    "/metrics",
-)
+@router.get("/metrics", include_in_schema=False)
 def metrics():
     """
     Returns application metrics.
