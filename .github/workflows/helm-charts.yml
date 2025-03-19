@@ -45,4 +45,4 @@ jobs:
           mv helm-repo/* .
           git add .
           git commit -m "Update Helm chart repository"
-          git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/bsantanna/agent-lab.git gh-pages
+          git push https://${{ secrets.GH_TOKEN }}@github.com/bsantanna/agent-lab.git gh-pages
