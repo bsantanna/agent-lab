@@ -44,14 +44,30 @@ class Container(containers.DeclarativeContainer):
         ]
     )
 
+    config_file = None
     if os.getenv("DOCKER"):
         config_file = "config-docker.yml"
     elif os.getenv("TESTING"):
         config_file = "config-test.yml"
-    else:
-        config_file = "config.yml"
+    elif os.getenv("DEVELOPING"):
+        config_file = "config-dev.yml"
 
-    config = providers.Configuration(yaml_files=[config_file])
+    if config_file is not None:
+        config = providers.Configuration(yaml_files=[config_file])
+    else:
+        vault_url = os.getenv("VAULT_URL")
+        vault_token = os.getenv("VAULT_TOKEN")
+        vault_client = hvac.Client(url=vault_url, token=vault_token, verify=False)
+        app_secrets = vault_client.secrets.kv.read_secret_version(
+            raise_on_deleted_version=False, path="app_secrets"
+        )
+
+        config = providers.Configuration()
+        config.set("vault.url", vault_url)
+        config.set("vault.token", vault_token)
+        config.set("db.url", app_secrets["data"]["data"]["db_url"])
+        config.set("db.vectors", app_secrets["data"]["data"]["db_vectors"])
+        config.set("db.checkpoints", app_secrets["data"]["data"]["db_checkpoints"])
 
     db = providers.Singleton(Database, db_url=config.db.url)
 
