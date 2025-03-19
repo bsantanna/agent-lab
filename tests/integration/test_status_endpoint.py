@@ -8,12 +8,15 @@ from app.main import app
 def client():
     yield TestClient(app)
 
-
-def test_health_check(client):
-    response = client.get("/status/health")
+def test_liveness_check(client):
+    response = client.get("/status/liveness")
     assert response.status_code == 200
-    assert response.json() == {"msg": "success"}
+    assert response.json() == {"status": "ok"}
 
+def test_readiness_check(client):
+    response = client.get("/status/readiness")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
 
 def test_metrics(client):
     response = client.get("/status/metrics")
