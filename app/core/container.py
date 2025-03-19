@@ -78,7 +78,7 @@ class Container(containers.DeclarativeContainer):
     markdown = providers.Singleton(MarkItDown)
 
     vault_client = providers.Singleton(
-        hvac.Client, url=config.vault.url, token=config.vault.token
+        hvac.Client, url=config.vault.url, token=config.vault.token, verify=False
     )
 
     document_repository = providers.Factory(

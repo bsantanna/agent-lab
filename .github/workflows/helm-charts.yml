@@ -1,0 +1,46 @@
+name: Helm Charts
+
+on:
+  workflow_run:
+    workflows: [ "Continuous Integration" ]
+    types:
+      - completed
+
+jobs:
+  helm_charts:
+    runs-on: ubuntu-24.04
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v1
+        with:
+          version: 'latest'
+
+      - name: Package Helm Charts
+        run: |
+          mkdir helm-repo
+          for dir in charts/*; do
+            if [ -d "$dir" ] && [ -f "$dir/Chart.yaml" ]; then
+              helm package "$dir" --destination helm-repo
+            fi
+          done
+
+      - name: Generate index.yaml
+        run: |
+          helm repo index helm-repo --url https://bsantanna.github.io/agent-lab/
+
+      - name: Publish to gh-pages
+        run: |
+          git config --global user.email "github-action@users.noreply.github.com"
+          git config --global user.name "GitHub Action"
+          git checkout gh-pages || git checkout --orphan gh-pages
+          git rm -rf .
+          mv helm-repo/* .
+          git add .
+          git commit -m "Update Helm chart repository"
+          git push origin gh-pages
