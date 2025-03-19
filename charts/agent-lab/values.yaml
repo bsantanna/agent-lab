@@ -15,7 +15,7 @@ fullnameOverride: ""
 
 config:
   OLLAMA_ENDPOINT: "http://moon.btech.software:11434"
-  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
+#  OTEL_EXPORTER_OTLP_ENDPOINT: "https://telemetry.btech.software"
 
 serviceAccount:
   create: true
