@@ -1,0 +1,6 @@
+apiVersion: v2
+name: agent-lab
+description: Agent-Lab is a web-based platform for managing and experimenting with LangGraph agents.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
