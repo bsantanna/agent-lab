@@ -1,4 +1,4 @@
-# Agent-Lab
+**# Agent-Lab**
 
 [![Continuous Integration](https://github.com/bsantanna/agent-lab/actions/workflows/build.yml/badge.svg)](https://github.com/bsantanna/agent-lab/actions/workflows/build.yml)
 [![Docker Image](https://github.com/bsantanna/agent-lab/actions/workflows/docker-image.yml/badge.svg)](https://hub.docker.com/r/bsantanna/agent-lab)
