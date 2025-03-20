@@ -6,4 +6,5 @@ metadata:
   labels:
     {{- include "agent-lab.labels" . | nindent 4 }}
 data:
-  {{- toYaml .Values.config | nindent 4 }}
+  - OLLAMA_ENDPOINT: {{ .Values.config.ollama_endpoint }}
+  - OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.config.telemetry_endpoint }}
