@@ -21,14 +21,6 @@ class GradeHallucinations(TypedDict):
     binary_score: Annotated[str, ..., "Answer is grounded in the facts, 'yes' or 'no'"]
 
 
-class RouteQuery(TypedDict):
-    """Route user query matching the most relevant knowledge_base."""
-
-    knowledge_base: Annotated[
-        str, ..., "Given a user query choose a most appropriate knowledge base."
-    ]
-
-
 class GenerateAnswer(TypedDict):
     """Generate a good answer to user query based on context and previous_messages."""
 
