@@ -31,9 +31,15 @@ jobs:
             fi
           done
 
+      - name: Fetch gh-pages branch
+        run: |
+          git fetch origin gh-pages:gh-pages
+          git checkout gh-pages
+          mv helm-repo/* .
+
       - name: Generate index.yaml
         run: |
-          helm repo index helm-repo --url https://bsantanna.github.io/agent-lab/
+          helm repo index . --url https://bsantanna.github.io/agent-lab/ --merge index.yaml
 
       - name: Setup git config
         run: |
@@ -42,11 +48,8 @@ jobs:
 
       - name: Publish to gh-pages
         run: |
-          git checkout gh-pages || git checkout -b gh-pages
-          git rm -rf .
-          mv helm-repo/* .
           git add .
           git commit -m "Update Helm chart repository"
-          git push origin gh-pages --force
+          git push origin gh-pages
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

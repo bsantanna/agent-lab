@@ -147,10 +147,8 @@ def process_jpg_files():
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
     # constants
-    agent_lab_endpoint = "http://neptune.btech.software:18000"
-    integration_endpoints = [
-        "http://moon.btech.software:11434"
-    ]
+    agent_lab_endpoint = "https://agentlab.btech.software"
+    integration_endpoints = ["http://moon.btech.software:11434"]
     model_tag = "granite3.2-vision:latest"
     instructions = (
         "Describe this image, "
@@ -170,6 +168,7 @@ def process_jpg_files():
                 "api_key": "ollama",
                 "integration_type": "ollama_api_v1",
             },
+            verify=False,
         )
         integration_id = integration_response.json()["id"]
 
@@ -179,6 +178,7 @@ def process_jpg_files():
                 "integration_id": integration_id,
                 "language_model_tag": model_tag,
             },
+            verify=False,
         )
         language_model_id = llm_creation_response.json()["id"]
 
@@ -189,6 +189,7 @@ def process_jpg_files():
                 "agent_type": "vision_document",
                 "agent_name": f"agent-{uuid4()}",
             },
+            verify=False,
         )
         return agent_creation_response.json()["id"]
 
@@ -207,6 +208,7 @@ def process_jpg_files():
                                 "image/jpeg",
                             )
                         },
+                        verify=False,
                     )
                     attachment_id = upload_response.json()["id"]
 
@@ -218,6 +220,7 @@ def process_jpg_files():
                             "agent_id": task_agent,
                             "attachment_id": attachment_id,
                         },
+                        verify=False,
                     )
                     if message_response.status_code == 200:
                         with open(json_file_path, "w") as json_file:
@@ -300,7 +303,7 @@ def process_zip_files():
     import zipfile
 
     source_dir = "/mnt/data"
-    output_dir = "/mnt/data/embeddings"
+    output_dir = "/mnt/data/static_document_result"
     max_zip_size = 14 * 1024 * 1024  # 14MB
 
     def get_files_sorted_by_size(directory):
