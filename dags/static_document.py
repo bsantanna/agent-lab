@@ -151,12 +151,8 @@ def process_jpg_files():
     integration_endpoints = ["http://moon.btech.software:11434"]
     model_tag = "granite3.2-vision:latest"
     instructions = (
-        "Describe this image, "
-        "generate data for study material based on this image. "
-        "If it is a long text, summarize the content. "
-        "If it is a chart, interpret the chart figures. "
-        "If it is a presentation or promotional material, summarize the content as Screen Reader. "
-        "Use a few paragraphs to describe."
+        "You are studying this material, please generate a comprehensive overview, explain with details. "
+        "Make sure your analysis does not overlook details."
     )
 
     # internal functions
