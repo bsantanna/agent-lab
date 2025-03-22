@@ -262,7 +262,7 @@ def process_jpg_files():
         task_agent_cycle = cycle(task_agents)
 
         # Execute in parallel with ThreadPoolExecutor
-        with ThreadPoolExecutor(max_workers=len(integration_endpoints) + 1) as executor:
+        with ThreadPoolExecutor(max_workers=len(integration_endpoints)) as executor:
             future_to_file = {
                 executor.submit(process_jpg_file, jpg_file, task_agent_cycle): jpg_file
                 for jpg_file in jpg_files
