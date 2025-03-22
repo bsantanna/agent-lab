@@ -147,7 +147,7 @@ def process_jpg_files():
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
     # constants
-    agent_lab_endpoint = "https://agentlab.btech.software"
+    agent_lab_endpoint = "http://btech-agent-lab.compute.svc.cluster.local:8000"
     integration_endpoints = ["http://moon.btech.software:11434"]
     model_tag = "granite3.2-vision:latest"
     instructions = (
