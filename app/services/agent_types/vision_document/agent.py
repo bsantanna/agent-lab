@@ -6,12 +6,12 @@ import hvac
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.constants import START, END
 from langgraph.graph import StateGraph
-from typing_extensions import TypedDict, List, Annotated
+from typing_extensions import TypedDict
 
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.interface.api.messages.schema import MessageRequest
 from app.services.agent_settings import AgentSettingService
-from app.services.agent_types.base import WorkflowAgent, join_messages
+from app.services.agent_types.base import WorkflowAgent
 from app.services.agents import AgentService
 from app.services.attachments import AttachmentService
 from app.services.integrations import IntegrationService
@@ -23,7 +23,6 @@ class AgentState(TypedDict):
     agent_id: str
     query: str
     generation: dict
-    messages: Annotated[List, join_messages]
     image_base64: str
     image_content_type: str
     execution_system_prompt: str
@@ -63,7 +62,7 @@ class VisionDocumentAgent(WorkflowAgent):
                     [
                         {
                             "type": "text",
-                            "text": "<query>{query}</query>\n<context>{context}</context>",
+                            "text": "<query>{query}</query>",
                         },
                         {
                             "type": "image_url",
@@ -82,32 +81,11 @@ class VisionDocumentAgent(WorkflowAgent):
         execution_system_prompt = state["execution_system_prompt"]
         image_base64 = state["image_base64"]
         image_content_type = state["image_content_type"]
-        previous_messages = state["messages"]
         chat_model = self.get_chat_model(agent_id)
-
-        # summarize context
-        context = "\n---\n".join(previous_messages)
-        if len(previous_messages) > 5:
-            token_limit = 10240
-            prompt = (
-                f"Summarize the text delimited by <context></context> using at most {token_limit} tokens.\n"
-                f"<context>{context}</context>"
-            )
-            messages = chat_model.invoke(prompt)
-        else:
-            messages = context
-
         generation = self.get_image_analysis_chain(
             chat_model, execution_system_prompt, image_content_type
-        ).invoke({"query": query, "context": messages, "image_base64": image_base64})
-
-        processed_messages = [
-            self.create_thought_chain(
-                human_input=query,
-                ai_response=generation.content,
-            )
-        ]
-        return {"generation": generation.content, "messages": processed_messages}
+        ).invoke({"query": query, "image_base64": image_base64})
+        return {"generation": generation.content}
 
     def get_workflow_builder(self, agent_id: str):
         workflow_builder = StateGraph(AgentState)

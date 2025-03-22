@@ -183,20 +183,22 @@ class WorkflowAgent(AgentBase, ABC):
         token_limit: int = 1024,
     ):
         # Build the chain of thought
-        prompt = (
-            f"Summarize the text delimited by <ai_resp></ai_resp> using at most {token_limit} tokens.\n"
-            f"<ai_resp>{ai_response}</ai_resp>"
-        )
-        processed_response = (
-            llm.invoke(prompt).content if llm is not None else ai_response
-        )
+        if llm is not None:
+            prompt = (
+                f"Summarize the text delimited by <ai_resp></ai_resp> using at most {token_limit} tokens.\n"
+                f"<ai_resp>{ai_response}</ai_resp>"
+            )
+            processed_response = llm.invoke(prompt).content
+        else:
+            processed_response = ai_response
+
         thought_chain = (
             f"First: The human asked or stated - {human_input}\n"
             f"Then: The AI responded with - {processed_response}\n"
-            f"Connection: {connection}"
-            if connection is not None
-            else ""
         )
+
+        if connection is not None:
+            thought_chain += f"Connection: {connection}"
 
         return thought_chain
 
