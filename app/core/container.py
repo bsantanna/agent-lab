@@ -21,9 +21,6 @@ from app.services.agent_types.adaptive_rag.agent import AdaptiveRagAgent
 from app.services.agent_types.react_rag.agent import ReactRagAgent
 from app.services.agent_types.registry import AgentRegistry
 from app.services.agent_types.test_echo.test_echo_agent import TestEchoAgent
-from app.services.agent_types.three_phase_react.agent import (
-    ThreePhaseReactAgent,
-)
 from app.services.agent_types.vision_document.agent import VisionDocumentAgent
 from app.services.agents import AgentService
 from app.services.attachments import AttachmentService
@@ -186,18 +183,6 @@ class Container(containers.DeclarativeContainer):
         document_repository=document_repository,
     )
 
-    three_phase_react_agent = providers.Factory(
-        ThreePhaseReactAgent,
-        agent_service=agent_service,
-        agent_setting_service=agent_setting_service,
-        language_model_service=language_model_service,
-        language_model_setting_service=language_model_setting_service,
-        integration_service=integration_service,
-        vault_client=vault_client,
-        graph_persistence_factory=graph_persistence_factory,
-        document_repository=document_repository,
-    )
-
     test_echo_agent = providers.Factory(
         TestEchoAgent,
         agent_service=agent_service,
@@ -224,7 +209,6 @@ class Container(containers.DeclarativeContainer):
         AgentRegistry,
         adaptive_rag_agent=adaptive_rag_agent,
         test_echo_agent=test_echo_agent,
-        three_phase_react_agent=three_phase_react_agent,
         vision_document_agent=vision_document_agent,
         react_rag_agent=react_rag_agent,
     )
