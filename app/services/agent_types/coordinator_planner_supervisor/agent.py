@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import hvac
 from langgraph.managed import RemainingSteps
 from typing_extensions import TypedDict, List, Annotated
@@ -53,7 +55,70 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
         self.document_repository = document_repository
 
     def create_default_settings(self, agent_id: str):
-        pass
+        current_dir = Path(__file__).parent
+
+        coordinator_prompt = self.read_file_content(
+            f"{current_dir}/default_coordinator_system_prompt.txt"
+        )
+        self.agent_setting_service.create_agent_setting(
+            agent_id=agent_id,
+            setting_key="coordinator_system_prompt",
+            setting_value=coordinator_prompt,
+        )
+
+        planner_prompt = self.read_file_content(
+            f"{current_dir}/default_planner_system_prompt.txt"
+        )
+        self.agent_setting_service.create_agent_setting(
+            agent_id=agent_id,
+            setting_key="planner_system_prompt",
+            setting_value=planner_prompt,
+        )
+
+        supervisor_prompt = self.read_file_content(
+            f"{current_dir}/default_supervisor_system_promtpt.txt"
+        )
+        self.agent_setting_service.create_agent_setting(
+            agent_id=agent_id,
+            setting_key="supervisor_system_prompt",
+            setting_value=supervisor_prompt,
+        )
+
+        researcher_prompt = self.read_file_content(
+            f"{current_dir}/default_researcher_system_prompt.txt"
+        )
+        self.agent_setting_service.create_agent_setting(
+            agent_id=agent_id,
+            setting_key="researcher_system_prompt",
+            setting_value=researcher_prompt,
+        )
+
+        browser_prompt = self.read_file_content(
+            f"{current_dir}/default_browser_system_prompt.txt"
+        )
+        self.agent_setting_service.create_agent_setting(
+            agent_id=agent_id,
+            setting_key="browser_system_prompt",
+            setting_value=browser_prompt,
+        )
+
+        reporter_prompt = self.read_file_content(
+            f"{current_dir}/default_reporter_system_prompt.txt"
+        )
+        self.agent_setting_service.create_agent_setting(
+            agent_id=agent_id,
+            setting_key="reporter_system_prompt",
+            setting_value=reporter_prompt,
+        )
+
+        collection_name = self.read_file_content(
+            f"{current_dir}/default_collection_name.txt"
+        )
+        self.agent_setting_service.create_agent_setting(
+            agent_id=agent_id,
+            setting_key="collection_name",
+            setting_value=collection_name,
+        )
 
     def get_workflow_builder(self, agent_id: str):
         pass
