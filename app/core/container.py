@@ -18,6 +18,9 @@ from app.infrastructure.database.vectors import DocumentRepository
 from app.infrastructure.metrics.tracer import Tracer
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.adaptive_rag.agent import AdaptiveRagAgent
+from app.services.agent_types.coordinator_planner_supervisor.agent import (
+    CoordinatorPlannerSupervisorAgent,
+)
 from app.services.agent_types.react_rag.agent import ReactRagAgent
 from app.services.agent_types.registry import AgentRegistry
 from app.services.agent_types.test_echo.test_echo_agent import TestEchoAgent
@@ -171,6 +174,18 @@ class Container(containers.DeclarativeContainer):
         document_repository=document_repository,
     )
 
+    coordinator_planner_supervisor_agent = providers.Factory(
+        CoordinatorPlannerSupervisorAgent,
+        agent_service=agent_service,
+        agent_setting_service=agent_setting_service,
+        language_model_service=language_model_service,
+        language_model_setting_service=language_model_setting_service,
+        integration_service=integration_service,
+        vault_client=vault_client,
+        graph_persistence_factory=graph_persistence_factory,
+        document_repository=document_repository,
+    )
+
     react_rag_agent = providers.Factory(
         ReactRagAgent,
         agent_service=agent_service,
@@ -208,6 +223,7 @@ class Container(containers.DeclarativeContainer):
     agent_registry = providers.Singleton(
         AgentRegistry,
         adaptive_rag_agent=adaptive_rag_agent,
+        coordinator_planner_supervisor_agent=coordinator_planner_supervisor_agent,
         test_echo_agent=test_echo_agent,
         vision_document_agent=vision_document_agent,
         react_rag_agent=react_rag_agent,
