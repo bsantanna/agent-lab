@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import hvac
+from langgraph.constants import START
 from langgraph.graph import StateGraph
 from langgraph.managed import RemainingSteps
 from typing_extensions import TypedDict, List, Annotated
@@ -123,7 +124,13 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
 
     def get_workflow_builder(self, agent_id: str):
         workflow_builder = StateGraph(AgentState)
-        # TODO
+        workflow_builder.add_edge(START, "coordinator")
+        # workflow_builder.add_node("coordinator", coordinator_node)
+        # workflow_builder.add_node("planner", planner_node)
+        # workflow_builder.add_node("supervisor", supervisor_node)
+        # workflow_builder.add_node("researcher", research_node)
+        # workflow_builder.add_node("browser", browser_node)
+        # workflow_builder.add_node("reporter", reporter_node)
         return workflow_builder
 
     def get_input_params(self, message_request: MessageRequest):
@@ -146,3 +153,5 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
             "reporter_system_prompt": settings_dict["reporter_system_prompt"],
             "messages": [],
         }
+
+
