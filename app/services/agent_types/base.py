@@ -5,11 +5,15 @@ import hvac
 from langchain_anthropic import ChatAnthropic
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseChatModel
+from langchain_core.tools import tool, InjectedToolCallId
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from typing_extensions import List
+from langchain_tavily import TavilySearch
+from langgraph.prebuilt import InjectedState
+from langgraph.types import Command
+from typing_extensions import List, Annotated
 
-from app.domain.exceptions.base import ResourceNotFoundError
+from app.domain.exceptions.base import ResourceNotFoundError, ConfigurationError
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.interface.api.messages.schema import MessageRequest, MessageBase
 from app.services.agent_settings import AgentSettingService
@@ -201,6 +205,35 @@ class WorkflowAgent(AgentBase, ABC):
             thought_chain += f"Connection: {connection}"
 
         return thought_chain
+
+    def create_handoff_tool(self, agent_name: str):
+        """Create a tool that can return handoff via a Command"""
+        tool_name = f"transfer_to_{agent_name}"
+
+        @tool(tool_name)
+        def handoff_to_agent(
+            state: Annotated[dict, InjectedState],
+            tool_call_id: Annotated[str, InjectedToolCallId],
+        ):
+            """Ask another agent for help."""
+            tool_message = {
+                "role": "tool",
+                "content": f"Successfully transferred to {agent_name}",
+                "name": tool_name,
+                "tool_call_id": tool_call_id,
+            }
+            return Command(
+                goto=agent_name,
+                graph=Command.PARENT,
+                update={"messages": state["messages"] + [tool_message]},
+            )
+
+        return handoff_to_agent
+
+    def get_web_search_tool(self, max_results=5, topic="general"):
+        if not os.environ.get("TAVILY_API_KEY"):
+            raise ConfigurationError("TAVILY_API_KEY environment variable not set")
+        return TavilySearch(max_results=max_results, topic=topic)
 
     def process_message(self, message_request: MessageRequest) -> MessageBase:
         checkpointer = self.graph_persistence_factory.build_checkpoint_saver()
