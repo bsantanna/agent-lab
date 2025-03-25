@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import hvac
+from langgraph.graph import StateGraph
 from langgraph.managed import RemainingSteps
 from typing_extensions import TypedDict, List, Annotated
 
@@ -76,7 +77,7 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
         )
 
         supervisor_prompt = self.read_file_content(
-            f"{current_dir}/default_supervisor_system_promtpt.txt"
+            f"{current_dir}/default_supervisor_system_prompt.txt"
         )
         self.agent_setting_service.create_agent_setting(
             agent_id=agent_id,
@@ -121,7 +122,27 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
         )
 
     def get_workflow_builder(self, agent_id: str):
-        pass
+        workflow_builder = StateGraph(AgentState)
+        # TODO
+        return workflow_builder
 
     def get_input_params(self, message_request: MessageRequest):
-        pass
+        settings = self.agent_setting_service.get_agent_settings(
+            message_request.agent_id
+        )
+        settings_dict = {
+            setting.setting_key: setting.setting_value for setting in settings
+        }
+
+        return {
+            "agent_id": message_request.agent_id,
+            "query": message_request.message_content,
+            "collection_name": settings_dict["collection_name"],
+            "coordinator_system_prompt": settings_dict["coordinator_system_prompt"],
+            "planner_system_prompt": settings_dict["planner_system_prompt"],
+            "supervisor_system_prompt": settings_dict["supervisor_system_prompt"],
+            "researcher_system_prompt": settings_dict["researcher_system_prompt"],
+            "browser_system_prompt": settings_dict["browser_system_prompt"],
+            "reporter_system_prompt": settings_dict["reporter_system_prompt"],
+            "messages": [],
+        }
