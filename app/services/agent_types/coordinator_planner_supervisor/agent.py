@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from pathlib import Path
 
@@ -29,7 +30,6 @@ from app.services.language_models import LanguageModelService
 
 class AgentState(MessagesState):
     agent_id: str
-    query: str
     collection_name: str
     coordinator_system_prompt: str
     planner_system_prompt: str
@@ -66,6 +66,7 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
             graph_persistence_factory=graph_persistence_factory,
         )
         self.document_repository = document_repository
+        self.logger = logging.getLogger(__name__)
 
     def create_default_settings(self, agent_id: str):
         current_dir = Path(__file__).parent
@@ -175,7 +176,6 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
 
         return {
             "agent_id": message_request.agent_id,
-            "query": message_request.message_content,
             "collection_name": settings_dict["collection_name"],
             "deep_search_mode": settings_dict["deep_search_mode"] == "True",
             "coordinator_system_prompt": self.parse_prompt_template(
@@ -199,19 +199,41 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
             "reporter_system_prompt": self.parse_prompt_template(
                 settings_dict, "reporter_system_prompt", template_vars
             ),
-            "messages": [],
+            "messages": [
+                ("user", message_request.message_content)
+            ],
         }
 
+    def get_coordinator_chain(self, llm, coordinator_system_prompt: str):
+        supervisor_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", coordinator_system_prompt),
+                (
+                    "human", "{query}",
+                ),
+            ]
+        )
+        return supervisor_prompt | llm
+
     def get_coordinator(self, state: AgentState):
+        self.logger.info("Coordinator -> Start")
         agent_id = state["agent_id"]
+        messages = state["messages"]
         coordinator_system_prompt = state["coordinator_system_prompt"]
         chat_model = self.get_chat_model(agent_id)
-        coordinator = create_react_agent(
-            model=chat_model,
-            tools=[self.create_handoff_tool(agent_name="planner")],
-            prompt=coordinator_system_prompt,
-        )
-        return coordinator
+
+        response = self.get_supervisor_chain(
+            chat_model, coordinator_system_prompt
+        ).invoke(messages[-1][1])
+
+        self.logger.info(f"Coordinator -> Response -> {response}")
+        plain_response = str(response)
+
+        goto = "__end__"
+        if "handoff_to_planner" in plain_response:
+            goto = "planner"
+
+        return Command(goto=goto)
 
     def get_planner(self, state: AgentState):
         deep_search_mode = state["deep_search_mode"]
@@ -241,8 +263,7 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
             [
                 ("system", supervisor_system_prompt),
                 (
-                    "human",
-                    "<query>{query}</query>",
+                    "human", "{query}",
                 ),
             ]
         )
