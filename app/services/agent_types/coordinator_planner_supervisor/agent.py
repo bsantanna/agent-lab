@@ -21,7 +21,10 @@ from app.services.agent_types.coordinator_planner_supervisor import (
     SUPERVISED_AGENTS,
     SUPERVISED_AGENT_CONFIGURATION,
 )
-from app.services.agent_types.coordinator_planner_supervisor.schema import Router
+from app.services.agent_types.coordinator_planner_supervisor.schema import (
+    SupervisorRouter,
+    CoordinatorRouter,
+)
 from app.services.agents import AgentService
 from app.services.integrations import IntegrationService
 from app.services.language_model_settings import LanguageModelSettingService
@@ -30,6 +33,8 @@ from app.services.language_models import LanguageModelService
 
 class AgentState(MessagesState):
     agent_id: str
+    query: str
+    generated: str
     collection_name: str
     coordinator_system_prompt: str
     planner_system_prompt: str
@@ -176,6 +181,7 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
 
         return {
             "agent_id": message_request.agent_id,
+            "query": message_request.message_content,
             "collection_name": settings_dict["collection_name"],
             "deep_search_mode": settings_dict["deep_search_mode"] == "True",
             "coordinator_system_prompt": self.parse_prompt_template(
@@ -199,41 +205,34 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
             "reporter_system_prompt": self.parse_prompt_template(
                 settings_dict, "reporter_system_prompt", template_vars
             ),
-            "messages": [
-                ("user", message_request.message_content)
-            ],
+            "messages": [],
         }
 
     def get_coordinator_chain(self, llm, coordinator_system_prompt: str):
-        supervisor_prompt = ChatPromptTemplate.from_messages(
+        structured_llm_generator = llm.with_structured_output(CoordinatorRouter)
+        coordinator_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", coordinator_system_prompt),
-                (
-                    "human", "{query}",
-                ),
+                ("human", "<query>{query}</query>"),
             ]
         )
-        return supervisor_prompt | llm
+        return coordinator_prompt | structured_llm_generator
 
     def get_coordinator(self, state: AgentState):
         self.logger.info("Coordinator -> Start")
         agent_id = state["agent_id"]
-        messages = state["messages"]
+        query = state["query"]
         coordinator_system_prompt = state["coordinator_system_prompt"]
         chat_model = self.get_chat_model(agent_id)
 
-        response = self.get_supervisor_chain(
+        response = self.get_coordinator_chain(
             chat_model, coordinator_system_prompt
-        ).invoke(messages[-1][1])
+        ).invoke({"query": query})
 
         self.logger.info(f"Coordinator -> Response -> {response}")
-        plain_response = str(response)
-
-        goto = "__end__"
-        if "handoff_to_planner" in plain_response:
-            goto = "planner"
-
-        return Command(goto=goto)
+        return Command(
+            goto=response["next"], update={"generated": response["generated"]}
+        )
 
     def get_planner(self, state: AgentState):
         deep_search_mode = state["deep_search_mode"]
@@ -256,14 +255,13 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
         return planner
 
     def get_supervisor_chain(self, llm, supervisor_system_prompt: str):
-        structured_llm_generator = llm.with_structured_output(
-            schema=Router, method="json_mode"
-        )
+        structured_llm_generator = llm.with_structured_output(SupervisorRouter)
         supervisor_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", supervisor_system_prompt),
                 (
-                    "human", "{query}",
+                    "human",
+                    "{query}",
                 ),
             ]
         )
