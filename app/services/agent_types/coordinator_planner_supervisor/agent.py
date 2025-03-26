@@ -4,10 +4,10 @@ from datetime import datetime
 from pathlib import Path
 
 import hvac
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.tools import tool
-from langgraph.constants import START
+from langchain_core.tools import tool, BaseTool
+from langgraph.constants import START, END
 from langgraph.graph import StateGraph, MessagesState
 from langgraph.managed import RemainingSteps
 from langgraph.prebuilt import create_react_agent, InjectedState
@@ -238,10 +238,13 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
             chat_model, coordinator_system_prompt
         ).invoke({"query": query})
         self.logger.info(f"Agent[{agent_id}] -> Coordinator -> Response -> {response}")
-
-        return Command(
-            goto=response["next"], update={"generated": response["generated"]}
-        )
+        if response["next"] == END:
+            return Command(
+                goto=response["next"],
+                update={"messages": [AIMessage(content=response["generated"])]},
+            )
+        else:
+            return Command(goto=response["next"])
 
     def get_planner_chain(
         self, llm, planner_system_prompt: str, search_results: str = None
@@ -318,34 +321,32 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
         self.logger.info(f"Agent[{agent_id}] -> Supervisor -> Response -> {response}")
         return Command(goto=response["next"], update={"next": response["next"]})
 
-    @tool
-    def research_knowledge_base(self, state: Annotated[dict, InjectedState]) -> str:
-        """
-        Consult the knowledge base. Use this to perform research on known knowledge bases.
+    def get_research_knowledge_base_tool(
+        self, state: Annotated[dict, InjectedState]
+    ) -> BaseTool:
+        @tool("research_knowledge_base")
+        def retrieve_tool_call():
+            """
+            Consult the knowledge base. Use this to perform research on known knowledge bases.
 
-        Returns:
-            str: Documents retrieved from knowledge base separated by line breaks.
-        """
-        agent_id = state["agent_id"]
-        collection_name = state["collection_name"]
-        execution_plan = state["execution_plan"]
-        embeddings_model = self.get_embeddings_model(agent_id)
-        thought_docs = self.document_repository.search(
-            embeddings_model=embeddings_model,
-            collection_name=collection_name,
-            query=execution_plan["thought"],
-        )
-        thought_docs_summary = "\n\n".join([doc.page_content for doc in thought_docs])
-        title_docs = self.document_repository.search(
-            embeddings_model=embeddings_model,
-            collection_name=collection_name,
-            query=execution_plan["title"],
-        )
-        title_docs_summary = "\n\n".join([doc.page_content for doc in title_docs])
+            Returns:
+                str: Documents retrieved from knowledge base separated by line breaks.
+            """
+            agent_id = state["agent_id"]
+            collection_name = state["collection_name"]
+            execution_plan = state["execution_plan"]
+            embeddings_model = self.get_embeddings_model(agent_id)
+            thought_docs = self.document_repository.search(
+                embeddings_model=embeddings_model,
+                collection_name=collection_name,
+                query=execution_plan["thought"],
+                size=3,
+            )
+            return "\n\n".join([doc.page_content for doc in thought_docs])
 
-        return f"{thought_docs_summary}\n\n{title_docs_summary}"
+        return retrieve_tool_call
 
-    def get_researcher(self, state: AgentState):
+    def get_researcher(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
         self.logger.info(f"Agent[{agent_id}] -> Researcher")
         researcher_system_prompt = state["researcher_system_prompt"]
@@ -353,7 +354,7 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
         if deep_search_mode:
             tools = [self.get_web_search_tool()]
         else:
-            tools = [self.research_knowledge_base]
+            tools = [self.get_research_knowledge_base_tool(state)]
 
         chat_model = self.get_chat_model(agent_id)
         researcher = create_react_agent(
@@ -400,13 +401,19 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
             goto="supervisor",
         )
 
-    def get_reporter(self, state: AgentState):
+    def get_reporter(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
+        self.logger.info(f"Agent[{agent_id}] -> Reporter")
         reporter_system_prompt = state["reporter_system_prompt"]
         chat_model = self.get_chat_model(agent_id)
         reporter = create_react_agent(
             model=chat_model,
-            tools=[self.create_handoff_tool(agent_name="supervisor")],
+            tools=[],
             prompt=reporter_system_prompt,
         )
-        return reporter
+        response = reporter.invoke(state)
+        self.logger.info(f"Agent[{agent_id}] -> Reporter -> Response -> {response}")
+        return Command(
+            update={"messages": response["messages"]},
+            goto="supervisor",
+        )
