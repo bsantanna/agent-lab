@@ -2,6 +2,7 @@ import os
 from abc import ABC, abstractmethod
 
 import hvac
+from jinja2 import Environment, DictLoader, select_autoescape
 from langchain_anthropic import ChatAnthropic
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseChatModel
@@ -147,6 +148,18 @@ class AgentBase(ABC):
 
         with open(file_path, "r") as file:
             return file.read().strip()
+
+    def parse_prompt_template(
+        self, settings_dict: dict, prompt_key: str, template_vars: dict
+    ) -> str:
+        env = Environment(
+            loader=DictLoader(settings_dict),
+            autoescape=select_autoescape(),
+            trim_blocks=True,
+            lstrip_blocks=True,
+        )
+        template = env.get_template(prompt_key)
+        return template.render(template_vars)
 
 
 class WorkflowAgent(AgentBase, ABC):

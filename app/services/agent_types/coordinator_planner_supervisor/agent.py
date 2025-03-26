@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 
 import hvac
@@ -15,6 +16,10 @@ from app.infrastructure.database.vectors import DocumentRepository
 from app.interface.api.messages.schema import MessageRequest
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.base import join_messages, WorkflowAgent
+from app.services.agent_types.coordinator_planner_supervisor import (
+    SUPERVISED_AGENTS,
+    SUPERVISED_AGENT_CONFIGURATION,
+)
 from app.services.agent_types.coordinator_planner_supervisor.schema import Router
 from app.services.agents import AgentService
 from app.services.integrations import IntegrationService
@@ -162,19 +167,38 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
         settings_dict = {
             setting.setting_key: setting.setting_value for setting in settings
         }
-        # TODO parse templates
+        template_vars = {
+            "CURRENT_TIME": datetime.now().strftime("%a %b %d %Y %H:%M:%S %z"),
+            "SUPERVISED_AGENTS": SUPERVISED_AGENTS,
+            "SUPERVISED_AGENT_CONFIGURATION": SUPERVISED_AGENT_CONFIGURATION,
+        }
+
         return {
             "agent_id": message_request.agent_id,
             "query": message_request.message_content,
             "collection_name": settings_dict["collection_name"],
-            "deep_search_mode": bool(settings_dict["deep_search_mode"]),
-            "coordinator_system_prompt": settings_dict["coordinator_system_prompt"],
-            "planner_system_prompt": settings_dict["planner_system_prompt"],
-            "supervisor_system_prompt": settings_dict["supervisor_system_prompt"],
-            "researcher_system_prompt": settings_dict["researcher_system_prompt"],
-            "coder_system_prompt": settings_dict["coder_system_prompt"],
-            "browser_system_prompt": settings_dict["browser_system_prompt"],
-            "reporter_system_prompt": settings_dict["reporter_system_prompt"],
+            "deep_search_mode": settings_dict["deep_search_mode"] == "True",
+            "coordinator_system_prompt": self.parse_prompt_template(
+                settings_dict, "coordinator_system_prompt", template_vars
+            ),
+            "planner_system_prompt": self.parse_prompt_template(
+                settings_dict, "planner_system_prompt", template_vars
+            ),
+            "supervisor_system_prompt": self.parse_prompt_template(
+                settings_dict, "supervisor_system_prompt", template_vars
+            ),
+            "researcher_system_prompt": self.parse_prompt_template(
+                settings_dict, "researcher_system_prompt", template_vars
+            ),
+            "coder_system_prompt": self.parse_prompt_template(
+                settings_dict, "coder_system_prompt", template_vars
+            ),
+            "browser_system_prompt": self.parse_prompt_template(
+                settings_dict, "browser_system_prompt", template_vars
+            ),
+            "reporter_system_prompt": self.parse_prompt_template(
+                settings_dict, "reporter_system_prompt", template_vars
+            ),
             "messages": [],
         }
 

@@ -26,7 +26,7 @@ SUPERVISED_AGENT_CONFIGURATION = {
         "desc": "Responsible for web browsing, content extraction and interaction",
         "desc_for_llm": (
             "Directly interacts with web pages, performing complex operations and interactions. "
-            "You can also leverage `browser` to perform in-domain search, like Facebook, Instgram, Github, etc."
+            "You can also leverage `browser` to perform in-domain search, like Facebook, Instagram, Github, etc."
         ),
         "is_optional": True,
     },
