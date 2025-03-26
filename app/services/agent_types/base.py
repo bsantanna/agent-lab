@@ -6,13 +6,10 @@ from jinja2 import Environment, DictLoader, select_autoescape
 from langchain_anthropic import ChatAnthropic
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseChatModel
-from langchain_core.tools import tool, InjectedToolCallId
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_tavily import TavilySearch
-from langgraph.prebuilt import InjectedState
-from langgraph.types import Command
-from typing_extensions import List, Annotated
+from typing_extensions import List
 
 from app.domain.exceptions.base import ResourceNotFoundError, ConfigurationError
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
@@ -218,30 +215,6 @@ class WorkflowAgent(AgentBase, ABC):
             thought_chain += f"Connection: {connection}"
 
         return thought_chain
-
-    def create_handoff_tool(self, agent_name: str):
-        """Create a tool that can return handoff via a Command"""
-        tool_name = f"transfer_to_{agent_name}"
-
-        @tool(tool_name)
-        def handoff_to_agent(
-            state: Annotated[dict, InjectedState],
-            tool_call_id: Annotated[str, InjectedToolCallId],
-        ):
-            """Ask another agent for help."""
-            tool_message = {
-                "role": "tool",
-                "content": f"Successfully transferred to {agent_name}",
-                "name": tool_name,
-                "tool_call_id": tool_call_id,
-            }
-            return Command(
-                goto=agent_name,
-                graph=Command.PARENT,
-                update={"messages": state["messages"] + [tool_message]},
-            )
-
-        return handoff_to_agent
 
     def get_web_search_tool(self, max_results=5, topic="general"):
         if not os.environ.get("TAVILY_API_KEY"):

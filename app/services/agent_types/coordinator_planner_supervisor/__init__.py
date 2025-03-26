@@ -5,6 +5,7 @@ SUPERVISED_AGENT_CONFIGURATION = {
             "Responsible for searching and collecting relevant information, understanding user needs and conducting research analysis"
         ),
         "desc_for_llm": (
+            "Uses knowledge bases to gather information from internal databases. "
             "Uses search engines and web crawlers to gather information from the internet. "
             "Outputs a Markdown report summarizing findings. Researcher can not do math or programming."
         ),
