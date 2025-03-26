@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import datetime
 from pathlib import Path
@@ -23,7 +24,7 @@ from app.services.agent_types.coordinator_planner_supervisor import (
 )
 from app.services.agent_types.coordinator_planner_supervisor.schema import (
     SupervisorRouter,
-    CoordinatorRouter,
+    CoordinatorRouter, SolutionPlan,
 )
 from app.services.agents import AgentService
 from app.services.integrations import IntegrationService
@@ -44,7 +45,7 @@ class AgentState(MessagesState):
     browser_system_prompt: str
     reporter_system_prompt: str
     deep_search_mode: bool
-    plan: str
+    execution_plan: str
     messages: Annotated[List, join_messages]
     remaining_steps: RemainingSteps
 
@@ -219,40 +220,69 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
         return coordinator_prompt | structured_llm_generator
 
     def get_coordinator(self, state: AgentState):
-        self.logger.info("Coordinator -> Start")
         agent_id = state["agent_id"]
         query = state["query"]
         coordinator_system_prompt = state["coordinator_system_prompt"]
-        chat_model = self.get_chat_model(agent_id)
 
+        self.logger.info(f"Agent[{agent_id}] -> Coordinator -> Query -> {query}")
+        chat_model = self.get_chat_model(agent_id)
         response = self.get_coordinator_chain(
             chat_model, coordinator_system_prompt
         ).invoke({"query": query})
+        self.logger.info(f"Agent[{agent_id}] -> Coordinator -> Response -> {response}")
 
-        self.logger.info(f"Coordinator -> Response -> {response}")
         return Command(
-            goto=response["next"], update={"generated": response["generated"]}
+            goto=response["next"],
+            update={"generated": response["generated"]}
         )
+
+    def get_planner_chain(self, llm, planner_system_prompt: str, search_results:str=None):
+        structured_llm_generator = llm.with_structured_output(SolutionPlan)
+        if search_results is not None:
+            planner_input = "<query>{query}</query>\n\n<search_results>{search_results}</search_results>"
+        else:
+            planner_input = "<query>{query}</query>"
+        planner_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", planner_system_prompt),
+                ("human", planner_input),
+            ]
+        )
+        return planner_prompt | structured_llm_generator
 
     def get_planner(self, state: AgentState):
-        deep_search_mode = state["deep_search_mode"]
-        if deep_search_mode:
-            tools = [
-                self.get_web_search_tool(),
-                self.create_handoff_tool(agent_name="supervisor"),
-            ]
-        else:
-            tools = [self.create_handoff_tool(agent_name="supervisor")]
-
         agent_id = state["agent_id"]
+        query = state["query"]
         planner_system_prompt = state["planner_system_prompt"]
+        deep_search_mode = state["deep_search_mode"]
+        self.logger.info(f"Agent[{agent_id}] -> Planner -> Query -> {query} -> Deep Search Mode -> {deep_search_mode}")
         chat_model = self.get_chat_model(agent_id)
-        planner = create_react_agent(
-            model=chat_model,
-            tools=tools,
-            prompt=planner_system_prompt,
+
+        if deep_search_mode:
+            search_response = self.get_web_search_tool().invoke({"query":query})
+            search_results = f"{json.dumps([{'title': elem['title'], 'content': elem['content']} for elem in search_response], ensure_ascii=False)}"
+            response = self.get_planner_chain(
+                llm=chat_model,
+                planner_system_prompt=planner_system_prompt,
+                search_results=search_results
+            ).invoke({"query": query,"search_results": search_results})
+        else:
+            response = self.get_planner_chain(
+                llm=chat_model,
+                planner_system_prompt=planner_system_prompt
+            ).invoke({"query": query})
+
+        self.logger.info(f"Agent[{agent_id}] -> Planner -> Response -> {response}")
+        plain_response = json.dumps(response)
+
+        return Command(
+            update={
+                "messages": [HumanMessage(content=plain_response, name="planner")],
+                "execution_plan": response,
+            },
+            goto="supervisor",
         )
-        return planner
+
 
     def get_supervisor_chain(self, llm, supervisor_system_prompt: str):
         structured_llm_generator = llm.with_structured_output(SupervisorRouter)
