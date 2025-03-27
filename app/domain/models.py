@@ -13,14 +13,6 @@ from sqlalchemy.orm import relationship
 from app.infrastructure.database.sql import Base
 
 
-integration_type = Enum(
-    "anthropic_api_v1",
-    "openai_api_v1",
-    "ollama_api_v1",
-    "xai_api_v1",
-    name="integration_type",
-)
-
 message_role = Enum("assistant", "human", name="message_role")
 
 
@@ -96,7 +88,7 @@ class Integration(Base):
     id = Column(String, primary_key=True)
     created_at = Column(TIMESTAMP)
     is_active = Column(Boolean)
-    integration_type = Column(integration_type)
+    integration_type = Column(String)
 
     language_models = relationship("LanguageModel", back_populates="integration")
 

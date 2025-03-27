@@ -10,6 +10,7 @@ langchain-core==0.3.48
 langchain-ollama==0.3.0
 langchain-openai==0.3.10
 langchain-postgres==0.0.13
+langchain-tavily==0.1.5
 langchain-xai==0.2.2
 langgraph==0.3.5
 langgraph-checkpoint-postgres==2.0.15

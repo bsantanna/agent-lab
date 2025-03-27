@@ -2,14 +2,16 @@ import os
 from abc import ABC, abstractmethod
 
 import hvac
+from jinja2 import Environment, DictLoader, select_autoescape
 from langchain_anthropic import ChatAnthropic
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseChatModel
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_tavily import TavilySearch
 from typing_extensions import List
 
-from app.domain.exceptions.base import ResourceNotFoundError
+from app.domain.exceptions.base import ResourceNotFoundError, ConfigurationError
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.interface.api.messages.schema import MessageRequest, MessageBase
 from app.services.agent_settings import AgentSettingService
@@ -144,6 +146,18 @@ class AgentBase(ABC):
         with open(file_path, "r") as file:
             return file.read().strip()
 
+    def parse_prompt_template(
+        self, settings_dict: dict, prompt_key: str, template_vars: dict
+    ) -> str:
+        env = Environment(
+            loader=DictLoader(settings_dict),
+            autoescape=select_autoescape(),
+            trim_blocks=True,
+            lstrip_blocks=True,
+        )
+        template = env.get_template(prompt_key)
+        return template.render(template_vars)
+
 
 class WorkflowAgent(AgentBase, ABC):
     def __init__(
@@ -201,6 +215,11 @@ class WorkflowAgent(AgentBase, ABC):
             thought_chain += f"Connection: {connection}"
 
         return thought_chain
+
+    def get_web_search_tool(self, max_results=5, topic="general"):
+        if not os.environ.get("TAVILY_API_KEY"):
+            raise ConfigurationError("TAVILY_API_KEY environment variable not set")
+        return TavilySearch(max_results=max_results, topic=topic)
 
     def process_message(self, message_request: MessageRequest) -> MessageBase:
         checkpointer = self.graph_persistence_factory.build_checkpoint_saver()
