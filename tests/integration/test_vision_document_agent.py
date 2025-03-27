@@ -76,10 +76,10 @@ class TestVisionDocumentAgent:
     @pytest.mark.asyncio
     async def test_post_message(self, client):
         # given
-        upload_filename = "vision_document_02.png"
-        upload_response = self._upload_file(client, upload_filename, "image/png")
+        upload_filename = "vision_document_01.jpg"
+        upload_response = self._upload_file(client, upload_filename, "image/jpeg")
         attachment_id = upload_response.json()["id"]
-        message_content = "You have this image containing a code snippet, which programming language names can you identify?"
+        message_content = "Can you describe the following image?"
 
         # when
         create_message_response = self._create_message(
