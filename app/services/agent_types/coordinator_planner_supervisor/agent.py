@@ -1,5 +1,4 @@
 import json
-import logging
 from datetime import datetime
 from pathlib import Path
 
@@ -18,7 +17,7 @@ from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.vectors import DocumentRepository
 from app.interface.api.messages.schema import MessageRequest
 from app.services.agent_settings import AgentSettingService
-from app.services.agent_types.base import join_messages, WorkflowAgent
+from app.services.agent_types.base import join_messages, RagAgentBase
 from app.services.agent_types.coordinator_planner_supervisor import (
     SUPERVISED_AGENTS,
     SUPERVISED_AGENT_CONFIGURATION,
@@ -52,7 +51,7 @@ class AgentState(MessagesState):
     remaining_steps: RemainingSteps
 
 
-class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
+class CoordinatorPlannerSupervisorAgent(RagAgentBase):
     def __init__(
         self,
         agent_service: AgentService,
@@ -72,9 +71,8 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
             integration_service=integration_service,
             vault_client=vault_client,
             graph_persistence_factory=graph_persistence_factory,
+            document_repository=document_repository,
         )
-        self.document_repository = document_repository
-        self.logger = logging.getLogger(__name__)
 
     def create_default_settings(self, agent_id: str):
         current_dir = Path(__file__).parent

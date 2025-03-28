@@ -11,7 +11,7 @@ from typing_extensions import TypedDict
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.interface.api.messages.schema import MessageRequest
 from app.services.agent_settings import AgentSettingService
-from app.services.agent_types.base import WorkflowAgent
+from app.services.agent_types.base import WorkflowAgentBase
 from app.services.agents import AgentService
 from app.services.attachments import AttachmentService
 from app.services.integrations import IntegrationService
@@ -28,7 +28,7 @@ class AgentState(TypedDict):
     execution_system_prompt: str
 
 
-class VisionDocumentAgent(WorkflowAgent):
+class VisionDocumentAgent(WorkflowAgentBase):
     def __init__(
         self,
         agent_service: AgentService,

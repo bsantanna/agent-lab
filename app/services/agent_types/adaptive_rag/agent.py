@@ -18,7 +18,7 @@ from app.services.agent_types.adaptive_rag.schema import (
     GradeAnswer,
     GenerateAnswer,
 )
-from app.services.agent_types.base import WorkflowAgent, join_messages
+from app.services.agent_types.base import join_messages, RagAgentBase
 from app.services.agents import AgentService
 from app.services.integrations import IntegrationService
 from app.services.language_model_settings import LanguageModelSettingService
@@ -40,7 +40,7 @@ class AgentState(TypedDict):
     retrieval_grader_system_prompt: str
 
 
-class AdaptiveRagAgent(WorkflowAgent):
+class AdaptiveRagAgent(RagAgentBase):
     def __init__(
         self,
         agent_service: AgentService,
@@ -60,8 +60,8 @@ class AdaptiveRagAgent(WorkflowAgent):
             integration_service=integration_service,
             vault_client=vault_client,
             graph_persistence_factory=graph_persistence_factory,
+            document_repository=document_repository,
         )
-        self.document_repository = document_repository
 
     def create_default_settings(self, agent_id: str):
         current_dir = Path(__file__).parent
