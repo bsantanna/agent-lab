@@ -1,9 +1,9 @@
 from contextlib import AbstractContextManager
 from datetime import datetime
-from typing_extensions import Callable, Iterator
 from uuid import uuid4
 
 from sqlalchemy.orm import Session
+from typing_extensions import Callable, Iterator
 
 from app.domain.exceptions.base import NotFoundError
 from app.domain.models import Agent, AgentSetting

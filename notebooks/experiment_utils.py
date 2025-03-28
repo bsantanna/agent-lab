@@ -123,3 +123,20 @@ def create_embeddings(
         },
     )
     return embeddings_response.json()
+
+
+def update_agent_setting(
+    agent_id: str,
+    setting_key: str,
+    setting_value: str,
+    agent_lab_endpoint: str = "http://localhost:18000",
+) -> dict:
+    update_setting_response = requests.post(
+        f"{agent_lab_endpoint}/agents/update_setting",
+        json={
+            "agent_id": agent_id,
+            "setting_key": setting_key,
+            "setting_value": setting_value,
+        },
+    )
+    return update_setting_response.json()

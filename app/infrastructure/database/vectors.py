@@ -1,9 +1,8 @@
-from typing_extensions import List
-
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 from langchain_core.vectorstores import VectorStore
 from langchain_postgres import PGVector
+from typing_extensions import List
 
 
 class DocumentRepository:

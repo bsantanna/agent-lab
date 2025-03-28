@@ -18,6 +18,7 @@ from app.infrastructure.database.vectors import DocumentRepository
 from app.infrastructure.metrics.tracer import Tracer
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.adaptive_rag.agent import AdaptiveRagAgent
+from app.services.agent_types.base import AgentUtils
 from app.services.agent_types.coordinator_planner_supervisor.agent import (
     CoordinatorPlannerSupervisorAgent,
 )
@@ -162,10 +163,11 @@ class Container(containers.DeclarativeContainer):
         attachment_service=attachment_service,
     )
 
-    adaptive_rag_agent = providers.Factory(
-        AdaptiveRagAgent,
+    agent_utils = providers.Factory(
+        AgentUtils,
         agent_service=agent_service,
         agent_setting_service=agent_setting_service,
+        attachment_service=attachment_service,
         language_model_service=language_model_service,
         language_model_setting_service=language_model_setting_service,
         integration_service=integration_service,
@@ -173,51 +175,19 @@ class Container(containers.DeclarativeContainer):
         graph_persistence_factory=graph_persistence_factory,
         document_repository=document_repository,
     )
+
+    adaptive_rag_agent = providers.Factory(AdaptiveRagAgent, agent_utils=agent_utils)
 
     coordinator_planner_supervisor_agent = providers.Factory(
-        CoordinatorPlannerSupervisorAgent,
-        agent_service=agent_service,
-        agent_setting_service=agent_setting_service,
-        language_model_service=language_model_service,
-        language_model_setting_service=language_model_setting_service,
-        integration_service=integration_service,
-        vault_client=vault_client,
-        graph_persistence_factory=graph_persistence_factory,
-        document_repository=document_repository,
+        CoordinatorPlannerSupervisorAgent, agent_utils=agent_utils
     )
 
-    react_rag_agent = providers.Factory(
-        ReactRagAgent,
-        agent_service=agent_service,
-        agent_setting_service=agent_setting_service,
-        language_model_service=language_model_service,
-        language_model_setting_service=language_model_setting_service,
-        integration_service=integration_service,
-        vault_client=vault_client,
-        graph_persistence_factory=graph_persistence_factory,
-        document_repository=document_repository,
-    )
+    react_rag_agent = providers.Factory(ReactRagAgent, agent_utils=agent_utils)
 
-    test_echo_agent = providers.Factory(
-        TestEchoAgent,
-        agent_service=agent_service,
-        agent_setting_service=agent_setting_service,
-        language_model_service=language_model_service,
-        language_model_setting_service=language_model_setting_service,
-        integration_service=integration_service,
-        vault_client=vault_client,
-    )
+    test_echo_agent = providers.Factory(TestEchoAgent, agent_utils=agent_utils)
 
     vision_document_agent = providers.Factory(
-        VisionDocumentAgent,
-        agent_service=agent_service,
-        agent_setting_service=agent_setting_service,
-        language_model_service=language_model_service,
-        language_model_setting_service=language_model_setting_service,
-        integration_service=integration_service,
-        vault_client=vault_client,
-        graph_persistence_factory=graph_persistence_factory,
-        attachment_service=attachment_service,
+        VisionDocumentAgent, agent_utils=agent_utils
     )
 
     agent_registry = providers.Singleton(

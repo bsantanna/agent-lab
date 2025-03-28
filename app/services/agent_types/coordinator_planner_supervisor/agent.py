@@ -1,24 +1,19 @@
 import json
-import logging
 from datetime import datetime
 from pathlib import Path
 
-import hvac
-from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool, BaseTool
 from langgraph.constants import START, END
-from langgraph.graph import StateGraph, MessagesState
+from langgraph.graph import StateGraph, MessagesState, add_messages
 from langgraph.managed import RemainingSteps
 from langgraph.prebuilt import create_react_agent, InjectedState
 from langgraph.types import Command
 from typing_extensions import List, Annotated, Literal
 
-from app.infrastructure.database.checkpoints import GraphPersistenceFactory
-from app.infrastructure.database.vectors import DocumentRepository
 from app.interface.api.messages.schema import MessageRequest
-from app.services.agent_settings import AgentSettingService
-from app.services.agent_types.base import join_messages, WorkflowAgent
+from app.services.agent_types.base import RagAgentBase, AgentUtils
 from app.services.agent_types.coordinator_planner_supervisor import (
     SUPERVISED_AGENTS,
     SUPERVISED_AGENT_CONFIGURATION,
@@ -28,10 +23,6 @@ from app.services.agent_types.coordinator_planner_supervisor.schema import (
     CoordinatorRouter,
     SolutionPlan,
 )
-from app.services.agents import AgentService
-from app.services.integrations import IntegrationService
-from app.services.language_model_settings import LanguageModelSettingService
-from app.services.language_models import LanguageModelService
 
 
 class AgentState(MessagesState):
@@ -48,33 +39,13 @@ class AgentState(MessagesState):
     reporter_system_prompt: str
     deep_search_mode: bool
     execution_plan: str
-    messages: Annotated[List, join_messages]
+    messages: Annotated[List, add_messages]
     remaining_steps: RemainingSteps
 
 
-class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
-    def __init__(
-        self,
-        agent_service: AgentService,
-        agent_setting_service: AgentSettingService,
-        language_model_service: LanguageModelService,
-        language_model_setting_service: LanguageModelSettingService,
-        integration_service: IntegrationService,
-        vault_client: hvac.Client,
-        graph_persistence_factory: GraphPersistenceFactory,
-        document_repository: DocumentRepository,
-    ):
-        super().__init__(
-            agent_service=agent_service,
-            agent_setting_service=agent_setting_service,
-            language_model_service=language_model_service,
-            language_model_setting_service=language_model_setting_service,
-            integration_service=integration_service,
-            vault_client=vault_client,
-            graph_persistence_factory=graph_persistence_factory,
-        )
-        self.document_repository = document_repository
-        self.logger = logging.getLogger(__name__)
+class CoordinatorPlannerSupervisorAgent(RagAgentBase):
+    def __init__(self, agent_utils: AgentUtils):
+        super().__init__(agent_utils)
 
     def create_default_settings(self, agent_id: str):
         current_dir = Path(__file__).parent
@@ -212,8 +183,20 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
             "reporter_system_prompt": self.parse_prompt_template(
                 settings_dict, "reporter_system_prompt", template_vars
             ),
-            "messages": [],
+            "messages": [HumanMessage(content=message_request.message_content)],
         }
+
+    def get_last_interaction_messages(self, messages):
+        subarray = []
+        found_human_message = False
+
+        for message in reversed(messages):
+            subarray.insert(0, message)
+            if isinstance(message, HumanMessage):
+                found_human_message = True
+                break
+
+        return subarray if found_human_message else []
 
     def get_coordinator_chain(self, llm, coordinator_system_prompt: str):
         structured_llm_generator = llm.with_structured_output(CoordinatorRouter)
@@ -274,7 +257,7 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
 
         if deep_search_mode:
             search_response = self.get_web_search_tool().invoke({"query": query})
-            search_results = f"{json.dumps([{'title': elem['title'], 'content': elem['content']} for elem in search_response], ensure_ascii=False)}"
+            search_results = f"{json.dumps([{'title': elem['title'], 'content': elem['content']} for elem in search_response['results']], ensure_ascii=False)}"
             response = self.get_planner_chain(
                 llm=chat_model,
                 planner_system_prompt=planner_system_prompt,
@@ -290,7 +273,7 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
 
         return Command(
             update={
-                "messages": [HumanMessage(content=plain_response, name="planner")],
+                "messages": [AIMessage(content=plain_response, name="planner")],
                 "execution_plan": response,
             },
             goto="supervisor",
@@ -310,7 +293,8 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
         self, state: AgentState
     ) -> Command[Literal[*SUPERVISED_AGENTS, "__end__"]]:
         agent_id = state["agent_id"]
-        messages = state["messages"]
+        messages = self.get_last_interaction_messages(state["messages"])
+
         self.logger.info(f"Agent[{agent_id}] -> Supervisor -> Messages -> {messages}")
         supervisor_system_prompt = state["supervisor_system_prompt"]
         chat_model = self.get_chat_model(agent_id)
@@ -348,11 +332,14 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
 
     def get_researcher(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
-        self.logger.info(f"Agent[{agent_id}] -> Researcher")
-        researcher_system_prompt = state["researcher_system_prompt"]
         deep_search_mode = state["deep_search_mode"]
+        researcher_system_prompt = state["researcher_system_prompt"]
+
+        self.logger.info(
+            f"Agent[{agent_id}] -> Researcher -> Deep Search Mode -> {deep_search_mode}"
+        )
         if deep_search_mode:
-            tools = [self.get_web_search_tool()]
+            tools = [self.get_web_search_tool(), self.get_web_crawl_tool()]
         else:
             tools = [self.get_research_knowledge_base_tool(state)]
 
@@ -369,18 +356,24 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
             goto="supervisor",
         )
 
-    def get_coder(self, state: AgentState):
+    def get_coder(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
         coder_system_prompt = state["coder_system_prompt"]
+
+        self.logger.info(f"Agent[{agent_id}] -> Coder")
         chat_model = self.get_chat_model(agent_id)
         coder = create_react_agent(
             model=chat_model,
-            tools=[
-                self.create_handoff_tool(agent_name="supervisor")
-            ],  # TODO include Python tool
+            tools=[self.get_bash_tool(), self.get_python_tool()],
             prompt=coder_system_prompt,
         )
-        return coder
+
+        response = coder.invoke(state)
+        self.logger.info(f"Agent[{agent_id}] -> Coder -> Response -> {response}")
+        return Command(
+            update={"messages": response["messages"]},
+            goto="supervisor",
+        )
 
     def get_browser(self, state: AgentState):
         # agent_id = state["agent_id"]
@@ -392,7 +385,7 @@ class CoordinatorPlannerSupervisorAgent(WorkflowAgent):
         return Command(
             update={
                 "messages": [
-                    HumanMessage(
+                    AIMessage(
                         content=response,
                         name="coder",
                     )

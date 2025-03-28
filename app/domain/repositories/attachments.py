@@ -1,9 +1,9 @@
 from contextlib import AbstractContextManager
 from datetime import datetime
-from typing_extensions import Callable
 from uuid import uuid4
 
 from sqlalchemy.orm import Session
+from typing_extensions import Callable
 
 from app.domain.exceptions.base import NotFoundError
 from app.domain.models import Attachment
@@ -56,7 +56,9 @@ class AttachmentRepository:
             session.delete(entity)
             session.commit()
 
-    def update_attachment(self, attachment_id: str, embeddings_collection: str) -> Attachment:
+    def update_attachment(
+        self, attachment_id: str, embeddings_collection: str
+    ) -> Attachment:
         with self.session_factory() as session:
             entity: Attachment = (
                 session.query(Attachment)

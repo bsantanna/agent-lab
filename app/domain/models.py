@@ -12,7 +12,6 @@ from sqlalchemy.orm import relationship
 
 from app.infrastructure.database.sql import Base
 
-
 message_role = Enum("assistant", "human", name="message_role")
 
 

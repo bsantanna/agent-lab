@@ -1,42 +1,16 @@
 from pathlib import Path
 
-import hvac
-
-from app.infrastructure.database.checkpoints import GraphPersistenceFactory
-from app.infrastructure.database.vectors import DocumentRepository
-from app.interface.api.messages.schema import MessageRequest, MessageBase
-from app.services.agent_settings import AgentSettingService
-from app.services.agent_types.base import AgentBase
-from app.services.agents import AgentService
-from app.services.integrations import IntegrationService
-from app.services.language_model_settings import LanguageModelSettingService
-from app.services.language_models import LanguageModelService
-
 from langgraph.prebuilt import create_react_agent
+
+from app.interface.api.messages.schema import MessageRequest, MessageBase
+from app.services.agent_types.base import AgentUtils, AgentBase
 
 
 class ReactRagAgent(AgentBase):
-    def __init__(
-        self,
-        agent_service: AgentService,
-        agent_setting_service: AgentSettingService,
-        language_model_service: LanguageModelService,
-        language_model_setting_service: LanguageModelSettingService,
-        integration_service: IntegrationService,
-        vault_client: hvac.Client,
-        graph_persistence_factory: GraphPersistenceFactory,
-        document_repository: DocumentRepository,
-    ):
-        super().__init__(
-            agent_service=agent_service,
-            agent_setting_service=agent_setting_service,
-            language_model_service=language_model_service,
-            language_model_setting_service=language_model_setting_service,
-            integration_service=integration_service,
-            vault_client=vault_client,
-        )
-        self.graph_persistence_factory = graph_persistence_factory
-        self.document_repository = document_repository
+    def __init__(self, agent_utils: AgentUtils):
+        super().__init__(agent_utils)
+        self.graph_persistence_factory = agent_utils.graph_persistence_factory
+        self.document_repository = agent_utils.document_repository
 
     def create_default_settings(self, agent_id: str):
         current_dir = Path(__file__).parent
@@ -96,15 +70,19 @@ class ReactRagAgent(AgentBase):
         }
 
     def process_message(self, message_request: MessageRequest) -> MessageBase:
-        workflow = self.get_workflow(message_request.agent_id)
+        agent_id = message_request.agent_id
+        workflow = self.get_workflow(agent_id)
         config = {
             "configurable": {
-                "thread_id": message_request.agent_id,
-            },
-            "recursion_limit": 30,
+                "thread_id": agent_id,
+            }
         }
         inputs = self.get_input_params(message_request)
+        self.logger.info(f"Agent[{agent_id}] -> Input -> {inputs}")
+
         workflow_result = workflow.invoke(inputs, config)
+        self.logger.info(f"Agent[{agent_id}] -> Result -> {workflow_result}")
+
         return MessageBase(
             message_role="assistant",
             message_content=workflow_result["messages"][-1].content,

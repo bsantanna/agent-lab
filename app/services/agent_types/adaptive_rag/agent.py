@@ -1,28 +1,19 @@
 from pathlib import Path
 
-from langgraph.managed import RemainingSteps
-from typing_extensions import Annotated, List, TypedDict, Literal
-
-import hvac
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.constants import START, END
 from langgraph.graph import StateGraph
+from langgraph.managed import RemainingSteps
+from typing_extensions import Annotated, List, TypedDict, Literal
 
-from app.infrastructure.database.checkpoints import GraphPersistenceFactory
-from app.infrastructure.database.vectors import DocumentRepository
 from app.interface.api.messages.schema import MessageRequest
-from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.adaptive_rag.schema import (
     GradeDocuments,
     GradeAnswer,
     GenerateAnswer,
 )
-from app.services.agent_types.base import WorkflowAgent, join_messages
-from app.services.agents import AgentService
-from app.services.integrations import IntegrationService
-from app.services.language_model_settings import LanguageModelSettingService
-from app.services.language_models import LanguageModelService
+from app.services.agent_types.base import join_messages, RagAgentBase, AgentUtils
 
 
 class AgentState(TypedDict):
@@ -40,28 +31,9 @@ class AgentState(TypedDict):
     retrieval_grader_system_prompt: str
 
 
-class AdaptiveRagAgent(WorkflowAgent):
-    def __init__(
-        self,
-        agent_service: AgentService,
-        agent_setting_service: AgentSettingService,
-        language_model_service: LanguageModelService,
-        language_model_setting_service: LanguageModelSettingService,
-        integration_service: IntegrationService,
-        vault_client: hvac.Client,
-        graph_persistence_factory: GraphPersistenceFactory,
-        document_repository: DocumentRepository,
-    ):
-        super().__init__(
-            agent_service=agent_service,
-            agent_setting_service=agent_setting_service,
-            language_model_service=language_model_service,
-            language_model_setting_service=language_model_setting_service,
-            integration_service=integration_service,
-            vault_client=vault_client,
-            graph_persistence_factory=graph_persistence_factory,
-        )
-        self.document_repository = document_repository
+class AdaptiveRagAgent(RagAgentBase):
+    def __init__(self, agent_utils: AgentUtils):
+        super().__init__(agent_utils)
 
     def create_default_settings(self, agent_id: str):
         current_dir = Path(__file__).parent
