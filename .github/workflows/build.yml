@@ -37,6 +37,7 @@ jobs:
         run: |
           pytest --cov=app --cov-report=xml
         env:
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
       - name: SonarQube
         uses: SonarSource/sonarqube-scan-action@v4
