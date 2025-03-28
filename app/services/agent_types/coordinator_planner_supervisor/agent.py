@@ -2,18 +2,18 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool, BaseTool
 from langgraph.constants import START, END
-from langgraph.graph import StateGraph, MessagesState
+from langgraph.graph import StateGraph, MessagesState, add_messages
 from langgraph.managed import RemainingSteps
 from langgraph.prebuilt import create_react_agent, InjectedState
 from langgraph.types import Command
 from typing_extensions import List, Annotated, Literal
 
 from app.interface.api.messages.schema import MessageRequest
-from app.services.agent_types.base import join_messages, RagAgentBase, AgentUtils
+from app.services.agent_types.base import RagAgentBase, AgentUtils
 from app.services.agent_types.coordinator_planner_supervisor import (
     SUPERVISED_AGENTS,
     SUPERVISED_AGENT_CONFIGURATION,
@@ -39,7 +39,7 @@ class AgentState(MessagesState):
     reporter_system_prompt: str
     deep_search_mode: bool
     execution_plan: str
-    messages: Annotated[List, join_messages]
+    messages: Annotated[List, add_messages]
     remaining_steps: RemainingSteps
 
 
@@ -183,8 +183,20 @@ class CoordinatorPlannerSupervisorAgent(RagAgentBase):
             "reporter_system_prompt": self.parse_prompt_template(
                 settings_dict, "reporter_system_prompt", template_vars
             ),
-            "messages": [],
+            "messages": [HumanMessage(content=message_request.message_content)],
         }
+
+    def get_last_interaction_messages(self, messages):
+        subarray = []
+        found_human_message = False
+
+        for message in reversed(messages):
+            subarray.insert(0, message)
+            if isinstance(message, HumanMessage):
+                found_human_message = True
+                break
+
+        return subarray if found_human_message else []
 
     def get_coordinator_chain(self, llm, coordinator_system_prompt: str):
         structured_llm_generator = llm.with_structured_output(CoordinatorRouter)
@@ -261,7 +273,7 @@ class CoordinatorPlannerSupervisorAgent(RagAgentBase):
 
         return Command(
             update={
-                "messages": [HumanMessage(content=plain_response, name="planner")],
+                "messages": [AIMessage(content=plain_response, name="planner")],
                 "execution_plan": response,
             },
             goto="supervisor",
@@ -281,7 +293,8 @@ class CoordinatorPlannerSupervisorAgent(RagAgentBase):
         self, state: AgentState
     ) -> Command[Literal[*SUPERVISED_AGENTS, "__end__"]]:
         agent_id = state["agent_id"]
-        messages = state["messages"]
+        messages = self.get_last_interaction_messages(state["messages"])
+
         self.logger.info(f"Agent[{agent_id}] -> Supervisor -> Messages -> {messages}")
         supervisor_system_prompt = state["supervisor_system_prompt"]
         chat_model = self.get_chat_model(agent_id)
@@ -372,7 +385,7 @@ class CoordinatorPlannerSupervisorAgent(RagAgentBase):
         return Command(
             update={
                 "messages": [
-                    HumanMessage(
+                    AIMessage(
                         content=response,
                         name="coder",
                     )

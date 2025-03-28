@@ -287,9 +287,11 @@ class WorkflowAgentBase(AgentBase, ABC):
                 str, "The python code to execute to do further analysis or calculation."
             ],
         ):
-            repl = PythonREPL()
             """Use this to execute python code and do data analysis or calculation. If you want to see the output of a value,
             you should print it out with `print(...)`. This is visible to the user."""
+
+            repl = PythonREPL()
+
             if not isinstance(code, str):
                 error_msg = f"Invalid input: code must be a string, got {type(code)}"
                 self.logger.error(error_msg)
