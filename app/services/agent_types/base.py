@@ -221,22 +221,28 @@ class WorkflowAgentBase(AgentBase, ABC):
         return thought_chain
 
     def process_message(self, message_request: MessageRequest) -> MessageBase:
+        agent_id = message_request.agent_id
         checkpointer = self.graph_persistence_factory.build_checkpoint_saver()
-        workflow = self.get_workflow_builder(message_request.agent_id).compile(
+        workflow = self.get_workflow_builder(agent_id).compile(
             checkpointer=checkpointer
         )
         config = {
             "configurable": {
-                "thread_id": message_request.agent_id,
+                "thread_id": agent_id,
             },
             "recursion_limit": 30,
         }
+
         inputs = self.get_input_params(message_request)
+        self.logger.info(f"Agent[{agent_id}] -> Input -> {inputs}")
+
         workflow_result = workflow.invoke(inputs, config)
+        self.logger.info(f"Agent[{agent_id}] -> Result -> {workflow_result}")
+
         return MessageBase(
             message_role="assistant",
             message_content=workflow_result["generation"],
-            agent_id=message_request.agent_id,
+            agent_id=agent_id,
         )
 
 

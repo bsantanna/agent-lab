@@ -70,15 +70,19 @@ class ReactRagAgent(AgentBase):
         }
 
     def process_message(self, message_request: MessageRequest) -> MessageBase:
-        workflow = self.get_workflow(message_request.agent_id)
+        agent_id = message_request.agent_id
+        workflow = self.get_workflow(agent_id)
         config = {
             "configurable": {
-                "thread_id": message_request.agent_id,
-            },
-            "recursion_limit": 30,
+                "thread_id": agent_id,
+            }
         }
         inputs = self.get_input_params(message_request)
+        self.logger.info(f"Agent[{agent_id}] -> Input -> {inputs}")
+
         workflow_result = workflow.invoke(inputs, config)
+        self.logger.info(f"Agent[{agent_id}] -> Result -> {workflow_result}")
+
         return MessageBase(
             message_role="assistant",
             message_content=workflow_result["messages"][-1].content,
