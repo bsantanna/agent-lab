@@ -18,6 +18,7 @@ from app.infrastructure.database.vectors import DocumentRepository
 from app.interface.api.messages.schema import MessageRequest, MessageBase
 from app.services.agent_settings import AgentSettingService
 from app.services.agents import AgentService
+from app.services.attachments import AttachmentService
 from app.services.integrations import IntegrationService
 from app.services.language_model_settings import LanguageModelSettingService
 from app.services.language_models import LanguageModelService
@@ -32,22 +33,38 @@ def join_messages(left: List, right: List) -> List:
     return left + right
 
 
-class AgentBase(ABC):
+class AgentUtils:
     def __init__(
         self,
         agent_service: AgentService,
         agent_setting_service: AgentSettingService,
+        attachment_service: AttachmentService,
         language_model_service: LanguageModelService,
         language_model_setting_service: LanguageModelSettingService,
         integration_service: IntegrationService,
         vault_client: hvac.Client,
+        graph_persistence_factory: GraphPersistenceFactory,
+        document_repository: DocumentRepository,
     ):
         self.agent_service = agent_service
         self.agent_setting_service = agent_setting_service
+        self.attachment_service = attachment_service
         self.language_model_service = language_model_service
         self.language_model_setting_service = language_model_setting_service
         self.integration_service = integration_service
         self.vault_client = vault_client
+        self.graph_persistence_factory = graph_persistence_factory
+        self.document_repository = document_repository
+
+
+class AgentBase(ABC):
+    def __init__(self, agent_utils: AgentUtils):
+        self.agent_service = agent_utils.agent_service
+        self.agent_setting_service = agent_utils.agent_setting_service
+        self.language_model_service = agent_utils.language_model_service
+        self.language_model_setting_service = agent_utils.language_model_setting_service
+        self.integration_service = agent_utils.integration_service
+        self.vault_client = agent_utils.vault_client
         self.logger = logging.getLogger(__name__)
 
     @abstractmethod
@@ -163,25 +180,9 @@ class AgentBase(ABC):
 
 
 class WorkflowAgentBase(AgentBase, ABC):
-    def __init__(
-        self,
-        agent_service: AgentService,
-        agent_setting_service: AgentSettingService,
-        language_model_service: LanguageModelService,
-        language_model_setting_service: LanguageModelSettingService,
-        integration_service: IntegrationService,
-        vault_client: hvac.Client,
-        graph_persistence_factory: GraphPersistenceFactory,
-    ):
-        super().__init__(
-            agent_service=agent_service,
-            agent_setting_service=agent_setting_service,
-            language_model_service=language_model_service,
-            language_model_setting_service=language_model_setting_service,
-            integration_service=integration_service,
-            vault_client=vault_client,
-        )
-        self.graph_persistence_factory = graph_persistence_factory
+    def __init__(self, agent_utils: AgentUtils):
+        super().__init__(agent_utils)
+        self.graph_persistence_factory = agent_utils.graph_persistence_factory
 
     @abstractmethod
     def get_workflow_builder(self, agent_id: str):
@@ -240,27 +241,9 @@ class WorkflowAgentBase(AgentBase, ABC):
 
 
 class RagAgentBase(WorkflowAgentBase, ABC):
-    def __init__(
-        self,
-        agent_service: AgentService,
-        agent_setting_service: AgentSettingService,
-        language_model_service: LanguageModelService,
-        language_model_setting_service: LanguageModelSettingService,
-        integration_service: IntegrationService,
-        vault_client: hvac.Client,
-        graph_persistence_factory: GraphPersistenceFactory,
-        document_repository: DocumentRepository,
-    ):
-        super().__init__(
-            agent_service=agent_service,
-            agent_setting_service=agent_setting_service,
-            language_model_service=language_model_service,
-            language_model_setting_service=language_model_setting_service,
-            integration_service=integration_service,
-            vault_client=vault_client,
-            graph_persistence_factory=graph_persistence_factory,
-        )
-        self.document_repository = document_repository
+    def __init__(self, agent_utils: AgentUtils):
+        super().__init__(agent_utils)
+        self.document_repository = agent_utils.document_repository
 
     def get_web_search_tool(self, max_results=5, topic="general"):
         if not os.environ.get("TAVILY_API_KEY"):

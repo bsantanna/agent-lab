@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing_extensions import List, Optional
 
 from pydantic import BaseModel, field_validator
+from typing_extensions import List, Optional
 
 from app.domain.exceptions.base import InvalidFieldError
 

@@ -1,7 +1,6 @@
-from typing_extensions import List
-
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Body, Depends, Response, status
+from typing_extensions import List
 
 from app.core.container import Container
 from app.domain.exceptions.base import NotFoundError

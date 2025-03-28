@@ -2,10 +2,10 @@
 
 import logging
 from contextlib import AbstractContextManager, contextmanager
-from typing_extensions import Callable
 
 from sqlalchemy import create_engine, orm
 from sqlalchemy.orm import Session, declarative_base
+from typing_extensions import Callable
 
 logger = logging.getLogger(__name__)
 
