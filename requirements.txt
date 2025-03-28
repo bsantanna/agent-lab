@@ -8,6 +8,7 @@ langchain==0.3.21
 langchain-anthropic==0.3.8
 langchain-community==0.3.18
 langchain-core~=0.3.40
+langchain-experimental==0.3.4
 langchain-ollama==0.3.0
 langchain-openai==0.3.10
 langchain-postgres==0.0.13

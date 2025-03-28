@@ -319,15 +319,14 @@ class CoordinatorPlannerSupervisorAgent(RagAgentBase):
 
     def get_researcher(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
-        self.logger.info(f"Agent[{agent_id}] -> Researcher")
-        researcher_system_prompt = state["researcher_system_prompt"]
         deep_search_mode = state["deep_search_mode"]
+        researcher_system_prompt = state["researcher_system_prompt"]
+
+        self.logger.info(
+            f"Agent[{agent_id}] -> Researcher -> Deep Search Mode -> {deep_search_mode}"
+        )
         if deep_search_mode:
-            tools = [
-                self.get_web_search_tool(),
-                self.get_web_crawl_tool(),
-                self.get_research_knowledge_base_tool(state),
-            ]
+            tools = [self.get_web_search_tool(), self.get_web_crawl_tool()]
         else:
             tools = [self.get_research_knowledge_base_tool(state)]
 
@@ -344,18 +343,24 @@ class CoordinatorPlannerSupervisorAgent(RagAgentBase):
             goto="supervisor",
         )
 
-    def get_coder(self, state: AgentState):
+    def get_coder(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
         coder_system_prompt = state["coder_system_prompt"]
+
+        self.logger.info(f"Agent[{agent_id}] -> Coder")
         chat_model = self.get_chat_model(agent_id)
         coder = create_react_agent(
             model=chat_model,
-            tools=[
-                self.create_handoff_tool(agent_name="supervisor")
-            ],  # TODO include Python tool
+            tools=[self.get_bash_tool(), self.get_python_tool()],
             prompt=coder_system_prompt,
         )
-        return coder
+
+        response = coder.invoke(state)
+        self.logger.info(f"Agent[{agent_id}] -> Coder -> Response -> {response}")
+        return Command(
+            update={"messages": response["messages"]},
+            goto="supervisor",
+        )
 
     def get_browser(self, state: AgentState):
         # agent_id = state["agent_id"]

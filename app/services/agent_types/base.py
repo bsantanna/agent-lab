@@ -1,5 +1,6 @@
 import logging
 import os
+import subprocess
 from abc import ABC, abstractmethod
 
 import hvac
@@ -7,10 +8,12 @@ from jinja2 import Environment, DictLoader, select_autoescape
 from langchain_anthropic import ChatAnthropic
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseChatModel
+from langchain_core.tools import tool, BaseTool
+from langchain_experimental.utilities import PythonREPL
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_tavily import TavilySearch, TavilyExtract
-from typing_extensions import List
+from typing_extensions import List, Annotated
 
 from app.domain.exceptions.base import ResourceNotFoundError, ConfigurationError
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
@@ -245,6 +248,75 @@ class WorkflowAgentBase(AgentBase, ABC):
             agent_id=agent_id,
         )
 
+    def get_bash_tool(self) -> BaseTool:
+        @tool("bash_tool")
+        def bash_tool_call(
+            cmd: Annotated[str, "The bash command to be executed."],
+            timeout: Annotated[
+                int, "Maximum time in seconds for the command to complete."
+            ] = 120,
+        ):
+            """Use this to execute bash command and do necessary operations."""
+            self.logger.info(f"Executing Bash Command: {cmd} with timeout {timeout}s")
+            try:
+                result = subprocess.run(
+                    cmd,
+                    shell=True,
+                    check=True,
+                    text=True,
+                    capture_output=True,
+                    timeout=timeout,
+                )
+                return result.stdout
+            except subprocess.CalledProcessError as e:
+                error_message = f"Command failed with exit code {e.returncode}.\nStdout: {e.stdout}\nStderr: {e.stderr}"
+            except subprocess.TimeoutExpired:
+                error_message = f"Command '{cmd}' timed out after {timeout}s."
+            except Exception as e:
+                error_message = f"Error executing command: {str(e)}"
+
+            self.logger.error(error_message)
+            return error_message
+
+        return bash_tool_call
+
+    def get_python_tool(self) -> BaseTool:
+        @tool("python_tool")
+        def python_tool_call(
+            code: Annotated[
+                str, "The python code to execute to do further analysis or calculation."
+            ],
+        ):
+            repl = PythonREPL()
+            """Use this to execute python code and do data analysis or calculation. If you want to see the output of a value,
+            you should print it out with `print(...)`. This is visible to the user."""
+            if not isinstance(code, str):
+                error_msg = f"Invalid input: code must be a string, got {type(code)}"
+                self.logger.error(error_msg)
+                return (
+                    f"Error executing code:\n```python\n{code}\n```\nError: {error_msg}"
+                )
+
+            self.logger.info("Executing Python code")
+            try:
+                result = repl.run(code)
+                if isinstance(result, str) and (
+                    "Error" in result or "Exception" in result
+                ):
+                    raise ValueError(result)
+                self.logger.info("Code execution successful")
+                return (
+                    f"Successfully executed:\n```python\n{code}\n```\nStdout: {result}"
+                )
+            except BaseException as e:
+                error_msg = repr(e)
+                self.logger.error(error_msg)
+                return (
+                    f"Error executing code:\n```python\n{code}\n```\nError: {error_msg}"
+                )
+
+        return python_tool_call
+
 
 class RagAgentBase(WorkflowAgentBase, ABC):
     def __init__(self, agent_utils: AgentUtils):
@@ -253,8 +325,8 @@ class RagAgentBase(WorkflowAgentBase, ABC):
         if not os.environ.get("TAVILY_API_KEY"):
             raise ConfigurationError("TAVILY_API_KEY environment variable not set")
 
-    def get_web_crawl_tool(self, extract_depth="basic"):
+    def get_web_crawl_tool(self, extract_depth="basic") -> BaseTool:
         return TavilyExtract(extract_depth=extract_depth)
 
-    def get_web_search_tool(self, max_results=5, topic="general"):
+    def get_web_search_tool(self, max_results=5, topic="general") -> BaseTool:
         return TavilySearch(max_results=max_results, topic=topic)
