@@ -9,7 +9,7 @@ from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseChatModel
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_tavily import TavilySearch
+from langchain_tavily import TavilySearch, TavilyExtract
 from typing_extensions import List
 
 from app.domain.exceptions.base import ResourceNotFoundError, ConfigurationError
@@ -244,8 +244,11 @@ class RagAgentBase(WorkflowAgentBase, ABC):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
         self.document_repository = agent_utils.document_repository
-
-    def get_web_search_tool(self, max_results=5, topic="general"):
         if not os.environ.get("TAVILY_API_KEY"):
             raise ConfigurationError("TAVILY_API_KEY environment variable not set")
+
+    def get_web_crawl_tool(self, extract_depth="basic"):
+        return TavilyExtract(extract_depth=extract_depth)
+
+    def get_web_search_tool(self, max_results=5, topic="general"):
         return TavilySearch(max_results=max_results, topic=topic)

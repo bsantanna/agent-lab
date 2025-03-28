@@ -245,7 +245,7 @@ class CoordinatorPlannerSupervisorAgent(RagAgentBase):
 
         if deep_search_mode:
             search_response = self.get_web_search_tool().invoke({"query": query})
-            search_results = f"{json.dumps([{'title': elem['title'], 'content': elem['content']} for elem in search_response], ensure_ascii=False)}"
+            search_results = f"{json.dumps([{'title': elem['title'], 'content': elem['content']} for elem in search_response['results']], ensure_ascii=False)}"
             response = self.get_planner_chain(
                 llm=chat_model,
                 planner_system_prompt=planner_system_prompt,
@@ -323,7 +323,11 @@ class CoordinatorPlannerSupervisorAgent(RagAgentBase):
         researcher_system_prompt = state["researcher_system_prompt"]
         deep_search_mode = state["deep_search_mode"]
         if deep_search_mode:
-            tools = [self.get_web_search_tool()]
+            tools = [
+                self.get_web_search_tool(),
+                self.get_web_crawl_tool(),
+                self.get_research_knowledge_base_tool(state),
+            ]
         else:
             tools = [self.get_research_knowledge_base_tool(state)]
 

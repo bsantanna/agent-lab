@@ -8,7 +8,8 @@ services:
     environment:
       DOCKER: 1
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
-      OLLAMA_ENDPOINT: "http://moon.btech.software:11434"
+      OLLAMA_ENDPOINT: ${OLLAMA_ENDPOINT}
+      TAVILY_API_KEY: ${TAVILY_API_KEY}
     depends_on:
       opensearch:
         condition: service_healthy
