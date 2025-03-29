@@ -86,7 +86,7 @@ class AgentBase(ABC):
 
     def format_response(self, workflow_state: MessagesState) -> str:
         return json.dumps(
-            [message.json() for message in workflow_state["messages"]],
+            [message.model_dump_json() for message in workflow_state["messages"]],
             indent=2,
         )
 
