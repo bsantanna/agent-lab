@@ -29,9 +29,7 @@ class VisionDocumentAgent(WorkflowAgentBase):
         result = {
             "agent_id": workflow_state["agent_id"],
             "query": workflow_state["query"],
-            "generation": workflow_state["generation"],
-            "image_base64": workflow_state["image_base64"],
-            "image_content_type": workflow_state["image_content_type"],
+            "generation": workflow_state["generation"]
         }
         return json.dumps(
             result,
