@@ -85,6 +85,6 @@ class ReactRagAgent(AgentBase):
 
         return MessageBase(
             message_role="assistant",
-            message_content=workflow_result["messages"][-1].content,
+            message_content=self.format_response(workflow_result),
             agent_id=message_request.agent_id,
         )

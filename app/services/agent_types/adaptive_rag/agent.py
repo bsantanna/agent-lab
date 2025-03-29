@@ -1,11 +1,12 @@
+import json
 from pathlib import Path
 
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.constants import START, END
-from langgraph.graph import StateGraph
+from langgraph.graph import StateGraph, MessagesState
 from langgraph.managed import RemainingSteps
-from typing_extensions import Annotated, List, TypedDict, Literal
+from typing_extensions import Annotated, List, Literal
 
 from app.interface.api.messages.schema import MessageRequest
 from app.services.agent_types.adaptive_rag.schema import (
@@ -16,13 +17,13 @@ from app.services.agent_types.adaptive_rag.schema import (
 from app.services.agent_types.base import join_messages, RagAgentBase, AgentUtils
 
 
-class AgentState(TypedDict):
+class AgentState(MessagesState):
     agent_id: str
     query: str
     collection_name: str
     generation: str
     connection: str
-    documents: List[str]
+    documents: List
     messages: Annotated[List, join_messages]
     remaining_steps: RemainingSteps
     execution_system_prompt: str
@@ -82,6 +83,24 @@ class AdaptiveRagAgent(RagAgentBase):
             setting_key="collection_name",
             setting_value=collection_name,
         )
+
+    def format_response(self, workflow_state: AgentState) -> str:
+        response = {
+            "agent_id": workflow_state["agent_id"],
+            "query": workflow_state["query"],
+            "collection_name": workflow_state["collection_name"],
+            "generation": workflow_state["generation"],
+            "connection": workflow_state["connection"],
+            "documents": [
+                document.page_content for document in workflow_state["documents"]
+            ],
+            "messages": [
+                {"role": role, "content": content}
+                for role, content in workflow_state["messages"]
+            ],
+            "remaining_steps": workflow_state["remaining_steps"],
+        }
+        return json.dumps(response)
 
     def get_query_rewriter(self, chat_model, query_rewriter_system_prompt):
         re_write_prompt = ChatPromptTemplate.from_messages(

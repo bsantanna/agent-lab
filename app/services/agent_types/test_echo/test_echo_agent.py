@@ -1,3 +1,8 @@
+import json
+
+from langchain_core.messages import AIMessage
+from langgraph.graph import MessagesState
+
 from app.interface.api.messages.schema import MessageRequest, MessageBase
 from app.services.agent_types.base import AgentBase, AgentUtils
 
@@ -5,6 +10,14 @@ from app.services.agent_types.base import AgentBase, AgentUtils
 class TestEchoAgent(AgentBase):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
+
+    def format_response(self, workflow_state: MessagesState) -> str:
+        return json.dumps(
+            [
+                {"role": role, "content": content}
+                for role, content in workflow_state["messages"]
+            ]
+        )
 
     def create_default_settings(self, agent_id: str):
         self.agent_setting_service.create_agent_setting(
@@ -14,11 +27,15 @@ class TestEchoAgent(AgentBase):
         )
 
     def get_input_params(self, message_request: MessageRequest) -> dict:
-        return {}
+        return json.dumps(message_request.to_dict())
 
     def process_message(self, message_request: MessageRequest) -> MessageBase:
         return MessageBase(
             message_role="assistant",
-            message_content=f"Echo: {message_request.message_content}",
+            message_content=self.format_response(
+                MessagesState(
+                    [AIMessage(content=f"Echo: {message_request.message_content}")]
+                )
+            ),
             agent_id=message_request.agent_id,
         )

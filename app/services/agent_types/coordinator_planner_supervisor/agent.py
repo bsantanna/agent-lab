@@ -47,6 +47,21 @@ class CoordinatorPlannerSupervisorAgent(RagAgentBase):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
 
+    def format_response(self, workflow_state: AgentState) -> str:
+        response = {
+            "agent_id": workflow_state["agent_id"],
+            "query": workflow_state["query"],
+            "collection_name": workflow_state["collection_name"],
+            "deep_search_mode": workflow_state["deep_search_mode"],
+            "execution_plan": workflow_state["execution_plan"],
+            "messages": [
+                {"role": role, "content": content}
+                for role, content in workflow_state["messages"]
+            ],
+            "remaining_steps": workflow_state["remaining_steps"],
+        }
+        return json.dumps(response)
+
     def create_default_settings(self, agent_id: str):
         current_dir = Path(__file__).parent
 
