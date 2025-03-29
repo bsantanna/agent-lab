@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import subprocess
@@ -13,6 +14,7 @@ from langchain_experimental.utilities import PythonREPL
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_tavily import TavilySearch, TavilyExtract
+from langgraph.graph import MessagesState
 from typing_extensions import List, Annotated
 
 from app.domain.exceptions.base import ResourceNotFoundError, ConfigurationError
@@ -75,12 +77,18 @@ class AgentBase(ABC):
         pass
 
     @abstractmethod
-    def process_message(self, message_request: MessageRequest) -> MessageBase:
+    def get_input_params(self, message_request: MessageRequest) -> dict:
         pass
 
     @abstractmethod
-    def get_input_params(self, message_request: MessageRequest) -> dict:
+    def process_message(self, message_request: MessageRequest) -> MessageBase:
         pass
+
+    def format_response(self, workflow_state: MessagesState) -> str:
+        return json.dumps(
+            [message.model_dump_json() for message in workflow_state["messages"]],
+            indent=2,
+        )
 
     def get_embeddings_model(self, agent_id) -> Embeddings:
         agent = self.agent_service.get_agent_by_id(agent_id)
@@ -110,13 +118,6 @@ class AgentBase(ABC):
                 openai_api_base=api_endpoint,
                 openai_api_key=api_key,
             )
-        # not available
-        # elif integration.integration_type == "xai_api_v1":
-        #    return OpenAIEmbeddings(
-        #       model=lm_settings_dict["embeddings"],
-        #       base_url=api_endpoint,
-        #       api_key=api_key
-        #    )
         elif integration.integration_type == "ollama_api_v1":
             return OllamaEmbeddings(
                 model=lm_settings_dict["embeddings"], base_url=api_endpoint
@@ -191,9 +192,13 @@ class WorkflowAgentBase(AgentBase, ABC):
     def get_workflow_builder(self, agent_id: str):
         pass
 
-    @abstractmethod
-    def get_input_params(self, message_request: MessageRequest):
-        pass
+    def get_config(self, agent_id: str) -> dict:
+        return {
+            "configurable": {
+                "thread_id": agent_id,
+            },
+            "recursion_limit": 30,
+        }
 
     def create_thought_chain(
         self,
@@ -229,12 +234,9 @@ class WorkflowAgentBase(AgentBase, ABC):
         workflow = self.get_workflow_builder(agent_id).compile(
             checkpointer=checkpointer
         )
-        config = {
-            "configurable": {
-                "thread_id": agent_id,
-            },
-            "recursion_limit": 30,
-        }
+
+        config = self.get_config(agent_id)
+        self.logger.info(f"Agent[{agent_id}] -> Config -> {config}")
 
         inputs = self.get_input_params(message_request)
         self.logger.info(f"Agent[{agent_id}] -> Input -> {inputs}")
@@ -244,7 +246,7 @@ class WorkflowAgentBase(AgentBase, ABC):
 
         return MessageBase(
             message_role="assistant",
-            message_content=workflow_result["generation"],
+            message_content=self.format_response(workflow_result),
             agent_id=agent_id,
         )
 

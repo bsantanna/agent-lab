@@ -1,3 +1,8 @@
+import json
+
+from langchain_core.messages import AIMessage
+from langgraph.graph import MessagesState
+
 from app.interface.api.messages.schema import MessageRequest, MessageBase
 from app.services.agent_types.base import AgentBase, AgentUtils
 
@@ -14,11 +19,17 @@ class TestEchoAgent(AgentBase):
         )
 
     def get_input_params(self, message_request: MessageRequest) -> dict:
-        return {}
+        return json.dumps(message_request.to_dict())
 
     def process_message(self, message_request: MessageRequest) -> MessageBase:
         return MessageBase(
             message_role="assistant",
-            message_content=f"Echo: {message_request.message_content}",
+            message_content=self.format_response(
+                MessagesState(
+                    messages=[
+                        AIMessage(content=f"Echo: {message_request.message_content}")
+                    ]
+                )
+            ),
             agent_id=message_request.agent_id,
         )

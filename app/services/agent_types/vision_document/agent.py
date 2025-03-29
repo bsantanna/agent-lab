@@ -1,17 +1,17 @@
 import base64
+import json
 import mimetypes
 from pathlib import Path
 
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.constants import START, END
-from langgraph.graph import StateGraph
-from typing_extensions import TypedDict
+from langgraph.graph import StateGraph, MessagesState
 
 from app.interface.api.messages.schema import MessageRequest
 from app.services.agent_types.base import WorkflowAgentBase, AgentUtils
 
 
-class AgentState(TypedDict):
+class AgentState(MessagesState):
     agent_id: str
     query: str
     generation: dict
@@ -24,6 +24,17 @@ class VisionDocumentAgent(WorkflowAgentBase):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
         self.attachment_service = agent_utils.attachment_service
+
+    def format_response(self, workflow_state: AgentState) -> str:
+        result = {
+            "agent_id": workflow_state["agent_id"],
+            "query": workflow_state["query"],
+            "generation": workflow_state["generation"]
+        }
+        return json.dumps(
+            result,
+            indent=2,
+        )
 
     def get_image_analysis_chain(
         self, llm, execution_system_prompt, image_content_type
