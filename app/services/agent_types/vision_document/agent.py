@@ -33,7 +33,10 @@ class VisionDocumentAgent(WorkflowAgentBase):
             "image_base64": workflow_state["image_base64"],
             "image_content_type": workflow_state["image_content_type"],
         }
-        return json.dumps(result)
+        return json.dumps(
+            result,
+            indent=2,
+        )
 
     def get_image_analysis_chain(
         self, llm, execution_system_prompt, image_content_type

@@ -96,7 +96,10 @@ class AdaptiveRagAgent(RagAgentBase):
             ],
             "messages": workflow_state["messages"],
         }
-        return json.dumps(response)
+        return json.dumps(
+            response,
+            indent=2,
+        )
 
     def get_query_rewriter(self, chat_model, query_rewriter_system_prompt):
         re_write_prompt = ChatPromptTemplate.from_messages(

@@ -57,7 +57,10 @@ class CoordinatorPlannerSupervisorAgent(RagAgentBase):
             "messages": [message.json() for message in workflow_state["messages"]],
             "remaining_steps": workflow_state["remaining_steps"],
         }
-        return json.dumps(response)
+        return json.dumps(
+            response,
+            indent=2,
+        )
 
     def create_default_settings(self, agent_id: str):
         current_dir = Path(__file__).parent
