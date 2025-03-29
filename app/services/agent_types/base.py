@@ -85,11 +85,7 @@ class AgentBase(ABC):
         pass
 
     def format_response(self, workflow_state: MessagesState) -> str:
-        messages = workflow_state["messages"]
-        messages_dict = [
-            {"role": role, "content": content} for role, content in messages
-        ]
-        return json.dumps(messages_dict)
+        return json.dumps([message.json() for message in workflow_state["messages"]])
 
     def get_embeddings_model(self, agent_id) -> Embeddings:
         agent = self.agent_service.get_agent_by_id(agent_id)

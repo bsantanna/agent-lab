@@ -94,11 +94,7 @@ class AdaptiveRagAgent(RagAgentBase):
             "documents": [
                 document.page_content for document in workflow_state["documents"]
             ],
-            "messages": [
-                {"role": role, "content": content}
-                for role, content in workflow_state["messages"]
-            ],
-            "remaining_steps": workflow_state["remaining_steps"],
+            "messages": workflow_state["messages"],
         }
         return json.dumps(response)
 

@@ -11,14 +11,6 @@ class TestEchoAgent(AgentBase):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
 
-    def format_response(self, workflow_state: MessagesState) -> str:
-        return json.dumps(
-            [
-                {"role": role, "content": content}
-                for role, content in workflow_state["messages"]
-            ]
-        )
-
     def create_default_settings(self, agent_id: str):
         self.agent_setting_service.create_agent_setting(
             agent_id=agent_id,
@@ -34,7 +26,9 @@ class TestEchoAgent(AgentBase):
             message_role="assistant",
             message_content=self.format_response(
                 MessagesState(
-                    [AIMessage(content=f"Echo: {message_request.message_content}")]
+                    messages=[
+                        AIMessage(content=f"Echo: {message_request.message_content}")
+                    ]
                 )
             ),
             agent_id=message_request.agent_id,
