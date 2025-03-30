@@ -76,8 +76,8 @@ class TestCoordinatorPlannerSupervisorAgent:
     async def test_coder(self, client):
         # given
         message_content = (
-            "Please create a compound interest calculator in Python. "
-            "What would be interest paid on a principal of 175k with rate 4.89/year for 15 years?"
+            "Please create a hello world in Python that accepts a name parameter. "
+            "What would be the result of calling the function with name='Bruno'?"
         )
 
         # when
