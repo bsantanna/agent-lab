@@ -1,5 +1,3 @@
-import json
-
 from langchain_core.messages import AIMessage
 from langgraph.graph import MessagesState
 
@@ -19,7 +17,7 @@ class TestEchoAgent(AgentBase):
         )
 
     def get_input_params(self, message_request: MessageRequest) -> dict:
-        return json.dumps(message_request.to_dict())
+        return message_request.to_dict()
 
     def process_message(self, message_request: MessageRequest) -> MessageBase:
         return MessageBase(

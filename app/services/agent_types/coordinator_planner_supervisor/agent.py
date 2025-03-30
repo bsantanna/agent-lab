@@ -54,8 +54,9 @@ class CoordinatorPlannerSupervisorAgent(RagAgentBase):
             "collection_name": workflow_state["collection_name"],
             "deep_search_mode": workflow_state["deep_search_mode"],
             "execution_plan": workflow_state["execution_plan"],
-            "messages": [message.model_dump_json() for message in workflow_state["messages"]],
-            "remaining_steps": workflow_state["remaining_steps"],
+            "messages": [
+                message.model_dump_json() for message in workflow_state["messages"]
+            ],
         }
         return json.dumps(
             response,

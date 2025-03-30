@@ -312,7 +312,7 @@ class WorkflowAgentBase(AgentBase, ABC):
                 return (
                     f"Successfully executed:\n```python\n{code}\n```\nStdout: {result}"
                 )
-            except BaseException as e:
+            except ValueError as e:
                 error_msg = repr(e)
                 self.logger.error(error_msg)
                 return (
