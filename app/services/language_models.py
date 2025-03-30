@@ -57,13 +57,6 @@ class LanguageModelService:
                 setting_key="embeddings",
                 setting_value="text-embedding-3-large",
             )
-        # not available
-        # if integration.integration_type == "xai_api_v1":
-        #     self.setting_service.create_language_model_setting(
-        #         language_model_id=language_model.id,
-        #         setting_key="embeddings",
-        #         setting_value="v1",
-        #     )
         else:
             self.setting_service.create_language_model_setting(
                 language_model_id=language_model.id,
