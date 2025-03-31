@@ -14,7 +14,7 @@ from app.services.agent_types.adaptive_rag.schema import (
     GradeAnswer,
     GenerateAnswer,
 )
-from app.services.agent_types.base import join_messages, RagAgentBase, AgentUtils
+from app.services.agent_types.base import join_messages, WebAgentBase, AgentUtils
 
 
 class AgentState(MessagesState):
@@ -32,7 +32,7 @@ class AgentState(MessagesState):
     retrieval_grader_system_prompt: str
 
 
-class AdaptiveRagAgent(RagAgentBase):
+class AdaptiveRagAgent(WebAgentBase):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
 
