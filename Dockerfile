@@ -9,6 +9,9 @@ WORKDIR /app
 COPY . .
 
 RUN pip install --no-cache-dir --upgrade pip \
-    &&  pip install --no-cache-dir -r requirements.txt
+    && pip install --no-cache-dir -r requirements.txt \
+    && playwright install && playwright install-deps \
+    && apt clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 CMD ["/bin/bash", "-x", "-c", "python -m uvicorn app.main:app --host ${HOST} --port ${PORT} --workers ${WORKERS}"]
