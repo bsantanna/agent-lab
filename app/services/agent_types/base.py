@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import subprocess
+import tempfile
 import uuid
 from abc import ABC, abstractmethod
 
@@ -337,9 +338,13 @@ class WebAgentBase(WorkflowAgentBase, ABC):
     def get_web_browser_tool(
         self,
         agent_id:str,
-        cache_dir: str = "/tmp/",
+        cache_dir: str = None,
         headless: bool = True,
     ) -> BaseTool:
+
+        if cache_dir is None:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                cache_dir = temp_dir
 
         chat_model = self.get_chat_model(agent_id)
 
