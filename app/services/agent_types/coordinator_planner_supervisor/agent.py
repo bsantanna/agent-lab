@@ -13,8 +13,7 @@ from langgraph.types import Command
 from typing_extensions import List, Annotated, Literal
 
 from app.interface.api.messages.schema import MessageRequest
-from app.services.agent_types.base import RagAgentBase, AgentUtils
-from app.services.agent_types.browser import BrowserTool
+from app.services.agent_types.base import WebAgentBase, AgentUtils
 from app.services.agent_types.coordinator_planner_supervisor import (
     SUPERVISED_AGENTS,
     SUPERVISED_AGENT_CONFIGURATION,
@@ -44,7 +43,7 @@ class AgentState(MessagesState):
     remaining_steps: RemainingSteps
 
 
-class CoordinatorPlannerSupervisorAgent(RagAgentBase):
+class CoordinatorPlannerSupervisorAgent(WebAgentBase):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
 
@@ -400,7 +399,7 @@ class CoordinatorPlannerSupervisorAgent(RagAgentBase):
         chat_model = self.get_chat_model(agent_id)
         browser = create_react_agent(
             model=chat_model,
-            tools=[BrowserTool(llm=chat_model)],
+            tools=[self.get_web_browser_tool(agent_id)],
             prompt=browser_system_prompt,
         )
 
