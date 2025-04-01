@@ -91,7 +91,7 @@ class TestCoordinatorPlannerSupervisorAgent:
     @pytest.mark.asyncio
     async def test_browser(self, client):
         # given
-        message_content = "Go to https://github.com/bsantanna/agent-lab and generate a simple description."
+        message_content = "Using the browser, go to https://github.com/bsantanna/agent-lab and generate a simple description."
 
         # when
         create_message_response = self._create_message(client, message_content)

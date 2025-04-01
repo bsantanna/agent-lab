@@ -6,14 +6,14 @@ from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool, BaseTool
 from langgraph.constants import START, END
-from langgraph.graph import StateGraph, MessagesState, add_messages
+from langgraph.graph import StateGraph, MessagesState
 from langgraph.managed import RemainingSteps
 from langgraph.prebuilt import create_react_agent, InjectedState
 from langgraph.types import Command
 from typing_extensions import List, Annotated, Literal
 
 from app.interface.api.messages.schema import MessageRequest
-from app.services.agent_types.base import WebAgentBase, AgentUtils
+from app.services.agent_types.base import WebAgentBase, AgentUtils, join_messages
 from app.services.agent_types.coordinator_planner_supervisor import (
     SUPERVISED_AGENTS,
     SUPERVISED_AGENT_CONFIGURATION,
@@ -39,7 +39,7 @@ class AgentState(MessagesState):
     reporter_system_prompt: str
     deep_search_mode: bool
     execution_plan: str
-    messages: Annotated[List, add_messages]
+    messages: Annotated[List, join_messages]
     remaining_steps: RemainingSteps
 
 
