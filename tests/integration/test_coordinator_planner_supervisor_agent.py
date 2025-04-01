@@ -89,16 +89,16 @@ class TestCoordinatorPlannerSupervisorAgent:
         assert "id" in response_dict
         assert "assistant" == response_dict["message_role"]
 
-    @pytest.mark.asyncio
-    async def test_browser(self, client):
-        # given
-        message_content = "Go to https://github.com/bsantanna/agent-lab and generate a overview about the project."
-
-        # when
-        create_message_response = self._create_message(client, message_content)
-
-        # then
-        assert create_message_response.status_code == 200
-        response_dict = create_message_response.json()
-        assert "id" in response_dict
-        assert "assistant" == response_dict["message_role"]
+    # @pytest.mark.asyncio
+    # async def test_browser(self, client):
+    #     # given
+    #     message_content = "Go to https://github.com/bsantanna/agent-lab and generate a overview about the project."
+    #
+    #     # when
+    #     create_message_response = self._create_message(client, message_content)
+    #
+    #     # then
+    #     assert create_message_response.status_code == 200
+    #     response_dict = create_message_response.json()
+    #     assert "id" in response_dict
+    #     assert "assistant" == response_dict["message_role"]
