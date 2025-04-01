@@ -1,5 +1,8 @@
+from io import StringIO
+
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Body, Depends, Response, status
+from fastapi.responses import StreamingResponse
 from typing_extensions import List
 
 from app.core.container import Container
@@ -16,6 +19,7 @@ from app.interface.api.agents.schema import (
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.registry import AgentRegistry
 from app.services.agents import AgentService
+from app.services.messages import MessageService
 
 router = APIRouter()
 
@@ -45,6 +49,55 @@ async def get_by_id(
     except NotFoundError:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
 
+
+@router.get("/dataset/{agent_id}", response_class=StreamingResponse)
+@inject
+async def get_dataset_format(
+    agent_id: str,
+    agent_service: AgentService = Depends(Provide[Container.agent_service]),
+    message_service: MessageService = Depends(Provide[Container.message_service]),
+):
+    agent = agent_service.get_agent_by_id(agent_id)
+    messages = message_service.get_messages(agent_id)
+
+    json_content = StringIO()
+    json_content.write("[")
+
+    first_message = True
+    message_dict = {}
+
+    # Group messages by replies_to
+    for message in messages:
+        if message.message_role == "human":
+            message_dict[message.id] = {
+                "human": message.message_content,
+                "assistant": None
+            }
+        elif message.message_role == "assistant" and message.replies_to:
+            if message.replies_to in message_dict:
+                message_dict[message.replies_to]["assistant"] = message.message_content
+
+    # Write paired messages to JSON
+    for msg_pair in message_dict.values():
+        if msg_pair["assistant"]:  # Only write if we have both human and assistant messages
+            if not first_message:
+                json_content.write(",")
+            json_content.write(
+                f'{{"text": "Human: {msg_pair["human"]}\\nAgent: {msg_pair["assistant"]}"}}'
+            )
+            first_message = False
+
+    json_content.write("]")
+    json_content.seek(0)
+
+    filename = f"{agent.agent_type}_{agent.agent_name}.json"
+    return StreamingResponse(
+        json_content,
+        media_type="application/json",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+        }
+    )
 
 @router.post(
     "/create", status_code=status.HTTP_201_CREATED, response_model=AgentResponse
