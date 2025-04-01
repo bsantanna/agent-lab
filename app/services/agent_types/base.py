@@ -41,7 +41,14 @@ def join_messages(left: List, right: List) -> List:
     if not isinstance(right, list):
         right = [right]
 
-    return left + right
+    combined = left + right
+
+    unique_messages = []
+    for msg in combined:
+        if msg not in unique_messages:
+            unique_messages.append(msg)
+
+    return unique_messages
 
 
 class AgentUtils:
@@ -337,11 +344,10 @@ class WebAgentBase(WorkflowAgentBase, ABC):
 
     def get_web_browser_tool(
         self,
-        agent_id:str,
+        agent_id: str,
         cache_dir: str = None,
         headless: bool = True,
     ) -> BaseTool:
-
         if cache_dir is None:
             with tempfile.TemporaryDirectory() as temp_dir:
                 cache_dir = temp_dir
@@ -380,14 +386,18 @@ class WebAgentBase(WorkflowAgentBase, ABC):
 
                     if isinstance(result, AgentHistoryList):
                         json_result = json.dumps(
-                            get_browser_result(result.final_result(), generated_gif_path)
+                            get_browser_result(
+                                result.final_result(), generated_gif_path
+                            )
                         )
                     else:
                         json_result = json.dumps(
                             get_browser_result(result, generated_gif_path)
                         )
 
-                    self.logger.info(f"Browser tool completed successfully, result: {json_result}")
+                    self.logger.info(
+                        f"Browser tool completed successfully, result: {json_result}"
+                    )
                     return json_result
 
                 finally:
@@ -405,5 +415,3 @@ class WebAgentBase(WorkflowAgentBase, ABC):
 
     def get_web_search_tool(self, max_results=5, topic="general") -> BaseTool:
         return TavilySearch(max_results=max_results, topic=topic)
-
-
