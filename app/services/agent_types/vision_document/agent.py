@@ -25,16 +25,12 @@ class VisionDocumentAgent(WorkflowAgentBase):
         super().__init__(agent_utils)
         self.attachment_service = agent_utils.attachment_service
 
-    def format_response(self, workflow_state: AgentState) -> str:
-        result = {
+    def format_response(self, workflow_state: AgentState) -> dict:
+        return {
             "agent_id": workflow_state["agent_id"],
             "query": workflow_state["query"],
             "generation": workflow_state["generation"]
         }
-        return json.dumps(
-            result,
-            indent=2,
-        )
 
     def get_image_analysis_chain(
         self, llm, execution_system_prompt, image_content_type

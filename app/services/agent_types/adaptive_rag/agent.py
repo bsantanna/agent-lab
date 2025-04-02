@@ -84,8 +84,8 @@ class AdaptiveRagAgent(WebAgentBase):
             setting_value=collection_name,
         )
 
-    def format_response(self, workflow_state: AgentState) -> str:
-        response = {
+    def format_response(self, workflow_state: AgentState) -> dict:
+        return {
             "agent_id": workflow_state["agent_id"],
             "query": workflow_state["query"],
             "collection_name": workflow_state["collection_name"],
@@ -96,10 +96,6 @@ class AdaptiveRagAgent(WebAgentBase):
             ],
             "messages": workflow_state["messages"],
         }
-        return json.dumps(
-            response,
-            indent=2,
-        )
 
     def get_query_rewriter(self, chat_model, query_rewriter_system_prompt):
         re_write_prompt = ChatPromptTemplate.from_messages(

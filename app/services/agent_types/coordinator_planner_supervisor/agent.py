@@ -47,8 +47,8 @@ class CoordinatorPlannerSupervisorAgent(WebAgentBase):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
 
-    def format_response(self, workflow_state: AgentState) -> str:
-        response = {
+    def format_response(self, workflow_state: AgentState) -> dict:
+        return {
             "agent_id": workflow_state["agent_id"],
             "query": workflow_state["query"],
             "collection_name": workflow_state["collection_name"],
@@ -56,12 +56,8 @@ class CoordinatorPlannerSupervisorAgent(WebAgentBase):
             "execution_plan": workflow_state["execution_plan"],
             "messages": [
                 message.model_dump_json() for message in workflow_state["messages"]
-            ],
+            ]
         }
-        return json.dumps(
-            response,
-            indent=2,
-        )
 
     def create_default_settings(self, agent_id: str):
         current_dir = Path(__file__).parent

@@ -83,7 +83,7 @@ async def get_dataset_format(
             if not first_message:
                 json_content.write(",")
             json_content.write(
-                f'{{"text": "Human: {msg_pair["human"]}\\nAgent: {msg_pair["assistant"]}"}}'
+                f'{{"text": "- human: {msg_pair["human"]}\n- assistant: {msg_pair["assistant"]}"}}'
             )
             first_message = False
 

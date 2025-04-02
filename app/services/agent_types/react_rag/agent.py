@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from langgraph.prebuilt import create_react_agent
@@ -85,6 +86,6 @@ class ReactRagAgent(AgentBase):
 
         return MessageBase(
             message_role="assistant",
-            message_content=self.format_response(workflow_result),
+            message_content=json.dumps(self.format_response(workflow_result)),
             agent_id=message_request.agent_id,
         )
