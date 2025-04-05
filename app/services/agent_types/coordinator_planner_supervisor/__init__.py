@@ -18,7 +18,7 @@ SUPERVISED_AGENT_CONFIGURATION = {
         ),
         "desc_for_llm": (
             "Executes Python or Bash commands, performs mathematical calculations, and outputs a Markdown report. "
-            "Must be used for all mathematical computations."
+            "Must be used for all python or bash computations."
         ),
         "is_optional": True,
     },

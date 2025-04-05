@@ -14,7 +14,7 @@ class MessageBase(BaseModel):
 
     @field_validator("message_role")
     def validate_message_role(cls, v):
-        valid_types = ["assistant", "human", "system", "tool"]
+        valid_types = ["assistant", "human", "tool"]
         if v not in valid_types:
             raise InvalidFieldError("message_role", "not supported")
         return v
@@ -29,9 +29,10 @@ class MessageListRequest(BaseModel):
 
 
 class MessageResponse(MessageBase):
-    id: str
-    is_active: bool
-    created_at: datetime
+    id: Optional[str] = None
+    is_active: Optional[bool] = None
+    created_at: Optional[datetime] = None
+    response_data: Optional[dict] = None
     replies_to: Optional[str] = None
 
     class Config:

@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 
 from pydantic import BaseModel, field_validator
@@ -10,6 +11,12 @@ class AgentCreateRequest(BaseModel):
     agent_name: str
     agent_type: str
     language_model_id: str
+
+    @field_validator("agent_name")
+    def validate_agent_name(cls, v):
+        if not re.match(r'^[a-zA-Z0-9_-]+$', v):
+            raise InvalidFieldError("agent_name", "contains invalid characters")
+        return v
 
     @field_validator("agent_type")
     def validate_agent_type(cls, v):

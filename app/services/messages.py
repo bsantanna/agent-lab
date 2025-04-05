@@ -35,6 +35,7 @@ class MessageService:
         message_role: str,
         message_content: str,
         agent_id: str,
+        response_data: dict = None,
         attachment_id: str = None,
         replies_to: Message = None,
     ) -> Message:
@@ -48,6 +49,7 @@ class MessageService:
             message_role=message_role,
             message_content=message_content,
             agent_id=agent_id,
+            response_data=response_data,
             attachment_id=attachment_id,
             replies_to=replies_to,
         )
