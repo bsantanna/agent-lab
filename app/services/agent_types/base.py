@@ -104,7 +104,7 @@ class AgentBase(ABC):
                 for message in workflow_state["messages"]
             ]
         }
-        return response_data["messages"][0]["content"], response_data
+        return response_data["messages"][-1]["content"], response_data
 
     def get_embeddings_model(self, agent_id) -> Embeddings:
         agent = self.agent_service.get_agent_by_id(agent_id)
