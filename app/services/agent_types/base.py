@@ -353,8 +353,9 @@ class WebAgentBase(WorkflowAgentBase, ABC):
         headless: bool = True,
     ) -> BaseTool:
         if cache_dir is None:
-            with tempfile.TemporaryDirectory() as temp_dir:
-                cache_dir = temp_dir
+            temp_dir = f"{os.getcwd()}/tmp/" #NOSONAR used inside container
+            os.makedirs(temp_dir, exist_ok=True)
+            cache_dir = temp_dir
 
         chat_model = self.get_chat_model(agent_id)
 
