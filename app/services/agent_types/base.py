@@ -26,7 +26,7 @@ from typing_extensions import List, Annotated
 from app.domain.exceptions.base import ResourceNotFoundError, ConfigurationError
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.vectors import DocumentRepository
-from app.interface.api.messages.schema import MessageRequest, MessageBase
+from app.interface.api.messages.schema import MessageRequest, MessageResponse
 from app.services.agent_settings import AgentSettingService
 from app.services.agents import AgentService
 from app.services.attachments import AttachmentService
@@ -94,11 +94,17 @@ class AgentBase(ABC):
         pass
 
     @abstractmethod
-    def process_message(self, message_request: MessageRequest) -> MessageBase:
+    def process_message(self, message_request: MessageRequest) -> MessageResponse:
         pass
 
-    def format_response(self, workflow_state: MessagesState) -> dict:
-        return {"messages":[message.model_dump_json() for message in workflow_state["messages"]]}
+    def format_response(self, workflow_state: MessagesState) -> (str, dict):
+        response_data = {
+            "messages": [
+                json.loads(message.model_dump_json())
+                for message in workflow_state["messages"]
+            ]
+        }
+        return response_data["messages"][0]["content"], response_data
 
     def get_embeddings_model(self, agent_id) -> Embeddings:
         agent = self.agent_service.get_agent_by_id(agent_id)
@@ -238,7 +244,7 @@ class WorkflowAgentBase(AgentBase, ABC):
 
         return thought_chain
 
-    def process_message(self, message_request: MessageRequest) -> MessageBase:
+    def process_message(self, message_request: MessageRequest) -> MessageResponse:
         agent_id = message_request.agent_id
         checkpointer = self.graph_persistence_factory.build_checkpoint_saver()
         workflow = self.get_workflow_builder(agent_id).compile(
@@ -253,10 +259,11 @@ class WorkflowAgentBase(AgentBase, ABC):
 
         workflow_result = workflow.invoke(inputs, config)
         self.logger.info(f"Agent[{agent_id}] -> Result -> {workflow_result}")
-
-        return MessageBase(
+        message_content, response_data = self.format_response(workflow_result)
+        return MessageResponse(
             message_role="assistant",
-            message_content=self.format_response(workflow_result),
+            message_content=message_content,
+            response_data=response_data,
             agent_id=agent_id,
         )
 

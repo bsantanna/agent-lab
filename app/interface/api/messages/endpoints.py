@@ -60,6 +60,7 @@ async def post_message(
     assistant_message = message_service.create_message(
         message_role="assistant",
         message_content=processed_message.message_content,
+        response_data=processed_message.response_data,
         agent_id=processed_message.agent_id,
         replies_to=human_message,
     )
@@ -122,6 +123,7 @@ def _format_expanded_response(
         agent_id=agent_message.agent_id,
         message_role=agent_message.message_role,
         message_content=agent_message.message_content,
+        response_data=agent_message.response_data,
         replies_to=MessageResponse.model_validate(human_message),
         attachment=attachment_response,
     )

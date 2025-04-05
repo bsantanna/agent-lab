@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 
 from langchain_core.output_parsers import StrOutputParser
@@ -84,8 +83,8 @@ class AdaptiveRagAgent(WebAgentBase):
             setting_value=collection_name,
         )
 
-    def format_response(self, workflow_state: AgentState) -> dict:
-        return {
+    def format_response(self, workflow_state: AgentState) -> (str, dict):
+        return workflow_state["generation"], {
             "agent_id": workflow_state["agent_id"],
             "query": workflow_state["query"],
             "collection_name": workflow_state["collection_name"],

@@ -1,9 +1,8 @@
-import json
 from pathlib import Path
 
 from langgraph.prebuilt import create_react_agent
 
-from app.interface.api.messages.schema import MessageRequest, MessageBase
+from app.interface.api.messages.schema import MessageRequest, MessageResponse
 from app.services.agent_types.base import AgentUtils, AgentBase
 
 
@@ -70,7 +69,7 @@ class ReactRagAgent(AgentBase):
             ],
         }
 
-    def process_message(self, message_request: MessageRequest) -> MessageBase:
+    def process_message(self, message_request: MessageRequest) -> MessageResponse:
         agent_id = message_request.agent_id
         workflow = self.get_workflow(agent_id)
         config = {
@@ -83,9 +82,10 @@ class ReactRagAgent(AgentBase):
 
         workflow_result = workflow.invoke(inputs, config)
         self.logger.info(f"Agent[{agent_id}] -> Result -> {workflow_result}")
-
-        return MessageBase(
+        message_content, response_data = self.format_response(workflow_result)
+        return MessageResponse(
             message_role="assistant",
-            message_content=json.dumps(self.format_response(workflow_result)),
+            message_content=message_content,
+            response_data=response_data,
             agent_id=message_request.agent_id,
         )

@@ -39,6 +39,7 @@ class MessageRepository:
         message_content: str,
         message_role: str,
         agent_id: str,
+        response_data: dict = None,
         attachment_id: str = None,
         replies_to: Message = None,
     ) -> Message:
@@ -51,6 +52,7 @@ class MessageRepository:
                 message_role=message_role,
                 message_content=message_content,
                 agent_id=agent_id,
+                response_data=response_data,
                 attachment_id=attachment_id,
                 replies_to=replies_to.id if replies_to is not None else None,
             )

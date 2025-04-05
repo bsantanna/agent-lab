@@ -7,6 +7,7 @@ from sqlalchemy import (
     LargeBinary,
     String,
     Text,
+    JSON,
 )
 from sqlalchemy.orm import relationship
 
@@ -101,6 +102,7 @@ class Message(Base):
     agent_id = Column(String, ForeignKey("agents.id"))
     message_role = Column(message_role)
     message_content = Column(Text)
+    response_data = Column(JSON)
     attachment_id = Column(String, ForeignKey("attachments.id"))
     replies_to = Column(String)
 

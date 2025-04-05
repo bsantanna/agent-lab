@@ -1,5 +1,4 @@
 import base64
-import json
 import mimetypes
 from pathlib import Path
 
@@ -25,11 +24,11 @@ class VisionDocumentAgent(WorkflowAgentBase):
         super().__init__(agent_utils)
         self.attachment_service = agent_utils.attachment_service
 
-    def format_response(self, workflow_state: AgentState) -> dict:
-        return {
+    def format_response(self, workflow_state: AgentState) -> (str, dict):
+        return workflow_state["generation"], {
             "agent_id": workflow_state["agent_id"],
             "query": workflow_state["query"],
-            "generation": workflow_state["generation"]
+            "generation": workflow_state["generation"],
         }
 
     def get_image_analysis_chain(
