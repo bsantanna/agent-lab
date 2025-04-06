@@ -65,7 +65,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
         workflow_builder.add_node("planner", self.get_planner)
         workflow_builder.add_node("supervisor", self.get_supervisor)
         workflow_builder.add_node("reporter", self.get_reporter)
-        # TODO add context_analyzer
+        workflow_builder.add_node("content_analyst", self.get_content_analyst)
         return workflow_builder
 
     def create_default_settings(self, agent_id: str):
@@ -248,6 +248,24 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
         )
         response = reporter.invoke(state)
         self.logger.info(f"Agent[{agent_id}] -> Reporter -> Response -> {response}")
+        return Command(
+            update={"messages": response["messages"]},
+            goto="supervisor",
+        )
+
+    def get_content_analyst(self, state: AgentState) -> Command[Literal["supervisor"]]:
+        agent_id = state["agent_id"]
+        self.logger.info(f"Agent[{agent_id}] -> Content Analyst")
+        content_analyst_system_prompt = state["content_analyst_system_prompt"]
+        reporter = create_react_agent(
+            model=self.get_chat_model(agent_id),
+            tools=[],
+            prompt=content_analyst_system_prompt,
+        )
+        response = reporter.invoke(state)
+        self.logger.info(
+            f"Agent[{agent_id}] -> Content Analyst -> Response -> {response}"
+        )
         return Command(
             update={"messages": response["messages"]},
             goto="supervisor",
