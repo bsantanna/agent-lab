@@ -14,7 +14,11 @@ from app.services.agent_types.adaptive_rag.schema import (
     GradeAnswer,
     GenerateAnswer,
 )
-from app.services.agent_types.base import join_messages, WebAgentBase, AgentUtils
+from app.services.agent_types.base import (
+    join_messages,
+    AgentUtils,
+    WebAgentBase,
+)
 
 
 class AgentState(MessagesState):

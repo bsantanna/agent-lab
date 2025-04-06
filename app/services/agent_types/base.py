@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import subprocess
-import tempfile
 import uuid
 from abc import ABC, abstractmethod
 
@@ -15,19 +14,23 @@ from jinja2 import Environment, DictLoader, select_autoescape
 from langchain_anthropic import ChatAnthropic
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import HumanMessage
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool, BaseTool
 from langchain_experimental.utilities import PythonREPL
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_tavily import TavilySearch, TavilyExtract
 from langgraph.graph import MessagesState
-from typing_extensions import List, Annotated
+from langgraph.types import Command
+from typing_extensions import List, Annotated, Literal
 
 from app.domain.exceptions.base import ResourceNotFoundError, ConfigurationError
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.vectors import DocumentRepository
 from app.interface.api.messages.schema import MessageRequest, MessageResponse
 from app.services.agent_settings import AgentSettingService
+from app.services.agent_types.schema import CoordinatorRouter, SolutionPlan
 from app.services.agents import AgentService
 from app.services.attachments import AttachmentService
 from app.services.integrations import IntegrationService
@@ -338,6 +341,18 @@ class WorkflowAgentBase(AgentBase, ABC):
 
         return python_tool_call
 
+    def get_last_interaction_messages(self, messages):
+        subarray = []
+        found_human_message = False
+
+        for message in reversed(messages):
+            subarray.insert(0, message)
+            if isinstance(message, HumanMessage):
+                found_human_message = True
+                break
+
+        return subarray if found_human_message else []
+
 
 class WebAgentBase(WorkflowAgentBase, ABC):
     def __init__(self, agent_utils: AgentUtils):
@@ -353,7 +368,7 @@ class WebAgentBase(WorkflowAgentBase, ABC):
         headless: bool = True,
     ) -> BaseTool:
         if cache_dir is None:
-            temp_dir = f"{os.getcwd()}/tmp/" #NOSONAR used inside container
+            temp_dir = f"{os.getcwd()}/tmp/"  # NOSONAR used inside container
             os.makedirs(temp_dir, exist_ok=True)
             cache_dir = temp_dir
 
@@ -420,3 +435,55 @@ class WebAgentBase(WorkflowAgentBase, ABC):
 
     def get_web_search_tool(self, max_results=5, topic="general") -> BaseTool:
         return TavilySearch(max_results=max_results, topic=topic)
+
+
+class SupervisedWorkflowAgentBase(WebAgentBase, ABC):
+    def __init__(self, agent_utils: AgentUtils):
+        super().__init__(agent_utils)
+        self.document_repository = agent_utils.document_repository
+        if not os.environ.get("TAVILY_API_KEY"):
+            raise ConfigurationError("TAVILY_API_KEY environment variable not set")
+
+    @abstractmethod
+    def get_coordinator(
+        self, state: MessagesState
+    ) -> Command[Literal["planner", "__end__"]]:
+        pass
+
+    def get_coordinator_chain(self, llm, coordinator_system_prompt: str):
+        structured_llm_generator = llm.with_structured_output(CoordinatorRouter)
+        coordinator_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", coordinator_system_prompt),
+                ("human", "<query>{query}</query>"),
+            ]
+        )
+        return coordinator_prompt | structured_llm_generator
+
+    @abstractmethod
+    def get_planner(self, state: MessagesState) -> Command[Literal["supervisor"]]:
+        pass
+
+    def get_planner_chain(
+        self, llm, planner_system_prompt: str, search_results: str = None
+    ):
+        structured_llm_generator = llm.with_structured_output(SolutionPlan)
+        if search_results is not None:
+            planner_input = "<query>{query}</query>\n\n<search_results>{search_results}</search_results>"
+        else:
+            planner_input = "<query>{query}</query>"
+        planner_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", planner_system_prompt),
+                ("human", planner_input),
+            ]
+        )
+        return planner_prompt | structured_llm_generator
+
+    @abstractmethod
+    def get_supervisor(self, state: MessagesState) -> Command:
+        pass
+
+    @abstractmethod
+    def get_reporter(self, state: MessagesState) -> Command[Literal["supervisor"]]:
+        pass

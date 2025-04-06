@@ -2,19 +2,32 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from langchain_core.messages import HumanMessage
-from langgraph.graph import MessagesState
+from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.prompts import ChatPromptTemplate
+from langgraph.constants import START, END
+from langgraph.graph import MessagesState, StateGraph
 from langgraph.managed import RemainingSteps
-from typing_extensions import Annotated, List
+from langgraph.prebuilt import create_react_agent
+from langgraph.types import Command
+from typing_extensions import Annotated, List, Literal
 
 from app.interface.api.messages.schema import MessageRequest
-from app.services.agent_types.base import join_messages, WebAgentBase, AgentUtils
-from app.services.agent_types.voice_memos import SUPERVISED_AGENTS, SUPERVISED_AGENT_CONFIGURATION
+from app.services.agent_types.base import (
+    join_messages,
+    SupervisedWorkflowAgentBase,
+    AgentUtils,
+)
+from app.services.agent_types.voice_memos import (
+    SUPERVISED_AGENTS,
+    SUPERVISED_AGENT_CONFIGURATION,
+)
+from app.services.agent_types.voice_memos.schema import SupervisorRouter
 
 
 class AgentState(MessagesState):
     agent_id: str
     attachment_id: str
+    query: str
     transcription: str
     next: str
     coordinator_system_prompt: str
@@ -27,7 +40,7 @@ class AgentState(MessagesState):
     remaining_steps: RemainingSteps
 
 
-class VoiceMemosAgent(WebAgentBase):
+class VoiceMemosAgent(SupervisedWorkflowAgentBase):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
 
@@ -35,6 +48,7 @@ class VoiceMemosAgent(WebAgentBase):
         response_data = {
             "agent_id": workflow_state["agent_id"],
             "attachment_id": workflow_state["attachment_id"],
+            "query": workflow_state["query"],
             "transcription": workflow_state["transcription"],
             "execution_plan": workflow_state["execution_plan"],
             "messages": [
@@ -45,8 +59,14 @@ class VoiceMemosAgent(WebAgentBase):
         return response_data["messages"][-1]["content"], response_data
 
     def get_workflow_builder(self, agent_id: str):
-        # TODO
-        pass
+        workflow_builder = StateGraph(AgentState)
+        workflow_builder.add_edge(START, "coordinator")
+        workflow_builder.add_node("coordinator", self.get_coordinator)
+        workflow_builder.add_node("planner", self.get_planner)
+        workflow_builder.add_node("supervisor", self.get_supervisor)
+        workflow_builder.add_node("reporter", self.get_reporter)
+        # TODO add context_analyzer
+        return workflow_builder
 
     def create_default_settings(self, agent_id: str):
         current_dir = Path(__file__).parent
@@ -116,6 +136,7 @@ class VoiceMemosAgent(WebAgentBase):
         return {
             "agent_id": message_request.agent_id,
             "attachment_id": message_request.attachment_id,
+            "query": message_request.message_content,
             "transcription": transcription,
             "content_analyst_system_prompt": self.parse_prompt_template(
                 settings_dict, "content_analyst_system_prompt", template_vars
@@ -134,3 +155,100 @@ class VoiceMemosAgent(WebAgentBase):
             ),
             "messages": [HumanMessage(content=message_request.message_content)],
         }
+
+    def get_coordinator(
+        self, state: AgentState
+    ) -> Command[Literal["planner", "__end__"]]:
+        agent_id = state["agent_id"]
+        query = state["query"]
+        transcription = state["transcription"]
+        coordinator_system_prompt = state["coordinator_system_prompt"]
+
+        self.logger.info(
+            f"Agent[{agent_id}] -> Coordinator -> Query -> {query} -> Transcription -> {transcription}"
+        )
+        chat_model = self.get_chat_model(agent_id)
+        response = self.get_coordinator_chain(
+            chat_model, coordinator_system_prompt
+        ).invoke(
+            {
+                "query": f"User instructions: {query}\n\nAudio transcription: {transcription}"
+            }
+        )
+        self.logger.info(f"Agent[{agent_id}] -> Coordinator -> Response -> {response}")
+        if response["next"] == END:
+            return Command(
+                goto=response["next"],
+                update={"messages": [AIMessage(content=response["generated"])]},
+            )
+        else:
+            return Command(goto=response["next"])
+
+    def get_planner(self, state: MessagesState) -> Command[Literal["supervisor"]]:
+        agent_id = state["agent_id"]
+        query = state["query"]
+        transcription = state["transcription"]
+        planner_system_prompt = state["planner_system_prompt"]
+        self.logger.info(
+            f"Agent[{agent_id}] -> Planner -> Query -> {query} -> Transcription -> {transcription}"
+        )
+        chat_model = self.get_chat_model(agent_id)
+
+        response = self.get_planner_chain(
+            llm=chat_model, planner_system_prompt=planner_system_prompt
+        ).invoke(
+            {
+                "query": f"User instructions: {query}\n\nAudio transcription: {transcription}"
+            }
+        )
+
+        self.logger.info(f"Agent[{agent_id}] -> Planner -> Response -> {response}")
+        plain_response = json.dumps(response)
+
+        return Command(
+            update={
+                "messages": [AIMessage(content=plain_response, name="planner")],
+                "execution_plan": response,
+            },
+            goto="supervisor",
+        )
+
+    def get_supervisor_chain(self, llm, supervisor_system_prompt: str):
+        structured_llm_generator = llm.with_structured_output(SupervisorRouter)
+        supervisor_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", supervisor_system_prompt),
+                ("human", "<messages>{messages}</messages>"),
+            ]
+        )
+        return supervisor_prompt | structured_llm_generator
+
+    def get_supervisor(
+        self, state: AgentState
+    ) -> Command[Literal[*SUPERVISED_AGENTS, "__end__"]]:
+        messages = self.get_last_interaction_messages(state["messages"])
+        agent_id = state["agent_id"]
+        self.logger.info(f"Agent[{agent_id}] -> Supervisor -> Messages -> {messages}")
+        supervisor_system_prompt = state["supervisor_system_prompt"]
+        response = self.get_supervisor_chain(
+            llm=self.get_chat_model(agent_id),
+            supervisor_system_prompt=supervisor_system_prompt,
+        ).invoke({"messages": messages})
+        self.logger.info(f"Agent[{agent_id}] -> Supervisor -> Response -> {response}")
+        return Command(goto=response["next"], update={"next": response["next"]})
+
+    def get_reporter(self, state: AgentState) -> Command[Literal["supervisor"]]:
+        agent_id = state["agent_id"]
+        self.logger.info(f"Agent[{agent_id}] -> Reporter")
+        reporter_system_prompt = state["reporter_system_prompt"]
+        reporter = create_react_agent(
+            model=self.get_chat_model(agent_id),
+            tools=[],
+            prompt=reporter_system_prompt,
+        )
+        response = reporter.invoke(state)
+        self.logger.info(f"Agent[{agent_id}] -> Reporter -> Response -> {response}")
+        return Command(
+            update={"messages": response["messages"]},
+            goto="supervisor",
+        )
