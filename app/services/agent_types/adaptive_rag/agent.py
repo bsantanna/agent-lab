@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 
 from langchain_core.output_parsers import StrOutputParser
@@ -295,17 +296,25 @@ class AdaptiveRagAgent(WebAgentBase):
             setting.setting_key: setting.setting_value for setting in settings
         }
 
+        template_vars = {
+            "CURRENT_TIME": datetime.now().strftime("%a %b %d %Y %H:%M:%S %z"),
+        }
+
         return {
             "agent_id": message_request.agent_id,
             "query": message_request.message_content,
             "collection_name": settings_dict["collection_name"],
-            "execution_system_prompt": settings_dict["execution_system_prompt"],
-            "query_rewriter_system_prompt": settings_dict[
-                "query_rewriter_system_prompt"
-            ],
-            "answer_grader_system_prompt": settings_dict["answer_grader_system_prompt"],
-            "retrieval_grader_system_prompt": settings_dict[
-                "retrieval_grader_system_prompt"
-            ],
+            "execution_system_prompt": self.parse_prompt_template(
+                settings_dict, "execution_system_prompt", template_vars
+            ),
+            "query_rewriter_system_prompt": self.parse_prompt_template(
+                settings_dict, "query_rewriter_system_prompt", template_vars
+            ),
+            "answer_grader_system_prompt": self.parse_prompt_template(
+                settings_dict, "answer_grader_system_prompt", template_vars
+            ),
+            "retrieval_grader_system_prompt": self.parse_prompt_template(
+                settings_dict, "retrieval_grader_system_prompt", template_vars
+            ),
             "messages": [],
         }

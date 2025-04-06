@@ -1,5 +1,6 @@
 import base64
 import mimetypes
+from datetime import datetime
 from pathlib import Path
 
 from langchain_core.prompts import ChatPromptTemplate
@@ -94,10 +95,16 @@ class VisionDocumentAgent(WorkflowAgentBase):
         image_base64 = base64.b64encode(attachment.raw_content).decode("utf-8")
         image_content_type = mimetypes.guess_type(attachment.file_name)[0]
 
+        template_vars = {
+            "CURRENT_TIME": datetime.now().strftime("%a %b %d %Y %H:%M:%S %z"),
+        }
+
         return {
             "agent_id": message_request.agent_id,
             "query": message_request.message_content,
-            "execution_system_prompt": settings_dict["execution_system_prompt"],
+            "execution_system_prompt": self.parse_prompt_template(
+                settings_dict, "execution_system_prompt", template_vars
+            ),
             "image_base64": image_base64,
             "image_content_type": image_content_type,
         }

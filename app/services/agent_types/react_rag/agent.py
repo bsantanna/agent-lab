@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 
 from langgraph.prebuilt import create_react_agent
@@ -39,9 +40,15 @@ class ReactRagAgent(AgentBase):
         }
         checkpointer = self.graph_persistence_factory.build_checkpoint_saver()
 
+        template_vars = {
+            "CURRENT_TIME": datetime.now().strftime("%a %b %d %Y %H:%M:%S %z"),
+        }
+
         return create_react_agent(
             model=chat_model,
-            prompt=settings_dict["execution_system_prompt"],
+            prompt=self.parse_prompt_template(
+                settings_dict, "execution_system_prompt", template_vars
+            ),
             tools=[],
             checkpointer=checkpointer,
         )
