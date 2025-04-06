@@ -14,7 +14,7 @@ class AgentCreateRequest(BaseModel):
 
     @field_validator("agent_name")
     def validate_agent_name(cls, v):
-        if not re.match(r'^[a-zA-Z0-9_-]+$', v):
+        if not re.match(r"^[a-zA-Z0-9_-]+$", v):
             raise InvalidFieldError("agent_name", "contains invalid characters")
         return v
 
@@ -26,6 +26,7 @@ class AgentCreateRequest(BaseModel):
             "react_rag",
             "test_echo",
             "vision_document",
+            "voice_memos",
         ]
         if v not in valid_types:
             raise InvalidFieldError("agent_type", "not supported")

@@ -26,6 +26,7 @@ from app.services.agent_types.react_rag.agent import ReactRagAgent
 from app.services.agent_types.registry import AgentRegistry
 from app.services.agent_types.test_echo.test_echo_agent import TestEchoAgent
 from app.services.agent_types.vision_document.agent import VisionDocumentAgent
+from app.services.agent_types.voice_memos.agent import VoiceMemosAgent
 from app.services.agents import AgentService
 from app.services.attachments import AttachmentService
 from app.services.integrations import IntegrationService
@@ -190,13 +191,19 @@ class Container(containers.DeclarativeContainer):
         VisionDocumentAgent, agent_utils=agent_utils
     )
 
+    voice_memos_agent = providers.Factory(
+        VoiceMemosAgent,
+        agent_utils=agent_utils,
+    )
+
     agent_registry = providers.Singleton(
         AgentRegistry,
         adaptive_rag_agent=adaptive_rag_agent,
         coordinator_planner_supervisor_agent=coordinator_planner_supervisor_agent,
+        react_rag_agent=react_rag_agent,
         test_echo_agent=test_echo_agent,
         vision_document_agent=vision_document_agent,
-        react_rag_agent=react_rag_agent,
+        voice_memos_agent=voice_memos_agent,
     )
 
     tracer = providers.Singleton(Tracer)
