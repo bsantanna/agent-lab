@@ -21,7 +21,10 @@ from app.services.agent_types.voice_memos import (
     SUPERVISED_AGENTS,
     SUPERVISED_AGENT_CONFIGURATION,
 )
-from app.services.agent_types.voice_memos.schema import SupervisorRouter, VoiceCoordinatorRouter
+from app.services.agent_types.voice_memos.schema import (
+    SupervisorRouter,
+    VoiceCoordinatorRouter,
+)
 
 
 class AgentState(MessagesState):
@@ -129,11 +132,6 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             "SUPERVISED_AGENTS": SUPERVISED_AGENTS,
             "SUPERVISED_AGENT_CONFIGURATION": SUPERVISED_AGENT_CONFIGURATION,
         }
-
-        # TODO transcribe attachment audio file
-        attachment = self.attachment_service.get_attachment_by_id(
-            message_request.attachment_id
-        )
 
         return {
             "agent_id": message_request.agent_id,
