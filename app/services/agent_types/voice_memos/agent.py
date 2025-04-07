@@ -131,6 +131,9 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
         }
 
         # TODO transcribe attachment audio file
+        attachment = self.attachment_service.get_attachment_by_id(
+            message_request.attachment_id
+        )
         transcription = ""
 
         return {

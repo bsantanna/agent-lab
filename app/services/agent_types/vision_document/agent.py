@@ -23,7 +23,6 @@ class AgentState(MessagesState):
 class VisionDocumentAgent(WorkflowAgentBase):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
-        self.attachment_service = agent_utils.attachment_service
 
     def format_response(self, workflow_state: AgentState) -> (str, dict):
         return workflow_state["generation"], {

@@ -206,6 +206,7 @@ class WorkflowAgentBase(AgentBase, ABC):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
         self.graph_persistence_factory = agent_utils.graph_persistence_factory
+        self.attachment_service = agent_utils.attachment_service
 
     @abstractmethod
     def get_workflow_builder(self, agent_id: str):
