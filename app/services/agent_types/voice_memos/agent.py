@@ -21,7 +21,7 @@ from app.services.agent_types.voice_memos import (
     SUPERVISED_AGENTS,
     SUPERVISED_AGENT_CONFIGURATION,
 )
-from app.services.agent_types.voice_memos.schema import SupervisorRouter
+from app.services.agent_types.voice_memos.schema import SupervisorRouter, VoiceCoordinatorRouter
 
 
 class AgentState(MessagesState):
@@ -134,13 +134,11 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
         attachment = self.attachment_service.get_attachment_by_id(
             message_request.attachment_id
         )
-        transcription = ""
 
         return {
             "agent_id": message_request.agent_id,
             "attachment_id": message_request.attachment_id,
             "query": message_request.message_content,
-            "transcription": transcription,
             "content_analyst_system_prompt": self.parse_prompt_template(
                 settings_dict, "content_analyst_system_prompt", template_vars
             ),
@@ -159,6 +157,16 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             "messages": [HumanMessage(content=message_request.message_content)],
         }
 
+    def get_voice_coordinator_chain(self, llm, coordinator_system_prompt: str):
+        structured_llm_generator = llm.with_structured_output(VoiceCoordinatorRouter)
+        coordinator_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", coordinator_system_prompt),
+                ("human", "<query>{query}</query>"),
+            ]
+        )
+        return coordinator_prompt | structured_llm_generator
+
     def get_coordinator(
         self, state: AgentState
     ) -> Command[Literal["planner", "__end__"]]:
@@ -171,7 +179,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             f"Agent[{agent_id}] -> Coordinator -> Query -> {query} -> Transcription -> {transcription}"
         )
         chat_model = self.get_chat_model(agent_id)
-        response = self.get_coordinator_chain(
+        response = self.get_voice_coordinator_chain(
             chat_model, coordinator_system_prompt
         ).invoke(
             {
@@ -182,7 +190,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
         if response["next"] == END:
             return Command(
                 goto=response["next"],
-                update={"messages": [AIMessage(content=response["generated"])]},
+                update={"messages": [AIMessage(content=response["transcription"])]},
             )
         else:
             return Command(goto=response["next"])
