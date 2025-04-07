@@ -1,7 +1,7 @@
 browser-use
 dependency-injector==4.46.0
 fastapi[standard]==0.115.12
-flake8==7.1.2
+flake8==7.2.0
 hvac==1.2.1
 isort==5.13.2
 jinja2==3.1.6
