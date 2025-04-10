@@ -147,7 +147,7 @@ class AgentBase(ABC):
                 base_url=f"{os.getenv('OLLAMA_ENDPOINT')}",
             )
 
-    def get_chat_model(self, agent_id) -> BaseChatModel:
+    def get_chat_model(self, agent_id, language_model_tag: str = None) -> BaseChatModel:
         agent = self.agent_service.get_agent_by_id(agent_id)
         language_model = self.language_model_service.get_language_model_by_id(
             agent.language_model_id
@@ -160,25 +160,27 @@ class AgentBase(ABC):
         )
         api_endpoint = secrets["data"]["data"]["api_endpoint"]
         api_key = secrets["data"]["data"]["api_key"]
+        if language_model_tag is None:
+            language_model_tag = language_model.language_model_tag
 
         if (
             integration.integration_type == "openai_api_v1"
             or integration.integration_type == "xai_api_v1"
         ):
             return ChatOpenAI(
-                model_name=language_model.language_model_tag,
+                model_name=language_model_tag,
                 openai_api_base=api_endpoint,
                 openai_api_key=api_key,
             )
         elif integration.integration_type == "anthropic_api_v1":
             return ChatAnthropic(
-                model=language_model.language_model_tag,
+                model=language_model_tag,
                 anthropic_api_url=api_endpoint,
                 anthropic_api_key=api_key,
             )
         else:
             return ChatOllama(
-                model=language_model.language_model_tag,
+                model=language_model_tag,
                 base_url=api_endpoint,
             )
 

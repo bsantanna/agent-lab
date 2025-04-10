@@ -3,19 +3,17 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate
-from langgraph.constants import START, END
+from langgraph.constants import START
 from langgraph.graph import MessagesState, StateGraph
 from langgraph.managed import RemainingSteps
 from langgraph.prebuilt import create_react_agent
 from langgraph.types import Command
-from typing_extensions import Annotated, List, Literal
+from typing_extensions import Literal
 
 from app.interface.api.messages.schema import MessageRequest
 from app.services.agent_types.base import (
-    join_messages,
     SupervisedWorkflowAgentBase,
     AgentUtils,
 )
@@ -23,15 +21,14 @@ from app.services.agent_types.voice_memos import (
     SUPERVISED_AGENTS,
     SUPERVISED_AGENT_CONFIGURATION,
 )
-from app.services.agent_types.voice_memos.schema import (
-    SupervisorRouter,
-    VoiceCoordinatorRouter,
-)
+from app.services.agent_types.voice_memos.schema import SupervisorRouter
 
 
 class AgentState(MessagesState):
     agent_id: str
     attachment_id: str
+    audio_format: str
+    audio_language_model: str
     query: str
     transcription: str
     next: str
@@ -41,7 +38,6 @@ class AgentState(MessagesState):
     content_analyst_system_prompt: str
     reporter_system_prompt: str
     execution_plan: str
-    messages: Annotated[List, join_messages]
     remaining_steps: RemainingSteps
 
 
@@ -53,6 +49,8 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
         response_data = {
             "agent_id": workflow_state["agent_id"],
             "attachment_id": workflow_state["attachment_id"],
+            "audio_format": workflow_state["audio_format"],
+            "audio_language_model": workflow_state["audio_language_model"],
             "query": workflow_state["query"],
             "transcription": workflow_state["transcription"],
             "execution_plan": workflow_state["execution_plan"],
@@ -121,6 +119,21 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             setting_value=reporter_prompt,
         )
 
+        audio_language_model = self.read_file_content(
+            f"{current_dir}/default_audio_language_model.txt"
+        )
+        self.agent_setting_service.create_agent_setting(
+            agent_id=agent_id,
+            setting_key="audio_language_model",
+            setting_value=audio_language_model,
+        )
+
+        self.agent_setting_service.create_agent_setting(
+            agent_id=agent_id,
+            setting_key="audio_format",
+            setting_value="mp3",
+        )
+
     def get_input_params(self, message_request: MessageRequest) -> dict:
         settings = self.agent_setting_service.get_agent_settings(
             message_request.agent_id
@@ -138,6 +151,8 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
         return {
             "agent_id": message_request.agent_id,
             "attachment_id": message_request.attachment_id,
+            "audio_language_model": settings_dict.get("audio_language_model"),
+            "audio_format": settings_dict.get("audio_format"),
             "query": message_request.message_content,
             "content_analyst_system_prompt": self.parse_prompt_template(
                 settings_dict, "content_analyst_system_prompt", template_vars
@@ -157,38 +172,11 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             "messages": [HumanMessage(content=message_request.message_content)],
         }
 
-    def get_voice_coordinator_chain(
-        self,
-        llm:BaseChatModel,
-        coordinator_system_prompt: str,
-        audio_format:str="wav"
-    ):
-        structured_llm_generator = llm.with_structured_output(VoiceCoordinatorRouter)
-        coordinator_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", coordinator_system_prompt),
-                ("human", [
-                    {
-                        "type": "text",
-                        "text": "<query>{query}</query>",
-                    },
-                    {
-                        "type": "input_audio",
-                        "input_audio": {
-                            "data": "{audio_base64}",
-                            "format": audio_format,
-                        }
-                    }
-                ]),
-            ]
-        )
-        return coordinator_prompt | structured_llm_generator
-
-    def get_coordinator(
-        self, state: AgentState
-    ) -> Command[Literal["planner", "__end__"]]:
+    def get_coordinator(self, state: AgentState) -> Command[Literal["planner"]]:
         agent_id = state["agent_id"]
         attachment_id = state["attachment_id"]
+        audio_format = state["audio_format"]
+        audio_language_model = state["audio_language_model"]
         query = state["query"]
         coordinator_system_prompt = state["coordinator_system_prompt"]
 
@@ -196,27 +184,40 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             f"Agent[{agent_id}] -> Coordinator -> Query -> {query} -> Attachment[{attachment_id}]"
         )
 
-        chat_model = self.get_chat_model(agent_id)
-        attachment = self.attachment_service.get_attachment_by_id(
-            attachment_id
+        chat_model = self.get_chat_model(
+            agent_id, language_model_tag=audio_language_model
         )
+        attachment = self.attachment_service.get_attachment_by_id(attachment_id)
         audio_base64 = base64.b64encode(attachment.raw_content).decode()
-
-        response = self.get_voice_coordinator_chain(
-            chat_model, coordinator_system_prompt
-        ).invoke({
-            "query": f"{query}",
-            "audio_base64": audio_base64
-        })
-
+        messages = [
+            ("system", coordinator_system_prompt),
+            (
+                "human",
+                [
+                    {"type": "text", "text": query},
+                    {
+                        "type": "input_audio",
+                        "input_audio": {"data": audio_base64, "format": audio_format},
+                    },
+                ],
+            ),
+        ]
+        response = chat_model.invoke(messages)
+        transcription = response.content
         self.logger.info(f"Agent[{agent_id}] -> Coordinator -> Response -> {response}")
-
         return Command(
-            goto=response["next"],
-            update={"transcription": response["transcription"]},
+            goto="planner",
+            update={
+                "messages": [
+                    AIMessage(
+                        content=f"Transcription: '{transcription}'", name="coordinator"
+                    )
+                ],
+                "transcription": transcription,
+            },
         )
 
-    def get_planner(self, state: MessagesState) -> Command[Literal["supervisor"]]:
+    def get_planner(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
         query = state["query"]
         transcription = state["transcription"]

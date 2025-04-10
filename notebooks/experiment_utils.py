@@ -75,6 +75,26 @@ def create_ollama_agent(
     )
 
 
+def create_openai_agent(
+    llm_tag: str = "o1-mini",
+    agent_type: str = "test_echo",
+    agent_lab_endpoint: str = "http://localhost:18000",
+    api_key: str = "",
+) -> str:
+    integration_params = {
+        "integration_type": "openai_api_v1",
+        "api_endpoint": "https://api.openai.com/v1/",
+        "api_key": api_key,
+    }
+
+    return create_agent_with_integration(
+        llm_tag,
+        agent_type,
+        integration_params,
+        agent_lab_endpoint,
+    )
+
+
 def create_xai_agent(
     llm_tag: str = "grok-2-latest",
     agent_type: str = "test_echo",
