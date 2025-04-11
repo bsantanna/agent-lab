@@ -12,4 +12,5 @@ Your primary responsibilities are:
 
 # Notes
 
-- Always Use the same language as the user audio transcription.
+- For the transcription, always use the same language as the audio.
+- Transcribe the given audio using same language as the audio, no explanation necessary only the transcription.

@@ -67,7 +67,6 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
         workflow_builder.add_node("coordinator", self.get_coordinator)
         workflow_builder.add_node("planner", self.get_planner)
         workflow_builder.add_node("supervisor", self.get_supervisor)
-        workflow_builder.add_node("reporter", self.get_reporter)
         workflow_builder.add_node("content_analyst", self.get_content_analyst)
         return workflow_builder
 
@@ -108,15 +107,6 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             agent_id=agent_id,
             setting_key="planner_system_prompt",
             setting_value=planner_prompt,
-        )
-
-        reporter_prompt = self.read_file_content(
-            f"{current_dir}/default_reporter_system_prompt.txt"
-        )
-        self.agent_setting_service.create_agent_setting(
-            agent_id=agent_id,
-            setting_key="reporter_system_prompt",
-            setting_value=reporter_prompt,
         )
 
         audio_language_model = self.read_file_content(
@@ -165,9 +155,6 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             ),
             "supervisor_system_prompt": self.parse_prompt_template(
                 settings_dict, "supervisor_system_prompt", template_vars
-            ),
-            "reporter_system_prompt": self.parse_prompt_template(
-                settings_dict, "reporter_system_prompt", template_vars
             ),
             "messages": [HumanMessage(content=message_request.message_content)],
         }
@@ -270,21 +257,6 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
         self.logger.info(f"Agent[{agent_id}] -> Supervisor -> Response -> {response}")
         return Command(goto=response["next"], update={"next": response["next"]})
 
-    def get_reporter(self, state: AgentState) -> Command[Literal["supervisor"]]:
-        agent_id = state["agent_id"]
-        self.logger.info(f"Agent[{agent_id}] -> Reporter")
-        reporter_system_prompt = state["reporter_system_prompt"]
-        reporter = create_react_agent(
-            model=self.get_chat_model(agent_id),
-            tools=[],
-            prompt=reporter_system_prompt,
-        )
-        response = reporter.invoke(state)
-        self.logger.info(f"Agent[{agent_id}] -> Reporter -> Response -> {response}")
-        return Command(
-            update={"messages": response["messages"]},
-            goto="supervisor",
-        )
 
     def get_content_analyst(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
