@@ -13,15 +13,17 @@ from langgraph.types import Command
 from typing_extensions import List, Annotated, Literal
 
 from app.interface.api.messages.schema import MessageRequest
-from app.services.agent_types.base import WebAgentBase, AgentUtils, join_messages
+from app.services.agent_types.base import (
+    SupervisedWorkflowAgentBase,
+    AgentUtils,
+    join_messages,
+)
 from app.services.agent_types.coordinator_planner_supervisor import (
     SUPERVISED_AGENTS,
     SUPERVISED_AGENT_CONFIGURATION,
 )
 from app.services.agent_types.coordinator_planner_supervisor.schema import (
     SupervisorRouter,
-    CoordinatorRouter,
-    SolutionPlan,
 )
 
 
@@ -43,7 +45,7 @@ class AgentState(MessagesState):
     remaining_steps: RemainingSteps
 
 
-class CoordinatorPlannerSupervisorAgent(WebAgentBase):
+class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
 
@@ -200,28 +202,6 @@ class CoordinatorPlannerSupervisorAgent(WebAgentBase):
             "messages": [HumanMessage(content=message_request.message_content)],
         }
 
-    def get_last_interaction_messages(self, messages):
-        subarray = []
-        found_human_message = False
-
-        for message in reversed(messages):
-            subarray.insert(0, message)
-            if isinstance(message, HumanMessage):
-                found_human_message = True
-                break
-
-        return subarray if found_human_message else []
-
-    def get_coordinator_chain(self, llm, coordinator_system_prompt: str):
-        structured_llm_generator = llm.with_structured_output(CoordinatorRouter)
-        coordinator_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", coordinator_system_prompt),
-                ("human", "<query>{query}</query>"),
-            ]
-        )
-        return coordinator_prompt | structured_llm_generator
-
     def get_coordinator(
         self, state: AgentState
     ) -> Command[Literal["planner", "__end__"]]:
@@ -242,22 +222,6 @@ class CoordinatorPlannerSupervisorAgent(WebAgentBase):
             )
         else:
             return Command(goto=response["next"])
-
-    def get_planner_chain(
-        self, llm, planner_system_prompt: str, search_results: str = None
-    ):
-        structured_llm_generator = llm.with_structured_output(SolutionPlan)
-        if search_results is not None:
-            planner_input = "<query>{query}</query>\n\n<search_results>{search_results}</search_results>"
-        else:
-            planner_input = "<query>{query}</query>"
-        planner_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", planner_system_prompt),
-                ("human", planner_input),
-            ]
-        )
-        return planner_prompt | structured_llm_generator
 
     def get_planner(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]

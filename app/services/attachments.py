@@ -46,12 +46,15 @@ class AttachmentService:
             raw_content = await file.read()
             buffer.write(raw_content)
 
-        parsed_content = self.markdown.convert(temp_file_path)
+        if not file.content_type.startswith("audio/"):
+            parsed_content = self.markdown.convert(temp_file_path).text_content
+        else:
+            parsed_content = ""
 
         attachment = self.attachment_repository.add(
             file_name=file.filename,
             raw_content=raw_content,
-            parsed_content=parsed_content.text_content,
+            parsed_content=parsed_content,
         )
 
         os.remove(temp_file_path)
