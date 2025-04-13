@@ -47,7 +47,7 @@ class AttachmentService:
             buffer.write(raw_content)
 
         if not file.content_type.startswith("audio/"):
-            parsed_content = raw_content.decode("utf-8").text_content
+            parsed_content = self.markdown.convert(temp_file_path).text_content
         else:
             parsed_content = ""
 
