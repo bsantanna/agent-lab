@@ -41,7 +41,7 @@ class TestVoiceMemosAgent:
             url="/agents/create",
             json={
                 "language_model_id": language_model_id,
-                "agent_type": "coordinator_planner_supervisor",
+                "agent_type": "voice_memos",
                 "agent_name": f"agent-{uuid4()}",
             },
         )
