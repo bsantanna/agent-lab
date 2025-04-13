@@ -21,7 +21,7 @@ from app.services.agent_types.voice_memos import (
     SUPERVISED_AGENTS,
     SUPERVISED_AGENT_CONFIGURATION,
 )
-from app.services.agent_types.voice_memos.schema import SupervisorRouter
+from app.services.agent_types.voice_memos.schema import SupervisorRouter, AudioAnalysisReport
 
 
 class AgentState(MessagesState):
@@ -32,6 +32,7 @@ class AgentState(MessagesState):
     query: str
     transcription: str
     next: str
+    structured_report: dict
     coordinator_system_prompt: str
     planner_system_prompt: str
     supervisor_system_prompt: str
@@ -51,6 +52,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             "attachment_id": workflow_state["attachment_id"],
             "audio_format": workflow_state["audio_format"],
             "audio_language_model": workflow_state["audio_language_model"],
+            "structured_report": workflow_state["structured_report"],
             "query": workflow_state["query"],
             "transcription": workflow_state["transcription"],
             "execution_plan": workflow_state["execution_plan"],
@@ -67,6 +69,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
         workflow_builder.add_node("coordinator", self.get_coordinator)
         workflow_builder.add_node("planner", self.get_planner)
         workflow_builder.add_node("supervisor", self.get_supervisor)
+        workflow_builder.add_node("reporter", self.get_reporter)
         workflow_builder.add_node("content_analyst", self.get_content_analyst)
         return workflow_builder
 
@@ -109,6 +112,15 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             setting_value=planner_prompt,
         )
 
+        reporter_prompt = self.read_file_content(
+            f"{current_dir}/default_reporter_system_prompt.txt"
+        )
+        self.agent_setting_service.create_agent_setting(
+            agent_id=agent_id,
+            setting_key="reporter_system_prompt",
+            setting_value=reporter_prompt,
+        )
+
         audio_language_model = self.read_file_content(
             f"{current_dir}/default_audio_language_model.txt"
         )
@@ -144,6 +156,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             "audio_language_model": settings_dict.get("audio_language_model"),
             "audio_format": settings_dict.get("audio_format"),
             "query": message_request.message_content,
+            "structured_report": None,
             "content_analyst_system_prompt": self.parse_prompt_template(
                 settings_dict, "content_analyst_system_prompt", template_vars
             ),
@@ -155,6 +168,9 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             ),
             "supervisor_system_prompt": self.parse_prompt_template(
                 settings_dict, "supervisor_system_prompt", template_vars
+            ),
+            "reporter_system_prompt": self.parse_prompt_template(
+                settings_dict, "reporter_system_prompt", template_vars
             ),
             "messages": [HumanMessage(content=message_request.message_content)],
         }
@@ -250,13 +266,41 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
         agent_id = state["agent_id"]
         self.logger.info(f"Agent[{agent_id}] -> Supervisor -> Messages -> {messages}")
         supervisor_system_prompt = state["supervisor_system_prompt"]
-        response = self.get_supervisor_chain(
-            llm=self.get_chat_model(agent_id),
-            supervisor_system_prompt=supervisor_system_prompt,
-        ).invoke({"messages": messages})
-        self.logger.info(f"Agent[{agent_id}] -> Supervisor -> Response -> {response}")
-        return Command(goto=response["next"], update={"next": response["next"]})
+        structured_report = state["structured_report"]
+        if structured_report is None:
+            response = self.get_supervisor_chain(
+                llm=self.get_chat_model(agent_id),
+                supervisor_system_prompt=supervisor_system_prompt,
+            ).invoke({"messages": messages})
+            self.logger.info(f"Agent[{agent_id}] -> Supervisor -> Response -> {response}")
+            return Command(goto=response["next"], update={"next": response["next"]})
+        else:
+            return Command(goto="__end__")
 
+    def get_reporter_chain(self, llm, reporter_system_prompt: str):
+        structured_llm_generator = llm.with_structured_output(AudioAnalysisReport)
+        reporter_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", reporter_system_prompt),
+                ("human", "<content_analysis>{content_analysis}</content_analysis>"),
+            ]
+        )
+        return reporter_prompt | structured_llm_generator
+
+    def get_reporter(self, state: AgentState) -> Command[Literal["supervisor"]]:
+        agent_id = state["agent_id"]
+        messages = state["messages"]
+        self.logger.info(f"Agent[{agent_id}] -> Reporter")
+        reporter_system_prompt = state["reporter_system_prompt"]
+        response = self.get_reporter_chain(
+            llm=self.get_chat_model(agent_id),
+            reporter_system_prompt=reporter_system_prompt,
+        ).invoke({"content_analysis": messages[-1].content})
+        self.logger.info(f"Agent[{agent_id}] -> Supervisor -> Response -> {response}")
+        return Command(
+            update={"structured_report": response},
+            goto="supervisor",
+        )
 
     def get_content_analyst(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
