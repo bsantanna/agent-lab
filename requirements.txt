@@ -43,6 +43,6 @@ starlette==0.46.1
 testcontainers[ollama]==4.9.2
 testcontainers[postgresql]==4.9.2
 testcontainers[vault]==4.9.2
-typing_extensions~=4.12.2
+typing_extensions~=4.13.2
 unstructured[md]==0.17.2
 uvicorn==0.34.0
