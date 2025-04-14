@@ -12,6 +12,7 @@ COPY . .
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt \
     && playwright install && playwright install-deps \
+    && apt install -yq ffmpeg \
     && apt clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
