@@ -21,7 +21,10 @@ from app.services.agent_types.voice_memos import (
     SUPERVISED_AGENTS,
     SUPERVISED_AGENT_CONFIGURATION,
 )
-from app.services.agent_types.voice_memos.schema import SupervisorRouter, AudioAnalysisReport
+from app.services.agent_types.voice_memos.schema import (
+    SupervisorRouter,
+    AudioAnalysisReport,
+)
 
 
 class AgentState(MessagesState):
@@ -272,7 +275,9 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
                 llm=self.get_chat_model(agent_id),
                 supervisor_system_prompt=supervisor_system_prompt,
             ).invoke({"messages": messages})
-            self.logger.info(f"Agent[{agent_id}] -> Supervisor -> Response -> {response}")
+            self.logger.info(
+                f"Agent[{agent_id}] -> Supervisor -> Response -> {response}"
+            )
             return Command(goto=response["next"], update={"next": response["next"]})
         else:
             return Command(goto="__end__")
