@@ -17,6 +17,7 @@ def liveness():
     """
     return {"status": "ok"}
 
+
 @router.get("/readiness", include_in_schema=False)
 def readiness():
     """
@@ -24,6 +25,7 @@ def readiness():
     Returns a 200 OK response with {"status": "ok"} if the application is ready.
     """
     return {"status": "ok"}
+
 
 @router.get("/metrics", include_in_schema=False)
 def metrics():

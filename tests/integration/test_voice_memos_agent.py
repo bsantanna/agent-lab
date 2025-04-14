@@ -12,8 +12,8 @@ from app.main import app
 def client():
     yield TestClient(app)
 
-class TestVoiceMemosAgent:
 
+class TestVoiceMemosAgent:
     def _create_agent(self, client):
         # create integration
         response = client.post(

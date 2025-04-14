@@ -25,3 +25,8 @@ class ConfigurationError(HTTPException):
         super().__init__(
             status_code=500, detail=f"Configuration error, reason: {reason}"
         )
+
+
+class AudioOptimizationError(HTTPException):
+    def __init__(self, reason):
+        super().__init__(status_code=500, detail=f"Audio optimization failed: {reason}")

@@ -1,5 +1,6 @@
 import os
 from uuid import uuid4
+import subprocess
 
 import hvac
 from fastapi import File
@@ -9,6 +10,7 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
 from markitdown import MarkItDown
 
+from app.domain.exceptions.base import AudioOptimizationError
 from app.domain.models import Attachment
 from app.domain.repositories.attachments import AttachmentRepository
 from app.infrastructure.database.vectors import DocumentRepository
@@ -49,6 +51,7 @@ class AttachmentService:
         if not file.content_type.startswith("audio/"):
             parsed_content = self.markdown.convert(temp_file_path).text_content
         else:
+            raw_content = self.optimize_audio(temp_file_path)
             parsed_content = ""
 
         attachment = self.attachment_repository.add(
@@ -126,3 +129,33 @@ class AttachmentService:
 
         os.remove(temp_file_path)
         return updated_attachment
+
+    def optimize_audio(self, file_path: str) -> bytes:
+        try:
+            temp_file_path = f"temp-{uuid4()}.mp3"
+            # Run the ffmpeg command to optimize the audio
+            subprocess.run(
+                [
+                    "ffmpeg",
+                    "-i",
+                    file_path,
+                    "-b:a",
+                    "64k",
+                    "-ac",
+                    "1",
+                    "-ar",
+                    "22050",
+                    temp_file_path,
+                ],
+                check=True,
+            )
+            # Move the output file back to the original file path
+            subprocess.run(["mv", temp_file_path, file_path], check=True)
+
+            # Read the optimized audio file as bytes
+            with open(file_path, "rb") as file:
+                optimized_audio = file.read()
+
+            return optimized_audio
+        except subprocess.CalledProcessError as e:
+            raise AudioOptimizationError(e)
