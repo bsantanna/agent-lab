@@ -252,16 +252,6 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             goto="supervisor",
         )
 
-    def get_supervisor_chain(self, llm, supervisor_system_prompt: str):
-        structured_llm_generator = llm.with_structured_output(SupervisorRouter)
-        supervisor_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", supervisor_system_prompt),
-                ("human", "<messages>{messages}</messages>"),
-            ]
-        )
-        return supervisor_prompt | structured_llm_generator
-
     def get_supervisor(
         self, state: AgentState
     ) -> Command[Literal[*SUPERVISED_AGENTS, "__end__"]]:
@@ -281,6 +271,16 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             return Command(goto=response["next"], update={"next": response["next"]})
         else:
             return Command(goto="__end__")
+
+    def get_supervisor_chain(self, llm, supervisor_system_prompt: str):
+        structured_llm_generator = llm.with_structured_output(SupervisorRouter)
+        supervisor_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", supervisor_system_prompt),
+                ("human", "<messages>{messages}</messages>"),
+            ]
+        )
+        return supervisor_prompt | structured_llm_generator
 
     def get_reporter_chain(self, llm, reporter_system_prompt: str):
         structured_llm_generator = llm.with_structured_output(AudioAnalysisReport)
