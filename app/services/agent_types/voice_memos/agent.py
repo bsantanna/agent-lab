@@ -13,6 +13,7 @@ from langgraph.types import Command
 from typing_extensions import Literal
 
 from app.interface.api.messages.schema import MessageRequest
+from app.services.agent_types.azure import AzureEntraIdOrganizationWorkflowBase
 from app.services.agent_types.base import (
     SupervisedWorkflowAgentBase,
     AgentUtils,
@@ -20,6 +21,8 @@ from app.services.agent_types.base import (
 from app.services.agent_types.voice_memos import (
     SUPERVISED_AGENTS,
     SUPERVISED_AGENT_CONFIGURATION,
+    AZURE_CONTENT_ANALYST_TOOLS,
+    AZURE_CONTENT_ANALYST_TOOLS_CONFIGURATION,
 )
 from app.services.agent_types.voice_memos.schema import (
     SupervisorRouter,
@@ -151,6 +154,8 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             "CURRENT_TIME": datetime.now().strftime("%a %b %d %Y %H:%M:%S %z"),
             "SUPERVISED_AGENTS": SUPERVISED_AGENTS,
             "SUPERVISED_AGENT_CONFIGURATION": SUPERVISED_AGENT_CONFIGURATION,
+            "CONTENT_ANALYST_TOOLS": [],
+            "CONTENT_ANALYST_TOOLS_CONFIGURATION": {},
         }
 
         return {
@@ -314,6 +319,51 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
         reporter = create_react_agent(
             model=self.get_chat_model(agent_id),
             tools=[],
+            prompt=content_analyst_system_prompt,
+        )
+        response = reporter.invoke(state)
+        self.logger.info(
+            f"Agent[{agent_id}] -> Content Analyst -> Response -> {response}"
+        )
+        return Command(
+            update={"messages": response["messages"]},
+            goto="supervisor",
+        )
+
+
+class AzureEntraIdVoiceMemosAgent(
+    AzureEntraIdOrganizationWorkflowBase, VoiceMemosAgent
+):
+    def __init__(self, agent_utils: AgentUtils):
+        super().__init__(agent_utils)
+
+    def get_input_params(self, message_request: MessageRequest) -> dict:
+        input_params = super().get_input_params(message_request)
+        settings = self.agent_setting_service.get_agent_settings(
+            message_request.agent_id
+        )
+        settings_dict = {
+            setting.setting_key: setting.setting_value for setting in settings
+        }
+        template_vars = {
+            "CURRENT_TIME": datetime.now().strftime("%a %b %d %Y %H:%M:%S %z"),
+            "SUPERVISED_AGENTS": SUPERVISED_AGENTS,
+            "SUPERVISED_AGENT_CONFIGURATION": SUPERVISED_AGENT_CONFIGURATION,
+            "CONTENT_ANALYST_TOOLS": AZURE_CONTENT_ANALYST_TOOLS,
+            "CONTENT_ANALYST_TOOLS_CONFIGURATION": AZURE_CONTENT_ANALYST_TOOLS_CONFIGURATION,
+        }
+        input_params["content_analyst_system_prompt"] = self.parse_prompt_template(
+            settings_dict, "content_analyst_system_prompt", template_vars
+        )
+        return input_params
+
+    def get_content_analyst(self, state: AgentState) -> Command[Literal["supervisor"]]:
+        agent_id = state["agent_id"]
+        self.logger.info(f"Agent[{agent_id}] -> Content Analyst")
+        content_analyst_system_prompt = state["content_analyst_system_prompt"]
+        reporter = create_react_agent(
+            model=self.get_chat_model(agent_id),
+            tools=[self.get_person_search_tool(), self.get_person_details_tool()],
             prompt=content_analyst_system_prompt,
         )
         response = reporter.invoke(state)

@@ -7,7 +7,6 @@ import uuid
 from abc import ABC, abstractmethod
 
 import hvac
-import requests
 from browser_use.agent.service import Agent
 from browser_use.agent.views import AgentHistoryList
 from browser_use.browser.browser import BrowserConfig, Browser
@@ -491,57 +490,3 @@ class SupervisedWorkflowAgentBase(WebAgentBase, ABC):
     @abstractmethod
     def get_reporter(self, state: MessagesState) -> Command[Literal["supervisor"]]:
         pass
-
-
-class AzureOrganizationWorkflowBase(SupervisedWorkflowAgentBase, ABC):
-    def __init__(self, agent_utils: AgentUtils):
-        super().__init__(agent_utils)
-        self.token = "TODO"
-        # CLIENT_ID = os.getenv("AZURE_CLIENT_ID")
-        # CLIENT_SECRET = os.getenv("AZURE_CLIENT_SECRET")
-        # TENANT_ID = os.getenv("AZURE_TENANT_ID")
-        # AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
-        # SCOPES = ["https://graph.microsoft.com/.default"]
-        # app = ConfidentialClientApplication(
-        #     CLIENT_ID,
-        #     authority=AUTHORITY,
-        #     client_credential=CLIENT_SECRET,
-        # )
-        # result = app.acquire_token_for_client(scopes=SCOPES)
-        # if "access_token" in result:
-        #     self.token = result["access_token"]
-        # else:
-        #     raise Exception("Could not obtain access token")
-
-    @tool
-    def search_users_by_name(self, name: str) -> str:
-        """Search for users by name in Azure AD."""
-        headers = {"Authorization": f"Bearer {self.token}"}
-        url = f"https://graph.microsoft.com/v1.0/users?$filter=startswith(displayName,'{name}')"
-        response = requests.get(url, headers=headers)
-        if response.status_code == 200:
-            users = response.json().get("value", [])
-            if users:
-                result = [
-                    f"{user['displayName']} ({user['userPrincipalName']})"
-                    for user in users
-                ]
-                return "\n".join(result)
-            else:
-                return "No users found"
-        else:
-            return f"Error: {response.status_code} - {response.text}"
-
-    @tool
-    def get_user_by_email(self, email: str) -> str:
-        """Get user details by email in Azure AD."""
-        headers = {"Authorization": f"Bearer {self.token}"}
-        url = f"https://graph.microsoft.com/v1.0/users/{email}"
-        response = requests.get(url, headers=headers)
-        if response.status_code == 200:
-            user = response.json()
-            return f"{user['displayName']} ({user['userPrincipalName']})"
-        elif response.status_code == 404:
-            return "User not found"
-        else:
-            return f"Error: {response.status_code} - {response.text}"

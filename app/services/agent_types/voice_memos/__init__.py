@@ -16,3 +16,16 @@ SUPERVISED_AGENT_CONFIGURATION = {
 }
 
 SUPERVISED_AGENTS = list(SUPERVISED_AGENT_CONFIGURATION.keys())
+
+AZURE_CONTENT_ANALYST_TOOLS_CONFIGURATION = {
+    "person_search": {
+        "name": "person_search",
+        "desc": "Use this tool for person search using name as parameter.",
+    },
+    "person_details": {
+        "name": "person_details",
+        "desc": "Use this tool for person details using email as parameter.",
+    },
+}
+
+AZURE_CONTENT_ANALYST_TOOLS = list(AZURE_CONTENT_ANALYST_TOOLS_CONFIGURATION.keys())

@@ -27,6 +27,7 @@ class AgentCreateRequest(BaseModel):
             "test_echo",
             "vision_document",
             "voice_memos",
+            "azure_entra_id_voice_memos",
         ]
         if v not in valid_types:
             raise InvalidFieldError("agent_type", "not supported")
