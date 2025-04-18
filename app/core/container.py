@@ -26,7 +26,10 @@ from app.services.agent_types.react_rag.agent import ReactRagAgent
 from app.services.agent_types.registry import AgentRegistry
 from app.services.agent_types.test_echo.test_echo_agent import TestEchoAgent
 from app.services.agent_types.vision_document.agent import VisionDocumentAgent
-from app.services.agent_types.voice_memos.agent import VoiceMemosAgent
+from app.services.agent_types.voice_memos.agent import (
+    VoiceMemosAgent,
+    AzureEntraIdVoiceMemosAgent,
+)
 from app.services.agents import AgentService
 from app.services.attachments import AttachmentService
 from app.services.integrations import IntegrationService
@@ -196,6 +199,11 @@ class Container(containers.DeclarativeContainer):
         agent_utils=agent_utils,
     )
 
+    azure_entra_id_voice_memos_agent = providers.Factory(
+        AzureEntraIdVoiceMemosAgent,
+        agent_utils=agent_utils,
+    )
+
     agent_registry = providers.Singleton(
         AgentRegistry,
         adaptive_rag_agent=adaptive_rag_agent,
@@ -204,6 +212,7 @@ class Container(containers.DeclarativeContainer):
         test_echo_agent=test_echo_agent,
         vision_document_agent=vision_document_agent,
         voice_memos_agent=voice_memos_agent,
+        azure_entra_id_voice_memos_agent=azure_entra_id_voice_memos_agent,
     )
 
     tracer = providers.Singleton(Tracer)
