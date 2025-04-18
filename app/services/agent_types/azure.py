@@ -1,7 +1,10 @@
+import json
+import os
 from abc import ABC
 
 import requests
 from langchain_core.tools import tool, BaseTool
+from msal import ConfidentialClientApplication
 from typing_extensions import Annotated
 
 from app.services.agent_types.base import SupervisedWorkflowAgentBase, AgentUtils
@@ -10,30 +13,32 @@ from app.services.agent_types.base import SupervisedWorkflowAgentBase, AgentUtil
 class AzureEntraIdOrganizationWorkflowBase(SupervisedWorkflowAgentBase, ABC):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
-        self.token = "TODO"
-        # CLIENT_ID = os.getenv("AZURE_CLIENT_ID")
-        # CLIENT_SECRET = os.getenv("AZURE_CLIENT_SECRET")
-        # TENANT_ID = os.getenv("AZURE_TENANT_ID")
-        # AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
-        # SCOPES = ["https://graph.microsoft.com/.default"]
-        # app = ConfidentialClientApplication(
-        #     CLIENT_ID,
-        #     authority=AUTHORITY,
-        #     client_credential=CLIENT_SECRET,
-        # )
-        # result = app.acquire_token_for_client(scopes=SCOPES)
-        # if "access_token" in result:
-        #     self.token = result["access_token"]
-        # else:
-        #     raise Exception("Could not obtain access token")
+
+    def get_token(self) -> str:
+        client_id = os.getenv("AZURE_CLIENT_ID")
+        client_secret = os.getenv("AZURE_CLIENT_SECRET")
+        tenant_id = os.getenv("AZURE_TENANT_ID")
+        app = ConfidentialClientApplication(
+            client_id,
+            authority=f"https://login.microsoftonline.com/{tenant_id}",
+            client_credential=client_secret,
+        )
+        result = app.acquire_token_for_client(
+            scopes=["https://graph.microsoft.com/.default"]
+        )
+        if "access_token" in result:
+            return result["access_token"]
+        else:
+            self.logger.error("Could not obtain Azure access token")
+            return ""
 
     def get_person_search_tool(self) -> BaseTool:
         @tool("person_search")
         def person_search_tool_call(
             name: Annotated[str, "The name of the person for search."],
         ):
-            """Use this tool for person search by name."""
-            headers = {"Authorization": f"Bearer {self.token}"}
+            """Use this tool to search for more information about a given person profile information within the organization."""
+            headers = {"Authorization": f"Bearer {self.get_token()}"}
             url = f"https://graph.microsoft.com/v1.0/users?$filter=startswith(displayName,'{name}')"
             response = requests.get(url, headers=headers)
             if response.status_code == 200:
@@ -54,13 +59,13 @@ class AzureEntraIdOrganizationWorkflowBase(SupervisedWorkflowAgentBase, ABC):
     def get_person_details_tool(self) -> BaseTool:
         @tool("person_details")
         def person_details_tool_call(email: Annotated[str, "The email of the person."]):
-            """Get person details by email."""
-            headers = {"Authorization": f"Bearer {self.token}"}
+            """Use this tool to get details about person profile information."""
+            headers = {"Authorization": f"Bearer {self.get_token()}"}
             url = f"https://graph.microsoft.com/v1.0/users/{email}"
             response = requests.get(url, headers=headers)
             if response.status_code == 200:
                 user = response.json()
-                return f"{user['displayName']} ({user['userPrincipalName']})"
+                return json.dumps(user)
             elif response.status_code == 404:
                 return "User not found"
             else:

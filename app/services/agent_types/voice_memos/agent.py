@@ -316,12 +316,12 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
         agent_id = state["agent_id"]
         self.logger.info(f"Agent[{agent_id}] -> Content Analyst")
         content_analyst_system_prompt = state["content_analyst_system_prompt"]
-        reporter = create_react_agent(
+        content_analyst = create_react_agent(
             model=self.get_chat_model(agent_id),
             tools=[],
             prompt=content_analyst_system_prompt,
         )
-        response = reporter.invoke(state)
+        response = content_analyst.invoke(state)
         self.logger.info(
             f"Agent[{agent_id}] -> Content Analyst -> Response -> {response}"
         )
@@ -361,12 +361,12 @@ class AzureEntraIdVoiceMemosAgent(
         agent_id = state["agent_id"]
         self.logger.info(f"Agent[{agent_id}] -> Content Analyst")
         content_analyst_system_prompt = state["content_analyst_system_prompt"]
-        reporter = create_react_agent(
+        content_analyst = create_react_agent(
             model=self.get_chat_model(agent_id),
             tools=[self.get_person_search_tool(), self.get_person_details_tool()],
             prompt=content_analyst_system_prompt,
         )
-        response = reporter.invoke(state)
+        response = content_analyst.invoke(state)
         self.logger.info(
             f"Agent[{agent_id}] -> Content Analyst -> Response -> {response}"
         )
