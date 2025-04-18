@@ -37,7 +37,11 @@ class AzureEntraIdOrganizationWorkflowBase(SupervisedWorkflowAgentBase, ABC):
         def person_search_tool_call(
             name: Annotated[str, "The name of the person for search."],
         ):
-            """Use this tool to search for more information about a given person profile information within the organization."""
+            """
+            "Use this tool to search for individuals within the domain or organization. "
+            "It is particularly useful for looking up co-workers' profiles, such as their roles, departments, or contact information. "
+            "For example, you can search for 'John Doe' to retrieve relevant details about their position and team."
+            """
             headers = {"Authorization": f"Bearer {self.get_token()}"}
             url = f"https://graph.microsoft.com/v1.0/users?$filter=startswith(displayName,'{name}')"
             response = requests.get(url, headers=headers)
@@ -59,7 +63,10 @@ class AzureEntraIdOrganizationWorkflowBase(SupervisedWorkflowAgentBase, ABC):
     def get_person_details_tool(self) -> BaseTool:
         @tool("person_details")
         def person_details_tool_call(email: Annotated[str, "The email of the person."]):
-            """Use this tool to get details about person profile information."""
+            """
+            "Use this tool to retrieve detailed information about a person using their email address as a parameter. "
+            "For instance, providing 'jane.doe@example.com' will return details such as their full name, job title, and organizational affiliation."
+            """
             headers = {"Authorization": f"Bearer {self.get_token()}"}
             url = f"https://graph.microsoft.com/v1.0/users/{email}"
             response = requests.get(url, headers=headers)

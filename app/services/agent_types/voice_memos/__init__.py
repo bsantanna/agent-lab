@@ -20,11 +20,18 @@ SUPERVISED_AGENTS = list(SUPERVISED_AGENT_CONFIGURATION.keys())
 AZURE_CONTENT_ANALYST_TOOLS_CONFIGURATION = {
     "person_search": {
         "name": "person_search",
-        "desc": "Use this tool for person search using name as parameter.",
+        "desc": (
+            "Use this tool to search for individuals within the domain or organization. "
+            "It is particularly useful for looking up co-workers' profiles, such as their roles, departments, or contact information. "
+            "For example, you can search for 'John Doe' to retrieve relevant details about their position and team."
+        ),
     },
     "person_details": {
         "name": "person_details",
-        "desc": "Use this tool for person details using email as parameter.",
+        "desc": (
+            "Use this tool to retrieve detailed information about a person using their email address as a parameter. "
+            "For instance, providing 'jane.doe@example.com' will return details such as their full name, job title, and organizational affiliation."
+        ),
     },
 }
 
