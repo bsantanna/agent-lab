@@ -7,10 +7,10 @@ from langchain_core.tools import tool, BaseTool
 from msal import ConfidentialClientApplication
 from typing_extensions import Annotated
 
-from app.services.agent_types.base import SupervisedWorkflowAgentBase, AgentUtils
+from app.services.agent_types.base import AgentUtils, WorkflowAgentBase
 
 
-class AzureEntraIdOrganizationWorkflowBase(SupervisedWorkflowAgentBase, ABC):
+class AzureEntraIdOrganizationWorkflowBase(WorkflowAgentBase, ABC):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
 

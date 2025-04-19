@@ -5,7 +5,7 @@ from pathlib import Path
 
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate
-from langgraph.constants import START
+from langgraph.constants import START, END
 from langgraph.graph import MessagesState, StateGraph
 from langgraph.managed import RemainingSteps
 from langgraph.prebuilt import create_react_agent
@@ -23,6 +23,8 @@ from app.services.agent_types.voice_memos import (
     SUPERVISED_AGENT_CONFIGURATION,
     AZURE_CONTENT_ANALYST_TOOLS,
     AZURE_CONTENT_ANALYST_TOOLS_CONFIGURATION,
+    COORDINATOR_TOOLS,
+    COORDINATOR_TOOLS_CONFIGURATION,
 )
 from app.services.agent_types.voice_memos.schema import (
     SupervisorRouter,
@@ -154,8 +156,11 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             "CURRENT_TIME": datetime.now().strftime("%a %b %d %Y %H:%M:%S %z"),
             "SUPERVISED_AGENTS": SUPERVISED_AGENTS,
             "SUPERVISED_AGENT_CONFIGURATION": SUPERVISED_AGENT_CONFIGURATION,
+            "COORDINATOR_TOOLS": COORDINATOR_TOOLS,
+            "COORDINATOR_TOOLS_CONFIGURATION": COORDINATOR_TOOLS_CONFIGURATION,
             "CONTENT_ANALYST_TOOLS": [],
             "CONTENT_ANALYST_TOOLS_CONFIGURATION": {},
+            "HAS_AUDIO_ATTACHMENT": message_request.attachment_id is not None,
         }
 
         return {
@@ -183,50 +188,77 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             "messages": [HumanMessage(content=message_request.message_content)],
         }
 
-    def get_coordinator(self, state: AgentState) -> Command[Literal["planner"]]:
+    def get_coordinator(
+        self, state: AgentState
+    ) -> Command[Literal["planner", "__end__"]]:
         agent_id = state["agent_id"]
         attachment_id = state["attachment_id"]
-        audio_format = state["audio_format"]
-        audio_language_model = state["audio_language_model"]
         query = state["query"]
         coordinator_system_prompt = state["coordinator_system_prompt"]
 
-        self.logger.info(
-            f"Agent[{agent_id}] -> Coordinator -> Query -> {query} -> Attachment[{attachment_id}]"
-        )
+        if attachment_id is None:
+            self.logger.info(f"Agent[{agent_id}] -> Coordinator -> Query -> {query}")
 
-        chat_model = self.get_chat_model(
-            agent_id, language_model_tag=audio_language_model
-        )
-        attachment = self.attachment_service.get_attachment_by_id(attachment_id)
-        audio_base64 = base64.b64encode(attachment.raw_content).decode()
-        messages = [
-            ("system", coordinator_system_prompt),
-            (
-                "human",
-                [
-                    {"type": "text", "text": query},
-                    {
-                        "type": "input_audio",
-                        "input_audio": {"data": audio_base64, "format": audio_format},
-                    },
-                ],
-            ),
-        ]
-        response = chat_model.invoke(messages)
-        transcription = response.content
-        self.logger.info(f"Agent[{agent_id}] -> Coordinator -> Response -> {response}")
-        return Command(
-            goto="planner",
-            update={
-                "messages": [
-                    AIMessage(
-                        content=f"Transcription: '{transcription}'", name="coordinator"
-                    )
-                ],
-                "transcription": transcription,
-            },
-        )
+            coordinator = create_react_agent(
+                model=self.get_chat_model(agent_id),
+                tools=[self.get_web_search_tool(), self.get_web_crawl_tool()],
+                prompt=coordinator_system_prompt,
+            )
+            response = coordinator.invoke(state)
+
+            self.logger.info(
+                f"Agent[{agent_id}] -> Coordinator -> Response -> {response}"
+            )
+            return Command(
+                goto=END,
+                update={"messages": response["messages"]},
+            )
+        else:
+            audio_format = state["audio_format"]
+            audio_language_model = state["audio_language_model"]
+
+            self.logger.info(
+                f"Agent[{agent_id}] -> Coordinator -> Query -> {query} -> Attachment[{attachment_id}]"
+            )
+
+            chat_model = self.get_chat_model(
+                agent_id, language_model_tag=audio_language_model
+            )
+            attachment = self.attachment_service.get_attachment_by_id(attachment_id)
+            audio_base64 = base64.b64encode(attachment.raw_content).decode()
+            messages = [
+                ("system", coordinator_system_prompt),
+                (
+                    "human",
+                    [
+                        {"type": "text", "text": query},
+                        {
+                            "type": "input_audio",
+                            "input_audio": {
+                                "data": audio_base64,
+                                "format": audio_format,
+                            },
+                        },
+                    ],
+                ),
+            ]
+            response = chat_model.invoke(messages)
+            transcription = response.content
+            self.logger.info(
+                f"Agent[{agent_id}] -> Coordinator -> Response -> {response}"
+            )
+            return Command(
+                goto="planner",
+                update={
+                    "messages": [
+                        AIMessage(
+                            content=f"Transcription: '{transcription}'",
+                            name="coordinator",
+                        )
+                    ],
+                    "transcription": transcription,
+                },
+            )
 
     def get_planner(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
@@ -347,8 +379,6 @@ class AzureEntraIdVoiceMemosAgent(
         }
         template_vars = {
             "CURRENT_TIME": datetime.now().strftime("%a %b %d %Y %H:%M:%S %z"),
-            "SUPERVISED_AGENTS": SUPERVISED_AGENTS,
-            "SUPERVISED_AGENT_CONFIGURATION": SUPERVISED_AGENT_CONFIGURATION,
             "CONTENT_ANALYST_TOOLS": AZURE_CONTENT_ANALYST_TOOLS,
             "CONTENT_ANALYST_TOOLS_CONFIGURATION": AZURE_CONTENT_ANALYST_TOOLS_CONFIGURATION,
         }
