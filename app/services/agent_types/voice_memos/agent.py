@@ -5,7 +5,7 @@ from pathlib import Path
 
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate
-from langgraph.constants import START
+from langgraph.constants import START, END
 from langgraph.graph import MessagesState, StateGraph
 from langgraph.managed import RemainingSteps
 from langgraph.prebuilt import create_react_agent
@@ -23,6 +23,8 @@ from app.services.agent_types.voice_memos import (
     SUPERVISED_AGENT_CONFIGURATION,
     AZURE_CONTENT_ANALYST_TOOLS,
     AZURE_CONTENT_ANALYST_TOOLS_CONFIGURATION,
+    COORDINATOR_TOOLS,
+    COORDINATOR_TOOLS_CONFIGURATION,
 )
 from app.services.agent_types.voice_memos.schema import (
     SupervisorRouter,
@@ -54,14 +56,14 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
 
     def format_response(self, workflow_state: AgentState) -> (str, dict):
         response_data = {
-            "agent_id": workflow_state["agent_id"],
-            "attachment_id": workflow_state["attachment_id"],
-            "audio_format": workflow_state["audio_format"],
-            "audio_language_model": workflow_state["audio_language_model"],
-            "structured_report": workflow_state["structured_report"],
-            "query": workflow_state["query"],
-            "transcription": workflow_state["transcription"],
-            "execution_plan": workflow_state["execution_plan"],
+            "agent_id": workflow_state.get("agent_id"),
+            "attachment_id": workflow_state.get("attachment_id"),
+            "audio_format": workflow_state.get("audio_format"),
+            "audio_language_model": workflow_state.get("audio_language_model"),
+            "structured_report": workflow_state.get("structured_report"),
+            "query": workflow_state.get("query"),
+            "transcription": workflow_state.get("transcription"),
+            "execution_plan": workflow_state.get("execution_plan"),
             "messages": [
                 json.loads(message.model_dump_json())
                 for message in workflow_state["messages"]
@@ -154,8 +156,11 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             "CURRENT_TIME": datetime.now().strftime("%a %b %d %Y %H:%M:%S %z"),
             "SUPERVISED_AGENTS": SUPERVISED_AGENTS,
             "SUPERVISED_AGENT_CONFIGURATION": SUPERVISED_AGENT_CONFIGURATION,
+            "COORDINATOR_TOOLS": COORDINATOR_TOOLS,
+            "COORDINATOR_TOOLS_CONFIGURATION": COORDINATOR_TOOLS_CONFIGURATION,
             "CONTENT_ANALYST_TOOLS": [],
             "CONTENT_ANALYST_TOOLS_CONFIGURATION": {},
+            "HAS_AUDIO_ATTACHMENT": message_request.attachment_id is not None,
         }
 
         return {
@@ -183,50 +188,80 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             "messages": [HumanMessage(content=message_request.message_content)],
         }
 
-    def get_coordinator(self, state: AgentState) -> Command[Literal["planner"]]:
+    def get_coordinator_tools(self) -> list:
+        return [self.get_web_search_tool(), self.get_web_crawl_tool()]
+
+    def get_coordinator(
+        self, state: AgentState
+    ) -> Command[Literal["planner", "__end__"]]:
         agent_id = state["agent_id"]
         attachment_id = state["attachment_id"]
-        audio_format = state["audio_format"]
-        audio_language_model = state["audio_language_model"]
         query = state["query"]
         coordinator_system_prompt = state["coordinator_system_prompt"]
 
-        self.logger.info(
-            f"Agent[{agent_id}] -> Coordinator -> Query -> {query} -> Attachment[{attachment_id}]"
-        )
+        if attachment_id is None:
+            self.logger.info(f"Agent[{agent_id}] -> Coordinator -> Query -> {query}")
 
-        chat_model = self.get_chat_model(
-            agent_id, language_model_tag=audio_language_model
-        )
-        attachment = self.attachment_service.get_attachment_by_id(attachment_id)
-        audio_base64 = base64.b64encode(attachment.raw_content).decode()
-        messages = [
-            ("system", coordinator_system_prompt),
-            (
-                "human",
-                [
-                    {"type": "text", "text": query},
-                    {
-                        "type": "input_audio",
-                        "input_audio": {"data": audio_base64, "format": audio_format},
-                    },
-                ],
-            ),
-        ]
-        response = chat_model.invoke(messages)
-        transcription = response.content
-        self.logger.info(f"Agent[{agent_id}] -> Coordinator -> Response -> {response}")
-        return Command(
-            goto="planner",
-            update={
-                "messages": [
-                    AIMessage(
-                        content=f"Transcription: '{transcription}'", name="coordinator"
-                    )
-                ],
-                "transcription": transcription,
-            },
-        )
+            coordinator = create_react_agent(
+                model=self.get_chat_model(agent_id),
+                tools=self.get_coordinator_tools(),
+                prompt=coordinator_system_prompt,
+            )
+            response = coordinator.invoke(state)
+
+            self.logger.info(
+                f"Agent[{agent_id}] -> Coordinator -> Response -> {response}"
+            )
+            return Command(
+                goto=END,
+                update={"messages": response["messages"]},
+            )
+        else:
+            audio_format = state["audio_format"]
+            audio_language_model = state["audio_language_model"]
+
+            self.logger.info(
+                f"Agent[{agent_id}] -> Coordinator -> Query -> {query} -> Attachment[{attachment_id}]"
+            )
+
+            chat_model = self.get_chat_model(
+                agent_id, language_model_tag=audio_language_model
+            )
+            attachment = self.attachment_service.get_attachment_by_id(attachment_id)
+            audio_base64 = base64.b64encode(attachment.raw_content).decode()
+            messages = [
+                ("system", coordinator_system_prompt),
+                (
+                    "human",
+                    [
+                        {"type": "text", "text": query},
+                        {
+                            "type": "input_audio",
+                            "input_audio": {
+                                "data": audio_base64,
+                                "format": audio_format,
+                            },
+                        },
+                    ],
+                ),
+            ]
+            response = chat_model.invoke(messages)
+            transcription = response.content
+            self.logger.info(
+                f"Agent[{agent_id}] -> Coordinator -> Response -> {response}"
+            )
+            return Command(
+                goto="planner",
+                update={
+                    "messages": [
+                        AIMessage(
+                            content=f"Transcription: '{transcription}'",
+                            name="coordinator",
+                        )
+                    ],
+                    "transcription": transcription,
+                },
+            )
 
     def get_planner(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
@@ -257,6 +292,9 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             goto="supervisor",
         )
 
+    def get_supervisor_tools(self) -> list:
+        return []
+
     def get_supervisor(
         self, state: AgentState
     ) -> Command[Literal[*SUPERVISED_AGENTS, "__end__"]]:
@@ -278,7 +316,9 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             return Command(goto="__end__")
 
     def get_supervisor_chain(self, llm, supervisor_system_prompt: str):
-        structured_llm_generator = llm.with_structured_output(SupervisorRouter)
+        structured_llm_generator = llm.bind_tools(
+            self.get_supervisor_tools()
+        ).with_structured_output(SupervisorRouter)
         supervisor_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", supervisor_system_prompt),
@@ -287,8 +327,13 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
         )
         return supervisor_prompt | structured_llm_generator
 
+    def get_reporter_tools(self) -> list:
+        return []
+
     def get_reporter_chain(self, llm, reporter_system_prompt: str):
-        structured_llm_generator = llm.with_structured_output(AudioAnalysisReport)
+        structured_llm_generator = llm.bind_tools(
+            self.get_reporter_tools()
+        ).with_structured_output(AudioAnalysisReport)
         reporter_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", reporter_system_prompt),
@@ -347,8 +392,6 @@ class AzureEntraIdVoiceMemosAgent(
         }
         template_vars = {
             "CURRENT_TIME": datetime.now().strftime("%a %b %d %Y %H:%M:%S %z"),
-            "SUPERVISED_AGENTS": SUPERVISED_AGENTS,
-            "SUPERVISED_AGENT_CONFIGURATION": SUPERVISED_AGENT_CONFIGURATION,
             "CONTENT_ANALYST_TOOLS": AZURE_CONTENT_ANALYST_TOOLS,
             "CONTENT_ANALYST_TOOLS_CONFIGURATION": AZURE_CONTENT_ANALYST_TOOLS_CONFIGURATION,
         }

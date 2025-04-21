@@ -17,6 +17,34 @@ SUPERVISED_AGENT_CONFIGURATION = {
 
 SUPERVISED_AGENTS = list(SUPERVISED_AGENT_CONFIGURATION.keys())
 
+COORDINATOR_TOOLS_CONFIGURATION = {
+    "tavily_search": {
+        "name": "tavily_search",
+        "desc": (
+            "A search engine optimized for comprehensive, accurate, and trusted results. "
+            "Useful for when you need to answer questions about current events. "
+            "It not only retrieves URLs and snippets, but offers advanced search depths, "
+            "domain management, time range filters, and image search, this tool delivers "
+            "real-time, accurate, and citation-backed results."
+            "Input should be a search query."
+        ),
+    },
+    "tavily_extract": {
+        "name": "tavily_extract",
+        "desc": (
+            "Extracts comprehensive content from web pages based on provided URLs. "
+            "This tool retrieves raw text of a web page, with an option to include images. "
+            "It supports two extraction depths: 'basic' for standard text extraction and "
+            "'advanced' for a more comprehensive extraction with higher success rate. "
+            "Ideal for use cases such as content curation, data ingestion for NLP models, "
+            "and automated information retrieval, this endpoint seamlessly integrates into "
+            "your content processing pipeline. Input should be a list of one or more URLs."
+        ),
+    },
+}
+
+COORDINATOR_TOOLS = list(COORDINATOR_TOOLS_CONFIGURATION.keys())
+
 AZURE_CONTENT_ANALYST_TOOLS_CONFIGURATION = {
     "person_search": {
         "name": "person_search",

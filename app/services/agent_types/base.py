@@ -30,7 +30,7 @@ from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.vectors import DocumentRepository
 from app.interface.api.messages.schema import MessageRequest, MessageResponse
 from app.services.agent_settings import AgentSettingService
-from app.services.agent_types.schema import CoordinatorRouter, SolutionPlan
+from app.services.agent_types.schema import SolutionPlan
 from app.services.agents import AgentService
 from app.services.attachments import AttachmentService
 from app.services.integrations import IntegrationService
@@ -357,6 +357,19 @@ class WorkflowAgentBase(AgentBase, ABC):
         return subarray if found_human_message else []
 
 
+class ContactSupportAgentBase(WorkflowAgentBase, ABC):
+    def __init__(self, agent_utils: AgentUtils):
+        super().__init__(agent_utils)
+
+    @abstractmethod
+    def get_person_search_tool(self) -> BaseTool:
+        pass
+
+    @abstractmethod
+    def get_person_details_tool(self) -> BaseTool:
+        pass
+
+
 class WebAgentBase(WorkflowAgentBase, ABC):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
@@ -448,20 +461,17 @@ class SupervisedWorkflowAgentBase(WebAgentBase, ABC):
             raise ConfigurationError("TAVILY_API_KEY environment variable not set")
 
     @abstractmethod
+    def get_coordinator_tools(self) -> list:
+        return []
+
+    @abstractmethod
     def get_coordinator(
         self, state: MessagesState
     ) -> Command[Literal["planner", "__end__"]]:
         pass
 
-    def get_coordinator_chain(self, llm, coordinator_system_prompt: str):
-        structured_llm_generator = llm.with_structured_output(CoordinatorRouter)
-        coordinator_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", coordinator_system_prompt),
-                ("human", "<query>{query}</query>"),
-            ]
-        )
-        return coordinator_prompt | structured_llm_generator
+    def get_planner_tools(self) -> list:
+        return [self.get_web_search_tool(), self.get_web_crawl_tool()]
 
     @abstractmethod
     def get_planner(self, state: MessagesState) -> Command[Literal["supervisor"]]:
@@ -470,11 +480,15 @@ class SupervisedWorkflowAgentBase(WebAgentBase, ABC):
     def get_planner_chain(
         self, llm, planner_system_prompt: str, search_results: str = None
     ):
-        structured_llm_generator = llm.with_structured_output(SolutionPlan)
+        structured_llm_generator = llm.bind_tools(
+            self.get_planner_tools()
+        ).with_structured_output(SolutionPlan)
+
         if search_results is not None:
             planner_input = "<query>{query}</query>\n\n<search_results>{search_results}</search_results>"
         else:
             planner_input = "<query>{query}</query>"
+
         planner_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", planner_system_prompt),
@@ -488,5 +502,13 @@ class SupervisedWorkflowAgentBase(WebAgentBase, ABC):
         pass
 
     @abstractmethod
+    def get_supervisor_tools(self) -> list:
+        pass
+
+    @abstractmethod
     def get_reporter(self, state: MessagesState) -> Command[Literal["supervisor"]]:
+        pass
+
+    @abstractmethod
+    def get_reporter_tools(self) -> list:
         pass
