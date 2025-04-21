@@ -204,7 +204,9 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
         }
 
     def get_coordinator_chain(self, llm, coordinator_system_prompt: str):
-        structured_llm_generator = llm.with_structured_output(CoordinatorRouter)
+        structured_llm_generator = llm.bind_tools(
+            self.get_coordinator_tools()
+        ).with_structured_output(CoordinatorRouter)
         coordinator_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", coordinator_system_prompt),
@@ -212,6 +214,9 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             ]
         )
         return coordinator_prompt | structured_llm_generator
+
+    def get_coordinator_tools(self) -> list:
+        return []
 
     def get_coordinator(
         self, state: AgentState
@@ -269,7 +274,9 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
         )
 
     def get_supervisor_chain(self, llm, supervisor_system_prompt: str):
-        structured_llm_generator = llm.with_structured_output(SupervisorRouter)
+        structured_llm_generator = llm.bind_tools(
+            self.get_supervisor_tools()
+        ).with_structured_output(SupervisorRouter)
         supervisor_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", supervisor_system_prompt),
@@ -277,6 +284,9 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             ]
         )
         return supervisor_prompt | structured_llm_generator
+
+    def get_supervisor_tools(self) -> list:
+        return []
 
     def get_supervisor(
         self, state: AgentState
@@ -383,6 +393,9 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             goto="supervisor",
         )
 
+    def get_reporter_tools(self) -> list:
+        return []
+
     def get_reporter(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
         self.logger.info(f"Agent[{agent_id}] -> Reporter")
@@ -390,7 +403,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
         chat_model = self.get_chat_model(agent_id)
         reporter = create_react_agent(
             model=chat_model,
-            tools=[],
+            tools=self.get_reporter_tools(),
             prompt=reporter_system_prompt,
         )
         response = reporter.invoke(state)

@@ -357,6 +357,19 @@ class WorkflowAgentBase(AgentBase, ABC):
         return subarray if found_human_message else []
 
 
+class ContactSupportAgentBase(WorkflowAgentBase, ABC):
+    def __init__(self, agent_utils: AgentUtils):
+        super().__init__(agent_utils)
+
+    @abstractmethod
+    def get_person_search_tool(self) -> BaseTool:
+        pass
+
+    @abstractmethod
+    def get_person_details_tool(self) -> BaseTool:
+        pass
+
+
 class WebAgentBase(WorkflowAgentBase, ABC):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
@@ -448,10 +461,17 @@ class SupervisedWorkflowAgentBase(WebAgentBase, ABC):
             raise ConfigurationError("TAVILY_API_KEY environment variable not set")
 
     @abstractmethod
+    def get_coordinator_tools(self) -> list:
+        return []
+
+    @abstractmethod
     def get_coordinator(
         self, state: MessagesState
     ) -> Command[Literal["planner", "__end__"]]:
         pass
+
+    def get_planner_tools(self) -> list:
+        return [self.get_web_search_tool(), self.get_web_crawl_tool()]
 
     @abstractmethod
     def get_planner(self, state: MessagesState) -> Command[Literal["supervisor"]]:
@@ -460,7 +480,9 @@ class SupervisedWorkflowAgentBase(WebAgentBase, ABC):
     def get_planner_chain(
         self, llm, planner_system_prompt: str, search_results: str = None
     ):
-        structured_llm_generator = llm.with_structured_output(SolutionPlan)
+        structured_llm_generator = llm.bind_tools(
+            self.get_planner_tools()
+        ).with_structured_output(SolutionPlan)
 
         if search_results is not None:
             planner_input = "<query>{query}</query>\n\n<search_results>{search_results}</search_results>"
@@ -480,5 +502,13 @@ class SupervisedWorkflowAgentBase(WebAgentBase, ABC):
         pass
 
     @abstractmethod
+    def get_supervisor_tools(self) -> list:
+        pass
+
+    @abstractmethod
     def get_reporter(self, state: MessagesState) -> Command[Literal["supervisor"]]:
+        pass
+
+    @abstractmethod
+    def get_reporter_tools(self) -> list:
         pass

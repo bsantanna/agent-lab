@@ -188,6 +188,9 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             "messages": [HumanMessage(content=message_request.message_content)],
         }
 
+    def get_coordinator_tools(self) -> list:
+        return [self.get_web_search_tool(), self.get_web_crawl_tool()]
+
     def get_coordinator(
         self, state: AgentState
     ) -> Command[Literal["planner", "__end__"]]:
@@ -201,7 +204,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
 
             coordinator = create_react_agent(
                 model=self.get_chat_model(agent_id),
-                tools=[self.get_web_search_tool(), self.get_web_crawl_tool()],
+                tools=self.get_coordinator_tools(),
                 prompt=coordinator_system_prompt,
             )
             response = coordinator.invoke(state)
@@ -289,6 +292,9 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             goto="supervisor",
         )
 
+    def get_supervisor_tools(self) -> list:
+        return []
+
     def get_supervisor(
         self, state: AgentState
     ) -> Command[Literal[*SUPERVISED_AGENTS, "__end__"]]:
@@ -310,7 +316,9 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             return Command(goto="__end__")
 
     def get_supervisor_chain(self, llm, supervisor_system_prompt: str):
-        structured_llm_generator = llm.with_structured_output(SupervisorRouter)
+        structured_llm_generator = llm.bind_tools(
+            self.get_supervisor_tools()
+        ).with_structured_output(SupervisorRouter)
         supervisor_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", supervisor_system_prompt),
@@ -319,8 +327,13 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
         )
         return supervisor_prompt | structured_llm_generator
 
+    def get_reporter_tools(self) -> list:
+        return []
+
     def get_reporter_chain(self, llm, reporter_system_prompt: str):
-        structured_llm_generator = llm.with_structured_output(AudioAnalysisReport)
+        structured_llm_generator = llm.bind_tools(
+            self.get_reporter_tools()
+        ).with_structured_output(AudioAnalysisReport)
         reporter_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", reporter_system_prompt),
