@@ -58,6 +58,9 @@ class TestAttachmentsEndpoint:
 
         return upload_response
 
+    def _download_file(self, client, attachment_id):
+        return client.get(url=f"/attachments/download/{attachment_id}")
+
     @pytest.mark.asyncio
     async def test_embeddings(self, client):
         # given
@@ -77,3 +80,16 @@ class TestAttachmentsEndpoint:
         assert response.status_code == 201
         embeddings_response = response.json()
         assert embeddings_response["embeddings_collection"] == "static_document_data"
+
+    @pytest.mark.asyncio
+    async def test_file_downloads(self, client):
+        # given
+        upload_filename = "attachment.zip"
+        upload_response = self._upload_file(client, upload_filename, "application/zip")
+        attachment_id = upload_response.json()["id"]
+
+        # when
+        download_response = self._download_file(client, attachment_id)
+
+        # then
+        assert download_response.status_code == 200
