@@ -5,8 +5,10 @@ import os
 import subprocess
 import uuid
 from abc import ABC, abstractmethod
+from datetime import timedelta, datetime, timezone
 
 import hvac
+import icalendar
 from browser_use.agent.service import Agent
 from browser_use.agent.views import AgentHistoryList
 from browser_use.browser.browser import BrowserConfig, Browser
@@ -57,6 +59,7 @@ def join_messages(left: List, right: List) -> List:
 class AgentUtils:
     def __init__(
         self,
+        base_url: str,
         agent_service: AgentService,
         agent_setting_service: AgentSettingService,
         attachment_service: AttachmentService,
@@ -67,6 +70,7 @@ class AgentUtils:
         graph_persistence_factory: GraphPersistenceFactory,
         document_repository: DocumentRepository,
     ):
+        self.base_url = base_url
         self.agent_service = agent_service
         self.agent_setting_service = agent_setting_service
         self.attachment_service = attachment_service
@@ -80,6 +84,7 @@ class AgentUtils:
 
 class AgentBase(ABC):
     def __init__(self, agent_utils: AgentUtils):
+        self.base_url = agent_utils.base_url
         self.agent_service = agent_utils.agent_service
         self.agent_setting_service = agent_utils.agent_setting_service
         self.language_model_service = agent_utils.language_model_service
@@ -368,6 +373,70 @@ class ContactSupportAgentBase(WorkflowAgentBase, ABC):
     @abstractmethod
     def get_person_details_tool(self) -> BaseTool:
         pass
+
+    def get_ical_attachment_tool(self) -> BaseTool:
+        @tool("ical_attachment")
+        def ical_attachment_tool_call(
+            event_name: Annotated[str, "The name of the event."],
+            event_description: Annotated[str, "The description of the event."],
+            event_start_datetime: Annotated[datetime, "The start date of the event."],
+            event_duration_minutes: Annotated[
+                int, "The duration of the event in minutes."
+            ],
+            event_attendees: Annotated[
+                list[str], "The attendees of the event in the format 'name <email>'"
+            ],
+        ):
+            """
+            Creates an iCalendar attachment and returns a link to download it.
+            Use this tool to create appointments or other types of events per user request.
+            This tool generates an attachment with corresponding URL, you must forward it to the user so
+            they can download it.
+            """
+            event_attachment_id = str(uuid.uuid4())
+
+            if event_start_datetime.tzinfo is None:
+                event_start_datetime = event_start_datetime.replace(tzinfo=timezone.utc)
+
+            event_end_datetime = event_start_datetime + timedelta(
+                minutes=event_duration_minutes
+            )
+
+            # Create calendar
+            cal = icalendar.Calendar()
+            cal.add("prodid", "-//Agent-Lab//ical_attachment_tool")
+            cal.add("version", "2.0")
+
+            if event_attendees:
+                cal.add("method", "REQUEST")
+            else:
+                cal.add("method", "PUBLISH")
+
+            # Create event
+            event = icalendar.Event()
+            event.add("summary", event_name)
+            event.add("description", event_description)
+            event.add("dtstart", event_start_datetime)
+            event.add("dtend", event_end_datetime)
+            event.add("uid", event_attachment_id)
+            event.add("dtstamp", datetime.now(timezone.utc))
+
+            for attendee in event_attendees:
+                event.add("attendee", attendee)
+
+            cal.add_component(event)
+            ical_result = cal.to_ical()
+            parsed_ical_result = ical_result.decode("utf-8")
+            self.attachment_service.create_attachment_with_content(
+                raw_content=ical_result,
+                parsed_content=parsed_ical_result,
+                file_name=f"{event_attachment_id}.ics",
+                attachment_id=event_attachment_id,
+            )
+
+            return f"{self.base_url}/attachments/download/{event_attachment_id}"
+
+        return ical_attachment_tool_call
 
 
 class WebAgentBase(WorkflowAgentBase, ABC):

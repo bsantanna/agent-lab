@@ -46,9 +46,12 @@ class TestAzureEntraIdVoiceMemosAgent:
             },
         )
 
-    def _create_message(self, client, message_content, attachment_id):
-        create_agent_response = self._create_agent(client)
-        agent_id = create_agent_response.json()["id"]
+    def _create_message(
+        self, client, message_content, agent_id=None, attachment_id=None
+    ):
+        if agent_id is None:
+            create_agent_response = self._create_agent(client)
+            agent_id = create_agent_response.json()["id"]
 
         return client.post(
             "/messages/post",
@@ -83,7 +86,7 @@ class TestAzureEntraIdVoiceMemosAgent:
 
         # when
         create_message_response = self._create_message(
-            client, message_content, attachment_id
+            client, message_content, attachment_id=attachment_id
         )
 
         # then
@@ -91,4 +94,24 @@ class TestAzureEntraIdVoiceMemosAgent:
         response_dict = create_message_response.json()
         assert "id" in response_dict
         assert "assistant" == response_dict["message_role"]
-        assert "a.real.madre@mailbsantanna.onmicrosoft.com" in response_dict["message_content"]
+        assert (
+            "a.real.madre@mailbsantanna.onmicrosoft.com"
+            in response_dict["message_content"]
+        )
+
+        # test coordinator react flow generate appointment ics attachment
+        # given
+        agent_id = response_dict["agent_id"]
+        follow_up_message_content = "Please generate a new appointment for follow up meeting next week same date."
+
+        # when
+        create_follow_up_message_response = self._create_message(
+            client, follow_up_message_content, agent_id=agent_id
+        )
+
+        # then
+        assert create_follow_up_message_response.status_code == 200
+        response_dict = create_follow_up_message_response.json()
+        assert "id" in response_dict
+        assert "assistant" == response_dict["message_role"]
+        assert "http://test/attachments/download/" in response_dict["message_content"]

@@ -41,7 +41,7 @@ class AttachmentService:
     def get_attachment_by_id(self, attachment_id: str) -> Attachment:
         return self.attachment_repository.get_by_id(attachment_id)
 
-    async def create_attachment(self, file: File) -> Attachment:
+    async def create_attachment_with_file(self, file: File) -> Attachment:
         temp_file_path = f"temp-{uuid4()}"
 
         with open(temp_file_path, "wb") as buffer:
@@ -54,7 +54,7 @@ class AttachmentService:
             raw_content = self.optimize_audio(temp_file_path)
             parsed_content = ""
 
-        attachment = self.attachment_repository.add(
+        attachment = await self.create_attachment_with_content(
             file_name=file.filename,
             raw_content=raw_content,
             parsed_content=parsed_content,
@@ -63,6 +63,20 @@ class AttachmentService:
         os.remove(temp_file_path)
 
         return attachment
+
+    async def create_attachment_with_content(
+        self,
+        file_name: str,
+        raw_content: bytes,
+        parsed_content: str,
+        attachment_id: str = None,
+    ) -> Attachment:
+        return self.attachment_repository.add(
+            file_name=file_name,
+            raw_content=raw_content,
+            parsed_content=parsed_content,
+            attachment_id=attachment_id,
+        )
 
     def delete_attachment_by_id(self, attachment_id: str) -> None:
         return self.attachment_repository.delete_by_id(attachment_id)
@@ -96,13 +110,6 @@ class AttachmentService:
                 openai_api_base=api_endpoint,
                 openai_api_key=api_key,
             )
-        # not available
-        # elif integration.integration_type == "xai_api_v1":
-        #    embeddings_model = OpenAIEmbeddings(
-        #       model=lm_settings_dict["embeddings"],
-        #       base_url=api_endpoint,
-        #       api_key=api_key
-        #    )
         elif integration.integration_type == "ollama_api_v1":
             embeddings_model = OllamaEmbeddings(
                 model=lm_settings_dict["embeddings"], base_url=api_endpoint

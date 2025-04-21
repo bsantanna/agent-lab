@@ -1,3 +1,4 @@
+api_base_url: "http://localhost:8000"
 db:
   url: "postgresql://postgres:postgres@localhost:5432/agent_lab"
   vectors: "postgresql://postgres:postgres@localhost:5432/agent_lab_vectors"

@@ -25,6 +25,8 @@ from app.services.agent_types.voice_memos import (
     AZURE_CONTENT_ANALYST_TOOLS_CONFIGURATION,
     COORDINATOR_TOOLS,
     COORDINATOR_TOOLS_CONFIGURATION,
+    AZURE_COORDINATOR_TOOLS,
+    AZURE_COORDINATOR_TOOLS_CONFIGURATION,
 )
 from app.services.agent_types.voice_memos.schema import (
     SupervisorRouter,
@@ -382,6 +384,13 @@ class AzureEntraIdVoiceMemosAgent(
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
 
+    def get_coordinator_tools(self) -> list:
+        return [
+            self.get_ical_attachment_tool(),
+            self.get_web_search_tool(),
+            self.get_web_crawl_tool(),
+        ]
+
     def get_input_params(self, message_request: MessageRequest) -> dict:
         input_params = super().get_input_params(message_request)
         settings = self.agent_setting_service.get_agent_settings(
@@ -392,6 +401,8 @@ class AzureEntraIdVoiceMemosAgent(
         }
         template_vars = {
             "CURRENT_TIME": datetime.now().strftime("%a %b %d %Y %H:%M:%S %z"),
+            "COORDINATOR_TOOLS": AZURE_COORDINATOR_TOOLS,
+            "COORDINATOR_TOOLS_CONFIGURATION": AZURE_COORDINATOR_TOOLS_CONFIGURATION,
             "CONTENT_ANALYST_TOOLS": AZURE_CONTENT_ANALYST_TOOLS,
             "CONTENT_ANALYST_TOOLS_CONFIGURATION": AZURE_CONTENT_ANALYST_TOOLS_CONFIGURATION,
         }

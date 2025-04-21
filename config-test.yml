@@ -1,3 +1,4 @@
+api_base_url: "http://test"
 db:
   url: "sqlite:///./agent_lab.db"
   vectors: "postgresql://postgres:postgres@localhost:15432/agent_lab_vectors"

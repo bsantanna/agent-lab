@@ -4,12 +4,12 @@ SUPERVISED_AGENT_CONFIGURATION = {
         "desc": (
             "Responsible for mapping relevant information, understanding user needs and conducting content analysis"
         ),
-        "desc_for_llm": ("Outputs a Markdown report with findings."),
+        "desc_for_llm": "Outputs a Markdown report with findings.",
         "is_optional": False,
     },
     "reporter": {
         "name": "reporter",
-        "desc": ("Responsible for formatting answer to the user as a JSON document"),
+        "desc": "Responsible for formatting answer to the user as a JSON document",
         "desc_for_llm": "Format answer to the user as a JSON document",
         "is_optional": False,
     },
@@ -44,6 +44,18 @@ COORDINATOR_TOOLS_CONFIGURATION = {
 }
 
 COORDINATOR_TOOLS = list(COORDINATOR_TOOLS_CONFIGURATION.keys())
+
+AZURE_COORDINATOR_TOOLS_CONFIGURATION = {
+    **COORDINATOR_TOOLS_CONFIGURATION,
+    "ical_attachment": (
+        "Creates an iCalendar attachment and returns a link to download it."
+        "Use this tool to create appointments or other types of events per user request."
+        "This tool generates an attachment with corresponding URL, you must forward it to "
+        "the user so they can download it."
+    ),
+}
+
+AZURE_COORDINATOR_TOOLS = list(AZURE_COORDINATOR_TOOLS_CONFIGURATION.keys())
 
 AZURE_CONTENT_ANALYST_TOOLS_CONFIGURATION = {
     "person_search": {

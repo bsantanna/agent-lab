@@ -21,7 +21,7 @@ async def upload_attachment(
         Provide[Container.attachment_service]
     ),
 ):
-    attachment = await attachment_service.create_attachment(file=file)
+    attachment = await attachment_service.create_attachment_with_file(file=file)
 
     return AttachmentResponse.model_validate(attachment)
 
