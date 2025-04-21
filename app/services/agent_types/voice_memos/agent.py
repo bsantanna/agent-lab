@@ -56,14 +56,14 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
 
     def format_response(self, workflow_state: AgentState) -> (str, dict):
         response_data = {
-            "agent_id": workflow_state["agent_id"],
-            "attachment_id": workflow_state["attachment_id"],
-            "audio_format": workflow_state["audio_format"],
-            "audio_language_model": workflow_state["audio_language_model"],
-            "structured_report": workflow_state["structured_report"],
-            "query": workflow_state["query"],
-            "transcription": workflow_state["transcription"],
-            "execution_plan": workflow_state["execution_plan"],
+            "agent_id": workflow_state.get("agent_id"),
+            "attachment_id": workflow_state.get("attachment_id"),
+            "audio_format": workflow_state.get("audio_format"),
+            "audio_language_model": workflow_state.get("audio_language_model"),
+            "structured_report": workflow_state.get("structured_report"),
+            "query": workflow_state.get("query"),
+            "transcription": workflow_state.get("transcription"),
+            "execution_plan": workflow_state.get("execution_plan"),
             "messages": [
                 json.loads(message.model_dump_json())
                 for message in workflow_state["messages"]
