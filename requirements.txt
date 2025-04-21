@@ -42,7 +42,7 @@ ruff==0.9.8
 slowapi==0.1.9
 sqlalchemy==2.0.38
 starlette==0.46.1
-testcontainers[ollama]==4.9.2
+testcontainers[ollama]==4.10.0
 testcontainers[postgresql]==4.9.2
 testcontainers[vault]==4.9.2
 typing_extensions~=4.13.2
