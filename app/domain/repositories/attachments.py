@@ -27,12 +27,18 @@ class AttachmentRepository:
             return attachment
 
     def add(
-        self, file_name: str, raw_content: bytes, parsed_content: str
+        self,
+        file_name: str,
+        raw_content: bytes,
+        parsed_content: str,
+        attachment_id: str = None,
     ) -> Attachment:
-        gen_id = uuid4()
+        if attachment_id is None:
+            attachment_id = str(uuid4())
+
         with self.session_factory() as session:
             attachment = Attachment(
-                id=str(gen_id),
+                id=attachment_id,
                 is_active=True,
                 created_at=datetime.now(),
                 file_name=file_name,

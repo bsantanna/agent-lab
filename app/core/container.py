@@ -60,6 +60,7 @@ class Container(containers.DeclarativeContainer):
     if config_file is not None:
         config = providers.Configuration(yaml_files=[config_file])
     else:
+        api_base_url = os.getenv("API_BASE_URL")
         vault_url = os.getenv("VAULT_URL")
         vault_token = os.getenv("VAULT_TOKEN")
         vault_client = hvac.Client(url=vault_url, token=vault_token, verify=False)
@@ -68,6 +69,7 @@ class Container(containers.DeclarativeContainer):
         )
 
         config = providers.Configuration()
+        config.set("api_base_url", api_base_url)
         config.set("vault.url", vault_url)
         config.set("vault.token", vault_token)
         config.set("db.url", app_secrets["data"]["data"]["db_url"])
@@ -169,6 +171,7 @@ class Container(containers.DeclarativeContainer):
 
     agent_utils = providers.Factory(
         AgentUtils,
+        base_url=config.api_base_url,
         agent_service=agent_service,
         agent_setting_service=agent_setting_service,
         attachment_service=attachment_service,
