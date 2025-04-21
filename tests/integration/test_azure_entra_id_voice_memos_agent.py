@@ -94,10 +94,7 @@ class TestAzureEntraIdVoiceMemosAgent:
         response_dict = create_message_response.json()
         assert "id" in response_dict
         assert "assistant" == response_dict["message_role"]
-        assert (
-            "a.real.madre@mailbsantanna.onmicrosoft.com"
-            in response_dict["message_content"]
-        )
+        assert "Aline" in response_dict["message_content"]
 
         # test coordinator react flow generate appointment ics attachment
         # given
