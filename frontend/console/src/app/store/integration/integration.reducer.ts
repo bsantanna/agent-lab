@@ -6,13 +6,13 @@ import {Integration} from '../../openapi';
 
 export const integrationFeatureKey = 'integration';
 
-export interface State extends EntityState<Integration> {
+export interface IntegrationState extends EntityState<Integration> {
     selectedEntityId: string | null;
     loading: boolean;
     error: any;
 }
 
-export const initialState: State = integrationAdapter.getInitialState({
+export const initialState: IntegrationState = integrationAdapter.getInitialState({
     selectedEntityId: null,
     loading: false,
     error: null,
