@@ -8,8 +8,7 @@ import {IntegrationActions} from './integration.actions';
 @Injectable()
 export class IntegrationEffects {
 
-
-  loadIntegrations$
+  readonly loadIntegrations$
 
   constructor(
     private actions$: Actions,

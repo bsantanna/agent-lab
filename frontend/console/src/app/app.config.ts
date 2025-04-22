@@ -9,6 +9,10 @@ import {provideRouterStore, routerReducer} from '@ngrx/router-store';
 import {IntegrationEffects} from './store/integration/integration.effects';
 import {integrationReducer} from './store/integration/integration.reducer';
 import {provideHttpClient} from '@angular/common/http';
+import {languageModelReducer} from './store/language-model/language-model.reducer';
+import {agentReducer} from './store/agent/agent.reducer';
+import {LanguageModelEffects} from './store/language-model/language-model.effects';
+import { AgentEffects } from './store/agent/agent.effects';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -16,11 +20,17 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideStore({
       router: routerReducer,
-      integration: integrationReducer
+      integration: integrationReducer,
+      languageModel: languageModelReducer,
+      agent: agentReducer,
     }),
     provideStoreDevtools({maxAge: 25, logOnly: !isDevMode()}),
     provideHttpClient(),
-    provideEffects([IntegrationEffects]),
+    provideEffects([
+      IntegrationEffects,
+      LanguageModelEffects,
+      AgentEffects,
+    ]),
     provideRouterStore(),
   ]
 };

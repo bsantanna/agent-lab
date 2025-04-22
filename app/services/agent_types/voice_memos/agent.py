@@ -359,13 +359,16 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             goto="supervisor",
         )
 
+    def get_content_analyst_tools(self) -> list:
+        return []
+
     def get_content_analyst(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
         self.logger.info(f"Agent[{agent_id}] -> Content Analyst")
         content_analyst_system_prompt = state["content_analyst_system_prompt"]
         content_analyst = create_react_agent(
             model=self.get_chat_model(agent_id),
-            tools=[],
+            tools=self.get_content_analyst_tools(),
             prompt=content_analyst_system_prompt,
         )
         response = content_analyst.invoke(state)
@@ -411,20 +414,6 @@ class AzureEntraIdVoiceMemosAgent(
         )
         return input_params
 
-    def get_content_analyst(self, state: AgentState) -> Command[Literal["supervisor"]]:
-        agent_id = state["agent_id"]
-        self.logger.info(f"Agent[{agent_id}] -> Content Analyst")
-        content_analyst_system_prompt = state["content_analyst_system_prompt"]
-        content_analyst = create_react_agent(
-            model=self.get_chat_model(agent_id),
-            tools=[self.get_person_search_tool(), self.get_person_details_tool()],
-            prompt=content_analyst_system_prompt,
-        )
-        response = content_analyst.invoke(state)
-        self.logger.info(
-            f"Agent[{agent_id}] -> Content Analyst -> Response -> {response}"
-        )
-        return Command(
-            update={"messages": response["messages"]},
-            goto="supervisor",
-        )
+    def get_content_analyst_tools(self) -> list:
+        return [
+            self.get_person_search_tool(), self.get_person_details_tool()]

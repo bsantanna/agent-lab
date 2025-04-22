@@ -1,6 +1,20 @@
 {
   "/integrations/*": {
-    "target": "http://localhost:18000/integrations",
+    "target": "http://localhost:18000/",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+
+  "/llms/*": {
+    "target": "http://localhost:18000/",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+
+  "/agents/*": {
+    "target": "http://localhost:18000/",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
