@@ -6,7 +6,7 @@ from starlette import status
 from starlette.responses import StreamingResponse
 
 from app.core.container import Container
-from app.interface.api.attachments.schema import AttachmentResponse, EmbeddingsRequest
+from app.interface.api.attachments.schema import Attachment, EmbeddingsRequest
 from app.services.attachments import AttachmentService
 
 router = APIRouter()
@@ -15,7 +15,7 @@ router = APIRouter()
 @router.post(
     "/upload",
     status_code=status.HTTP_201_CREATED,
-    response_model=AttachmentResponse,
+    response_model=Attachment,
 )
 @inject
 async def upload_attachment(
@@ -26,7 +26,7 @@ async def upload_attachment(
 ):
     attachment = await attachment_service.create_attachment_with_file(file=file)
 
-    return AttachmentResponse.model_validate(attachment)
+    return Attachment.model_validate(attachment)
 
 
 @router.get(
@@ -54,7 +54,7 @@ async def download_attachment(
 @router.post(
     "/embeddings",
     status_code=status.HTTP_201_CREATED,
-    response_model=AttachmentResponse,
+    response_model=Attachment,
 )
 @inject
 async def create_embeddings(
@@ -69,4 +69,4 @@ async def create_embeddings(
         collection_name=embeddings.collection_name,
     )
 
-    return AttachmentResponse.model_validate(attachment)
+    return Attachment.model_validate(attachment)

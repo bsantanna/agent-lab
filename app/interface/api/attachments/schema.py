@@ -10,7 +10,7 @@ class EmbeddingsRequest(BaseModel):
     collection_name: str
 
 
-class AttachmentResponse(BaseModel):
+class Attachment(BaseModel):
     id: str
     is_active: bool
     created_at: datetime

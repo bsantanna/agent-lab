@@ -9,7 +9,7 @@ class LanguageModelCreateRequest(BaseModel):
     language_model_tag: str
 
 
-class LanguageModelSettingResponse(BaseModel):
+class LanguageModelSetting(BaseModel):
     setting_key: str
     setting_value: str
 
@@ -17,7 +17,7 @@ class LanguageModelSettingResponse(BaseModel):
         from_attributes = True
 
 
-class LanguageModelResponse(BaseModel):
+class LanguageModel(BaseModel):
     id: str
     created_at: datetime
     is_active: bool
@@ -28,8 +28,8 @@ class LanguageModelResponse(BaseModel):
         from_attributes = True
 
 
-class LanguageModelExpandedResponse(LanguageModelResponse):
-    lm_settings: Optional[List[LanguageModelSettingResponse]] = None
+class LanguageModelExpanded(LanguageModel):
+    lm_settings: Optional[List[LanguageModelSetting]] = None
 
 
 class LanguageModelUpdateRequest(BaseModel):

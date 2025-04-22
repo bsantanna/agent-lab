@@ -4,12 +4,12 @@ from typing_extensions import List
 
 from app.core.container import Container
 from app.domain.exceptions.base import NotFoundError
-from app.domain.models import Message
-from app.interface.api.attachments.schema import AttachmentResponse
+from app.domain.models import Message as DomainMessage
+from app.interface.api.attachments.schema import Attachment
 from app.interface.api.messages.schema import (
     MessageListRequest,
-    MessageExpandedResponse,
-    MessageResponse,
+    MessageExpanded,
+    Message,
     MessageRequest,
 )
 from app.services.agent_types.registry import AgentRegistry
@@ -20,17 +20,17 @@ from app.services.messages import MessageService
 router = APIRouter()
 
 
-@router.post("/list", response_model=List[MessageResponse])
+@router.post("/list", response_model=List[Message])
 @inject
 async def get_list(
     message_data: MessageListRequest = Body(...),
     message_service: MessageService = Depends(Provide[Container.message_service]),
 ):
     messages = message_service.get_messages(message_data.agent_id)
-    return [MessageResponse.model_validate(message) for message in messages]
+    return [Message.model_validate(message) for message in messages]
 
 
-@router.post("/post", response_model=MessageResponse)
+@router.post("/post", response_model=Message)
 @inject
 async def post_message(
     message_data: MessageRequest = Body(...),
@@ -65,10 +65,10 @@ async def post_message(
         replies_to=human_message,
     )
 
-    return MessageResponse.model_validate(assistant_message)
+    return Message.model_validate(assistant_message)
 
 
-@router.get("/{message_id}", response_model=MessageExpandedResponse)
+@router.get("/{message_id}", response_model=MessageExpanded)
 @inject
 async def get_by_id(
     message_id: str,
@@ -104,19 +104,19 @@ async def remove(
 
 
 def _format_expanded_response(
-    agent_message: Message,
-    human_message: Message,
+    agent_message: DomainMessage,
+    human_message: DomainMessage,
     attachment_service: AttachmentService,
-) -> MessageExpandedResponse:
+) -> MessageExpanded:
     attachment_response = None
 
     if human_message.attachment_id is not None:
         attachment = attachment_service.get_attachment_by_id(
             human_message.attachment_id
         )
-        attachment_response = AttachmentResponse.model_validate(attachment)
+        attachment_response = Attachment.model_validate(attachment)
 
-    response = MessageExpandedResponse(
+    response = MessageExpanded(
         id=agent_message.id,
         is_active=agent_message.is_active,
         created_at=agent_message.created_at,
@@ -124,7 +124,7 @@ def _format_expanded_response(
         message_role=agent_message.message_role,
         message_content=agent_message.message_content,
         response_data=agent_message.response_data,
-        replies_to=MessageResponse.model_validate(human_message),
+        replies_to=Message.model_validate(human_message),
         attachment=attachment_response,
     )
 

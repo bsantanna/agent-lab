@@ -34,7 +34,7 @@ class AgentCreateRequest(BaseModel):
         return v
 
 
-class AgentSettingResponse(BaseModel):
+class AgentSetting(BaseModel):
     setting_key: str
     setting_value: str
 
@@ -42,7 +42,7 @@ class AgentSettingResponse(BaseModel):
         from_attributes = True
 
 
-class AgentResponse(BaseModel):
+class Agent(BaseModel):
     id: str
     is_active: bool
     created_at: datetime
@@ -55,8 +55,8 @@ class AgentResponse(BaseModel):
         from_attributes = True
 
 
-class AgentExpandedResponse(AgentResponse):
-    ag_settings: Optional[List[AgentSettingResponse]] = None
+class AgentExpanded(Agent):
+    ag_settings: Optional[List[AgentSetting]] = None
 
 
 class AgentUpdateRequest(BaseModel):

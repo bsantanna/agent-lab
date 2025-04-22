@@ -3,7 +3,7 @@ from pathlib import Path
 
 from langgraph.prebuilt import create_react_agent
 
-from app.interface.api.messages.schema import MessageRequest, MessageResponse
+from app.interface.api.messages.schema import MessageRequest, Message
 from app.services.agent_types.base import AgentUtils, AgentBase
 
 
@@ -76,7 +76,7 @@ class ReactRagAgent(AgentBase):
             ],
         }
 
-    def process_message(self, message_request: MessageRequest) -> MessageResponse:
+    def process_message(self, message_request: MessageRequest) -> Message:
         agent_id = message_request.agent_id
         workflow = self.get_workflow(agent_id)
         config = {
@@ -90,7 +90,7 @@ class ReactRagAgent(AgentBase):
         workflow_result = workflow.invoke(inputs, config)
         self.logger.info(f"Agent[{agent_id}] -> Result -> {workflow_result}")
         message_content, response_data = self.format_response(workflow_result)
-        return MessageResponse(
+        return Message(
             message_role="assistant",
             message_content=message_content,
             response_data=response_data,

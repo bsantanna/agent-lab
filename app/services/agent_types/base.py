@@ -30,7 +30,7 @@ from typing_extensions import List, Annotated, Literal
 from app.domain.exceptions.base import ResourceNotFoundError, ConfigurationError
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.vectors import DocumentRepository
-from app.interface.api.messages.schema import MessageRequest, MessageResponse
+from app.interface.api.messages.schema import MessageRequest, Message
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.schema import SolutionPlan
 from app.services.agents import AgentService
@@ -102,7 +102,7 @@ class AgentBase(ABC):
         pass
 
     @abstractmethod
-    def process_message(self, message_request: MessageRequest) -> MessageResponse:
+    def process_message(self, message_request: MessageRequest) -> Message:
         pass
 
     def format_response(self, workflow_state: MessagesState) -> (str, dict):
@@ -255,7 +255,7 @@ class WorkflowAgentBase(AgentBase, ABC):
 
         return thought_chain
 
-    def process_message(self, message_request: MessageRequest) -> MessageResponse:
+    def process_message(self, message_request: MessageRequest) -> Message:
         agent_id = message_request.agent_id
         checkpointer = self.graph_persistence_factory.build_checkpoint_saver()
         workflow = self.get_workflow_builder(agent_id).compile(
@@ -271,7 +271,7 @@ class WorkflowAgentBase(AgentBase, ABC):
         workflow_result = workflow.invoke(inputs, config)
         self.logger.info(f"Agent[{agent_id}] -> Result -> {workflow_result}")
         message_content, response_data = self.format_response(workflow_result)
-        return MessageResponse(
+        return Message(
             message_role="assistant",
             message_content=message_content,
             response_data=response_data,

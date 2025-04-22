@@ -4,7 +4,7 @@ from pydantic import BaseModel, field_validator
 from typing_extensions import Optional
 
 from app.domain.exceptions.base import InvalidFieldError
-from app.interface.api.attachments.schema import AttachmentResponse
+from app.interface.api.attachments.schema import Attachment
 
 
 class MessageBase(BaseModel):
@@ -28,7 +28,7 @@ class MessageListRequest(BaseModel):
     agent_id: str
 
 
-class MessageResponse(MessageBase):
+class Message(MessageBase):
     id: Optional[str] = None
     is_active: Optional[bool] = None
     created_at: Optional[datetime] = None
@@ -39,6 +39,6 @@ class MessageResponse(MessageBase):
         from_attributes = True
 
 
-class MessageExpandedResponse(MessageResponse):
-    replies_to: Optional[MessageResponse]
-    attachment: Optional[AttachmentResponse]
+class MessageExpanded(Message):
+    replies_to: Optional[Message]
+    attachment: Optional[Attachment]
