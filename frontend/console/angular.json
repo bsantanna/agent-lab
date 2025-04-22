@@ -67,6 +67,7 @@
               "buildTarget": "agent-lab-console:build:production"
             },
             "development": {
+              "proxyConfig": "proxy.conf.json",
               "buildTarget": "agent-lab-console:build:development"
             }
           },

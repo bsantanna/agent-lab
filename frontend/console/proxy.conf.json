@@ -1,0 +1,8 @@
+{
+  "/integrations/*": {
+    "target": "http://localhost:18000/integrations",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}
