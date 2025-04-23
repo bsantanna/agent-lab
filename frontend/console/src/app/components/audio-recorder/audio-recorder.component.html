@@ -1,0 +1,71 @@
+<div class="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
+  <!-- Permission Prompt -->
+  <div *ngIf="permissionState === 'prompt'" class="mb-4 text-center">
+    <p class="text-gray-600 mb-4">This app requires microphone access to record audio.</p>
+    <button
+      (click)="requestMicrophonePermission()"
+      class="px-6 py-3 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 transition-colors"
+    >
+      Grant Microphone Access
+    </button>
+  </div>
+
+  <!-- Permission Denied Message -->
+  <div *ngIf="permissionState === 'denied'" class="mb-4 text-center">
+    <p class="text-red-500 mb-4">
+      Microphone access is denied. Please enable it in your browser settings or try again.
+    </p>
+    <button
+      (click)="requestMicrophonePermission()"
+      class="px-6 py-3 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 transition-colors"
+    >
+      Try Again
+    </button>
+  </div>
+
+  <!-- Recording Controls (shown only when permission is granted) -->
+  <div *ngIf="permissionState === 'granted'" class="flex flex-col sm:flex-row gap-4 justify-center mb-4">
+    <button
+      (click)="toggleRecording()"
+      [disabled]="!isMicrophoneAvailable"
+      [ngClass]="{
+        'bg-red-500': isRecording,
+        'bg-green-500': !isRecording,
+        'bg-gray-300 cursor-not-allowed': !isMicrophoneAvailable
+      }"
+      class="px-6 py-3 text-white font-semibold rounded-md hover:bg-opacity-90 transition-colors disabled:opacity-75"
+    >
+      {{ isRecording ? 'Stop Recording' : 'Start Recording' }}
+    </button>
+
+    <button
+      *ngIf="isRecording"
+      (click)="isPaused ? resumeRecording() : pauseRecording()"
+      [disabled]="!isMicrophoneAvailable"
+      class="px-6 py-3 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+    >
+      {{ isPaused ? 'Resume' : 'Pause' }}
+    </button>
+  </div>
+
+  <!-- Timer -->
+  <div *ngIf="isRecording" class="text-center text-gray-600 text-sm mb-4">
+    Recording Time: {{ formatTime(recordingTime) }} / {{ formatTime(maxRecordingTime) }}
+  </div>
+
+  <!-- Audio Player -->
+  <div *ngIf="recordedAudio" class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
+    <audio controls [src]="recordedAudio" class="w-full sm:w-auto"></audio>
+    <button
+      (click)="downloadRecording()"
+      class="px-4 py-2 bg-amber-500 text-black font-semibold rounded-md hover:bg-amber-600 transition-colors"
+    >
+      Download Recording
+    </button>
+  </div>
+
+  <!-- General Error Message (if microphone is unavailable after permission check) -->
+  <p *ngIf="!isMicrophoneAvailable && permissionState === 'granted'" class="text-red-500 text-center mt-4 text-sm">
+    Microphone access is not available. Please check your browser permissions or device settings.
+  </p>
+</div>
