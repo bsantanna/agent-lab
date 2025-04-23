@@ -12,7 +12,6 @@ import {AgentActions} from './store/agent/agent.actions';
   styleUrl: './app.component.scss'
 })
 export class AppComponent implements AfterViewInit{
-  title = 'agent-lab-console';
 
   constructor(private store: Store) {}
 
