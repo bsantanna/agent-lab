@@ -6,10 +6,11 @@ import { Agent } from '../../openapi';
 import { selectAll as selectAvailableAgents, selectCurrentAgent } from '../../store/agent/agent.selectors';
 import { AgentActions } from '../../store/agent/agent.actions';
 import {FormBuilder, FormGroup, Validators, AbstractControl, ReactiveFormsModule, FormControl} from '@angular/forms';
+import {AudioRecorderComponent} from '../audio-recorder/audio-recorder.component';
 
 @Component({
   selector: 'console-query-input',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, AudioRecorderComponent],
   templateUrl: './query-input.component.html',
   styleUrls: ['./query-input.component.scss']
 })
