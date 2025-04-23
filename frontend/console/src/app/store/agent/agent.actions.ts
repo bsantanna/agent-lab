@@ -1,4 +1,4 @@
-import { createActionGroup, emptyProps, props } from '@ngrx/store';
+import {createActionGroup, emptyProps, props} from '@ngrx/store';
 import {Agent} from '../../openapi';
 
 export const AgentActions = createActionGroup({
@@ -7,5 +7,7 @@ export const AgentActions = createActionGroup({
     'Load Agents': emptyProps(),
     'Load Agents Success': props<{ data: Agent[] }>(),
     'Load Agents Failure': props<{ error: string }>(),
+    'Select Agent': props<{ id: string }>(),
+    'Deselect Agent': emptyProps(),
   }
 });

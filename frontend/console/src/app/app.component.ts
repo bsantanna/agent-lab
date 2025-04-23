@@ -11,9 +11,10 @@ import {AgentActions} from './store/agent/agent.actions';
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent implements AfterViewInit{
+export class AppComponent implements AfterViewInit {
 
-  constructor(private store: Store) {}
+  constructor(private store: Store) {
+  }
 
   ngAfterViewInit(): void {
     this.store.dispatch(IntegrationActions.loadIntegrations());

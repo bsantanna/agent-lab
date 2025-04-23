@@ -12,7 +12,7 @@ import {provideHttpClient} from '@angular/common/http';
 import {languageModelReducer} from './store/language-model/language-model.reducer';
 import {agentReducer} from './store/agent/agent.reducer';
 import {LanguageModelEffects} from './store/language-model/language-model.effects';
-import { AgentEffects } from './store/agent/agent.effects';
+import {AgentEffects} from './store/agent/agent.effects';
 
 export const appConfig: ApplicationConfig = {
   providers: [

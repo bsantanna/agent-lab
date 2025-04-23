@@ -1,0 +1,88 @@
+<ng-container *ngIf="{
+  currentAgent: currentAgent$ | async,
+  availableAgents: availableAgents$ | async
+} as vm">
+  <div class="h-44 max-w-screen-lg mx-auto rounded-xl border-2 border-gray-300 shadow-lg bg-white pl-6 pr-6 pt-4">
+    <form [formGroup]="form">
+      <div class="flex flex-col">
+        <textarea class="w-full h-28 resize-none focus:outline-none"
+                  formControlName="query"
+                  placeholder=">..."></textarea>
+        <div class="flex flex-row">
+          <ng-container *ngIf="voiceInputEnabled(vm.currentAgent)">
+            <button class="text-gray-400 hover:text-gray-200">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                      stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+              </svg>
+            </button>
+          </ng-container>
+          <ng-container *ngIf="imageAttachmentEnabled(vm.currentAgent)">
+            <button class="text-gray-400 hover:text-gray-200">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M7 21h10a2 2 0 002-2V9l-5-5H7a2 2 0 00-2 2v13a2 2 0 002 2zM14 4v5h5M9 12h6m-3 3v-6"
+                      stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+              </svg>
+            </button>
+          </ng-container>
+          <div class="flex-grow">
+            <!-- spacer -->
+          </div>
+          <div class="-mt-1 mr-4 relative">
+            <div>
+              <button (click)="toggleAgentSelector()"
+                      aria-expanded="true"
+                      aria-haspopup="true"
+                      class="inline-flex w-full justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-xs hover:bg-gray-50"
+                      id="menu-button"
+                      type="button">
+                <span *ngIf="vm.currentAgent">{{ vm.currentAgent.agent_name }}</span>
+                <span *ngIf="!vm.currentAgent">Select Agent</span>
+                <svg aria-hidden="true" class="-mr-1 size-5 text-gray-400" data-slot="icon" fill="currentColor" viewBox="0 0 20 20">
+                  <path clip-rule="evenodd"
+                        d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+                        fill-rule="evenodd"/>
+                </svg>
+              </button>
+            </div>
+            <!-- Dropdown menu -->
+            <div *ngIf="agentSelectorOpen"
+                 aria-labelledby="menu-button"
+                 aria-orientation="vertical"
+                 class="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-hidden
+                        transition ease-out duration-100 transform opacity-100 scale-100"
+                 role="menu"
+                 tabindex="-1">
+              <div class="py-1">
+                <ng-container *ngFor="let agent of vm.availableAgents">
+                  <a *ngIf="agent.id !== vm.currentAgent?.id"
+                     (click)="setCurrentAgent(agent)"
+                     class="block px-4 py-2 text-sm text-gray-700"
+                     role="menuitem"
+                     tabindex="-1">
+                    {{ agent.agent_name }}
+                  </a>
+                  <a *ngIf="agent.id == vm.currentAgent?.id"
+                     (click)="deselectAgent()"
+                     class="block px-4 py-2 text-sm text-gray-700"
+                     role="menuitem"
+                     tabindex="-1">
+                    Deselect Agent
+                  </a>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+          <!-- Send button -->
+          <button [disabled]="form.invalid" [ngClass]="{'text-gray-400':!form.invalid,'text-gray-200':form.invalid}"
+                  class="hover:text-gray-300">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M3 3l9 9-9 9 18-9L3 3zm0 0l9 9"
+                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</ng-container>
