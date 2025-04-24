@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, OnDestroy } from '@angular/core';
+import {AfterViewInit, ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -18,6 +18,8 @@ export class AudioRecorderComponent implements OnDestroy, AfterViewInit{
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];
   private timerInterval: any;
+
+  constructor(private changeDetectorRef: ChangeDetectorRef) {}
 
   ngAfterViewInit(): void {
     this.checkMicrophoneAccess();
@@ -85,6 +87,7 @@ export class AudioRecorderComponent implements OnDestroy, AfterViewInit{
       }
       await this.startRecording();
     }
+    setTimeout(() => this.changeDetectorRef.detectChanges(), 50);
   }
 
   async startRecording() {
