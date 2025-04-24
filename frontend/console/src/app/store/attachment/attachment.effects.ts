@@ -20,14 +20,15 @@ export class AttachmentEffects {
       this.actions$.pipe(
         ofType(AttachmentActions.uploadAttachment),
         map(action => new File([action.data], action.filename, { type: action.data.type })),
-        mergeMap(file => {
+        map(file => {
           const formData = new FormData();
           formData.append('file', file, file.name);
-          return this.httpClient.post<Attachment>("/attachments/upload", formData).pipe(
-            map(attachment => AttachmentActions.uploadAttachmentSuccess({ data: attachment })),
-            catchError(error => of(AttachmentActions.uploadAttachmentFailure({ error: error.message })))
-          );
-        })
+          return formData;
+        }),
+        mergeMap(formData => this.httpClient.post<Attachment>("/attachments/upload", formData).pipe(
+          map(attachment => AttachmentActions.uploadAttachmentSuccess({ data: attachment })),
+          catchError(error => of(AttachmentActions.uploadAttachmentFailure({ error: error.message })))
+        ))
       )
     );
   }
