@@ -17,7 +17,7 @@ export class AgentEffects {
     this.loadAgents$ = createEffect(() =>
       this.actions$.pipe(
         ofType(AgentActions.loadAgents),
-        mergeMap(() => agentsService.getListAgentsListGet().pipe(
+        mergeMap(() => this.agentsService.getListAgentsListGet().pipe(
           map(agents => AgentActions.loadAgentsSuccess({data: agents})),
           catchError(error => of(AgentActions.loadAgentsFailure({error: error.message})))
         ))

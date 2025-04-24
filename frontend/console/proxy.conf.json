@@ -1,20 +1,27 @@
 {
+  "/agents/*": {
+    "target": "http://neptune.btech.software:8000/",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+
+  "/attachments/*": {
+    "target": "http://neptune.btech.software:8000/",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+
   "/integrations/*": {
-    "target": "http://neptune.btech.software:18000/",
+    "target": "http://neptune.btech.software:8000/",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
   },
 
   "/llms/*": {
-    "target": "http://neptune.btech.software:18000/",
-    "secure": false,
-    "changeOrigin": true,
-    "logLevel": "debug"
-  },
-
-  "/agents/*": {
-    "target": "http://neptune.btech.software:18000/",
+    "target": "http://neptune.btech.software:8000/",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"

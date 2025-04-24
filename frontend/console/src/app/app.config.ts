@@ -13,23 +13,27 @@ import {languageModelReducer} from './store/language-model/language-model.reduce
 import {agentReducer} from './store/agent/agent.reducer';
 import {LanguageModelEffects} from './store/language-model/language-model.effects';
 import {AgentEffects} from './store/agent/agent.effects';
+import {AttachmentEffects} from './store/attachment/attachment.effects';
+import {attachmentReducer} from './store/attachment/attachment.reducer';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({eventCoalescing: true}),
     provideRouter(routes),
     provideStore({
-      router: routerReducer,
+      agent: agentReducer,
+      attachment: attachmentReducer,
       integration: integrationReducer,
       languageModel: languageModelReducer,
-      agent: agentReducer,
+      router: routerReducer,
     }),
     provideStoreDevtools({maxAge: 25, logOnly: !isDevMode()}),
     provideHttpClient(),
     provideEffects([
+      AgentEffects,
+      AttachmentEffects,
       IntegrationEffects,
       LanguageModelEffects,
-      AgentEffects,
     ]),
     provideRouterStore(),
   ]

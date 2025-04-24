@@ -1,5 +1,7 @@
 import {AfterViewInit, ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {Store} from '@ngrx/store';
+import {AttachmentActions} from '../../store/attachment/attachment.actions';
 
 @Component({
   selector: 'console-audio-recorder',
@@ -12,14 +14,17 @@ export class AudioRecorderComponent implements OnDestroy, AfterViewInit{
   isPaused = false;
   isMicrophoneAvailable = false;
   permissionState: 'prompt' | 'granted' | 'denied' = 'prompt';
-  recordedAudio: string | null = null;
+  recordedAudio: Blob | null = null;
   recordingTime = 0;
   maxRecordingTime = 120; // 2 minutes in seconds
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];
   private timerInterval: any;
 
-  constructor(private changeDetectorRef: ChangeDetectorRef) {}
+  constructor(
+    private readonly changeDetectorRef: ChangeDetectorRef,
+    private readonly store: Store,
+  ) {}
 
   ngAfterViewInit(): void {
     this.checkMicrophoneAccess();
@@ -87,7 +92,12 @@ export class AudioRecorderComponent implements OnDestroy, AfterViewInit{
       }
       await this.startRecording();
     }
-    setTimeout(() => this.changeDetectorRef.detectChanges(), 50);
+    setTimeout(() => {
+      this.changeDetectorRef.detectChanges();
+      if (this.recordedAudio) {
+        this.store.dispatch(AttachmentActions.uploadAttachment({data: this.recordedAudio, filename:`recording-${new Date().toISOString()}.webm`}));
+      }
+    }, 50);
   }
 
   async startRecording() {
@@ -104,8 +114,7 @@ export class AudioRecorderComponent implements OnDestroy, AfterViewInit{
       };
 
       this.mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
-        this.recordedAudio = URL.createObjectURL(audioBlob);
+        this.recordedAudio = new Blob(this.audioChunks, { type: 'audio/webm' });
         this.stopMediaTracks();
         this.clearTimer();
       };
