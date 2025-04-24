@@ -92,6 +92,7 @@ export class QueryInputComponent {
     this.store.dispatch(AttachmentActions.deselectAttachment());
     this.store.dispatch(MessageActions.cleanReply())
     this.agentSelectorOpen = false;
+    this.router.navigate(['/pages/start']);
   }
 
   getAttachmentUrl(attachment: Attachment): string {
