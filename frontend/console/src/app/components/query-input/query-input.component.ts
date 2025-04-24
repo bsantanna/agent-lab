@@ -1,4 +1,5 @@
 import {Component} from '@angular/core';
+import {Router} from '@angular/router';
 import {CommonModule} from '@angular/common';
 import {Store} from '@ngrx/store';
 import {Observable, tap} from 'rxjs';
@@ -30,7 +31,8 @@ export class QueryInputComponent {
 
   constructor(
     private readonly store: Store,
-    private readonly fb: FormBuilder
+    private readonly fb: FormBuilder,
+    private readonly router: Router
   ) {
     this.availableAgents$ = this.store.select(selectAvailableAgents);
 
@@ -110,6 +112,7 @@ export class QueryInputComponent {
       } as MessageRequest;
 
       this.store.dispatch(MessageActions.postMessage({data}));
+      this.router.navigate(['/pages/dialog', agentId]);
     }
   }
 
