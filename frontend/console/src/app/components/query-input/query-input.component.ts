@@ -97,8 +97,6 @@ export class QueryInputComponent {
     attachmentId: string | null | undefined,
   ):void {
 
-    debugger;
-
     const data = {
       'message_role': 'human',
       'message_content': query,

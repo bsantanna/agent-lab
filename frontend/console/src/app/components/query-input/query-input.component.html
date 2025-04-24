@@ -89,8 +89,8 @@
           <button [disabled]="form.invalid"
                   (click)="postMessageRequest(
                     form.value.query,
-                    form.value.agent_id,
-                    form.value.attachment_id
+                    form.value.agentId,
+                    form.value.attachmentId
                   )"
                   [ngClass]="{'text-gray-400 hover:text-green-400':!form.invalid,'text-gray-200':form.invalid}">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

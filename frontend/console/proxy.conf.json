@@ -1,26 +1,5 @@
 {
-  "/agents/*": {
-    "target": "http://neptune.btech.software:18000/",
-    "secure": false,
-    "changeOrigin": true,
-    "logLevel": "debug"
-  },
-
-  "/attachments/*": {
-    "target": "http://neptune.btech.software:18000/",
-    "secure": false,
-    "changeOrigin": true,
-    "logLevel": "debug"
-  },
-
-  "/integrations/*": {
-    "target": "http://neptune.btech.software:18000/",
-    "secure": false,
-    "changeOrigin": true,
-    "logLevel": "debug"
-  },
-
-  "/llms/*": {
+  "/(agents|attachments|integrations|llms|messages)/*": {
     "target": "http://neptune.btech.software:18000/",
     "secure": false,
     "changeOrigin": true,
