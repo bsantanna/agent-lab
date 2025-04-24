@@ -1,71 +1,48 @@
-<div class="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
-  <!-- Permission Prompt -->
-  <div *ngIf="permissionState === 'prompt'" class="mb-4 text-center">
-    <p class="text-gray-600 mb-4">This app requires microphone access to record audio.</p>
-    <button
-      (click)="requestMicrophonePermission()"
-      class="px-6 py-3 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 transition-colors"
-    >
-      Grant Microphone Access
-    </button>
-  </div>
+<div class="flex flex-row">
 
-  <!-- Permission Denied Message -->
-  <div *ngIf="permissionState === 'denied'" class="mb-4 text-center">
-    <p class="text-red-500 mb-4">
-      Microphone access is denied. Please enable it in your browser settings or try again.
-    </p>
-    <button
-      (click)="requestMicrophonePermission()"
-      class="px-6 py-3 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 transition-colors"
-    >
-      Try Again
-    </button>
-  </div>
+  <ng-container *ngIf="!recordedAudio">
+    <!-- Permission Prompt -->
+    <ng-container *ngIf="permissionState === 'prompt' || permissionState === 'denied'">
+      <button (click)="requestMicrophonePermission()" class="text-gray-400 hover:text-gray-300">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+        </svg>
+      </button>
+    </ng-container>
 
-  <!-- Recording Controls (shown only when permission is granted) -->
-  <div *ngIf="permissionState === 'granted'" class="flex flex-col sm:flex-row gap-4 justify-center mb-4">
-    <button
-      (click)="toggleRecording()"
-      [disabled]="!isMicrophoneAvailable"
-      [ngClass]="{
-        'bg-red-500': isRecording,
-        'bg-green-500': !isRecording,
-        'bg-gray-300 cursor-not-allowed': !isMicrophoneAvailable
+    <!-- Recording Controls (shown only when permission is granted) -->
+    <ng-container *ngIf="permissionState === 'granted'">
+      <button
+        (click)="toggleRecording()"
+        [disabled]="!isMicrophoneAvailable"
+        [ngClass]="{
+        'text-red-400': isRecording,
+        'text-green-400': !isRecording,
+        'text-gray-200 cursor-not-allowed': !isMicrophoneAvailable
       }"
-      class="px-6 py-3 text-white font-semibold rounded-md hover:bg-opacity-90 transition-colors disabled:opacity-75"
-    >
-      {{ isRecording ? 'Stop Recording' : 'Start Recording' }}
-    </button>
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+        </svg>
+      </button>
 
-    <button
-      *ngIf="isRecording"
-      (click)="isPaused ? resumeRecording() : pauseRecording()"
-      [disabled]="!isMicrophoneAvailable"
-      class="px-6 py-3 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-    >
-      {{ isPaused ? 'Resume' : 'Pause' }}
-    </button>
-  </div>
+      <div *ngIf="isRecording" class="text-center text-gray-600 text-sm mb-4">
+        {{ formatTime(recordingTime) }} / {{ formatTime(maxRecordingTime) }}
+      </div>
+    </ng-container>
 
-  <!-- Timer -->
-  <div *ngIf="isRecording" class="text-center text-gray-600 text-sm mb-4">
-    Recording Time: {{ formatTime(recordingTime) }} / {{ formatTime(maxRecordingTime) }}
-  </div>
+    <!-- General Error Message (if microphone is unavailable after permission check) -->
+    <ng-container *ngIf="!isMicrophoneAvailable && permissionState === 'granted'">
+      <button class="text-gray-200">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+          <path d="M3 21l18-18" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+        </svg>
+      </button>
+    </ng-container>
+  </ng-container>
 
-  <!-- Audio Player -->
-  <div *ngIf="recordedAudio" class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
-    <audio controls [src]="recordedAudio" class="w-full sm:w-auto"></audio>
-    <button
-      (click)="downloadRecording()"
-      class="px-4 py-2 bg-amber-500 text-black font-semibold rounded-md hover:bg-amber-600 transition-colors"
-    >
-      Download Recording
-    </button>
-  </div>
-
-  <!-- General Error Message (if microphone is unavailable after permission check) -->
-  <p *ngIf="!isMicrophoneAvailable && permissionState === 'granted'" class="text-red-500 text-center mt-4 text-sm">
-    Microphone access is not available. Please check your browser permissions or device settings.
-  </p>
 </div>
+

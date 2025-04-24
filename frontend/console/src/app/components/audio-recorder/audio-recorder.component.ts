@@ -125,30 +125,14 @@ export class AudioRecorderComponent implements OnDestroy, AfterViewInit{
     }
   }
 
-  pauseRecording() {
-    if (this.mediaRecorder && this.isRecording && !this.isPaused) {
-      this.mediaRecorder.pause();
-      this.isPaused = true;
-      this.clearTimer();
-    }
-  }
-
-  resumeRecording() {
-    if (this.mediaRecorder && this.isPaused) {
-      this.mediaRecorder.resume();
-      this.isPaused = false;
-      this.startTimer();
-    }
-  }
-
-  downloadRecording() {
-    if (this.recordedAudio) {
-      const link = document.createElement('a');
-      link.href = this.recordedAudio;
-      link.download = `recording-${new Date().toISOString()}.webm`;
-      link.click();
-    }
-  }
+  // downloadRecording() {
+  //   if (this.recordedAudio) {
+  //     const link = document.createElement('a');
+  //     link.href = this.recordedAudio;
+  //     link.download = `recording-${new Date().toISOString()}.webm`;
+  //     link.click();
+  //   }
+  // }
 
   private startTimer() {
     this.clearTimer();
