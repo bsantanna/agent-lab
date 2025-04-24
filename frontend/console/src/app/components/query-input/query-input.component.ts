@@ -11,6 +11,7 @@ import {AttachmentActions} from '../../store/attachment/attachment.actions';
 import {selectCurrentAttachment} from '../../store/attachment/attachment.selectors';
 import globalConfig from '../../../agent-lab-console.json';
 import {MessageActions} from '../../store/message/message.actions';
+import {selectMessageIsLoading} from '../../store/message/message.selectors';
 
 @Component({
   selector: 'console-query-input',
@@ -23,6 +24,7 @@ export class QueryInputComponent {
   readonly availableAgents$: Observable<Agent[]>;
   readonly currentAgent$: Observable<Agent | null | undefined>;
   readonly currentAttachment$: Observable<Attachment | null | undefined>;
+  readonly isProcessing$: Observable<boolean>;
   readonly form: FormGroup;
   agentSelectorOpen = false;
 
@@ -51,6 +53,8 @@ export class QueryInputComponent {
         }
       })
     );
+
+    this.isProcessing$ = this.store.select(selectMessageIsLoading);
 
     this.form = this.fb.group({
       query: ['', [Validators.required, this.noWhitespaceValidator]],
@@ -97,15 +101,16 @@ export class QueryInputComponent {
     agentId: string,
     attachmentId: string | null | undefined,
   ): void {
+    if (!this.form.invalid) {
+      const data = {
+        'message_role': 'human',
+        'message_content': query,
+        'agent_id': agentId,
+        'attachment_id': attachmentId,
+      } as MessageRequest;
 
-    const data = {
-      'message_role': 'human',
-      'message_content': query,
-      'agent_id': agentId,
-      'attachment_id': attachmentId,
-    } as MessageRequest;
-
-    this.store.dispatch(MessageActions.postMessage({data}));
+      this.store.dispatch(MessageActions.postMessage({data}));
+    }
   }
 
 }

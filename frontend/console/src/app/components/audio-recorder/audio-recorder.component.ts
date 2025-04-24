@@ -98,7 +98,7 @@ export class AudioRecorderComponent implements OnDestroy, AfterViewInit {
       if (this.recordedAudio) {
         this.store.dispatch(AttachmentActions.uploadAttachment({
           data: this.recordedAudio,
-          filename: `recording-${new Date().toISOString()}.webm`
+          filename: `rec-${new Date().toISOString()}.webm`
         }));
       }
     }, 50);
@@ -140,15 +140,6 @@ export class AudioRecorderComponent implements OnDestroy, AfterViewInit {
       this.isPaused = false;
     }
   }
-
-  // downloadRecording() {
-  //   if (this.recordedAudio) {
-  //     const link = document.createElement('a');
-  //     link.href = this.recordedAudio;
-  //     link.download = `recording-${new Date().toISOString()}.webm`;
-  //     link.click();
-  //   }
-  // }
 
   formatTime(seconds: number): string {
     const minutes = Math.floor(seconds / 60);

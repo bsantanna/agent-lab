@@ -1,14 +1,18 @@
 <ng-container *ngIf="{
+  availableAgents: availableAgents$ | async,
   currentAgent: currentAgent$ | async,
   currentAttachment: currentAttachment$ | async,
-  availableAgents: availableAgents$ | async
+  isProcessing: isProcessing$ | async
 } as vm">
   <div class="h-44 max-w-screen-lg mx-auto rounded-xl border-2 border-gray-300 shadow-lg bg-white pl-6 pr-6 pt-4">
     <form [formGroup]="form">
       <div class="flex flex-col">
-        <textarea class="w-full h-28 resize-none focus:outline-none"
-                  formControlName="query"
-                  placeholder=">..."></textarea>
+
+        <textarea
+          class="w-full h-28 resize-none focus:outline-none"
+          formControlName="query"
+          placeholder=">..."></textarea>
+
         <div class="flex flex-row">
 
           <ng-container *ngIf="vm.currentAttachment">
@@ -17,15 +21,21 @@
                class="cursor-pointer"
                download
                target="_blank">
-              {{ vm.currentAttachment.file_name }}
+              <button aria-expanded="true"
+                      aria-haspopup="true"
+                      class="inline-flex w-full justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-xs hover:bg-gray-50 cursor-pointer"
+                      id="menu-button"
+                      type="button">
+                {{ vm.currentAttachment.file_name }}
+              </button>
             </a>
           </ng-container>
 
-          <ng-container *ngIf="voiceInputEnabled(vm.currentAgent) && !vm.currentAttachment">
+          <ng-container *ngIf="voiceInputEnabled(vm.currentAgent) && !vm.currentAttachment && !vm.isProcessing">
             <console-audio-recorder></console-audio-recorder>
           </ng-container>
 
-          <ng-container *ngIf="imageAttachmentEnabled(vm.currentAgent) && !vm.currentAttachment">
+          <ng-container *ngIf="imageAttachmentEnabled(vm.currentAgent) && !vm.currentAttachment && !vm.isProcessing">
             <button class="text-gray-400 hover:text-gray-200 cursor-pointer">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path d="M7 21h10a2 2 0 002-2V9l-5-5H7a2 2 0 00-2 2v13a2 2 0 002 2zM14 4v5h5M9 12h6m-3 3v-6"
@@ -40,25 +50,25 @@
 
           <!-- agent selector -->
           <div class="-mt-1 mr-4 relative">
-            <div>
-              <button (click)="toggleAgentSelector()"
-                      aria-expanded="true"
-                      aria-haspopup="true"
-                      class="inline-flex w-full justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-xs hover:bg-gray-50 cursor-pointer"
-                      id="menu-button"
-                      type="button">
-                <span *ngIf="vm.currentAgent">{{ vm.currentAgent.agent_name }}</span>
-                <span *ngIf="!vm.currentAgent">Select Agent</span>
-                <svg aria-hidden="true" class="-mr-1 size-5 text-gray-400" data-slot="icon" fill="currentColor"
-                     viewBox="0 0 20 20">
-                  <path clip-rule="evenodd"
-                        d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
-                        fill-rule="evenodd"/>
-                </svg>
-              </button>
-            </div>
+            <button (click)="toggleAgentSelector()"
+                    aria-expanded="true"
+                    aria-haspopup="true"
+                    class="inline-flex w-full justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-xs hover:bg-gray-50 cursor-pointer"
+                    id="menu-button"
+                    type="button">
+              <span *ngIf="vm.currentAgent">{{ vm.currentAgent.agent_name }}</span>
+              <span *ngIf="!vm.currentAgent">Select Agent</span>
+              <svg aria-hidden="true"
+                   class="-mr-1 size-5 text-gray-400"
+                   data-slot="icon" fill="currentColor"
+                   viewBox="0 0 20 20">
+                <path clip-rule="evenodd"
+                      d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+                      fill-rule="evenodd"/>
+              </svg>
+            </button>
             <!-- Dropdown menu -->
-            <div *ngIf="agentSelectorOpen"
+            <div *ngIf="agentSelectorOpen && !vm.isProcessing"
                  aria-labelledby="menu-button"
                  aria-orientation="vertical"
                  class="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-hidden
@@ -87,22 +97,28 @@
             </div>
           </div>
 
-          <!-- Send button -->
-          <button
-            (click)="postMessageRequest(
+          <ng-container *ngIf="vm.isProcessing">
+            <div class="w-8 h-8 border-4 border-blue-500 border-solid border-t-transparent rounded-full animate-spin"></div>
+          </ng-container>
+
+          <ng-container *ngIf="!vm.isProcessing">
+            <!-- Send button -->
+            <button
+              (click)="postMessageRequest(
               form.value.query,
               form.value.agentId,
               form.value.attachmentId
             )"
-            [disabled]="form.invalid"
-            [ngClass]="{'text-gray-400 hover:text-green-400':!form.invalid,'text-gray-200':form.invalid}"
-            class="cursor-pointer"
-          >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M3 3l9 9-9 9 18-9L3 3zm0 0l9 9"
-                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-            </svg>
-          </button>
+              [disabled]="form.invalid"
+              [ngClass]="{'text-gray-400 hover:text-green-400':!form.invalid,'text-gray-200':form.invalid}"
+              class="cursor-pointer"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="M3 3l9 9-9 9 18-9L3 3zm0 0l9 9"
+                      stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+              </svg>
+            </button>
+          </ng-container>
 
         </div>
       </div>
