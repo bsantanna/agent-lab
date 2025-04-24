@@ -14,7 +14,7 @@ export class AudioRecorderComponent implements OnDestroy, AfterViewInit{
   permissionState: 'prompt' | 'granted' | 'denied' = 'prompt';
   recordedAudio: string | null = null;
   recordingTime = 0;
-  maxRecordingTime = 300; // 5 minutes in seconds
+  maxRecordingTime = 120; // 2 minutes in seconds
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];
   private timerInterval: any;
