@@ -1,4 +1,4 @@
-import { createActionGroup, props } from '@ngrx/store';
+import {createActionGroup, emptyProps, props} from '@ngrx/store';
 import {Attachment} from '../../openapi';
 
 export const AttachmentActions = createActionGroup({
@@ -7,5 +7,6 @@ export const AttachmentActions = createActionGroup({
     'Upload Attachment': props<{ data: Blob, filename: string }>(),
     'Upload Attachment Success': props<{ data: Attachment }>(),
     'Upload Attachment Failure': props<{ error: string }>(),
+    'Deselect Attachment': emptyProps(),
   }
 });

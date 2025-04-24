@@ -33,6 +33,10 @@ export const attachmentReducer = createReducer(
     ...state,
     loading: false,
     error,
+  })),
+  on(AttachmentActions.deselectAttachment, state => ({
+    ...state,
+    attachment: null,
   }))
 
 );

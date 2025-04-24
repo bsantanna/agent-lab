@@ -1,5 +1,6 @@
 <ng-container *ngIf="{
   currentAgent: currentAgent$ | async,
+  currentAttachment: currentAttachment$ | async,
   availableAgents: availableAgents$ | async
 } as vm">
   <div class="h-44 max-w-screen-lg mx-auto rounded-xl border-2 border-gray-300 shadow-lg bg-white pl-6 pr-6 pt-4">
@@ -10,11 +11,20 @@
                   placeholder=">..."></textarea>
         <div class="flex flex-row">
 
-          <ng-container *ngIf="voiceInputEnabled(vm.currentAgent)">
+          <ng-container *ngIf="vm.currentAttachment">
+            <a *ngIf="vm.currentAttachment"
+               [href]="getAttachmentUrl(vm.currentAttachment)"
+               target="_blank"
+               download>
+              {{ vm.currentAttachment.file_name }}
+            </a>
+          </ng-container>
+
+          <ng-container *ngIf="voiceInputEnabled(vm.currentAgent) && !vm.currentAttachment">
             <console-audio-recorder></console-audio-recorder>
           </ng-container>
 
-          <ng-container *ngIf="imageAttachmentEnabled(vm.currentAgent)">
+          <ng-container *ngIf="imageAttachmentEnabled(vm.currentAgent) && !vm.currentAttachment">
             <button class="text-gray-400 hover:text-gray-200">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path d="M7 21h10a2 2 0 002-2V9l-5-5H7a2 2 0 00-2 2v13a2 2 0 002 2zM14 4v5h5M9 12h6m-3 3v-6"
@@ -26,6 +36,8 @@
           <div class="flex-grow">
             <!-- spacer -->
           </div>
+
+          <!-- agent selector -->
           <div class="-mt-1 mr-4 relative">
             <div>
               <button (click)="toggleAgentSelector()"
@@ -52,6 +64,14 @@
                  role="menu"
                  tabindex="-1">
               <div class="py-1">
+                <ng-container *ngIf="vm.currentAgent">
+                  <a (click)="deselectAgent()"
+                     class="block px-4 py-2 text-sm text-gray-700"
+                     role="menuitem"
+                     tabindex="-1">
+                    Deselect Agent
+                  </a>
+                </ng-container>
                 <ng-container *ngFor="let agent of vm.availableAgents">
                   <a *ngIf="agent.id !== vm.currentAgent?.id"
                      (click)="setCurrentAgent(agent)"
@@ -60,25 +80,25 @@
                      tabindex="-1">
                     {{ agent.agent_name }}
                   </a>
-                  <a *ngIf="agent.id == vm.currentAgent?.id"
-                     (click)="deselectAgent()"
-                     class="block px-4 py-2 text-sm text-gray-700"
-                     role="menuitem"
-                     tabindex="-1">
-                    Deselect Agent
-                  </a>
                 </ng-container>
               </div>
             </div>
           </div>
+
           <!-- Send button -->
-          <button [disabled]="form.invalid" [ngClass]="{'text-gray-400':!form.invalid,'text-gray-200':form.invalid}"
-                  class="hover:text-gray-300">
+          <button [disabled]="form.invalid"
+                  (click)="postMessageRequest(
+                    form.value.query,
+                    form.value.agent_id,
+                    form.value.attachment_id
+                  )"
+                  [ngClass]="{'text-gray-400 hover:text-green-400':!form.invalid,'text-gray-200':form.invalid}">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path d="M3 3l9 9-9 9 18-9L3 3zm0 0l9 9"
                     stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
             </svg>
           </button>
+
         </div>
       </div>
     </form>

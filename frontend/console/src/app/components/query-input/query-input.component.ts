@@ -2,11 +2,15 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
 import {Observable, tap} from 'rxjs';
-import { Agent } from '../../openapi';
+import {Agent, Attachment, MessageRequest} from '../../openapi';
 import { selectAll as selectAvailableAgents, selectCurrentAgent } from '../../store/agent/agent.selectors';
 import { AgentActions } from '../../store/agent/agent.actions';
 import {FormBuilder, FormGroup, Validators, AbstractControl, ReactiveFormsModule, FormControl} from '@angular/forms';
 import {AudioRecorderComponent} from '../audio-recorder/audio-recorder.component';
+import {AttachmentActions} from '../../store/attachment/attachment.actions';
+import {selectCurrentAttachment} from '../../store/attachment/attachment.selectors';
+import globalConfig from '../../../agent-lab-console.json';
+import {MessageActions} from '../../store/message/message.actions';
 
 @Component({
   selector: 'console-query-input',
@@ -18,6 +22,7 @@ export class QueryInputComponent {
 
   readonly availableAgents$: Observable<Agent[]>;
   readonly currentAgent$: Observable<Agent | null | undefined>;
+  readonly currentAttachment$: Observable<Attachment | null | undefined>;
   readonly form: FormGroup;
   agentSelectorOpen = false;
 
@@ -25,6 +30,7 @@ export class QueryInputComponent {
     private readonly store: Store,
     private readonly fb: FormBuilder
   ) {
+    this.availableAgents$ = this.store.select(selectAvailableAgents);
 
     this.currentAgent$ = this.store.select(selectCurrentAgent).pipe(
       tap(agent => {
@@ -35,10 +41,21 @@ export class QueryInputComponent {
         }
       })
     );
-    this.availableAgents$ = this.store.select(selectAvailableAgents);
+
+    this.currentAttachment$ = this.store.select(selectCurrentAttachment).pipe(
+      tap(attachment => {
+        if (attachment) {
+          this.form.get('attachmentId')?.setValue(attachment.id);
+        } else {
+          this.form.get('attachmentId')?.setValue(null);
+        }
+      })
+    );
+
     this.form = this.fb.group({
       query: ['', [Validators.required, this.noWhitespaceValidator]],
-      agentId: ['', [Validators.required, this.noWhitespaceValidator]]
+      agentId: ['', [Validators.required, this.noWhitespaceValidator]],
+      attachmentId: [null]
     });
   }
 
@@ -66,7 +83,30 @@ export class QueryInputComponent {
 
   deselectAgent() {
     this.store.dispatch(AgentActions.deselectAgent());
+    this.store.dispatch(AttachmentActions.deselectAttachment());
     this.agentSelectorOpen = false;
+  }
+
+  getAttachmentUrl(attachment: Attachment): string {
+    return `${globalConfig.apiUrl}/attachments/download/${attachment.id}`;
+  }
+
+  postMessageRequest(
+    query: string,
+    agentId: string,
+    attachmentId: string | null | undefined,
+  ):void {
+
+    debugger;
+
+    const data = {
+      'message_role': 'human',
+      'message_content': query,
+      'agent_id': agentId,
+      'attachment_id': attachmentId,
+    } as MessageRequest;
+
+    this.store.dispatch(MessageActions.postMessage({data}));
   }
 
 }

@@ -15,6 +15,8 @@ import {LanguageModelEffects} from './store/language-model/language-model.effect
 import {AgentEffects} from './store/agent/agent.effects';
 import {AttachmentEffects} from './store/attachment/attachment.effects';
 import {attachmentReducer} from './store/attachment/attachment.reducer';
+import {messageReducer} from './store/message/message.reducer';
+import {MessageEffects} from './store/message/message.effects';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -25,6 +27,7 @@ export const appConfig: ApplicationConfig = {
       attachment: attachmentReducer,
       integration: integrationReducer,
       languageModel: languageModelReducer,
+      message: messageReducer,
       router: routerReducer,
     }),
     provideStoreDevtools({maxAge: 25, logOnly: !isDevMode()}),
@@ -34,6 +37,7 @@ export const appConfig: ApplicationConfig = {
       AttachmentEffects,
       IntegrationEffects,
       LanguageModelEffects,
+      MessageEffects,
     ]),
     provideRouterStore(),
   ]
