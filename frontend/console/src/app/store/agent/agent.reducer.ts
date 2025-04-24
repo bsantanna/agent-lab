@@ -1,7 +1,5 @@
 import {createReducer, on} from '@ngrx/store';
 import {AgentActions} from './agent.actions';
-import {Agent} from '../../openapi';
-import {EntityState} from '@ngrx/entity';
 import {agentAdapter, AgentState} from './agent.state';
 
 export const agentFeatureKey = 'agent';
@@ -27,7 +25,7 @@ export const agentReducer = createReducer(
     loading: false,
     error,
   })),
-  on(AgentActions.selectAgent, (state, { id }) => ({
+  on(AgentActions.selectAgent, (state, {id}) => ({
     ...state,
     selectedEntityId: id,
   })),

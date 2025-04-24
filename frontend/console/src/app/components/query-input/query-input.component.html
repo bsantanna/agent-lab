@@ -14,8 +14,8 @@
           <ng-container *ngIf="vm.currentAttachment">
             <a *ngIf="vm.currentAttachment"
                [href]="getAttachmentUrl(vm.currentAttachment)"
-               target="_blank"
-               download>
+               download
+               target="_blank">
               {{ vm.currentAttachment.file_name }}
             </a>
           </ng-container>
@@ -48,7 +48,8 @@
                       type="button">
                 <span *ngIf="vm.currentAgent">{{ vm.currentAgent.agent_name }}</span>
                 <span *ngIf="!vm.currentAgent">Select Agent</span>
-                <svg aria-hidden="true" class="-mr-1 size-5 text-gray-400" data-slot="icon" fill="currentColor" viewBox="0 0 20 20">
+                <svg aria-hidden="true" class="-mr-1 size-5 text-gray-400" data-slot="icon" fill="currentColor"
+                     viewBox="0 0 20 20">
                   <path clip-rule="evenodd"
                         d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
                         fill-rule="evenodd"/>
@@ -73,8 +74,8 @@
                   </a>
                 </ng-container>
                 <ng-container *ngFor="let agent of vm.availableAgents">
-                  <a *ngIf="agent.id !== vm.currentAgent?.id"
-                     (click)="setCurrentAgent(agent)"
+                  <a (click)="setCurrentAgent(agent)"
+                     *ngIf="agent.id !== vm.currentAgent?.id"
                      class="block px-4 py-2 text-sm text-gray-700"
                      role="menuitem"
                      tabindex="-1">
@@ -86,12 +87,12 @@
           </div>
 
           <!-- Send button -->
-          <button [disabled]="form.invalid"
-                  (click)="postMessageRequest(
+          <button (click)="postMessageRequest(
                     form.value.query,
                     form.value.agentId,
                     form.value.attachmentId
                   )"
+                  [disabled]="form.invalid"
                   [ngClass]="{'text-gray-400 hover:text-green-400':!form.invalid,'text-gray-200':form.invalid}">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path d="M3 3l9 9-9 9 18-9L3 3zm0 0l9 9"

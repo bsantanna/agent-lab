@@ -1,14 +1,12 @@
-import { createReducer, on } from '@ngrx/store';
-import { MessageActions } from './message.actions';
-import {Message} from '../../openapi';
-import {EntityState} from '@ngrx/entity';
+import {createReducer, on} from '@ngrx/store';
+import {MessageActions} from './message.actions';
 import {messageAdapter, MessageState} from './message.state';
 
 export const messageFeatureKey = 'message';
 
 export const initialState: MessageState = messageAdapter.getInitialState({
   selectedEntityId: null,
-  reply:null,
+  reply: null,
   loading: false,
   error: null,
 });
@@ -28,7 +26,7 @@ export const messageReducer = createReducer(
     loading: false,
     error,
   })),
-  on(MessageActions.postMessageSuccess, (state, {data}) =>({
+  on(MessageActions.postMessageSuccess, (state, {data}) => ({
     ...state,
     reply: data,
     loading: false,

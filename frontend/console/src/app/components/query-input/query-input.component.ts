@@ -1,11 +1,11 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Store } from '@ngrx/store';
+import {Component} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {Store} from '@ngrx/store';
 import {Observable, tap} from 'rxjs';
 import {Agent, Attachment, MessageRequest} from '../../openapi';
-import { selectAll as selectAvailableAgents, selectCurrentAgent } from '../../store/agent/agent.selectors';
-import { AgentActions } from '../../store/agent/agent.actions';
-import {FormBuilder, FormGroup, Validators, AbstractControl, ReactiveFormsModule, FormControl} from '@angular/forms';
+import {selectAll as selectAvailableAgents, selectCurrentAgent} from '../../store/agent/agent.selectors';
+import {AgentActions} from '../../store/agent/agent.actions';
+import {AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {AudioRecorderComponent} from '../audio-recorder/audio-recorder.component';
 import {AttachmentActions} from '../../store/attachment/attachment.actions';
 import {selectCurrentAttachment} from '../../store/attachment/attachment.selectors';
@@ -61,7 +61,7 @@ export class QueryInputComponent {
 
   noWhitespaceValidator(control: AbstractControl) {
     const isWhitespace = (control.value ?? '').trim().length === 0;
-    return !isWhitespace ? null : { whitespace: true };
+    return !isWhitespace ? null : {whitespace: true};
   }
 
   voiceInputEnabled(agent: Agent | null | undefined): boolean {
@@ -77,7 +77,7 @@ export class QueryInputComponent {
   }
 
   setCurrentAgent(agent: Agent) {
-    this.store.dispatch(AgentActions.selectAgent({ id: agent.id }));
+    this.store.dispatch(AgentActions.selectAgent({id: agent.id}));
     this.agentSelectorOpen = false;
   }
 
@@ -95,7 +95,7 @@ export class QueryInputComponent {
     query: string,
     agentId: string,
     attachmentId: string | null | undefined,
-  ):void {
+  ): void {
 
     const data = {
       'message_role': 'human',

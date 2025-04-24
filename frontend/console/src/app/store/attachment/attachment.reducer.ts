@@ -1,5 +1,5 @@
-import { createReducer, on } from '@ngrx/store';
-import { AttachmentActions } from './attachment.actions';
+import {createReducer, on} from '@ngrx/store';
+import {AttachmentActions} from './attachment.actions';
 import {Attachment} from '../../openapi';
 
 export const attachmentFeatureKey = 'attachment';
@@ -11,7 +11,7 @@ export interface AttachmentState {
 }
 
 export const initialState: AttachmentState = {
-  attachment:null,
+  attachment: null,
   loading: false,
   error: null,
 };
@@ -38,6 +38,5 @@ export const attachmentReducer = createReducer(
     ...state,
     attachment: null,
   }))
-
 );
 

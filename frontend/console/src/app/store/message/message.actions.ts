@@ -1,4 +1,4 @@
-import {createActionGroup, emptyProps, props} from '@ngrx/store';
+import {createActionGroup, props} from '@ngrx/store';
 import {Message, MessageListRequest, MessageRequest} from '../../openapi';
 
 export const MessageActions = createActionGroup({

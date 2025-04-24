@@ -1,4 +1,4 @@
-import { createFeatureSelector, createSelector } from '@ngrx/store';
+import {createFeatureSelector, createSelector} from '@ngrx/store';
 import {AttachmentState} from './attachment.reducer';
 
 export const selectAttachmentState = createFeatureSelector<AttachmentState>('attachment');

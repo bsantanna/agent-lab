@@ -1,5 +1,5 @@
-import {AfterViewInit, ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {AfterViewInit, ChangeDetectorRef, Component, OnDestroy} from '@angular/core';
+import {CommonModule} from '@angular/common';
 import {Store} from '@ngrx/store';
 import {AttachmentActions} from '../../store/attachment/attachment.actions';
 
@@ -9,7 +9,7 @@ import {AttachmentActions} from '../../store/attachment/attachment.actions';
   imports: [CommonModule],
   templateUrl: './audio-recorder.component.html'
 })
-export class AudioRecorderComponent implements OnDestroy, AfterViewInit{
+export class AudioRecorderComponent implements OnDestroy, AfterViewInit {
   isRecording = false;
   isPaused = false;
   isMicrophoneAvailable = false;
@@ -24,7 +24,8 @@ export class AudioRecorderComponent implements OnDestroy, AfterViewInit{
   constructor(
     private readonly changeDetectorRef: ChangeDetectorRef,
     private readonly store: Store,
-  ) {}
+  ) {
+  }
 
   ngAfterViewInit(): void {
     this.checkMicrophoneAccess();
@@ -39,7 +40,7 @@ export class AudioRecorderComponent implements OnDestroy, AfterViewInit{
     if (!navigator.permissions || !navigator.permissions.query) {
       // Fallback for browsers that don't support permissions API
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({audio: true});
         this.isMicrophoneAvailable = true;
         this.permissionState = 'granted';
         stream.getTracks().forEach(track => track.stop());
@@ -51,7 +52,7 @@ export class AudioRecorderComponent implements OnDestroy, AfterViewInit{
     }
 
     try {
-      const permission = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+      const permission = await navigator.permissions.query({name: 'microphone' as PermissionName});
       this.permissionState = permission.state;
       this.isMicrophoneAvailable = permission.state === 'granted';
 
@@ -69,7 +70,7 @@ export class AudioRecorderComponent implements OnDestroy, AfterViewInit{
 
   async requestMicrophonePermission() {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({audio: true});
       this.isMicrophoneAvailable = true;
       this.permissionState = 'granted';
       stream.getTracks().forEach(track => track.stop());
@@ -95,14 +96,17 @@ export class AudioRecorderComponent implements OnDestroy, AfterViewInit{
     setTimeout(() => {
       this.changeDetectorRef.detectChanges();
       if (this.recordedAudio) {
-        this.store.dispatch(AttachmentActions.uploadAttachment({data: this.recordedAudio, filename:`recording-${new Date().toISOString()}.webm`}));
+        this.store.dispatch(AttachmentActions.uploadAttachment({
+          data: this.recordedAudio,
+          filename: `recording-${new Date().toISOString()}.webm`
+        }));
       }
     }, 50);
   }
 
   async startRecording() {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({audio: true});
       this.mediaRecorder = new MediaRecorder(stream);
       this.audioChunks = [];
       this.recordingTime = 0;
@@ -114,7 +118,7 @@ export class AudioRecorderComponent implements OnDestroy, AfterViewInit{
       };
 
       this.mediaRecorder.onstop = () => {
-        this.recordedAudio = new Blob(this.audioChunks, { type: 'audio/webm' });
+        this.recordedAudio = new Blob(this.audioChunks, {type: 'audio/webm'});
         this.stopMediaTracks();
         this.clearTimer();
       };
@@ -146,6 +150,12 @@ export class AudioRecorderComponent implements OnDestroy, AfterViewInit{
   //   }
   // }
 
+  formatTime(seconds: number): string {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  }
+
   private startTimer() {
     this.clearTimer();
     this.timerInterval = setInterval(() => {
@@ -167,11 +177,5 @@ export class AudioRecorderComponent implements OnDestroy, AfterViewInit{
     if (this.mediaRecorder?.stream) {
       this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
     }
-  }
-
-  formatTime(seconds: number): string {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   }
 }
