@@ -84,6 +84,7 @@ export class QueryInputComponent {
   deselectAgent() {
     this.store.dispatch(AgentActions.deselectAgent());
     this.store.dispatch(AttachmentActions.deselectAttachment());
+    this.store.dispatch(MessageActions.cleanReply())
     this.agentSelectorOpen = false;
   }
 

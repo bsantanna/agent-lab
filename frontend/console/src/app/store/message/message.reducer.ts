@@ -6,6 +6,7 @@ export const messageFeatureKey = 'message';
 
 export const initialState: MessageState = messageAdapter.getInitialState({
   selectedEntityId: null,
+  request: null,
   reply: null,
   loading: false,
   error: null,
@@ -26,6 +27,12 @@ export const messageReducer = createReducer(
     loading: false,
     error,
   })),
+  on(MessageActions.postMessage, (state, {data}) => ({
+    ...state,
+    request: data,
+    loading: true,
+    error: null,
+  })),
   on(MessageActions.postMessageSuccess, (state, {data}) => ({
     ...state,
     reply: data,
@@ -36,6 +43,11 @@ export const messageReducer = createReducer(
     ...state,
     loading: false,
     error,
+  })),
+  on(MessageActions.cleanReply, state => ({
+    ...state,
+    request: null,
+    reply: null,
   }))
 );
 
