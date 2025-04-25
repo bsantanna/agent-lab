@@ -4,12 +4,12 @@ from typing_extensions import List
 
 from app.core.container import Container
 from app.domain.exceptions.base import NotFoundError
-from app.domain.models import Agent
+from app.domain.models import Agent as DomainAgent
 from app.interface.api.agents.schema import (
     AgentCreateRequest,
-    AgentExpandedResponse,
-    AgentResponse,
-    AgentSettingResponse,
+    AgentExpanded,
+    Agent,
+    AgentSetting,
     AgentSettingUpdateRequest,
     AgentUpdateRequest,
 )
@@ -20,16 +20,16 @@ from app.services.agents import AgentService
 router = APIRouter()
 
 
-@router.get("/list", response_model=List[AgentResponse])
+@router.get("/list", response_model=List[Agent])
 @inject
 async def get_list(
     agent_service: AgentService = Depends(Provide[Container.agent_service]),
 ):
     agents = agent_service.get_agents()
-    return [AgentResponse.model_validate(agent) for agent in agents]
+    return [Agent.model_validate(agent) for agent in agents]
 
 
-@router.get("/{agent_id}", response_model=AgentExpandedResponse)
+@router.get("/{agent_id}", response_model=AgentExpanded)
 @inject
 async def get_by_id(
     agent_id: str,
@@ -46,9 +46,7 @@ async def get_by_id(
         return Response(status_code=status.HTTP_404_NOT_FOUND)
 
 
-@router.post(
-    "/create", status_code=status.HTTP_201_CREATED, response_model=AgentResponse
-)
+@router.post("/create", status_code=status.HTTP_201_CREATED, response_model=Agent)
 @inject
 async def add(
     agent_data: AgentCreateRequest = Body(...),
@@ -63,7 +61,7 @@ async def add(
     agent_registry.get_agent(agent_data.agent_type).create_default_settings(
         agent_id=agent.id
     )
-    return AgentResponse.model_validate(agent)
+    return Agent.model_validate(agent)
 
 
 @router.delete("/delete/{agent_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -80,7 +78,7 @@ async def remove(
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.post(path="/update", response_model=AgentResponse)
+@router.post(path="/update", response_model=Agent)
 @inject
 async def update(
     agent_data: AgentUpdateRequest = Body(...),
@@ -91,12 +89,12 @@ async def update(
             agent_id=agent_data.agent_id,
             agent_name=agent_data.agent_name,
         )
-        return AgentResponse.model_validate(agent)
+        return Agent.model_validate(agent)
     except NotFoundError:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
 
 
-@router.post(path="/update_setting", response_model=AgentExpandedResponse)
+@router.post(path="/update_setting", response_model=AgentExpanded)
 @inject
 async def update_setting(
     agent_data: AgentSettingUpdateRequest = Body(...),
@@ -121,11 +119,11 @@ async def update_setting(
 
 
 def _format_expanded_response(
-    agent: Agent, agent_setting_service: AgentSettingService
-) -> AgentExpandedResponse:
+    agent: DomainAgent, agent_setting_service: AgentSettingService
+) -> AgentExpanded:
     settings = agent_setting_service.get_agent_settings(agent_id=agent.id)
-    response = AgentExpandedResponse.model_validate(agent)
+    response = AgentExpanded.model_validate(agent)
     response.ag_settings = [
-        AgentSettingResponse.model_validate(setting) for setting in settings
+        AgentSetting.model_validate(setting) for setting in settings
     ]
     return response

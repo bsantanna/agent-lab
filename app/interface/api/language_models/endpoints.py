@@ -4,12 +4,12 @@ from typing_extensions import List
 
 from app.core.container import Container
 from app.domain.exceptions.base import NotFoundError
-from app.domain.models import LanguageModel
+from app.domain.models import LanguageModel as DomainLanguageModel
 from app.interface.api.language_models.schema import (
     LanguageModelCreateRequest,
-    LanguageModelExpandedResponse,
-    LanguageModelResponse,
-    LanguageModelSettingResponse,
+    LanguageModelExpanded,
+    LanguageModel,
+    LanguageModelSetting,
     LanguageModelSettingUpdateRequest,
     LanguageModelUpdateRequest,
 )
@@ -19,7 +19,7 @@ from app.services.language_models import LanguageModelService
 router = APIRouter()
 
 
-@router.get("/list", response_model=List[LanguageModelResponse])
+@router.get("/list", response_model=List[LanguageModel])
 @inject
 async def get_list(
     language_model_service: LanguageModelService = Depends(
@@ -27,10 +27,10 @@ async def get_list(
     ),
 ):
     language_models = language_model_service.get_language_models()
-    return [LanguageModelResponse.model_validate(lm) for lm in language_models]
+    return [LanguageModel.model_validate(lm) for lm in language_models]
 
 
-@router.get("/{language_model_id}", response_model=LanguageModelExpandedResponse)
+@router.get("/{language_model_id}", response_model=LanguageModelExpanded)
 @inject
 async def get_by_id(
     language_model_id: str,
@@ -52,7 +52,7 @@ async def get_by_id(
 
 
 @router.post(
-    "/create", status_code=status.HTTP_201_CREATED, response_model=LanguageModelResponse
+    "/create", status_code=status.HTTP_201_CREATED, response_model=LanguageModel
 )
 @inject
 async def add(
@@ -65,7 +65,7 @@ async def add(
         integration_id=language_model_data.integration_id,
         language_model_tag=language_model_data.language_model_tag,
     )
-    return LanguageModelResponse.model_validate(language_model)
+    return LanguageModel.model_validate(language_model)
 
 
 @router.delete("/delete/{language_model_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -84,7 +84,7 @@ async def remove(
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.post(path="/update", response_model=LanguageModelResponse)
+@router.post(path="/update", response_model=LanguageModel)
 @inject
 async def update(
     language_model_data: LanguageModelUpdateRequest = Body(...),
@@ -97,12 +97,12 @@ async def update(
             language_model_id=language_model_data.language_model_id,
             language_model_tag=language_model_data.language_model_tag,
         )
-        return LanguageModelResponse.model_validate(language_model)
+        return LanguageModel.model_validate(language_model)
     except NotFoundError:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
 
 
-@router.post(path="/update_setting", response_model=LanguageModelExpandedResponse)
+@router.post(path="/update_setting", response_model=LanguageModelExpanded)
 @inject
 async def update_setting(
     language_model_data: LanguageModelSettingUpdateRequest = Body(...),
@@ -131,14 +131,14 @@ async def update_setting(
 
 
 def _format_expanded_response(
-    language_model: LanguageModel,
+    language_model: DomainLanguageModel,
     language_model_setting_service: LanguageModelSettingService,
-) -> LanguageModelExpandedResponse:
+) -> LanguageModelExpanded:
     settings = language_model_setting_service.get_language_model_settings(
         language_model.id
     )
-    response = LanguageModelExpandedResponse.model_validate(language_model)
+    response = LanguageModelExpanded.model_validate(language_model)
     response.lm_settings = [
-        LanguageModelSettingResponse.model_validate(setting) for setting in settings
+        LanguageModelSetting.model_validate(setting) for setting in settings
     ]
     return response

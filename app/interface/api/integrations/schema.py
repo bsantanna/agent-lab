@@ -31,7 +31,7 @@ class IntegrationCreateRequest(BaseModel):
         return v
 
 
-class IntegrationResponse(BaseModel):
+class Integration(BaseModel):
     id: str
     created_at: datetime
     is_active: bool

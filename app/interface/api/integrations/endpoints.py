@@ -6,14 +6,14 @@ from app.core.container import Container
 from app.domain.exceptions.base import NotFoundError
 from app.interface.api.integrations.schema import (
     IntegrationCreateRequest,
-    IntegrationResponse,
+    Integration,
 )
 from app.services.integrations import IntegrationService
 
 router = APIRouter()
 
 
-@router.get(path="/list", response_model=List[IntegrationResponse])
+@router.get(path="/list", response_model=List[Integration])
 @inject
 async def get_list(
     integration_service: IntegrationService = Depends(
@@ -21,12 +21,10 @@ async def get_list(
     ),
 ):
     integrations = integration_service.get_integrations()
-    return [
-        IntegrationResponse.model_validate(integration) for integration in integrations
-    ]
+    return [Integration.model_validate(integration) for integration in integrations]
 
 
-@router.get(path="/{integration_id}", response_model=IntegrationResponse)
+@router.get(path="/{integration_id}", response_model=Integration)
 @inject
 async def get_by_id(
     integration_id: str,
@@ -36,14 +34,12 @@ async def get_by_id(
 ):
     try:
         integration = integration_service.get_integration_by_id(integration_id)
-        return IntegrationResponse.model_validate(integration)
+        return Integration.model_validate(integration)
     except NotFoundError:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
 
 
-@router.post(
-    "/create", status_code=status.HTTP_201_CREATED, response_model=IntegrationResponse
-)
+@router.post("/create", status_code=status.HTTP_201_CREATED, response_model=Integration)
 @inject
 async def add(
     integration_data: IntegrationCreateRequest = Body(...),
@@ -57,7 +53,7 @@ async def add(
         api_key=integration_data.api_key,
     )
 
-    return IntegrationResponse.model_validate(integration)
+    return Integration.model_validate(integration)
 
 
 @router.delete("/delete/{integration_id}", status_code=status.HTTP_204_NO_CONTENT)
