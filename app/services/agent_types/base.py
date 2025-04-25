@@ -195,7 +195,7 @@ class AgentBase(ABC):
 
     def get_openai_client(self, agent_id: str) -> OpenAI:
         agent = self.agent_service.get_agent_by_id(agent_id)
-        language_model, integration = self.get_language_model_integration(agent)
+        _, integration = self.get_language_model_integration(agent)
         api_endpoint, api_key = self.get_integration_credentials(integration)
 
         return OpenAI(
