@@ -7,6 +7,9 @@ import {selectAll as selectAllMessages, selectMessageIsLoading} from '../../stor
 import {ActivatedRoute} from '@angular/router';
 import {MessageActions} from '../../store/message/message.actions';
 import {MessageListRequest} from '../../openapi';
+import {AgentActions} from '../../store/agent/agent.actions';
+import {IntegrationActions} from '../../store/integration/integration.actions';
+import {LanguageModelActions} from '../../store/language-model/language-model.actions';
 
 @Component({
   selector: 'console-dialog',
@@ -32,9 +35,14 @@ export class DialogComponent implements AfterViewInit {
   }
 
   ngAfterViewInit(): void {
+    const agentId = this.activatedRoute.snapshot.params['agentId'];
     const messageListRequest = {
-      agent_id: this.activatedRoute.snapshot.params['agentId']
+      agent_id: agentId,
     } as MessageListRequest;
+    this.store.dispatch(AgentActions.loadAgents());
+    this.store.dispatch(IntegrationActions.loadIntegrations());
+    this.store.dispatch(LanguageModelActions.loadLanguageModels());
+    this.store.dispatch(AgentActions.selectAgent({id:agentId}));
     this.store.dispatch(MessageActions.loadMessages({data: messageListRequest}));
   }
 
