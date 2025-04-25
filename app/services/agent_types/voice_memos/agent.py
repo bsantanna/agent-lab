@@ -219,6 +219,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
                 update={"messages": response["messages"]},
             )
         else:
+            # https://platform.openai.com/docs/guides/audio?api-mode=chat&lang=python
             audio_format = state["audio_format"]
             audio_language_model = state["audio_language_model"]
 
@@ -226,16 +227,13 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
                 f"Agent[{agent_id}] -> Coordinator -> Query -> {query} -> Attachment[{attachment_id}]"
             )
 
-            chat_model = self.get_chat_model(
-                agent_id, language_model_tag=audio_language_model
-            )
             attachment = self.attachment_service.get_attachment_by_id(attachment_id)
             audio_base64 = base64.b64encode(attachment.raw_content).decode()
             messages = [
-                ("system", coordinator_system_prompt),
-                (
-                    "human",
-                    [
+                {"role": "system", "content": coordinator_system_prompt},
+                {
+                    "role": "user",
+                    "content": [
                         {"type": "text", "text": query},
                         {
                             "type": "input_audio",
@@ -245,9 +243,14 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
                             },
                         },
                     ],
-                ),
+                },
             ]
-            response = chat_model.invoke(messages)
+
+            openai_client = self.get_openai_client(agent_id)
+            completion = openai_client.chat.completions.create(
+                model=audio_language_model, modalities=["text"], messages=messages
+            )
+            response = completion.choices[0].message
             transcription = response.content
             self.logger.info(
                 f"Agent[{agent_id}] -> Coordinator -> Response -> {response}"
@@ -415,5 +418,4 @@ class AzureEntraIdVoiceMemosAgent(
         return input_params
 
     def get_content_analyst_tools(self) -> list:
-        return [
-            self.get_person_search_tool(), self.get_person_details_tool()]
+        return [self.get_person_search_tool(), self.get_person_details_tool()]

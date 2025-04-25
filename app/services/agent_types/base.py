@@ -9,7 +9,7 @@ from datetime import timedelta, datetime, timezone
 
 import hvac
 import icalendar
-from browser_use.agent.service import Agent
+from browser_use.agent.service import Agent as BrowserAgent
 from browser_use.agent.views import AgentHistoryList
 from browser_use.browser.browser import BrowserConfig, Browser
 from jinja2 import Environment, DictLoader, select_autoescape
@@ -25,9 +25,11 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_tavily import TavilySearch, TavilyExtract
 from langgraph.graph import MessagesState
 from langgraph.types import Command
+from openai import OpenAI
 from typing_extensions import List, Annotated, Literal
 
 from app.domain.exceptions.base import ResourceNotFoundError, ConfigurationError
+from app.domain.models import Agent, Integration, LanguageModel
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.vectors import DocumentRepository
 from app.interface.api.messages.schema import MessageRequest, Message
@@ -114,22 +116,32 @@ class AgentBase(ABC):
         }
         return response_data["messages"][-1]["content"], response_data
 
-    def get_embeddings_model(self, agent_id) -> Embeddings:
-        agent = self.agent_service.get_agent_by_id(agent_id)
+    def get_language_model_integration(
+        self, agent: Agent
+    ) -> (LanguageModel, Integration):
         language_model = self.language_model_service.get_language_model_by_id(
             agent.language_model_id
         )
         integration = self.integration_service.get_integration_by_id(
             language_model.integration_id
         )
+        return language_model, integration
+
+    def get_integration_credentials(self, integration: Integration) -> (str, str):
         secrets = self.vault_client.secrets.kv.read_secret_version(
             path=f"integration_{integration.id}", raise_on_deleted_version=False
         )
         api_endpoint = secrets["data"]["data"]["api_endpoint"]
         api_key = secrets["data"]["data"]["api_key"]
+        return api_endpoint, api_key
+
+    def get_embeddings_model(self, agent_id) -> Embeddings:
+        agent = self.agent_service.get_agent_by_id(agent_id)
+        language_model, integration = self.get_language_model_integration(agent)
+        api_endpoint, api_key = self.get_integration_credentials(integration)
 
         lm_settings = self.language_model_setting_service.get_language_model_settings(
-            agent.language_model_id
+            language_model_id=language_model.id,
         )
 
         lm_settings_dict = {
@@ -154,17 +166,9 @@ class AgentBase(ABC):
 
     def get_chat_model(self, agent_id, language_model_tag: str = None) -> BaseChatModel:
         agent = self.agent_service.get_agent_by_id(agent_id)
-        language_model = self.language_model_service.get_language_model_by_id(
-            agent.language_model_id
-        )
-        integration = self.integration_service.get_integration_by_id(
-            language_model.integration_id
-        )
-        secrets = self.vault_client.secrets.kv.read_secret_version(
-            raise_on_deleted_version=False, path=f"integration_{integration.id}"
-        )
-        api_endpoint = secrets["data"]["data"]["api_endpoint"]
-        api_key = secrets["data"]["data"]["api_key"]
+        language_model, integration = self.get_language_model_integration(agent)
+        api_endpoint, api_key = self.get_integration_credentials(integration)
+
         if language_model_tag is None:
             language_model_tag = language_model.language_model_tag
 
@@ -188,6 +192,16 @@ class AgentBase(ABC):
                 model=language_model_tag,
                 base_url=api_endpoint,
             )
+
+    def get_openai_client(self, agent_id: str) -> OpenAI:
+        agent = self.agent_service.get_agent_by_id(agent_id)
+        language_model, integration = self.get_language_model_integration(agent)
+        api_endpoint, api_key = self.get_integration_credentials(integration)
+
+        return OpenAI(
+            api_key=api_key,
+            base_url=api_endpoint,
+        )
 
     def read_file_content(self, file_path: str) -> str:
         if not os.path.exists(file_path):
@@ -477,7 +491,7 @@ class WebAgentBase(WorkflowAgentBase, ABC):
             generated_gif_path = f"{cache_dir}/{uuid.uuid4()}.gif"
             browser_config = BrowserConfig(headless=headless)
             browser = Browser(config=browser_config)
-            browser_agent = Agent(
+            browser_agent = BrowserAgent(
                 task=instruction,  # Will be set per request
                 llm=chat_model,
                 browser=browser,
