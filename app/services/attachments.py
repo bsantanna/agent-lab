@@ -42,7 +42,7 @@ class AttachmentService:
         return self.attachment_repository.get_by_id(attachment_id)
 
     async def create_attachment_with_file(self, file: File) -> Attachment:
-        temp_file_path = f"./tmp/temp-{uuid4()}"
+        temp_file_path = f"tmp/temp-{uuid4()}"
 
         with open(temp_file_path, "wb") as buffer:
             raw_content = await file.read()
