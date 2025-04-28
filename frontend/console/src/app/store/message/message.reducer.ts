@@ -44,10 +44,11 @@ export const messageReducer = createReducer(
     loading: false,
     error,
   })),
-  on(MessageActions.cleanReply, state => ({
+  on(MessageActions.cleanMessages, state =>  ({
     ...state,
     request: null,
     reply: null,
-  }))
+  }) // TODO delete all
+  )
 );
 

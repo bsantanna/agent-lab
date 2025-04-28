@@ -90,7 +90,7 @@ export class QueryInputComponent {
   deselectAgent() {
     this.store.dispatch(AgentActions.deselectAgent());
     this.store.dispatch(AttachmentActions.deselectAttachment());
-    this.store.dispatch(MessageActions.cleanReply())
+    this.store.dispatch(MessageActions.cleanMessages())
     this.agentSelectorOpen = false;
     this.router.navigate(['/pages/start']);
   }
@@ -111,8 +111,10 @@ export class QueryInputComponent {
         'agent_id': agentId,
         'attachment_id': attachmentId,
       } as MessageRequest;
-
+      this.form.get('query')?.setValue(null);
       this.store.dispatch(MessageActions.postMessage({data}));
+      this.store.dispatch(MessageActions.cleanMessages())
+      this.store.dispatch(AttachmentActions.deselectAttachment());
       this.router.navigate(['/pages/dialog', agentId]);
     }
   }

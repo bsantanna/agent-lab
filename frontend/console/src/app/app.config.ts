@@ -17,6 +17,7 @@ import {AttachmentEffects} from './store/attachment/attachment.effects';
 import {attachmentReducer} from './store/attachment/attachment.reducer';
 import {messageReducer} from './store/message/message.reducer';
 import {MessageEffects} from './store/message/message.effects';
+import {provideMarkdown} from 'ngx-markdown';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -40,5 +41,6 @@ export const appConfig: ApplicationConfig = {
       MessageEffects,
     ]),
     provideRouterStore(),
+    provideMarkdown()
   ]
 };

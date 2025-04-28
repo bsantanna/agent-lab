@@ -10,6 +10,6 @@ export const MessageActions = createActionGroup({
     'Post Message': props<{ data: MessageRequest }>(),
     'Post Message Success': props<{ data: Message }>(),
     'Post Message Failure': props<{ error: string }>(),
-    'Clean Reply': emptyProps(),
+    'Clean Messages': emptyProps(),
   }
 });
