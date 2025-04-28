@@ -18,7 +18,7 @@ langchain-tavily==0.1.5
 langchain-text-splitters==0.3.8
 langchain-xai==0.2.2
 langgraph==0.3.5
-langgraph-checkpoint-postgres==2.0.15
+langgraph-checkpoint-postgres==2.0.21
 langgraph-prebuilt==0.1.7
 markitdown==0.0.2
 msal==1.32.0
