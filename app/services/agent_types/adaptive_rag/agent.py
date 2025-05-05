@@ -89,16 +89,16 @@ class AdaptiveRagAgent(WebAgentBase):
         )
 
     def format_response(self, workflow_state: AgentState) -> (str, dict):
-        return workflow_state["generation"], {
-            "agent_id": workflow_state["agent_id"],
-            "query": workflow_state["query"],
-            "collection_name": workflow_state["collection_name"],
-            "generation": workflow_state["generation"],
-            "connection": workflow_state["connection"],
+        return workflow_state.get("generation"), {
+            "agent_id": workflow_state.get("agent_id"),
+            "query": workflow_state.get("query"),
+            "collection_name": workflow_state.get("collection_name"),
+            "generation": workflow_state.get("generation"),
+            "connection": workflow_state.get("connection"),
             "documents": [
-                document.page_content for document in workflow_state["documents"]
+                document.page_content for document in workflow_state.get("documents")
             ],
-            "messages": workflow_state["messages"],
+            "messages": workflow_state.get("messages"),
         }
 
     def get_query_rewriter(self, chat_model, query_rewriter_system_prompt):
