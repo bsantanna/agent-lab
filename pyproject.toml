@@ -1,0 +1,5 @@
+[tool.semantic_release]
+version_variables = [
+  "charts/agent-lab/Chart.yaml:version",
+  "charts/agent-lab/Chart.yaml:appVersion"
+]

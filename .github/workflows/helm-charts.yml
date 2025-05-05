@@ -2,7 +2,7 @@ name: Helm Charts
 
 on:
   workflow_run:
-    workflows: [ "Continuous Integration" ]
+    workflows: [ "Release" ]
     types:
       - completed
 
