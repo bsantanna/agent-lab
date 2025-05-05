@@ -52,11 +52,11 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
 
     def format_response(self, workflow_state: AgentState) -> (str, dict):
         response_data = {
-            "agent_id": workflow_state["agent_id"],
-            "query": workflow_state["query"],
-            "collection_name": workflow_state["collection_name"],
-            "deep_search_mode": workflow_state["deep_search_mode"],
-            "execution_plan": workflow_state["execution_plan"],
+            "agent_id": workflow_state.get("agent_id"),
+            "query": workflow_state.get("query"),
+            "collection_name": workflow_state.get("collection_name"),
+            "deep_search_mode": workflow_state.get("deep_search_mode"),
+            "execution_plan": workflow_state.get("execution_plan"),
             "messages": [
                 json.loads(message.model_dump_json())
                 for message in workflow_state["messages"]

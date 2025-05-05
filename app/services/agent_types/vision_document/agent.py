@@ -25,10 +25,10 @@ class VisionDocumentAgent(WorkflowAgentBase):
         super().__init__(agent_utils)
 
     def format_response(self, workflow_state: AgentState) -> (str, dict):
-        return workflow_state["generation"], {
-            "agent_id": workflow_state["agent_id"],
-            "query": workflow_state["query"],
-            "generation": workflow_state["generation"],
+        return workflow_state.get("generation"), {
+            "agent_id": workflow_state.get("agent_id"),
+            "query": workflow_state.get("query"),
+            "generation": workflow_state.get("generation"),
         }
 
     def get_image_analysis_chain(
