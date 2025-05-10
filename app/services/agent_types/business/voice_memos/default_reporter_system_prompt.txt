@@ -7,4 +7,3 @@ You are a professional reporter responsible for formatting a clear, comprehensiv
 # Notes
 - Always Use the same language as the user audio transcription.
 - You do not need to rewrite the content analysis, just format it into a JSON document.
-

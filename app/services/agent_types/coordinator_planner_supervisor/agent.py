@@ -215,9 +215,6 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
         )
         return coordinator_prompt | structured_llm_generator
 
-    def get_coordinator_tools(self) -> list:
-        return []
-
     def get_coordinator(
         self, state: AgentState
     ) -> Command[Literal["planner", "__end__"]]:
@@ -284,9 +281,6 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             ]
         )
         return supervisor_prompt | structured_llm_generator
-
-    def get_supervisor_tools(self) -> list:
-        return []
 
     def get_supervisor(
         self, state: AgentState
@@ -392,9 +386,6 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             update={"messages": response["messages"]},
             goto="supervisor",
         )
-
-    def get_reporter_tools(self) -> list:
-        return []
 
     def get_reporter(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]

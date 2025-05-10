@@ -543,7 +543,6 @@ class SupervisedWorkflowAgentBase(WebAgentBase, ABC):
         if not os.environ.get("TAVILY_API_KEY"):
             raise ConfigurationError("TAVILY_API_KEY environment variable not set")
 
-    @abstractmethod
     def get_coordinator_tools(self) -> list:
         return []
 
@@ -584,14 +583,12 @@ class SupervisedWorkflowAgentBase(WebAgentBase, ABC):
     def get_supervisor(self, state: MessagesState) -> Command:
         pass
 
-    @abstractmethod
     def get_supervisor_tools(self) -> list:
-        pass
+        return []
 
     @abstractmethod
     def get_reporter(self, state: MessagesState) -> Command[Literal["supervisor"]]:
         pass
 
-    @abstractmethod
     def get_reporter_tools(self) -> list:
-        pass
+        return []

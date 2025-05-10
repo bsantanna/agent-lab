@@ -26,7 +26,7 @@ from app.services.agent_types.react_rag.agent import ReactRagAgent
 from app.services.agent_types.registry import AgentRegistry
 from app.services.agent_types.test_echo.test_echo_agent import TestEchoAgent
 from app.services.agent_types.vision_document.agent import VisionDocumentAgent
-from app.services.agent_types.voice_memos.agent import (
+from app.services.agent_types.business.voice_memos.agent import (
     VoiceMemosAgent,
     AzureEntraIdVoiceMemosAgent,
 )
