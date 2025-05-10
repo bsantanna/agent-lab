@@ -24,6 +24,8 @@ class AgentState(MessagesState):
     planner_system_prompt: str
     supervisor_system_prompt: str
     reporter_system_prompt: str
+    financial_struggle_system_prompt: str
+    customer_complaint_system_prompt: str
     execution_plan: str
     agreement_plan: str
     claim_support_request: str
@@ -112,12 +114,39 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
         return Command(goto=response["next"], update={"next": response["next"]})
 
     def get_reporter(self, state: AgentState) -> Command[Literal["supervisor"]]:
-        pass
+        agent_id = state["agent_id"]
+        self.logger.info(f"Agent[{agent_id}] -> Reporter")
+        reporter = create_react_agent(
+            model=self.get_chat_model(agent_id),
+            tools=self.get_reporter_tools(),
+            prompt=state["reporter_system_prompt"],
+        )
+        response = reporter.invoke(state)
+        self.logger.info(f"Agent[{agent_id}] -> Reporter -> Response -> {response}")
+        return Command(
+            update={"messages": response["messages"]},
+            goto="supervisor",
+        )
 
     def get_financial_struggle_analyst(
         self, state: AgentState
     ) -> Command[Literal["supervisor"]]:
-        pass
+        agent_id = state["agent_id"]
+        self.logger.info(f"Agent[{agent_id}] -> Financial Struggle Analyst")
+        financial_struggle_system_prompt = state["financial_struggle_system_prompt"]
+        financial_struggle_analyst = create_react_agent(
+            model=self.get_chat_model(agent_id),
+            tools=self.get_financial_struggle_analyst_tools(),
+            prompt=financial_struggle_system_prompt,
+        )
+        response = financial_struggle_analyst.invoke(state)
+        self.logger.info(
+            f"Agent[{agent_id}] -> Financial Struggle Analyst -> Response -> {response}"
+        )
+        return Command(
+            update={"messages": response["messages"]},
+            goto="supervisor",
+        )
 
     def get_financial_struggle_analyst_tools(self) -> list:
         return []
@@ -125,7 +154,22 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
     def get_customer_complaint_analyst(
         self, state: AgentState
     ) -> Command[Literal["supervisor"]]:
-        pass
+        agent_id = state["agent_id"]
+        self.logger.info(f"Agent[{agent_id}] -> Customer Complaint Analyst")
+        customer_complaint_system_prompt = state["customer_complaint_system_prompt"]
+        customer_complaint_analyst = create_react_agent(
+            model=self.get_chat_model(agent_id),
+            tools=self.get_customer_complaint_analyst_tools(),
+            prompt=customer_complaint_system_prompt,
+        )
+        response = customer_complaint_analyst.invoke(state)
+        self.logger.info(
+            f"Agent[{agent_id}] -> Customer Complaint Analyst -> Response -> {response}"
+        )
+        return Command(
+            update={"messages": response["messages"]},
+            goto="supervisor",
+        )
 
     def get_customer_complaint_analyst_tools(self) -> list:
         return []
