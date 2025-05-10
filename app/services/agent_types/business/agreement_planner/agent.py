@@ -1,7 +1,8 @@
 import json
+from datetime import datetime
 from pathlib import Path
 
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.constants import START, END
 from langgraph.managed import RemainingSteps
@@ -13,21 +14,22 @@ from langgraph.types import Command
 
 from app.interface.api.messages.schema import MessageRequest
 from app.services.agent_types.base import SupervisedWorkflowAgentBase, AgentUtils
-from app.services.agent_types.business.agreement_planner import SUPERVISED_AGENTS
+from app.services.agent_types.business.agreement_planner import (
+    SUPERVISED_AGENTS,
+    SUPERVISED_AGENT_CONFIGURATION,
+)
 from app.services.agent_types.business.agreement_planner.schema import SupervisorRouter
 
 
 class AgentState(MessagesState):
     agent_id: str
     query: str
-    structured_report: dict
     coordinator_system_prompt: str
     planner_system_prompt: str
     supervisor_system_prompt: str
     reporter_system_prompt: str
     financial_struggle_system_prompt: str
     customer_complaint_system_prompt: str
-    customer_profile: dict
     execution_plan: str
     agreement_plan: str
     claim_support_request: str
@@ -252,4 +254,45 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
         )
 
     def get_input_params(self, message_request: MessageRequest) -> dict:
-        pass
+        settings = self.agent_setting_service.get_agent_settings(
+            message_request.agent_id
+        )
+        settings_dict = {
+            setting.setting_key: setting.setting_value for setting in settings
+        }
+
+        template_vars = {
+            "CURRENT_TIME": datetime.now().strftime("%a %b %d %Y %H:%M:%S %z"),
+            "SUPERVISED_AGENTS": SUPERVISED_AGENTS,
+            "SUPERVISED_AGENT_CONFIGURATION": SUPERVISED_AGENT_CONFIGURATION,
+            "FINANCIAL_STRUGGLE_ANALYST_TOOLS": [],
+            "FINANCIAL_STRUGGLE_ANALYST_TOOLS_CONFIGURATION": {},
+            "CUSTOMER_COMPLAINT_ANALYST_TOOLS": [],
+            "CUSTOMER_COMPLAINT_ANALYST_TOOLS_CONFIGURATION": {},
+        }
+
+        return {
+            "agent_id": message_request.agent_id,
+            "query": message_request.message_content,
+            "agreement_plan": None,
+            "claim_support_request": None,
+            "coordinator_system_prompt": self.parse_prompt_template(
+                settings_dict, "coordinator_system_prompt", template_vars
+            ),
+            "financial_struggle_system_prompt": self.parse_prompt_template(
+                settings_dict, "financial_struggle_system_prompt", template_vars
+            ),
+            "planner_system_prompt": self.parse_prompt_template(
+                settings_dict, "planner_system_prompt", template_vars
+            ),
+            "customer_complaint_system_prompt": self.parse_prompt_template(
+                settings_dict, "customer_complaint_system_prompt", template_vars
+            ),
+            "supervisor_system_prompt": self.parse_prompt_template(
+                settings_dict, "supervisor_system_prompt", template_vars
+            ),
+            "reporter_system_prompt": self.parse_prompt_template(
+                settings_dict, "reporter_system_prompt", template_vars
+            ),
+            "messages": [HumanMessage(content=message_request.message_content)],
+        }
