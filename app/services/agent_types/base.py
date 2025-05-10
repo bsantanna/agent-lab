@@ -34,7 +34,7 @@ from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.vectors import DocumentRepository
 from app.interface.api.messages.schema import MessageRequest, Message
 from app.services.agent_settings import AgentSettingService
-from app.services.agent_types.schema import SolutionPlan
+from app.services.agent_types.schema import SolutionPlan, CoordinatorRouter
 from app.services.agents import AgentService
 from app.services.attachments import AttachmentService
 from app.services.integrations import IntegrationService
@@ -551,6 +551,18 @@ class SupervisedWorkflowAgentBase(WebAgentBase, ABC):
         self, state: MessagesState
     ) -> Command[Literal["planner", "__end__"]]:
         pass
+
+    def get_coordinator_chain(self, llm, coordinator_system_prompt: str):
+        structured_llm_generator = llm.bind_tools(
+            self.get_coordinator_tools()
+        ).with_structured_output(CoordinatorRouter)
+        coordinator_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", coordinator_system_prompt),
+                ("human", "<query>{query}</query>"),
+            ]
+        )
+        return coordinator_prompt | structured_llm_generator
 
     def get_planner_tools(self) -> list:
         return [self.get_web_search_tool(), self.get_web_crawl_tool()]

@@ -25,7 +25,6 @@ from app.services.agent_types.coordinator_planner_supervisor import (
 from app.services.agent_types.coordinator_planner_supervisor.schema import (
     SupervisorRouter,
 )
-from app.services.agent_types.schema import CoordinatorRouter
 
 
 class AgentState(MessagesState):
@@ -202,18 +201,6 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             ),
             "messages": [HumanMessage(content=message_request.message_content)],
         }
-
-    def get_coordinator_chain(self, llm, coordinator_system_prompt: str):
-        structured_llm_generator = llm.bind_tools(
-            self.get_coordinator_tools()
-        ).with_structured_output(CoordinatorRouter)
-        coordinator_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", coordinator_system_prompt),
-                ("human", "<query>{query}</query>"),
-            ]
-        )
-        return coordinator_prompt | structured_llm_generator
 
     def get_coordinator(
         self, state: AgentState

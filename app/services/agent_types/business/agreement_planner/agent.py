@@ -1,8 +1,9 @@
 import json
+from pathlib import Path
 
 from langchain_core.messages import AIMessage
 from langchain_core.prompts import ChatPromptTemplate
-from langgraph.constants import START
+from langgraph.constants import START, END
 from langgraph.managed import RemainingSteps
 from langgraph.prebuilt import create_react_agent
 from typing_extensions import Literal
@@ -26,6 +27,7 @@ class AgentState(MessagesState):
     reporter_system_prompt: str
     financial_struggle_system_prompt: str
     customer_complaint_system_prompt: str
+    customer_profile: dict
     execution_plan: str
     agreement_plan: str
     claim_support_request: str
@@ -36,22 +38,25 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
 
-    def get_coordinator(self, state: AgentState) -> Command[Literal["planner"]]:
+    def get_coordinator(
+        self, state: AgentState
+    ) -> Command[Literal["planner", "__end__"]]:
         agent_id = state["agent_id"]
         query = state["query"]
-        coordinator_system_prompt = state["coordinator_system_prompt"]
+
         self.logger.info(f"Agent[{agent_id}] -> Coordinator -> Query -> {query}")
-        coordinator = create_react_agent(
-            model=self.get_chat_model(agent_id),
-            tools=self.get_coordinator_tools(),
-            prompt=coordinator_system_prompt,
-        )
-        response = coordinator.invoke(state)
+        chat_model = self.get_chat_model(agent_id)
+        response = self.get_coordinator_chain(
+            chat_model, state["coordinator_system_prompt"]
+        ).invoke({"query": query})
         self.logger.info(f"Agent[{agent_id}] -> Coordinator -> Response -> {response}")
-        return Command(
-            goto="planner",
-            update={"messages": response["messages"]},
-        )
+        if response["next"] == END:
+            return Command(
+                goto=response["next"],
+                update={"messages": [AIMessage(content=response["generated"])]},
+            )
+        else:
+            return Command(goto=response["next"])
 
     def get_planner(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
@@ -190,7 +195,61 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
         return workflow_builder
 
     def create_default_settings(self, agent_id: str):
-        pass
+        current_dir = Path(__file__).parent
+
+        coordinator_prompt = self.read_file_content(
+            f"{current_dir}/default_coordinator_system_prompt.txt"
+        )
+        self.agent_setting_service.create_agent_setting(
+            agent_id=agent_id,
+            setting_key="coordinator_system_prompt",
+            setting_value=coordinator_prompt,
+        )
+
+        financial_struggle_prompt = self.read_file_content(
+            f"{current_dir}/default_financial_struggle_system_prompt.txt"
+        )
+        self.agent_setting_service.create_agent_setting(
+            agent_id=agent_id,
+            setting_key="financial_struggle_system_prompt",
+            setting_value=financial_struggle_prompt,
+        )
+
+        supervisor_prompt = self.read_file_content(
+            f"{current_dir}/default_supervisor_system_prompt.txt"
+        )
+        self.agent_setting_service.create_agent_setting(
+            agent_id=agent_id,
+            setting_key="supervisor_system_prompt",
+            setting_value=supervisor_prompt,
+        )
+
+        customer_complaint_prompt = self.read_file_content(
+            f"{current_dir}/default_customer_complaint_system_prompt.txt"
+        )
+        self.agent_setting_service.create_agent_setting(
+            agent_id=agent_id,
+            setting_key="customer_complaint_system_prompt",
+            setting_value=customer_complaint_prompt,
+        )
+
+        reporter_prompt = self.read_file_content(
+            f"{current_dir}/default_reporter_system_prompt.txt"
+        )
+        self.agent_setting_service.create_agent_setting(
+            agent_id=agent_id,
+            setting_key="reporter_system_prompt",
+            setting_value=reporter_prompt,
+        )
+
+        planner_prompt = self.read_file_content(
+            f"{current_dir}/default_planner_system_prompt.txt"
+        )
+        self.agent_setting_service.create_agent_setting(
+            agent_id=agent_id,
+            setting_key="planner_system_prompt",
+            setting_value=planner_prompt,
+        )
 
     def get_input_params(self, message_request: MessageRequest) -> dict:
         pass
