@@ -1,32 +1,149 @@
+import json
+
+from langchain_core.messages import AIMessage
+from langchain_core.prompts import ChatPromptTemplate
+from langgraph.constants import START
+from langgraph.managed import RemainingSteps
+from langgraph.prebuilt import create_react_agent
 from typing_extensions import Literal
 
-from langgraph.graph import MessagesState
+from langgraph.graph import MessagesState, StateGraph
 from langgraph.types import Command
 
 from app.interface.api.messages.schema import MessageRequest
 from app.services.agent_types.base import SupervisedWorkflowAgentBase, AgentUtils
+from app.services.agent_types.business.agreement_planner import SUPERVISED_AGENTS
+from app.services.agent_types.business.agreement_planner.schema import SupervisorRouter
+
+
+class AgentState(MessagesState):
+    agent_id: str
+    query: str
+    structured_report: dict
+    coordinator_system_prompt: str
+    planner_system_prompt: str
+    supervisor_system_prompt: str
+    reporter_system_prompt: str
+    execution_plan: str
+    agreement_plan: str
+    claim_support_request: str
+    remaining_steps: RemainingSteps
 
 
 class AgreementPlanner(SupervisedWorkflowAgentBase):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
 
-    def get_coordinator(
-        self, state: MessagesState
-    ) -> Command[Literal["planner", "__end__"]]:
+    def get_coordinator(self, state: AgentState) -> Command[Literal["planner"]]:
+        agent_id = state["agent_id"]
+        query = state["query"]
+        coordinator_system_prompt = state["coordinator_system_prompt"]
+        self.logger.info(f"Agent[{agent_id}] -> Coordinator -> Query -> {query}")
+        coordinator = create_react_agent(
+            model=self.get_chat_model(agent_id),
+            tools=self.get_coordinator_tools(),
+            prompt=coordinator_system_prompt,
+        )
+        response = coordinator.invoke(state)
+        self.logger.info(f"Agent[{agent_id}] -> Coordinator -> Response -> {response}")
+        return Command(
+            goto="planner",
+            update={"messages": response["messages"]},
+        )
+
+    def get_planner(self, state: AgentState) -> Command[Literal["supervisor"]]:
+        agent_id = state["agent_id"]
+        query = state["query"]
+        planner_system_prompt = state["planner_system_prompt"]
+        self.logger.info(f"Agent[{agent_id}] -> Planner -> Query -> {query}")
+        chat_model = self.get_chat_model(agent_id)
+        response = self.get_planner_chain(
+            llm=chat_model, planner_system_prompt=planner_system_prompt
+        ).invoke({"query": query})
+
+        self.logger.info(f"Agent[{agent_id}] -> Planner -> Response -> {response}")
+        plain_response = json.dumps(response)
+
+        return Command(
+            update={
+                "messages": [AIMessage(content=plain_response, name="planner")],
+                "execution_plan": response,
+            },
+            goto="supervisor",
+        )
+
+    def get_supervisor_chain(self, llm, supervisor_system_prompt: str):
+        structured_llm_generator = llm.bind_tools(
+            self.get_supervisor_tools()
+        ).with_structured_output(SupervisorRouter)
+        supervisor_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", supervisor_system_prompt),
+                ("human", "<messages>{messages}</messages>"),
+            ]
+        )
+        return supervisor_prompt | structured_llm_generator
+
+    def get_supervisor(
+        self, state: AgentState
+    ) -> Command[Literal[*SUPERVISED_AGENTS, "__end__"]]:
+        messages = self.get_last_interaction_messages(state["messages"])
+        agent_id = state["agent_id"]
+        self.logger.info(f"Agent[{agent_id}] -> Supervisor -> Messages -> {messages}")
+        supervisor_system_prompt = state["supervisor_system_prompt"]
+        agreement_plan = state["agreement_plan"]
+        claim_support_request = state["claim_support_request"]
+        if agreement_plan:
+            self.logger.info(
+                f"Agent[{agent_id}] -> Supervisor -> Agreement Plan -> {agreement_plan}"
+            )
+            return Command(goto="__end__")
+        if claim_support_request:
+            self.logger.info(
+                f"Agent[{agent_id}] -> Supervisor -> Claim Support Request -> {claim_support_request}"
+            )
+            return Command(goto="__end__")
+
+        response = self.get_supervisor_chain(
+            llm=self.get_chat_model(agent_id),
+            supervisor_system_prompt=supervisor_system_prompt,
+        ).invoke({"messages": messages})
+        self.logger.info(f"Agent[{agent_id}] -> Supervisor -> Response -> {response}")
+        return Command(goto=response["next"], update={"next": response["next"]})
+
+    def get_reporter(self, state: AgentState) -> Command[Literal["supervisor"]]:
         pass
 
-    def get_planner(self, state: MessagesState) -> Command[Literal["supervisor"]]:
+    def get_financial_struggle_analyst(
+        self, state: AgentState
+    ) -> Command[Literal["supervisor"]]:
         pass
 
-    def get_supervisor(self, state: MessagesState) -> Command:
+    def get_financial_struggle_analyst_tools(self) -> list:
+        return []
+
+    def get_customer_complaint_analyst(
+        self, state: AgentState
+    ) -> Command[Literal["supervisor"]]:
         pass
 
-    def get_reporter(self, state: MessagesState) -> Command[Literal["supervisor"]]:
-        pass
+    def get_customer_complaint_analyst_tools(self) -> list:
+        return []
 
     def get_workflow_builder(self, agent_id: str):
-        pass
+        workflow_builder = StateGraph(AgentState)
+        workflow_builder.add_edge(START, "coordinator")
+        workflow_builder.add_node("coordinator", self.get_coordinator)
+        workflow_builder.add_node("planner", self.get_planner)
+        workflow_builder.add_node("supervisor", self.get_supervisor)
+        workflow_builder.add_node(
+            "financial_struggle_analyst", self.get_financial_struggle_analyst
+        )
+        workflow_builder.add_node(
+            "customer_complaint_analyst", self.get_customer_complaint_analyst
+        )
+        workflow_builder.add_node("reporter", self.get_reporter)
+        return workflow_builder
 
     def create_default_settings(self, agent_id: str):
         pass
