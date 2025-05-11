@@ -4,7 +4,7 @@ from pathlib import Path
 
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
-from langgraph.constants import START, END
+from langgraph.constants import START
 from langgraph.managed import RemainingSteps
 from langgraph.prebuilt import create_react_agent
 from typing_extensions import Literal
@@ -18,21 +18,28 @@ from app.services.agent_types.business.agreement_planner import (
     SUPERVISED_AGENTS,
     SUPERVISED_AGENT_CONFIGURATION,
 )
-from app.services.agent_types.business.agreement_planner.schema import SupervisorRouter
+from app.services.agent_types.business.agreement_planner.schema import (
+    SupervisorRouter,
+    StructuredReport,
+    ExpertAnalysis,
+)
+from app.services.agent_types.schema import CoordinatorRouter
 
 
 class AgentState(MessagesState):
     agent_id: str
     query: str
+    next: str
     coordinator_system_prompt: str
     planner_system_prompt: str
     supervisor_system_prompt: str
     reporter_system_prompt: str
     financial_struggle_system_prompt: str
     customer_complaint_system_prompt: str
-    execution_plan: str
-    agreement_plan: str
-    claim_support_request: str
+    structured_report: dict
+    execution_plan: dict
+    agreement_plan: dict
+    claim_support_request: dict
     remaining_steps: RemainingSteps
 
 
@@ -40,25 +47,35 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
 
+    def format_response(self, workflow_state: AgentState) -> (str, dict):
+        response_data = {
+            "agent_id": workflow_state.get("agent_id"),
+            "query": workflow_state.get("query"),
+            "structured_report": workflow_state.get("structured_report"),
+            "execution_plan": workflow_state.get("execution_plan"),
+            "agreement_plan": workflow_state.get("agreement_plan"),
+            "claim_support_request": workflow_state.get("claim_support_request"),
+        }
+        return response_data["messages"][-1]["content"], response_data
+
     def get_coordinator(
         self, state: AgentState
     ) -> Command[Literal["planner", "__end__"]]:
         agent_id = state["agent_id"]
         query = state["query"]
-
         self.logger.info(f"Agent[{agent_id}] -> Coordinator -> Query -> {query}")
-        chat_model = self.get_chat_model(agent_id)
-        response = self.get_coordinator_chain(
-            chat_model, state["coordinator_system_prompt"]
-        ).invoke({"query": query})
+        coordinator = create_react_agent(
+            model=self.get_chat_model(agent_id),
+            tools=self.get_coordinator_tools(),
+            prompt=state["coordinator_system_prompt"],
+            response_format=CoordinatorRouter,
+        )
+        response = coordinator.invoke(state)
         self.logger.info(f"Agent[{agent_id}] -> Coordinator -> Response -> {response}")
-        if response["next"] == END:
-            return Command(
-                goto=response["next"],
-                update={"messages": [AIMessage(content=response["generated"])]},
-            )
-        else:
-            return Command(goto=response["next"])
+        return Command(
+            goto=response["structured_response"]["next"],
+            update={"messages": response["messages"]},
+        )
 
     def get_planner(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
@@ -100,14 +117,15 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
         agent_id = state["agent_id"]
         self.logger.info(f"Agent[{agent_id}] -> Supervisor -> Messages -> {messages}")
         supervisor_system_prompt = state["supervisor_system_prompt"]
+        structured_report = state["structured_report"]
         agreement_plan = state["agreement_plan"]
         claim_support_request = state["claim_support_request"]
-        if agreement_plan:
+        if agreement_plan is not None and structured_report is not None:
             self.logger.info(
                 f"Agent[{agent_id}] -> Supervisor -> Agreement Plan -> {agreement_plan}"
             )
             return Command(goto="__end__")
-        if claim_support_request:
+        if claim_support_request is not None and structured_report is not None:
             self.logger.info(
                 f"Agent[{agent_id}] -> Supervisor -> Claim Support Request -> {claim_support_request}"
             )
@@ -127,11 +145,15 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
             model=self.get_chat_model(agent_id),
             tools=self.get_reporter_tools(),
             prompt=state["reporter_system_prompt"],
+            response_format=StructuredReport,
         )
         response = reporter.invoke(state)
         self.logger.info(f"Agent[{agent_id}] -> Reporter -> Response -> {response}")
         return Command(
-            update={"messages": response["messages"]},
+            update={
+                "messages": response["messages"],
+                "structured_report": response["structured_response"],
+            },
             goto="supervisor",
         )
 
@@ -145,13 +167,20 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
             model=self.get_chat_model(agent_id),
             tools=self.get_financial_struggle_analyst_tools(),
             prompt=financial_struggle_system_prompt,
+            response_format=ExpertAnalysis,
         )
         response = financial_struggle_analyst.invoke(state)
         self.logger.info(
             f"Agent[{agent_id}] -> Financial Struggle Analyst -> Response -> {response}"
         )
         return Command(
-            update={"messages": response["messages"]},
+            update={
+                "messages": response["messages"],
+                "agreement_plan": response["structured_response"]["agreement_plan"],
+                "claim_support_request": response["structured_response"][
+                    "claim_support_request"
+                ],
+            },
             goto="supervisor",
         )
 
@@ -168,13 +197,20 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
             model=self.get_chat_model(agent_id),
             tools=self.get_customer_complaint_analyst_tools(),
             prompt=customer_complaint_system_prompt,
+            response_format=ExpertAnalysis,
         )
         response = customer_complaint_analyst.invoke(state)
         self.logger.info(
             f"Agent[{agent_id}] -> Customer Complaint Analyst -> Response -> {response}"
         )
         return Command(
-            update={"messages": response["messages"]},
+            update={
+                "messages": response["messages"],
+                "agreement_plan": response["structured_response"]["agreement_plan"],
+                "claim_support_request": response["structured_response"][
+                    "claim_support_request"
+                ],
+            },
             goto="supervisor",
         )
 
