@@ -292,6 +292,30 @@ class WorkflowAgentBase(AgentBase, ABC):
             agent_id=agent_id,
         )
 
+    def get_image_analysis_chain(
+        self, llm, execution_system_prompt, image_content_type
+    ):
+        generate_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", execution_system_prompt),
+                (
+                    "human",
+                    [
+                        {
+                            "type": "text",
+                            "text": "<query>{query}</query>",
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": f"data:{image_content_type};base64,"
+                            + "{image_base64}",
+                        },
+                    ],
+                ),
+            ]
+        )
+        return generate_prompt | llm
+
     def get_bash_tool(self) -> BaseTool:
         @tool("bash_tool")
         def bash_tool_call(

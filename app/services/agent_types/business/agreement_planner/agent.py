@@ -1,11 +1,12 @@
+import base64
 import json
+import mimetypes
 from datetime import datetime
 from pathlib import Path
 
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.constants import START
-from langgraph.managed import RemainingSteps
 from langgraph.prebuilt import create_react_agent
 from typing_extensions import Literal
 
@@ -22,12 +23,14 @@ from app.services.agent_types.business.agreement_planner.schema import (
     SupervisorRouter,
     StructuredReport,
     ExpertAnalysis,
+    ClaimSupportAnalysis,
 )
 from app.services.agent_types.schema import CoordinatorRouter
 
 
 class AgentState(MessagesState):
     agent_id: str
+    attachment_id: str
     query: str
     next: str
     coordinator_system_prompt: str
@@ -40,7 +43,6 @@ class AgentState(MessagesState):
     execution_plan: dict
     agreement_plan: dict
     claim_support_request: dict
-    remaining_steps: RemainingSteps
 
 
 class AgreementPlanner(SupervisedWorkflowAgentBase):
@@ -60,22 +62,32 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
 
     def get_coordinator(
         self, state: AgentState
-    ) -> Command[Literal["planner", "__end__"]]:
+    ) -> Command[Literal["planner", "claim_support_analyst", "__end__"]]:
         agent_id = state["agent_id"]
-        query = state["query"]
-        self.logger.info(f"Agent[{agent_id}] -> Coordinator -> Query -> {query}")
-        coordinator = create_react_agent(
-            model=self.get_chat_model(agent_id),
-            tools=self.get_coordinator_tools(),
-            prompt=state["coordinator_system_prompt"],
-            response_format=CoordinatorRouter,
-        )
-        response = coordinator.invoke(state)
-        self.logger.info(f"Agent[{agent_id}] -> Coordinator -> Response -> {response}")
-        return Command(
-            goto=response["structured_response"]["next"],
-            update={"messages": response["messages"]},
-        )
+        attachment_id = state["attachment_id"]
+
+        if attachment_id is None:
+            query = state["query"]
+            self.logger.info(f"Agent[{agent_id}] -> Coordinator -> Query -> {query}")
+            coordinator = create_react_agent(
+                model=self.get_chat_model(agent_id),
+                tools=self.get_coordinator_tools(),
+                prompt=state["coordinator_system_prompt"],
+                response_format=CoordinatorRouter,
+            )
+            response = coordinator.invoke(state)
+            self.logger.info(
+                f"Agent[{agent_id}] -> Coordinator -> Response -> {response}"
+            )
+            return Command(
+                goto=response["structured_response"]["next"],
+                update={"messages": response["messages"]},
+            )
+        else:
+            self.logger.info(
+                f"Agent[{agent_id}] -> Coordinator -> Attachment -> {attachment_id}"
+            )
+            return Command(goto="claim_support_analyst")
 
     def get_planner(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
@@ -217,12 +229,50 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
     def get_customer_complaint_analyst_tools(self) -> list:
         return []
 
+    def get_claim_support_analyst(
+        self, state: AgentState
+    ) -> Command[Literal["planner", "__end__"]]:
+        agent_id = state["agent_id"]
+        query = state["query"]
+        attachment_id = state["attachment_id"]
+        claim_support_analyst_system_prompt = state["customer_complaint_system_prompt"]
+        attachment = self.attachment_service.get_attachment_by_id(attachment_id)
+        image_base64 = base64.b64encode(attachment.raw_content).decode("utf-8")
+        image_content_type = mimetypes.guess_type(attachment.file_name)[0]
+        chat_model_with_structured_output = (
+            self.get_chat_model(agent_id)
+            .bind_tools(self.get_claim_support_analyst_tools())
+            .with_structured_output(ClaimSupportAnalysis)
+        )
+        self.logger.info(f"Agent[{agent_id}] -> Claim Support Analyst")
+        response = self.get_image_analysis_chain(
+            chat_model_with_structured_output,
+            claim_support_analyst_system_prompt,
+            image_content_type,
+        ).invoke({"query": query, "image_base64": image_base64})
+        self.logger.info(
+            f"Agent[{agent_id}] -> Claim Support Analyst -> Response -> {response}"
+        )
+        return Command(
+            update={
+                "messages": [
+                    AIMessage(
+                        content=response["analysis"], name="claim_support_analyst"
+                    )
+                ],
+            },
+            goto=response["next"],
+        )
+
     def get_workflow_builder(self, agent_id: str):
         workflow_builder = StateGraph(AgentState)
         workflow_builder.add_edge(START, "coordinator")
         workflow_builder.add_node("coordinator", self.get_coordinator)
         workflow_builder.add_node("planner", self.get_planner)
         workflow_builder.add_node("supervisor", self.get_supervisor)
+        workflow_builder.add_node(
+            "claim_support_analyst", self.get_claim_support_analyst
+        )
         workflow_builder.add_node(
             "financial_struggle_analyst", self.get_financial_struggle_analyst
         )
@@ -310,6 +360,7 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
         return {
             "agent_id": message_request.agent_id,
             "query": message_request.message_content,
+            "attachment_id": message_request.attachment_id,
             "agreement_plan": None,
             "claim_support_request": None,
             "coordinator_system_prompt": self.parse_prompt_template(

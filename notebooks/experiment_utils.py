@@ -1,10 +1,17 @@
 from uuid import uuid4
 from IPython.display import Image, display
 import requests
+from langchain_core.runnables.graph import MermaidDrawMethod
 
 
 def print_graph(graph):
-    display(Image(graph.get_graph(xray=True).draw_mermaid_png()))
+    display(
+        Image(
+            graph.get_graph(xray=True).draw_mermaid_png(
+                draw_method=MermaidDrawMethod.PYPPETEER
+            )
+        )
+    )
 
 
 def create_llm_with_integration(

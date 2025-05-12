@@ -23,6 +23,21 @@ class ClaimSupportRequest(TypedDict):
     """Claim support request"""
 
 
+class ClaimSupportAnalysis(TypedDict):
+    """Claim support analysis"""
+
+    next: Annotated[
+        Literal["planner", "__end__"],
+        ...,
+        "'planner' if analyzed evidence supports the claim, '__end__' otherwise",
+    ]
+    analysis: Annotated[
+        str,
+        ...,
+        "Analysis on how the given evidence supports the claim request",
+    ]
+
+
 class ExpertAnalysis(TypedDict):
     """Expert analysis"""
 
