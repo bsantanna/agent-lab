@@ -12,7 +12,7 @@ langchain-community==0.3.23
 langchain-core~=0.3.51
 langchain-experimental==0.3.4
 langchain-ollama==0.3.0
-langchain-openai==0.3.14
+langchain-openai==0.3.16
 langchain-postgres==0.0.13
 langchain-tavily==0.1.5
 langchain-text-splitters==0.3.8
