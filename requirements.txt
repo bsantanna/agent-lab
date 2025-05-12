@@ -16,7 +16,7 @@ langchain-openai==0.3.14
 langchain-postgres==0.0.13
 langchain-tavily==0.1.5
 langchain-text-splitters==0.3.8
-langchain-xai==0.2.2
+langchain-xai==0.2.3
 langgraph==0.4.1
 langgraph-checkpoint-postgres==2.0.21
 langgraph-prebuilt==0.1.8
