@@ -58,7 +58,7 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
             "agreement_plan": workflow_state.get("agreement_plan"),
             "claim_support_request": workflow_state.get("claim_support_request"),
         }
-        return response_data["messages"][-1]["content"], response_data
+        return workflow_state["messages"][-1].content, response_data
 
     def get_coordinator(
         self, state: AgentState

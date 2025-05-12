@@ -56,12 +56,8 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             "collection_name": workflow_state.get("collection_name"),
             "deep_search_mode": workflow_state.get("deep_search_mode"),
             "execution_plan": workflow_state.get("execution_plan"),
-            "messages": [
-                json.loads(message.model_dump_json())
-                for message in workflow_state["messages"]
-            ],
         }
-        return response_data["messages"][-1]["content"], response_data
+        return workflow_state["messages"][-1].content, response_data
 
     def create_default_settings(self, agent_id: str):
         current_dir = Path(__file__).parent

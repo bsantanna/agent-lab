@@ -66,12 +66,8 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             "query": workflow_state.get("query"),
             "transcription": workflow_state.get("transcription"),
             "execution_plan": workflow_state.get("execution_plan"),
-            "messages": [
-                json.loads(message.model_dump_json())
-                for message in workflow_state["messages"]
-            ],
         }
-        return response_data["messages"][-1]["content"], response_data
+        return workflow_state.get("messages")[-1].content, response_data
 
     def get_workflow_builder(self, agent_id: str):
         workflow_builder = StateGraph(AgentState)
