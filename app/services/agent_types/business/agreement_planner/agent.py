@@ -22,8 +22,9 @@ from app.services.agent_types.business.agreement_planner import (
 from app.services.agent_types.business.agreement_planner.schema import (
     SupervisorRouter,
     StructuredReport,
-    ExpertAnalysis,
-    ClaimSupportAnalysis,
+    ImpedimentAnalysis,
+    FinancialExpertAnalysis,
+    CustomerServiceExpertAnalysis,
 )
 from app.services.agent_types.schema import CoordinatorRouter
 
@@ -39,10 +40,11 @@ class AgentState(MessagesState):
     reporter_system_prompt: str
     financial_struggle_system_prompt: str
     customer_complaint_system_prompt: str
+    impediment_checker_system_prompt: str
     structured_report: dict
     execution_plan: dict
     agreement_plan: dict
-    claim_support_request: dict
+    agreement_impediment: dict
 
 
 class AgreementPlanner(SupervisedWorkflowAgentBase):
@@ -56,13 +58,13 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
             "structured_report": workflow_state.get("structured_report"),
             "execution_plan": workflow_state.get("execution_plan"),
             "agreement_plan": workflow_state.get("agreement_plan"),
-            "claim_support_request": workflow_state.get("claim_support_request"),
+            "agreement_impediment": workflow_state.get("agreement_impediment"),
         }
         return workflow_state["messages"][-1].content, response_data
 
     def get_coordinator(
         self, state: AgentState
-    ) -> Command[Literal["planner", "claim_support_analyst", "__end__"]]:
+    ) -> Command[Literal["planner", "impediment_checker", "__end__"]]:
         agent_id = state["agent_id"]
         attachment_id = state["attachment_id"]
 
@@ -87,7 +89,7 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
             self.logger.info(
                 f"Agent[{agent_id}] -> Coordinator -> Attachment -> {attachment_id}"
             )
-            return Command(goto="claim_support_analyst")
+            return Command(goto="impediment_checker")
 
     def get_planner(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
@@ -131,15 +133,15 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
         supervisor_system_prompt = state["supervisor_system_prompt"]
         structured_report = state["structured_report"]
         agreement_plan = state["agreement_plan"]
-        claim_support_request = state["claim_support_request"]
+        agreement_impediment = state["agreement_impediment"]
         if agreement_plan is not None and structured_report is not None:
             self.logger.info(
                 f"Agent[{agent_id}] -> Supervisor -> Agreement Plan -> {agreement_plan}"
             )
             return Command(goto="__end__")
-        if claim_support_request is not None and structured_report is not None:
+        if agreement_impediment is not None and structured_report is not None:
             self.logger.info(
-                f"Agent[{agent_id}] -> Supervisor -> Claim Support Request -> {claim_support_request}"
+                f"Agent[{agent_id}] -> Supervisor -> Claim Support Request -> {agreement_impediment}"
             )
             return Command(goto="__end__")
 
@@ -179,7 +181,7 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
             model=self.get_chat_model(agent_id),
             tools=self.get_financial_struggle_analyst_tools(),
             prompt=financial_struggle_system_prompt,
-            response_format=ExpertAnalysis,
+            response_format=FinancialExpertAnalysis,
         )
         response = financial_struggle_analyst.invoke(state)
         self.logger.info(
@@ -189,8 +191,8 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
             update={
                 "messages": response["messages"],
                 "agreement_plan": response["structured_response"]["agreement_plan"],
-                "claim_support_request": response["structured_response"][
-                    "claim_support_request"
+                "agreement_impediment": response["structured_response"][
+                    "agreement_impediment"
                 ],
             },
             goto="supervisor",
@@ -209,7 +211,7 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
             model=self.get_chat_model(agent_id),
             tools=self.get_customer_complaint_analyst_tools(),
             prompt=customer_complaint_system_prompt,
-            response_format=ExpertAnalysis,
+            response_format=CustomerServiceExpertAnalysis,
         )
         response = customer_complaint_analyst.invoke(state)
         self.logger.info(
@@ -219,8 +221,8 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
             update={
                 "messages": response["messages"],
                 "agreement_plan": response["structured_response"]["agreement_plan"],
-                "claim_support_request": response["structured_response"][
-                    "claim_support_request"
+                "agreement_impediment": response["structured_response"][
+                    "agreement_impediment"
                 ],
             },
             goto="supervisor",
@@ -229,25 +231,25 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
     def get_customer_complaint_analyst_tools(self) -> list:
         return []
 
-    def get_claim_support_analyst(
+    def get_impediment_checker(
         self, state: AgentState
     ) -> Command[Literal["planner", "__end__"]]:
         agent_id = state["agent_id"]
         query = state["query"]
         attachment_id = state["attachment_id"]
-        claim_support_analyst_system_prompt = state["customer_complaint_system_prompt"]
+        impediment_checker_system_prompt = state["impediment_checker_system_prompt"]
         attachment = self.attachment_service.get_attachment_by_id(attachment_id)
         image_base64 = base64.b64encode(attachment.raw_content).decode("utf-8")
         image_content_type = mimetypes.guess_type(attachment.file_name)[0]
         chat_model_with_structured_output = (
             self.get_chat_model(agent_id)
-            .bind_tools(self.get_claim_support_analyst_tools())
-            .with_structured_output(ClaimSupportAnalysis)
+            .bind_tools(self.get_impediment_checker_tools())
+            .with_structured_output(ImpedimentAnalysis)
         )
         self.logger.info(f"Agent[{agent_id}] -> Claim Support Analyst")
         response = self.get_image_analysis_chain(
             chat_model_with_structured_output,
-            claim_support_analyst_system_prompt,
+            impediment_checker_system_prompt,
             image_content_type,
         ).invoke({"query": query, "image_base64": image_base64})
         self.logger.info(
@@ -256,9 +258,7 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
         return Command(
             update={
                 "messages": [
-                    AIMessage(
-                        content=response["analysis"], name="claim_support_analyst"
-                    )
+                    AIMessage(content=response["analysis"], name="impediment_checker")
                 ],
             },
             goto=response["next"],
@@ -270,9 +270,7 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
         workflow_builder.add_node("coordinator", self.get_coordinator)
         workflow_builder.add_node("planner", self.get_planner)
         workflow_builder.add_node("supervisor", self.get_supervisor)
-        workflow_builder.add_node(
-            "claim_support_analyst", self.get_claim_support_analyst
-        )
+        workflow_builder.add_node("impediment_checker", self.get_impediment_checker)
         workflow_builder.add_node(
             "financial_struggle_analyst", self.get_financial_struggle_analyst
         )
@@ -330,6 +328,15 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
             setting_value=reporter_prompt,
         )
 
+        impediment_checker_prompt = self.read_file_content(
+            f"{current_dir}/default_impediment_checker_system_prompt.txt"
+        )
+        self.agent_setting_service.create_agent_setting(
+            agent_id=agent_id,
+            setting_key="impediment_checker_system_prompt",
+            setting_value=impediment_checker_prompt,
+        )
+
         planner_prompt = self.read_file_content(
             f"{current_dir}/default_planner_system_prompt.txt"
         )
@@ -362,7 +369,10 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
             "query": message_request.message_content,
             "attachment_id": message_request.attachment_id,
             "agreement_plan": None,
-            "claim_support_request": None,
+            "agreement_impediment": None,
+            "impediment_checker_system_prompt": self.parse_prompt_template(
+                settings_dict, "impediment_checker_system_prompt", template_vars
+            ),
             "coordinator_system_prompt": self.parse_prompt_template(
                 settings_dict, "coordinator_system_prompt", template_vars
             ),
