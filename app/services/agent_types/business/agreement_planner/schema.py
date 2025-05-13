@@ -14,6 +14,16 @@ class SupervisorRouter(TypedDict):
 class StructuredReport(TypedDict):
     """Structured report"""
 
+    executive_summary: Annotated[str, ..., "An executive summary of the report"]
+
+    key_findings: Annotated[str, ..., "Key findings of the report"]
+
+    detailed_analysis: Annotated[str, ..., "Detailed analysis of the report"]
+
+    conclusions_recommendations: Annotated[
+        str, ..., "Conclusions and recommendations of the report"
+    ]
+
 
 class AgreementPlan(TypedDict):
     """Agreement plan"""
