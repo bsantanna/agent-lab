@@ -34,7 +34,7 @@ from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.vectors import DocumentRepository
 from app.interface.api.messages.schema import MessageRequest, Message
 from app.services.agent_settings import AgentSettingService
-from app.services.agent_types.schema import SolutionPlan
+from app.services.agent_types.schema import SolutionPlan, CoordinatorRouter
 from app.services.agents import AgentService
 from app.services.attachments import AttachmentService
 from app.services.integrations import IntegrationService
@@ -292,6 +292,30 @@ class WorkflowAgentBase(AgentBase, ABC):
             agent_id=agent_id,
         )
 
+    def get_image_analysis_chain(
+        self, llm, execution_system_prompt, image_content_type
+    ):
+        generate_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", execution_system_prompt),
+                (
+                    "human",
+                    [
+                        {
+                            "type": "text",
+                            "text": "<query>{query}</query>",
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": f"data:{image_content_type};base64,"
+                            + "{image_base64}",
+                        },
+                    ],
+                ),
+            ]
+        )
+        return generate_prompt | llm
+
     def get_bash_tool(self) -> BaseTool:
         @tool("bash_tool")
         def bash_tool_call(
@@ -543,7 +567,6 @@ class SupervisedWorkflowAgentBase(WebAgentBase, ABC):
         if not os.environ.get("TAVILY_API_KEY"):
             raise ConfigurationError("TAVILY_API_KEY environment variable not set")
 
-    @abstractmethod
     def get_coordinator_tools(self) -> list:
         return []
 
@@ -552,6 +575,18 @@ class SupervisedWorkflowAgentBase(WebAgentBase, ABC):
         self, state: MessagesState
     ) -> Command[Literal["planner", "__end__"]]:
         pass
+
+    def get_coordinator_chain(self, llm, coordinator_system_prompt: str):
+        structured_llm_generator = llm.bind_tools(
+            self.get_coordinator_tools()
+        ).with_structured_output(CoordinatorRouter)
+        coordinator_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", coordinator_system_prompt),
+                ("human", "<query>{query}</query>"),
+            ]
+        )
+        return coordinator_prompt | structured_llm_generator
 
     def get_planner_tools(self) -> list:
         return [self.get_web_search_tool(), self.get_web_crawl_tool()]
@@ -584,14 +619,12 @@ class SupervisedWorkflowAgentBase(WebAgentBase, ABC):
     def get_supervisor(self, state: MessagesState) -> Command:
         pass
 
-    @abstractmethod
     def get_supervisor_tools(self) -> list:
-        pass
+        return []
 
     @abstractmethod
     def get_reporter(self, state: MessagesState) -> Command[Literal["supervisor"]]:
         pass
 
-    @abstractmethod
     def get_reporter_tools(self) -> list:
-        pass
+        return []

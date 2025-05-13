@@ -25,7 +25,6 @@ from app.services.agent_types.coordinator_planner_supervisor import (
 from app.services.agent_types.coordinator_planner_supervisor.schema import (
     SupervisorRouter,
 )
-from app.services.agent_types.schema import CoordinatorRouter
 
 
 class AgentState(MessagesState):
@@ -57,12 +56,8 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             "collection_name": workflow_state.get("collection_name"),
             "deep_search_mode": workflow_state.get("deep_search_mode"),
             "execution_plan": workflow_state.get("execution_plan"),
-            "messages": [
-                json.loads(message.model_dump_json())
-                for message in workflow_state["messages"]
-            ],
         }
-        return response_data["messages"][-1]["content"], response_data
+        return workflow_state["messages"][-1].content, response_data
 
     def create_default_settings(self, agent_id: str):
         current_dir = Path(__file__).parent
@@ -203,21 +198,6 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             "messages": [HumanMessage(content=message_request.message_content)],
         }
 
-    def get_coordinator_chain(self, llm, coordinator_system_prompt: str):
-        structured_llm_generator = llm.bind_tools(
-            self.get_coordinator_tools()
-        ).with_structured_output(CoordinatorRouter)
-        coordinator_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", coordinator_system_prompt),
-                ("human", "<query>{query}</query>"),
-            ]
-        )
-        return coordinator_prompt | structured_llm_generator
-
-    def get_coordinator_tools(self) -> list:
-        return []
-
     def get_coordinator(
         self, state: AgentState
     ) -> Command[Literal["planner", "__end__"]]:
@@ -284,9 +264,6 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             ]
         )
         return supervisor_prompt | structured_llm_generator
-
-    def get_supervisor_tools(self) -> list:
-        return []
 
     def get_supervisor(
         self, state: AgentState
@@ -392,9 +369,6 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             update={"messages": response["messages"]},
             goto="supervisor",
         )
-
-    def get_reporter_tools(self) -> list:
-        return []
 
     def get_reporter(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]

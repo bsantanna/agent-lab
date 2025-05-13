@@ -22,6 +22,7 @@ class AgentCreateRequest(BaseModel):
     def validate_agent_type(cls, v):
         valid_types = [
             "adaptive_rag",
+            "agreement_planner",
             "coordinator_planner_supervisor",
             "react_rag",
             "test_echo",

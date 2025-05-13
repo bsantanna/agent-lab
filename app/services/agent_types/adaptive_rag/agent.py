@@ -98,7 +98,6 @@ class AdaptiveRagAgent(WebAgentBase):
             "documents": [
                 document.page_content for document in workflow_state.get("documents")
             ],
-            "messages": workflow_state.get("messages"),
         }
 
     def get_query_rewriter(self, chat_model, query_rewriter_system_prompt):

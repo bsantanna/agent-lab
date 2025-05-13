@@ -18,7 +18,7 @@ from app.services.agent_types.base import (
     SupervisedWorkflowAgentBase,
     AgentUtils,
 )
-from app.services.agent_types.voice_memos import (
+from app.services.agent_types.business.voice_memos import (
     SUPERVISED_AGENTS,
     SUPERVISED_AGENT_CONFIGURATION,
     AZURE_CONTENT_ANALYST_TOOLS,
@@ -28,7 +28,7 @@ from app.services.agent_types.voice_memos import (
     AZURE_COORDINATOR_TOOLS,
     AZURE_COORDINATOR_TOOLS_CONFIGURATION,
 )
-from app.services.agent_types.voice_memos.schema import (
+from app.services.agent_types.business.voice_memos.schema import (
     SupervisorRouter,
     AudioAnalysisReport,
 )
@@ -66,12 +66,8 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             "query": workflow_state.get("query"),
             "transcription": workflow_state.get("transcription"),
             "execution_plan": workflow_state.get("execution_plan"),
-            "messages": [
-                json.loads(message.model_dump_json())
-                for message in workflow_state["messages"]
-            ],
         }
-        return response_data["messages"][-1]["content"], response_data
+        return workflow_state.get("messages")[-1].content, response_data
 
     def get_workflow_builder(self, agent_id: str):
         workflow_builder = StateGraph(AgentState)
@@ -297,9 +293,6 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             goto="supervisor",
         )
 
-    def get_supervisor_tools(self) -> list:
-        return []
-
     def get_supervisor(
         self, state: AgentState
     ) -> Command[Literal[*SUPERVISED_AGENTS, "__end__"]]:
@@ -331,9 +324,6 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             ]
         )
         return supervisor_prompt | structured_llm_generator
-
-    def get_reporter_tools(self) -> list:
-        return []
 
     def get_reporter_chain(self, llm, reporter_system_prompt: str):
         structured_llm_generator = llm.bind_tools(

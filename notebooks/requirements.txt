@@ -1,2 +1,4 @@
 IPython
+nest_asyncio
+pyppeteer
 python-dotenv

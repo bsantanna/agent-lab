@@ -3,7 +3,6 @@ import mimetypes
 from datetime import datetime
 from pathlib import Path
 
-from langchain_core.prompts import ChatPromptTemplate
 from langgraph.constants import START, END
 from langgraph.graph import StateGraph, MessagesState
 
@@ -30,30 +29,6 @@ class VisionDocumentAgent(WorkflowAgentBase):
             "query": workflow_state.get("query"),
             "generation": workflow_state.get("generation"),
         }
-
-    def get_image_analysis_chain(
-        self, llm, execution_system_prompt, image_content_type
-    ):
-        generate_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", execution_system_prompt),
-                (
-                    "human",
-                    [
-                        {
-                            "type": "text",
-                            "text": "<query>{query}</query>",
-                        },
-                        {
-                            "type": "image_url",
-                            "image_url": f"data:{image_content_type};base64,"
-                            + "{image_base64}",
-                        },
-                    ],
-                ),
-            ]
-        )
-        return generate_prompt | llm
 
     def generate(self, state: AgentState):
         agent_id = state["agent_id"]

@@ -1,6 +1,6 @@
 from typing_extensions import TypedDict, Literal, Annotated
 
-from app.services.agent_types.voice_memos import SUPERVISED_AGENTS
+from app.services.agent_types.business.voice_memos import SUPERVISED_AGENTS
 
 SUPERVISOR_ROUTER_OPTIONS = SUPERVISED_AGENTS + ["__end__"]
 
