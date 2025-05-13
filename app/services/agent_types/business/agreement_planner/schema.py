@@ -102,7 +102,7 @@ class FinancialExpertAnalysis(TypedDict):
         "An agreement plan to be approved by customer and business partner",
     ]
 
-    claim_support_request: Annotated[
+    agreement_impediment: Annotated[
         AgreementImpediment,
         ...,
         "A impediment request asking further clarifications from customer",

@@ -130,10 +130,10 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
         messages = self.get_last_interaction_messages(state["messages"])
         agent_id = state["agent_id"]
         self.logger.info(f"Agent[{agent_id}] -> Supervisor -> Messages -> {messages}")
-        supervisor_system_prompt = state["supervisor_system_prompt"]
-        structured_report = state["structured_report"]
-        agreement_plan = state["agreement_plan"]
-        agreement_impediment = state["agreement_impediment"]
+        supervisor_system_prompt = state.get("supervisor_system_prompt")
+        structured_report = state.get("structured_report")
+        agreement_plan = state.get("agreement_plan")
+        agreement_impediment = state.get("agreement_impediment")
         if agreement_plan is not None and structured_report is not None:
             self.logger.info(
                 f"Agent[{agent_id}] -> Supervisor -> Agreement Plan -> {agreement_plan}"
@@ -368,6 +368,7 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
             "agent_id": message_request.agent_id,
             "query": message_request.message_content,
             "attachment_id": message_request.attachment_id,
+            "structured_report": None,
             "agreement_plan": None,
             "agreement_impediment": None,
             "impediment_checker_system_prompt": self.parse_prompt_template(
