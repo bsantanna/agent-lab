@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.2.0 (2025-05-13)
+
+### Features
+
+- Support to tools descriptions in prompt ([#124](https://github.com/bsantanna/agent-lab/pull/124),
+  [`59ab53e`](https://github.com/bsantanna/agent-lab/commit/59ab53e62ab5e662eb25f425ce744735542eee89))
+
+
 ## v0.1.0 (2025-05-06)
 
 ### Features
