@@ -3,7 +3,7 @@ entries:
   agent-lab:
   - apiVersion: v2
     appVersion: 0.2.1
-    created: "2025-05-14T19:44:13.894424165Z"
+    created: "2025-05-14T19:55:49.815552355Z"
     description: Agent-Lab is a comprehensive toolkit designed for developing and
       testing LLM agents.
     digest: 23f27b2d3199b1f321e6c87570913932f1caf50c9c6678ddaffabec83aa50e81
@@ -14,7 +14,7 @@ entries:
     version: 0.2.1
   - apiVersion: v2
     appVersion: 0.2.0
-    created: "2025-05-14T19:44:13.893105604Z"
+    created: "2025-05-14T19:55:49.815151374Z"
     description: Agent-Lab is a comprehensive toolkit designed for developing and
       testing LLM agents.
     digest: 6ce829bf608092b027f0a2a38f5649d12dc042cc247326325b4a2b74fb8f46df
@@ -25,7 +25,7 @@ entries:
     version: 0.2.0
   - apiVersion: v2
     appVersion: 0.1.0
-    created: "2025-05-14T19:44:13.89247122Z"
+    created: "2025-05-14T19:55:49.814726489Z"
     description: Agent-Lab is a comprehensive toolkit designed for developing and
       testing LLM agents.
     digest: 3064943f4aaed81e6b39cda33056cb8865da6824e97c91f6b94e00722752da53
@@ -34,4 +34,4 @@ entries:
     urls:
     - https://bsantanna.github.io/agent-lab/agent-lab-0.1.0.tgz
     version: 0.1.0
-generated: "2025-05-14T19:44:13.891883292Z"
+generated: "2025-05-14T19:55:49.814186658Z"
