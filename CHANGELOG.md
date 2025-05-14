@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.2.1 (2025-05-14)
+
+### Bug Fixes
+
+- Proxy timeout settings for long running operations
+  ([#125](https://github.com/bsantanna/agent-lab/pull/125),
+  [`fb5df21`](https://github.com/bsantanna/agent-lab/commit/fb5df2134f690de880150c2d733c2d82ac9c421c))
+
+
 ## v0.2.0 (2025-05-13)
 
 ### Features
