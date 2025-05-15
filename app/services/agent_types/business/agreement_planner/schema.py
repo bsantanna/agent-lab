@@ -5,6 +5,18 @@ from app.services.agent_types.business.agreement_planner import SUPERVISED_AGENT
 SUPERVISOR_ROUTER_OPTIONS = SUPERVISED_AGENTS + ["__end__"]
 
 
+class CoordinatorRouter(TypedDict):
+    """
+    Based on provided context, decided te route to take next.
+    """
+
+    next: Annotated[
+        Literal["planner", "__end__"],
+        ...,
+        "If customer has supplied enough information, route to planner, otherwise route to __end__",
+    ]
+
+
 class SupervisorRouter(TypedDict):
     """Worker to route to next. If no workers needed, route to FINISH."""
 
