@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.2.2 (2025-05-15)
+
+### Bug Fixes
+
+- Adjusts coordinator system prompt and CoordinatorRouter class
+  ([#126](https://github.com/bsantanna/agent-lab/pull/126),
+  [`aba396d`](https://github.com/bsantanna/agent-lab/commit/aba396dc76dacd4f5982b759b0090ffd83f86b66))
+
+
 ## v0.2.1 (2025-05-14)
 
 ### Bug Fixes
