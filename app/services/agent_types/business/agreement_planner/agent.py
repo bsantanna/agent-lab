@@ -25,8 +25,8 @@ from app.services.agent_types.business.agreement_planner.schema import (
     ImpedimentAnalysis,
     FinancialExpertAnalysis,
     CustomerServiceExpertAnalysis,
+    CoordinatorRouter,
 )
-from app.services.agent_types.schema import CoordinatorRouter
 
 
 class AgentState(MessagesState):
