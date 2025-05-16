@@ -8,7 +8,8 @@ ENV WORKERS=3
 ENV BROWSER_USE_VERSION=0.1.48
 
 WORKDIR /app
-COPY . .
+COPY app .
+COPY requirements.txt .
 
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir browser-use==${BROWSER_USE_VERSION} \
