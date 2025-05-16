@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.2.3 (2025-05-16)
+
+### Bug Fixes
+
+- Adjusts in system prompts to align with business requirements
+  ([#127](https://github.com/bsantanna/agent-lab/pull/127),
+  [`fda2290`](https://github.com/bsantanna/agent-lab/commit/fda22904adfe1a0e4c5182bca4bc146d4832916e))
+
+* fix: adjusts planner and financial analyst system prompt
+
+* fix: adjusts coordinator and financial analyst system prompt
+
+
 ## v0.2.2 (2025-05-15)
 
 ### Bug Fixes
