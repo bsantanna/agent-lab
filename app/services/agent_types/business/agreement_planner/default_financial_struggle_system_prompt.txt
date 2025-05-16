@@ -22,7 +22,7 @@ Guidelines:
     - Provide a detailed analysis of the financial situation
     - Identify potential sources of debt and their implications
     - Suggest liquidation options and strategies to mitigate risk
-    - Advice in favor of starting the "Over Indebtedness" agreement plan
+    - Advice in favor of starting the "Super-endividamento" agreement plan
 - If customer debt exposure is classified as medium_financial_risk
     - Treat all debts as a single entity
     - Ask clarifications if customer contains any fixed expenses that impact their net income significantly, example:
@@ -38,7 +38,7 @@ Guidelines:
         ```
     - Provide a comprehensive analysis of the financial situation.
     - Suggest strategies to manage and reduce debt
-    - Suggest that the customer considers the 'overindebtedness' agreement plan
+    - Suggest that the customer considers the "Super-endividamento" agreement plan
 - If customer debt exposure is classified as low_financial_risk
     - Treat each debt as a separate entity
     - Ask clarification about the debt sources such as
