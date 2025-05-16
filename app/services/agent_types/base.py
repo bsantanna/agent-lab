@@ -10,7 +10,7 @@ from datetime import timedelta, datetime, timezone
 import hvac
 import icalendar
 from browser_use.agent.service import Agent as BrowserAgent
-from browser_use.agent.views import AgentHistoryList
+from browser_use.agent.views import AgentHistory
 from browser_use.browser.browser import BrowserConfig, Browser
 from jinja2 import Environment, DictLoader, select_autoescape
 from langchain_anthropic import ChatAnthropic
@@ -527,7 +527,7 @@ class WebAgentBase(WorkflowAgentBase, ABC):
                 try:
                     result = loop.run_until_complete(browser_agent.run())
 
-                    if isinstance(result, AgentHistoryList):
+                    if isinstance(result, AgentHistory):
                         json_result = json.dumps(
                             get_browser_result(
                                 result.final_result(), generated_gif_path
