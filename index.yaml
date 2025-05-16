@@ -3,7 +3,7 @@ entries:
   agent-lab:
   - apiVersion: v2
     appVersion: 0.2.3
-    created: "2025-05-16T17:59:56.938197049Z"
+    created: "2025-05-16T21:42:35.611782628Z"
     description: Agent-Lab is a comprehensive toolkit designed for developing and
       testing LLM agents.
     digest: 66f615f94612ff91c1750865e83a55ee97a53d0b85c42e07b5d2368de4d5d540
@@ -14,7 +14,7 @@ entries:
     version: 0.2.3
   - apiVersion: v2
     appVersion: 0.2.2
-    created: "2025-05-16T17:59:56.937796723Z"
+    created: "2025-05-16T21:42:35.611324232Z"
     description: Agent-Lab is a comprehensive toolkit designed for developing and
       testing LLM agents.
     digest: a04e86a9c933a3ad8c7c139bfafb0a9742b3cd08fdd256cfbf5be597ac66404f
@@ -25,7 +25,7 @@ entries:
     version: 0.2.2
   - apiVersion: v2
     appVersion: 0.2.1
-    created: "2025-05-16T17:59:56.937357905Z"
+    created: "2025-05-16T21:42:35.610903276Z"
     description: Agent-Lab is a comprehensive toolkit designed for developing and
       testing LLM agents.
     digest: 23f27b2d3199b1f321e6c87570913932f1caf50c9c6678ddaffabec83aa50e81
@@ -36,7 +36,7 @@ entries:
     version: 0.2.1
   - apiVersion: v2
     appVersion: 0.2.0
-    created: "2025-05-16T17:59:56.93632903Z"
+    created: "2025-05-16T21:42:35.610410857Z"
     description: Agent-Lab is a comprehensive toolkit designed for developing and
       testing LLM agents.
     digest: 6ce829bf608092b027f0a2a38f5649d12dc042cc247326325b4a2b74fb8f46df
@@ -47,7 +47,7 @@ entries:
     version: 0.2.0
   - apiVersion: v2
     appVersion: 0.1.0
-    created: "2025-05-16T17:59:56.935222878Z"
+    created: "2025-05-16T21:42:35.609385178Z"
     description: Agent-Lab is a comprehensive toolkit designed for developing and
       testing LLM agents.
     digest: 3064943f4aaed81e6b39cda33056cb8865da6824e97c91f6b94e00722752da53
@@ -56,4 +56,4 @@ entries:
     urls:
     - https://bsantanna.github.io/agent-lab/agent-lab-0.1.0.tgz
     version: 0.1.0
-generated: "2025-05-16T17:59:56.934686679Z"
+generated: "2025-05-16T21:42:35.608530151Z"
