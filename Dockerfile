@@ -12,7 +12,7 @@ COPY . .
 
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir browser-use==${BROWSER_USE_VERSION} \
-    && playwright install chromium --with-deps \
+    && playwright install chromium --with-deps --no-shell \
     && pip install --no-cache-dir -r requirements.txt \
     && apt install -yq ffmpeg \
     && apt clean \
