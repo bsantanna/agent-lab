@@ -1,6 +1,29 @@
 # CHANGELOG
 
 
+## v0.2.4 (2025-05-17)
+
+### Bug Fixes
+
+- Adjusts dependencies and vulnerabilities on Docker base image, upgrades browser-use
+  ([#128](https://github.com/bsantanna/agent-lab/pull/128),
+  [`ecdb178`](https://github.com/bsantanna/agent-lab/commit/ecdb1781146d7b86131c02140cb6311f245f3365))
+
+* fix: upgrades libs and dockerfile
+
+* fix: adjusts dependencies versions
+
+* fix: adjusts CI pipelines
+
+* fix: adjusts chromium install command
+
+* fix: rollback adjusts chromium install command
+
+* fix: adjusts COPY command scope in dockerfile
+
+* fix: adjusts COPY command scope in dockerfile, adjusts browser-use tool call
+
+
 ## v0.2.3 (2025-05-16)
 
 ### Bug Fixes
