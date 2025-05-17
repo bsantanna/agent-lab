@@ -7,9 +7,8 @@ ENV PORT=8000
 ENV WORKERS=3
 ENV BROWSER_USE_VERSION=0.1.48
 
-WORKDIR /app
-COPY app .
-COPY requirements.txt .
+WORKDIR /agent-lab
+COPY requirements.txt /agent-lab/
 
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir browser-use==${BROWSER_USE_VERSION} \
@@ -18,5 +17,8 @@ RUN pip install --no-cache-dir --upgrade pip \
     && apt install -yq ffmpeg \
     && apt clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+COPY app/ /agent-lab/app/
+COPY config-docker.yml /agent-lab/
 
 CMD ["/bin/bash", "-x", "-c", "python -m uvicorn app.main:app --host ${HOST} --port ${PORT} --workers ${WORKERS}"]
