@@ -9,9 +9,8 @@ from datetime import timedelta, datetime, timezone
 
 import hvac
 import icalendar
-from browser_use.agent.service import Agent as BrowserAgent
+from browser_use import Agent as BrowserAgent
 from browser_use.agent.views import AgentHistoryList
-from browser_use.browser.browser import BrowserConfig, Browser
 from jinja2 import Environment, DictLoader, select_autoescape
 from langchain_anthropic import ChatAnthropic
 from langchain_core.embeddings import Embeddings
@@ -497,12 +496,6 @@ class WebAgentBase(WorkflowAgentBase, ABC):
 
         chat_model = self.get_chat_model(agent_id)
 
-        def get_browser_result(result_content: str, generated_gif_path: str) -> dict:
-            return {
-                "result_content": result_content,
-                "generated_gif_path": generated_gif_path,
-            }
-
         @tool("browser_tool")
         def browser_tool_call(
             instruction: Annotated[str, "The instruction to use browser."],
@@ -512,44 +505,30 @@ class WebAgentBase(WorkflowAgentBase, ABC):
             what you want to do with the browser, such as 'Go to google.com and search for browser-use', or 'Navigate
             to Reddit and find the top post about AI'."
             """
-            generated_gif_path = f"{cache_dir}/{uuid.uuid4()}.gif"
-            browser_config = BrowserConfig(headless=headless)
-            browser = Browser(config=browser_config)
             browser_agent = BrowserAgent(
-                task=instruction,  # Will be set per request
+                task=instruction,
                 llm=chat_model,
-                browser=browser,
-                generate_gif=generated_gif_path,
             )
+
+            loop = asyncio.new_event_loop()
             try:
-                loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
-                try:
-                    result = loop.run_until_complete(browser_agent.run())
+                result = loop.run_until_complete(browser_agent.run())
+                if isinstance(result, AgentHistoryList):
+                    json_result = json.dumps({"result_content": result.final_result()})
+                else:
+                    json_result = json.dumps({"result_content": result})
 
-                    if isinstance(result, AgentHistoryList):
-                        json_result = json.dumps(
-                            get_browser_result(
-                                result.final_result(), generated_gif_path
-                            )
-                        )
-                    else:
-                        json_result = json.dumps(
-                            get_browser_result(result, generated_gif_path)
-                        )
-
-                    self.logger.info(
-                        f"Browser tool completed successfully, result: {json_result}"
-                    )
-                    return json_result
-
-                finally:
-                    loop.run_until_complete(browser_agent.browser.close())
-
-            except Exception as e:
-                return f"Error executing browser task: {str(e)}"
+                loop.run_until_complete(browser_agent.browser.close())
             finally:
                 loop.close()
+
+            self.logger.info(
+                f"Browser tool completed successfully, result: {json_result}"
+            )
+
+            return json_result
+
 
         return browser_tool_call
 

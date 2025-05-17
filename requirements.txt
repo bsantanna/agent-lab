@@ -1,4 +1,4 @@
-browser-use
+charset-normalizer==3.4.1
 dependency-injector==4.46.0
 fastapi[standard]==0.115.12
 flake8==7.2.0
@@ -20,7 +20,7 @@ langchain-xai==0.2.3
 langgraph==0.4.1
 langgraph-checkpoint-postgres==2.0.21
 langgraph-prebuilt==0.1.8
-markitdown==0.0.2
+markitdown[all]==0.1.1
 msal==1.32.3
 opentelemetry-api==1.33.0
 opentelemetry-exporter-otlp-proto-http==1.33.0
