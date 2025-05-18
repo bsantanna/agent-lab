@@ -11,6 +11,7 @@ import hvac
 import icalendar
 from browser_use import Agent as BrowserAgent
 from browser_use.agent.views import AgentHistoryList
+from browser_use.browser.browser import BrowserConfig, Browser
 from jinja2 import Environment, DictLoader, select_autoescape
 from langchain_anthropic import ChatAnthropic
 from langchain_core.embeddings import Embeddings
@@ -488,14 +489,8 @@ class WebAgentBase(WorkflowAgentBase, ABC):
     def get_web_browser_tool(
         self,
         agent_id: str,
-        cache_dir: str = None,
         headless: bool = True,
     ) -> BaseTool:
-        if cache_dir is None:
-            temp_dir = f"{os.getcwd()}/tmp/"  # NOSONAR used inside container
-            os.makedirs(temp_dir, exist_ok=True)
-            cache_dir = temp_dir
-
         chat_model = self.get_chat_model(agent_id)
 
         @tool("browser_tool")
@@ -507,9 +502,19 @@ class WebAgentBase(WorkflowAgentBase, ABC):
             what you want to do with the browser, such as 'Go to google.com and search for browser-use', or 'Navigate
             to Reddit and find the top post about AI'."
             """
+
+            browser_config = BrowserConfig(
+                headless=headless
+            )
+
+            browser = Browser(
+                config=browser_config
+            )
+
             browser_agent = BrowserAgent(
                 task=instruction,
                 llm=chat_model,
+                browser=browser
             )
 
             loop = asyncio.new_event_loop()
