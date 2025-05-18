@@ -65,7 +65,7 @@ jobs:
 
       - name: Generate SLSA Provenance
         id: slsa_provenance
-        uses: slsa-framework/slsa-github-generator@v2.0.0
+        uses: slsa-framework/slsa-github-generator@v2.1.0
         with:
           builder-id: https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_docker-based_slsa3.yml
           subjects: |
