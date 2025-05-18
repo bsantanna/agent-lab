@@ -21,4 +21,8 @@ RUN pip install --no-cache-dir --upgrade pip \
 COPY app/ /agent-lab/app/
 COPY config-docker.yml /agent-lab/
 
+RUN groupadd -r agent-lab && useradd -r -g agent-lab agent-lab
+RUN chown -R agent-lab:agent-lab /agent-lab
+USER agent-lab
+
 CMD ["/bin/bash", "-x", "-c", "python -m uvicorn app.main:app --host ${HOST} --port ${PORT} --workers ${WORKERS}"]

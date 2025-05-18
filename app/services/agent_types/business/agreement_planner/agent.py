@@ -5,7 +5,6 @@ from datetime import datetime
 from pathlib import Path
 
 from langchain_core.messages import AIMessage, HumanMessage
-from langchain_core.prompts import ChatPromptTemplate
 from langgraph.constants import START
 from langgraph.prebuilt import create_react_agent
 from typing_extensions import Literal
@@ -112,18 +111,6 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
             goto="supervisor",
         )
 
-    def get_supervisor_chain(self, llm, supervisor_system_prompt: str):
-        structured_llm_generator = llm.bind_tools(
-            self.get_supervisor_tools()
-        ).with_structured_output(SupervisorRouter)
-        supervisor_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", supervisor_system_prompt),
-                ("human", "<messages>{messages}</messages>"),
-            ]
-        )
-        return supervisor_prompt | structured_llm_generator
-
     def get_supervisor(
         self, state: AgentState
     ) -> Command[Literal[*SUPERVISED_AGENTS, "__end__"]]:
@@ -134,6 +121,13 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
         structured_report = state.get("structured_report")
         agreement_plan = state.get("agreement_plan")
         agreement_impediment = state.get("agreement_impediment")
+        chat_model = self.get_chat_model(agent_id).bind_tools(
+            self.get_supervisor_tools()
+        )
+        chat_model_with_structured_output = chat_model.with_structured_output(
+            SupervisorRouter
+        )
+
         if agreement_plan is not None and structured_report is not None:
             self.logger.info(
                 f"Agent[{agent_id}] -> Supervisor -> Agreement Plan -> {agreement_plan}"
@@ -146,10 +140,11 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
             return Command(goto="__end__")
 
         response = self.get_supervisor_chain(
-            llm=self.get_chat_model(agent_id),
+            llm=chat_model_with_structured_output,
             supervisor_system_prompt=supervisor_system_prompt,
         ).invoke({"messages": messages})
         self.logger.info(f"Agent[{agent_id}] -> Supervisor -> Response -> {response}")
+
         return Command(goto=response["next"], update={"next": response["next"]})
 
     def get_reporter(self, state: AgentState) -> Command[Literal["supervisor"]]:
