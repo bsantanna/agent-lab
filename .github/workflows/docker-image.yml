@@ -24,21 +24,26 @@ jobs:
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3.7.0
 
+      - name: Install Syft
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+          syft version
+
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Get Docker Image Metadata
         id: docker_meta
-        uses: docker/metadata-action@v4.4.0
+        uses: docker/metadata-action@v5
         with:
           images: ${{ secrets.DOCKER_USERNAME }}/agent-lab
           tags: type=sha,format=long
@@ -49,7 +54,7 @@ jobs:
 
       - name: Build and push Docker image
         id: build_and_push
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: Dockerfile
@@ -57,26 +62,55 @@ jobs:
           push: true
           tags: |
             bsantanna/agent-lab:${{ env.VERSION }}
+          outputs: type=image,name=bsantanna/agent-lab:${{ env.VERSION }},push=true,annotation-index.org.opencontainers.image.source=https://github.com/${{ github.repository }}
+
+      - name: Generate SLSA Provenance
+        id: slsa_provenance
+        uses: slsa-framework/slsa-github-generator/.github/actions/provenance@v2
+        with:
+          image: bsantanna/agent-lab:${{ env.VERSION }}
+          digest: ${{ steps.build_and_push.outputs.digest }}
+          source-uri: git+https://github.com/${{ github.repository }}@refs/heads/main
+          builder-id: https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_docker-based_slsa3.yml
+
+      - name: Generate SBOM
+        id: generate_sbom
+        run: |
+          syft bsantanna/agent-lab:${{ env.VERSION }} -o cyclonedx-json > sbom.json
+          echo "SBOM_PATH=sbom.json" >> $GITHUB_ENV
 
       - name: Sign and verify the images with GitHub OIDC Token
         env:
           DIGEST: ${{ steps.build_and_push.outputs.digest }}
           TAGS: ${{ steps.docker_meta.outputs.tags }}
-          COSIGN_EXPERIMENTAL: "1" # Enable keyless signing
+          COSIGN_EXPERIMENTAL: "1"
         run: |
           # Initialize Sigstore TUF root
           cosign initialize
 
           # Build image references
-          images=""
-          for tag in ${TAGS}; do
-            images+="${tag}@${DIGEST} "
-          done
+          images="bsantanna/agent-lab:${{ env.VERSION }}@${DIGEST}"
 
-          # Sign the images
+          # Sign the image
           cosign sign --yes ${images}
 
-          # Verify the signatures
+          # Attest SBOM
+          cosign attest --yes --predicate ${SBOM_PATH} --type cyclonedx ${images}
+
+          # Attest SLSA Provenance
+          cosign attest --yes --predicate ${{ steps.slsa_provenance.outputs.provenance-path }} --type slsa ${images}
+
+          # Verify signature
           cosign verify ${images} \
+            --certificate-identity-regexp 'https://github.com/${{ github.repository }}/.github/workflows/docker-image.yml@refs/heads/main' \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com
+
+          # Verify SBOM attestation
+          cosign verify-attestation --type cyclonedx ${images} \
+            --certificate-identity-regexp 'https://github.com/${{ github.repository }}/.github/workflows/docker-image.yml@refs/heads/main' \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com
+
+          # Verify SLSA provenance attestation
+          cosign verify-attestation --type slsa ${images} \
             --certificate-identity-regexp 'https://github.com/${{ github.repository }}/.github/workflows/docker-image.yml@refs/heads/main' \
             --certificate-oidc-issuer https://token.actions.githubusercontent.com
