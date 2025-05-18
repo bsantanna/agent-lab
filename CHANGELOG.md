@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.2.12 (2025-05-18)
+
+### Bug Fixes
+
+- Fix/release 2 adjusts docker image auditing 6
+  ([#137](https://github.com/bsantanna/agent-lab/pull/137),
+  [`b6f15ee`](https://github.com/bsantanna/agent-lab/commit/b6f15ee8ef59ea5072c8ae683570b596a673287c))
+
+* fix: adjusts image sign command (6)
+
+* fix: adjust build pipeline, avoid extra build
+
+
 ## v0.2.11 (2025-05-18)
 
 ### Bug Fixes
