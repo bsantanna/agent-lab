@@ -1,6 +1,18 @@
 # CHANGELOG
 
 
+## v0.2.6 (2025-05-18)
+
+### Bug Fixes
+
+- Using headless browser ([#131](https://github.com/bsantanna/agent-lab/pull/131),
+  [`e3f234a`](https://github.com/bsantanna/agent-lab/commit/e3f234a9bd10fd1b9afa10dda6500c7c984de0d2))
+
+- Using xvfb wrapper for headless browser, adjusts cosign
+  ([#130](https://github.com/bsantanna/agent-lab/pull/130),
+  [`0b97cc5`](https://github.com/bsantanna/agent-lab/commit/0b97cc54e3c41df1bbff1bf436a2f9c3f206e056))
+
+
 ## v0.2.5 (2025-05-18)
 
 ### Bug Fixes
