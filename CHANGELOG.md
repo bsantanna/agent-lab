@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.2.9 (2025-05-18)
+
+### Bug Fixes
+
+- Adjusts image sign command (3) ([#134](https://github.com/bsantanna/agent-lab/pull/134),
+  [`517c532`](https://github.com/bsantanna/agent-lab/commit/517c532e54284afe0317d081bc2a18e3c2df34e4))
+
+
 ## v0.2.8 (2025-05-18)
 
 ### Bug Fixes
