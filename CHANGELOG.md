@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.2.5 (2025-05-18)
+
+### Bug Fixes
+
+- Docker image auditing and python code refactoring
+  ([#129](https://github.com/bsantanna/agent-lab/pull/129),
+  [`0d83670`](https://github.com/bsantanna/agent-lab/commit/0d836706c6009244419be94f5093745ad7580c86))
+
+
 ## v0.2.4 (2025-05-17)
 
 ### Bug Fixes
