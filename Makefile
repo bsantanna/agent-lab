@@ -3,7 +3,7 @@ run:
 
 test:
 	rm agent_lab.db || true
-	pytest --cov=app --cov-report=xml
+	xvfb-run pytest --cov=app --cov-report=xml
 
 lint:
 	python -m flake8 .

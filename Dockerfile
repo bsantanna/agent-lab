@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir browser-use==${BROWSER_USE_VERSION} \
     && playwright install chromium --with-deps --no-shell \
     && pip install --no-cache-dir -r requirements.txt \
-    && apt install -yq ffmpeg \
+    && apt install -yq xvfb ffmpeg \
     && apt clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -25,4 +25,4 @@ RUN groupadd -r agent-lab && useradd -r -g agent-lab agent-lab
 RUN chown -R agent-lab:agent-lab /agent-lab
 USER agent-lab
 
-CMD ["/bin/bash", "-x", "-c", "python -m uvicorn app.main:app --host ${HOST} --port ${PORT} --workers ${WORKERS}"]
+CMD ["/bin/bash", "-x", "-c", "xvfb-run python -m uvicorn app.main:app --host ${HOST} --port ${PORT} --workers ${WORKERS}"]

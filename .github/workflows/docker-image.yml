@@ -2,12 +2,14 @@ name: Docker Image
 
 on:
   workflow_run:
-    workflows: [ "Release" ]
+    workflows: ["Release"]
     types:
       - completed
 
 permissions:
   contents: read
+  packages: write
+  id-token: write
 
 jobs:
   docker_image:
@@ -60,12 +62,21 @@ jobs:
         env:
           DIGEST: ${{ steps.build_and_push.outputs.digest }}
           TAGS: ${{ steps.docker_meta.outputs.tags }}
+          COSIGN_EXPERIMENTAL: "1" # Enable keyless signing
         run: |
+          # Initialize Sigstore TUF root
+          cosign initialize
+
+          # Build image references
           images=""
           for tag in ${TAGS}; do
             images+="${tag}@${DIGEST} "
           done
+
+          # Sign the images
           cosign sign --yes ${images}
+
+          # Verify the signatures
           cosign verify ${images} \
-          --certificate-identity=https://github.com/${{ secrets.DOCKER_USERNAME }}/agent-lab/.github/workflows/docker-image.yml@refs/heads/main \
-          --certificate-oidc-issuer=https://token.actions.githubusercontent.com
+            --certificate-identity-regexp 'https://github.com/${{ github.repository }}/.github/workflows/docker-image.yml@refs/heads/main' \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com
