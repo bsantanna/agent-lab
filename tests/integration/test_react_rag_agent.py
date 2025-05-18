@@ -30,7 +30,7 @@ class TestReactRagAgent:
             url="/llms/create",
             json={
                 "integration_id": integration_id,
-                "language_model_tag": "grok-2",
+                "language_model_tag": "grok-3-mini-beta",
             },
         )
         language_model_id = response_2.json()["id"]
