@@ -3,7 +3,6 @@ from datetime import datetime
 from pathlib import Path
 
 from langchain_core.messages import AIMessage, HumanMessage
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool, BaseTool
 from langgraph.constants import START, END
 from langgraph.graph import StateGraph, MessagesState
@@ -253,18 +252,6 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             goto="supervisor",
         )
 
-    def get_supervisor_chain(self, llm, supervisor_system_prompt: str):
-        structured_llm_generator = llm.bind_tools(
-            self.get_supervisor_tools()
-        ).with_structured_output(SupervisorRouter)
-        supervisor_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", supervisor_system_prompt),
-                ("human", "<messages>{messages}</messages>"),
-            ]
-        )
-        return supervisor_prompt | structured_llm_generator
-
     def get_supervisor(
         self, state: AgentState
     ) -> Command[Literal[*SUPERVISED_AGENTS, "__end__"]]:
@@ -273,10 +260,15 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
 
         self.logger.info(f"Agent[{agent_id}] -> Supervisor -> Messages -> {messages}")
         supervisor_system_prompt = state["supervisor_system_prompt"]
-        chat_model = self.get_chat_model(agent_id)
-
+        chat_model = self.get_chat_model(agent_id).bind_tools(
+            self.get_supervisor_tools()
+        )
+        chat_model_with_structured_output = chat_model.with_structured_output(
+            SupervisorRouter
+        )
         response = self.get_supervisor_chain(
-            llm=chat_model, supervisor_system_prompt=supervisor_system_prompt
+            llm=chat_model_with_structured_output,
+            supervisor_system_prompt=supervisor_system_prompt,
         ).invoke({"messages": messages})
         self.logger.info(f"Agent[{agent_id}] -> Supervisor -> Response -> {response}")
         return Command(goto=response["next"], update={"next": response["next"]})

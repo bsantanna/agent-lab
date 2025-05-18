@@ -301,9 +301,15 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
         self.logger.info(f"Agent[{agent_id}] -> Supervisor -> Messages -> {messages}")
         supervisor_system_prompt = state["supervisor_system_prompt"]
         structured_report = state["structured_report"]
+        chat_model = self.get_chat_model(agent_id).bind_tools(
+            self.get_supervisor_tools()
+        )
+        chat_model_with_structured_output = chat_model.with_structured_output(
+            SupervisorRouter
+        )
         if structured_report is None:
             response = self.get_supervisor_chain(
-                llm=self.get_chat_model(agent_id),
+                llm=chat_model_with_structured_output,
                 supervisor_system_prompt=supervisor_system_prompt,
             ).invoke({"messages": messages})
             self.logger.info(
@@ -312,18 +318,6 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             return Command(goto=response["next"], update={"next": response["next"]})
         else:
             return Command(goto="__end__")
-
-    def get_supervisor_chain(self, llm, supervisor_system_prompt: str):
-        structured_llm_generator = llm.bind_tools(
-            self.get_supervisor_tools()
-        ).with_structured_output(SupervisorRouter)
-        supervisor_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", supervisor_system_prompt),
-                ("human", "<messages>{messages}</messages>"),
-            ]
-        )
-        return supervisor_prompt | structured_llm_generator
 
     def get_reporter_chain(self, llm, reporter_system_prompt: str):
         structured_llm_generator = llm.bind_tools(

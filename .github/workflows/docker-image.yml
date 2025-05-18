@@ -19,6 +19,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.7.0
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
 
@@ -31,11 +34,19 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Get Docker Image Metadata
+        id: docker_meta
+        uses: docker/metadata-action@v4.4.0
+        with:
+          images: ${{ secrets.DOCKER_USERNAME }}/agent-lab
+          tags: type=sha,format=long
+
       - name: Get the version
         id: get_version
         run: echo "VERSION=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
 
       - name: Build and push Docker image
+        id: build_and_push
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -44,3 +55,17 @@ jobs:
           push: true
           tags: |
             bsantanna/agent-lab:${{ env.VERSION }}
+
+      - name: Sign and verify the images with GitHub OIDC Token
+        env:
+          DIGEST: ${{ steps.build_and_push.outputs.digest }}
+          TAGS: ${{ steps.docker_meta.outputs.tags }}
+        run: |
+          images=""
+          for tag in ${TAGS}; do
+            images+="${tag}@${DIGEST} "
+          done
+          cosign sign --yes ${images}
+          cosign verify ${images} \
+          --certificate-identity=https://github.com/${{ secrets.DOCKER_USERNAME }}/agent-lab/.github/workflows/docker-image.yml@refs/heads/main \
+          --certificate-oidc-issuer=https://token.actions.githubusercontent.com

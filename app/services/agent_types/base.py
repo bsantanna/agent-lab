@@ -223,6 +223,8 @@ class AgentBase(ABC):
 
 
 class WorkflowAgentBase(AgentBase, ABC):
+    QUERY_FORMAT = "<query>{query}</query>"
+
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
         self.graph_persistence_factory = agent_utils.graph_persistence_factory
@@ -302,7 +304,7 @@ class WorkflowAgentBase(AgentBase, ABC):
                     [
                         {
                             "type": "text",
-                            "text": "<query>{query}</query>",
+                            "text": WorkflowAgentBase.QUERY_FORMAT,
                         },
                         {
                             "type": "image_url",
@@ -529,7 +531,6 @@ class WebAgentBase(WorkflowAgentBase, ABC):
 
             return json_result
 
-
         return browser_tool_call
 
     def get_web_crawl_tool(self, extract_depth="basic") -> BaseTool:
@@ -562,7 +563,7 @@ class SupervisedWorkflowAgentBase(WebAgentBase, ABC):
         coordinator_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", coordinator_system_prompt),
-                ("human", "<query>{query}</query>"),
+                ("human", WorkflowAgentBase.QUERY_FORMAT),
             ]
         )
         return coordinator_prompt | structured_llm_generator
@@ -582,9 +583,12 @@ class SupervisedWorkflowAgentBase(WebAgentBase, ABC):
         ).with_structured_output(SolutionPlan)
 
         if search_results is not None:
-            planner_input = "<query>{query}</query>\n\n<search_results>{search_results}</search_results>"
+            planner_input = (
+                WorkflowAgentBase.QUERY_FORMAT
+                + "\n\n<search_results>{search_results}</search_results>"
+            )
         else:
-            planner_input = "<query>{query}</query>"
+            planner_input = WorkflowAgentBase.QUERY_FORMAT
 
         planner_prompt = ChatPromptTemplate.from_messages(
             [
@@ -594,12 +598,21 @@ class SupervisedWorkflowAgentBase(WebAgentBase, ABC):
         )
         return planner_prompt | structured_llm_generator
 
+    def get_supervisor_tools(self) -> list:
+        return []
+
     @abstractmethod
     def get_supervisor(self, state: MessagesState) -> Command:
         pass
 
-    def get_supervisor_tools(self) -> list:
-        return []
+    def get_supervisor_chain(self, llm, supervisor_system_prompt: str):
+        supervisor_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", supervisor_system_prompt),
+                ("human", "<messages>{messages}</messages>"),
+            ]
+        )
+        return supervisor_prompt | llm
 
     @abstractmethod
     def get_reporter(self, state: MessagesState) -> Command[Literal["supervisor"]]:
