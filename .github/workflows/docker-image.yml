@@ -66,12 +66,26 @@ jobs:
 
       - name: Generate SLSA Provenance
         id: slsa_provenance
-        uses: slsa-framework/slsa-github-generator/.github/actions/provenance@v2
+        uses: slsa-framework/slsa-github-generator/generic@v2.0.0
         with:
-          image: bsantanna/agent-lab:${{ env.VERSION }}
-          digest: ${{ steps.build_and_push.outputs.digest }}
-          source-uri: git+https://github.com/${{ github.repository }}@refs/heads/main
           builder-id: https://github.com/slsa-framework/slsa-github-generator/.github/workflows/builder_docker-based_slsa3.yml
+          subjects: |
+            [
+              {
+                "name": "bsantanna/agent-lab:${{ env.VERSION }}",
+                "digest": {
+                  "sha256": "${{ steps.build_and_push.outputs.digest }}"
+                }
+              }
+            ]
+          source-uri: git+https://github.com/${{ github.repository }}@refs/heads/main
+          github-context: ${{ toJSON(github) }}
+          github-run-id: ${{ github.run_id }}
+          github-run-attempt: ${{ github.run_attempt }}
+        permissions:
+          id-token: write
+          contents: read
+          actions: read
 
       - name: Generate SBOM
         id: generate_sbom
