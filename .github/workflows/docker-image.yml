@@ -8,7 +8,6 @@ on:
 
 permissions:
   contents: read
-  packages: write
   id-token: write
 
 jobs:
@@ -82,10 +81,6 @@ jobs:
           github-context: ${{ toJSON(github) }}
           github-run-id: ${{ github.run_id }}
           github-run-attempt: ${{ github.run_attempt }}
-        permissions:
-          id-token: write
-          contents: read
-          actions: read
 
       - name: Generate SBOM
         id: generate_sbom
