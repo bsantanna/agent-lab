@@ -5,6 +5,7 @@ import pytest
 from testcontainers.core.waiting_utils import wait_for_logs
 from testcontainers.ollama import OllamaContainer
 from testcontainers.postgres import PostgresContainer
+from testcontainers.redis import RedisContainer
 from testcontainers.vault import VaultContainer
 
 os.environ["TESTING"] = "1"
@@ -23,6 +24,9 @@ postgres = (
     .with_bind_ports(container=5432, host=15432)
     .with_volume_mapping(f"{Path.cwd()}/tests/integration", "/mnt/integration")
 )
+
+redis = RedisContainer(image="redis:alpine").with_bind_ports(container=6379, host=16379)
+
 vault = (
     VaultContainer("hashicorp/vault:1.18.1")
     .with_bind_ports(container=8200, host=18200)
@@ -35,16 +39,19 @@ vault = (
 def test_config(request):
     ollama.start()
     postgres.start()
+    redis.start()
     vault.start()
 
     def remove_container():
         ollama.stop()
         postgres.stop()
+        redis.stop()
         vault.stop()
 
     request.addfinalizer(remove_container)
     wait_for_logs(ollama, "Listening on")
     wait_for_logs(postgres, "database system is ready to accept connections")
+    wait_for_logs(redis, "Ready to accept connections")
     wait_for_logs(
         vault, "Development mode should NOT be used in production installations!"
     )

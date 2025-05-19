@@ -12,6 +12,7 @@ from app.domain.repositories.language_models import (
     LanguageModelSettingRepository,
 )
 from app.domain.repositories.messages import MessageRepository
+from app.infrastructure.broker.redis import RedisClient
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.sql import Database
 from app.infrastructure.database.vectors import DocumentRepository
@@ -73,11 +74,14 @@ class Container(containers.DeclarativeContainer):
         config.set("api_base_url", api_base_url)
         config.set("vault.url", vault_url)
         config.set("vault.token", vault_token)
+        config.set("broker.url", app_secrets["data"]["data"]["broker_url"])
         config.set("db.url", app_secrets["data"]["data"]["db_url"])
         config.set("db.vectors", app_secrets["data"]["data"]["db_vectors"])
         config.set("db.checkpoints", app_secrets["data"]["data"]["db_checkpoints"])
 
     db = providers.Singleton(Database, db_url=config.db.url)
+
+    redis_client = providers.Singleton(RedisClient, redis_url=config.broker.url)
 
     graph_persistence_factory = providers.Singleton(
         GraphPersistenceFactory, db_checkpoints=config.db.checkpoints
