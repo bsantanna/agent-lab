@@ -525,6 +525,14 @@ class WebAgentBase(WorkflowAgentBase, ABC):
             to Reddit and find the top post about AI'."
             """
 
+            self.task_notification_service.publish_update(
+                task_progress=TaskProgress(
+                    agent_id=agent_id,
+                    status="in_progress",
+                    message_content="Starting headless browser tool...",
+                )
+            )
+
             browser_config = BrowserConfig(headless=headless)
 
             browser = Browser(config=browser_config)
@@ -538,6 +546,19 @@ class WebAgentBase(WorkflowAgentBase, ABC):
                 asyncio.set_event_loop(loop)
                 result = loop.run_until_complete(browser_agent.run())
                 if isinstance(result, AgentHistoryList):
+                    for i in range(len(result.action_names())):
+                        self.task_notification_service.publish_update(
+                            task_progress=TaskProgress(
+                                agent_id=agent_id,
+                                status="in_progress",
+                                message_content=(
+                                    f"Step {i + 1}:\n\t"
+                                    f"Action: {result.action_names()[i]}\n\t"
+                                    f"Thought: {result.model_thoughts()[i]}\n\t"
+                                    f"URL: {result.urls()[i]}"
+                                ),
+                            )
+                        )
                     json_result = json.dumps({"result_content": result.final_result()})
                 else:
                     json_result = json.dumps({"result_content": result})
