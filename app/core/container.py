@@ -12,7 +12,6 @@ from app.domain.repositories.language_models import (
     LanguageModelSettingRepository,
 )
 from app.domain.repositories.messages import MessageRepository
-from app.infrastructure.broker.redis import RedisClient
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.sql import Database
 from app.infrastructure.database.vectors import DocumentRepository
@@ -38,6 +37,7 @@ from app.services.integrations import IntegrationService
 from app.services.language_model_settings import LanguageModelSettingService
 from app.services.language_models import LanguageModelService
 from app.services.messages import MessageService
+from app.services.tasks import TaskNotificationService
 
 
 class Container(containers.DeclarativeContainer):
@@ -81,8 +81,6 @@ class Container(containers.DeclarativeContainer):
 
     db = providers.Singleton(Database, db_url=config.db.url)
 
-    redis_client = providers.Singleton(RedisClient, redis_url=config.broker.url)
-
     graph_persistence_factory = providers.Singleton(
         GraphPersistenceFactory, db_checkpoints=config.db.checkpoints
     )
@@ -106,6 +104,11 @@ class Container(containers.DeclarativeContainer):
     integration_service = providers.Factory(
         IntegrationService,
         integration_repository=integration_repository,
+    )
+
+    task_notification_service = providers.Factory(
+        TaskNotificationService,
+        redis_url=config.broker.url,
     )
 
     language_model_setting_repository = providers.Factory(
@@ -186,6 +189,7 @@ class Container(containers.DeclarativeContainer):
         vault_client=vault_client,
         graph_persistence_factory=graph_persistence_factory,
         document_repository=document_repository,
+        task_notification_service=task_notification_service,
     )
 
     adaptive_rag_agent = providers.Factory(AdaptiveRagAgent, agent_utils=agent_utils)

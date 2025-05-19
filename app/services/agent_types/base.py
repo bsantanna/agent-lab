@@ -40,6 +40,7 @@ from app.services.attachments import AttachmentService
 from app.services.integrations import IntegrationService
 from app.services.language_model_settings import LanguageModelSettingService
 from app.services.language_models import LanguageModelService
+from app.services.tasks import TaskNotificationService, TaskProgress
 
 
 def join_messages(left: List, right: List) -> List:
@@ -71,6 +72,7 @@ class AgentUtils:
         vault_client: hvac.Client,
         graph_persistence_factory: GraphPersistenceFactory,
         document_repository: DocumentRepository,
+        task_notification_service: TaskNotificationService,
     ):
         self.base_url = base_url
         self.agent_service = agent_service
@@ -82,6 +84,7 @@ class AgentUtils:
         self.vault_client = vault_client
         self.graph_persistence_factory = graph_persistence_factory
         self.document_repository = document_repository
+        self.task_notification_service = task_notification_service
 
 
 class AgentBase(ABC):
@@ -92,6 +95,7 @@ class AgentBase(ABC):
         self.language_model_service = agent_utils.language_model_service
         self.language_model_setting_service = agent_utils.language_model_setting_service
         self.integration_service = agent_utils.integration_service
+        self.task_notification_service = agent_utils.task_notification_service
         self.vault_client = agent_utils.vault_client
         self.logger = logging.getLogger(__name__)
 
@@ -284,9 +288,27 @@ class WorkflowAgentBase(AgentBase, ABC):
         inputs = self.get_input_params(message_request)
         self.logger.info(f"Agent[{agent_id}] -> Input -> {inputs}")
 
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content="...",
+            )
+        )
+
         workflow_result = workflow.invoke(inputs, config)
         self.logger.info(f"Agent[{agent_id}] -> Result -> {workflow_result}")
         message_content, response_data = self.format_response(workflow_result)
+
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="completed",
+                message_content=message_content,
+                response_data=response_data,
+            )
+        )
+
         return Message(
             message_role="assistant",
             message_content=message_content,
@@ -503,18 +525,12 @@ class WebAgentBase(WorkflowAgentBase, ABC):
             to Reddit and find the top post about AI'."
             """
 
-            browser_config = BrowserConfig(
-                headless=headless
-            )
+            browser_config = BrowserConfig(headless=headless)
 
-            browser = Browser(
-                config=browser_config
-            )
+            browser = Browser(config=browser_config)
 
             browser_agent = BrowserAgent(
-                task=instruction,
-                llm=chat_model,
-                browser=browser
+                task=instruction, llm=chat_model, browser=browser
             )
 
             loop = asyncio.new_event_loop()
