@@ -19,6 +19,7 @@ from app.services.agent_types.base import (
     AgentUtils,
     WebAgentBase,
 )
+from app.services.tasks import TaskProgress
 
 
 class AgentState(MessagesState):
@@ -207,18 +208,37 @@ class AdaptiveRagAgent(WebAgentBase):
         else:
             context = context + f"\n\nPrevious messages:{previous_messages}"
 
-        generation = self.get_rag_chain(chat_model, execution_system_prompt).invoke(
+        self.logger.info(
+            f"Agent[{agent_id}] -> Generate -> Query -> {query}"
+        )
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content="Generating response...",
+            )
+        )
+        response = self.get_rag_chain(chat_model, execution_system_prompt).invoke(
             {"context": context, "query": query}
         )
 
-        generation["messages"] = [
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content=response["generation"],
+            )
+        )
+
+        response["messages"] = [
             self.create_thought_chain(
                 human_input=query,
-                ai_response=generation["generation"],
-                connection=generation["connection"],
+                ai_response=response["generation"],
+                connection=response["connection"],
             )
         ]
-        return generation
+
+        return response
 
     def get_retrieval_grader(self, chat_model, retrieval_grader_system_prompt):
         # LLM with function call
@@ -243,6 +263,16 @@ class AdaptiveRagAgent(WebAgentBase):
         chat_model = self.get_chat_model(agent_id)
         retrieval_grader_system_prompt = state["retrieval_grader_system_prompt"]
         filtered_docs = []
+        self.logger.info(
+            f"Agent[{agent_id}] -> Document Grader -> Query -> {query} "
+        )
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content=f"Grading documents relevance to query '{query}'...",
+            )
+        )
         for d in documents:
             score = self.get_retrieval_grader(
                 chat_model, retrieval_grader_system_prompt
@@ -256,6 +286,14 @@ class AdaptiveRagAgent(WebAgentBase):
                 filtered_docs.append(d)
             else:
                 continue
+
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content=f"Filtered out {len(documents) - len(filtered_docs)} documents. ",
+            )
+        )
         return {"documents": filtered_docs}
 
     def retrieve(self, state: AgentState):
@@ -263,6 +301,16 @@ class AdaptiveRagAgent(WebAgentBase):
         query = state["query"]
         collection_name = state["collection_name"]
         embeddings = self.get_embeddings_model(agent_id)
+        self.logger.info(
+            f"Agent[{agent_id}] -> Retrieve -> Query -> {query} -- Collection -> {collection_name}"
+        )
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content="Retrieving documents...",
+            )
+        )
         documents = self.document_repository.search(
             embeddings_model=embeddings,
             collection_name=collection_name,
@@ -279,6 +327,16 @@ class AdaptiveRagAgent(WebAgentBase):
         query = state["query"]
         chat_model = self.get_chat_model(agent_id)
         query_rewriter_system_prompt = state["query_rewriter_system_prompt"]
+        self.logger.info(
+            f"Agent[{agent_id}] -> Transform query -> Query -> {query}"
+        )
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content="Transforming query for better semantic document match...",
+            )
+        )
         transformed_query = self.get_query_rewriter(
             chat_model, query_rewriter_system_prompt
         ).invoke({"query": query})
@@ -289,6 +347,16 @@ class AdaptiveRagAgent(WebAgentBase):
                 connection="Transformed query can help generating a better answer.",
             )
         ]
+        self.logger.info(
+            f"Agent[{agent_id}] -> Retrieve -> Query -> {query} -- Collection -> {collection_name}"
+        )
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content=f"Transformed query: `{transformed_query}` ",
+            )
+        )
         return {"query": transformed_query, "messages": messages}
 
     def get_input_params(self, message_request: MessageRequest):
