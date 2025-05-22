@@ -1,5 +1,16 @@
+import asyncio
+import json
+
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Body, Depends, Response, status
+from fastapi import (
+    APIRouter,
+    Body,
+    Depends,
+    Response,
+    status,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from typing_extensions import List
 
 from app.core.container import Container
@@ -16,6 +27,7 @@ from app.interface.api.agents.schema import (
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.registry import AgentRegistry
 from app.services.agents import AgentService
+from app.services.tasks import TaskNotificationService
 
 router = APIRouter()
 
@@ -116,6 +128,46 @@ async def update_setting(
 
     except NotFoundError:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
+
+
+@router.websocket("/ws/task_updates/{agent_id}")
+@inject
+async def task_updates_endpoint(
+    websocket: WebSocket,
+    agent_id: str,
+    task_notification_service: TaskNotificationService = Depends(
+        Provide[Container.task_notification_service]
+    ),
+):
+    await websocket.accept()
+    task_notification_service.subscribe()
+    loop = asyncio.get_event_loop()
+
+    def get_next_message():
+        return next(task_notification_service.listen())
+
+    try:
+        while True:
+            try:
+                message = await asyncio.wait_for(
+                    loop.run_in_executor(None, get_next_message), timeout=30
+                )
+            except asyncio.TimeoutError:
+                break
+
+            if message.get("type") != "message":
+                continue
+            try:
+                data = json.loads(message["data"])
+            except (ValueError, TypeError):
+                continue
+            if data.get("agent_id") == agent_id:
+                await websocket.send_json(data)
+                break
+    except WebSocketDisconnect:
+        pass
+    finally:
+        task_notification_service.close()
 
 
 def _format_expanded_response(

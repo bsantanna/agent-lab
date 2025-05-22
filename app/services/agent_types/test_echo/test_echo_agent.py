@@ -3,6 +3,7 @@ from langgraph.graph import MessagesState
 
 from app.interface.api.messages.schema import MessageRequest, Message
 from app.services.agent_types.base import AgentBase, AgentUtils
+from app.services.tasks import TaskProgress
 
 
 class TestEchoAgent(AgentBase):
@@ -23,6 +24,14 @@ class TestEchoAgent(AgentBase):
         message_content, response_data = self.format_response(
             MessagesState(
                 messages=[AIMessage(content=f"Echo: {message_request.message_content}")]
+            )
+        )
+
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=message_request.agent_id,
+                status="in_progress",
+                message_content=f"echo: {message_request.message_content}",
             )
         )
 
