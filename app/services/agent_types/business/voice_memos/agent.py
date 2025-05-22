@@ -33,6 +33,7 @@ from app.services.agent_types.business.voice_memos.schema import (
     AudioAnalysisReport,
 )
 from app.services.agent_types.schema import SolutionPlan
+from app.services.tasks import TaskProgress
 
 
 class AgentState(MessagesState):
@@ -207,10 +208,20 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
                 prompt=coordinator_system_prompt,
             )
             response = coordinator.invoke(state)
+            response_message = response["messages"][-1]
+
+            self.task_notification_service.publish_update(
+                task_progress=TaskProgress(
+                    agent_id=agent_id,
+                    status="in_progress",
+                    message_content=response_message.content,
+                )
+            )
 
             self.logger.info(
                 f"Agent[{agent_id}] -> Coordinator -> Response -> {response}"
             )
+
             return Command(
                 goto=END,
                 update={"messages": response["messages"]},
@@ -222,6 +233,14 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
 
             self.logger.info(
                 f"Agent[{agent_id}] -> Coordinator -> Query -> {query} -> Attachment[{attachment_id}]"
+            )
+
+            self.task_notification_service.publish_update(
+                task_progress=TaskProgress(
+                    agent_id=agent_id,
+                    status="in_progress",
+                    message_content="Analyzing audio...",
+                )
             )
 
             attachment = self.attachment_service.get_attachment_by_id(attachment_id)
@@ -249,6 +268,15 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             )
             response = completion.choices[0].message
             transcription = response.content
+
+            self.task_notification_service.publish_update(
+                task_progress=TaskProgress(
+                    agent_id=agent_id,
+                    status="in_progress",
+                    message_content=f"{transcription}",
+                )
+            )
+
             self.logger.info(
                 f"Agent[{agent_id}] -> Coordinator -> Response -> {response}"
             )
@@ -270,6 +298,15 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
         query = state["query"]
         transcription = state["transcription"]
         planner_system_prompt = state["planner_system_prompt"]
+
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content="Planning how to reply...",
+            )
+        )
+
         self.logger.info(
             f"Agent[{agent_id}] -> Planner -> Query -> {query} -> Transcription -> {transcription}"
         )
@@ -286,8 +323,16 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             }
         )
 
-        self.logger.info(f"Agent[{agent_id}] -> Planner -> Response -> {response}")
         plain_response = json.dumps(response)
+
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content=response.get("thought"),
+            )
+        )
+        self.logger.info(f"Agent[{agent_id}] -> Planner -> Response -> {response}")
 
         return Command(
             update={
@@ -339,11 +384,25 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
         agent_id = state["agent_id"]
         messages = state["messages"]
         self.logger.info(f"Agent[{agent_id}] -> Reporter")
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content="Generating structured report...",
+            )
+        )
         reporter_system_prompt = state["reporter_system_prompt"]
         response = self.get_reporter_chain(
             llm=self.get_chat_model(agent_id),
             reporter_system_prompt=reporter_system_prompt,
         ).invoke({"content_analysis": messages[-1].content})
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content=f"Structured report generated: {response.get('main_topic')}...",
+            )
+        )
         self.logger.info(f"Agent[{agent_id}] -> Supervisor -> Response -> {response}")
         return Command(
             update={"structured_report": response},
@@ -356,6 +415,13 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
     def get_content_analyst(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
         self.logger.info(f"Agent[{agent_id}] -> Content Analyst")
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content="Analysing transcription content...",
+            )
+        )
         content_analyst_system_prompt = state["content_analyst_system_prompt"]
         content_analyst = create_react_agent(
             model=self.get_chat_model(agent_id),
@@ -363,6 +429,14 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             prompt=content_analyst_system_prompt,
         )
         response = content_analyst.invoke(state)
+
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content=f"Content analysis complete: {response.get('messages')[-1].content}",
+            )
+        )
         self.logger.info(
             f"Agent[{agent_id}] -> Content Analyst -> Response -> {response}"
         )
