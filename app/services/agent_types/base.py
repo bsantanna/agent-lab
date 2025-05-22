@@ -34,7 +34,6 @@ from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.vectors import DocumentRepository
 from app.interface.api.messages.schema import MessageRequest, Message
 from app.services.agent_settings import AgentSettingService
-from app.services.agent_types.schema import SolutionPlan, CoordinatorRouter
 from app.services.agents import AgentService
 from app.services.attachments import AttachmentService
 from app.services.integrations import IntegrationService
@@ -599,16 +598,13 @@ class SupervisedWorkflowAgentBase(WebAgentBase, ABC):
         pass
 
     def get_coordinator_chain(self, llm, coordinator_system_prompt: str):
-        structured_llm_generator = llm.bind_tools(
-            self.get_coordinator_tools()
-        ).with_structured_output(CoordinatorRouter)
         coordinator_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", coordinator_system_prompt),
                 ("human", WorkflowAgentBase.QUERY_FORMAT),
             ]
         )
-        return coordinator_prompt | structured_llm_generator
+        return coordinator_prompt | llm
 
     def get_planner_tools(self) -> list:
         return [self.get_web_search_tool(), self.get_web_crawl_tool()]
@@ -620,10 +616,6 @@ class SupervisedWorkflowAgentBase(WebAgentBase, ABC):
     def get_planner_chain(
         self, llm, planner_system_prompt: str, search_results: str = None
     ):
-        structured_llm_generator = llm.bind_tools(
-            self.get_planner_tools()
-        ).with_structured_output(SolutionPlan)
-
         if search_results is not None:
             planner_input = (
                 WorkflowAgentBase.QUERY_FORMAT
@@ -638,7 +630,7 @@ class SupervisedWorkflowAgentBase(WebAgentBase, ABC):
                 ("human", planner_input),
             ]
         )
-        return planner_prompt | structured_llm_generator
+        return planner_prompt | llm
 
     def get_supervisor_tools(self) -> list:
         return []

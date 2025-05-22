@@ -23,7 +23,9 @@ from app.services.agent_types.coordinator_planner_supervisor import (
 )
 from app.services.agent_types.coordinator_planner_supervisor.schema import (
     SupervisorRouter,
+    CoordinatorRouter,
 )
+from app.services.agent_types.schema import SolutionPlan
 
 
 class AgentState(MessagesState):
@@ -206,8 +208,12 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
 
         self.logger.info(f"Agent[{agent_id}] -> Coordinator -> Query -> {query}")
         chat_model = self.get_chat_model(agent_id)
+        chat_model_with_tools = chat_model.bind_tools(self.get_coordinator_tools())
+        chat_model_with_structured_output = (
+            chat_model_with_tools.with_structured_output(CoordinatorRouter)
+        )
         response = self.get_coordinator_chain(
-            chat_model, coordinator_system_prompt
+            chat_model_with_structured_output, coordinator_system_prompt
         ).invoke({"query": query})
         self.logger.info(f"Agent[{agent_id}] -> Coordinator -> Response -> {response}")
         if response["next"] == END:
@@ -226,7 +232,11 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
         self.logger.info(
             f"Agent[{agent_id}] -> Planner -> Query -> {query} -> Deep Search Mode -> {deep_search_mode}"
         )
-        chat_model = self.get_chat_model(agent_id)
+        chat_model = (
+            self.get_chat_model(agent_id)
+            .bind_tools(self.get_planner_tools())
+            .with_structured_output(SolutionPlan)
+        )
 
         if deep_search_mode:
             search_response = self.get_web_search_tool().invoke({"query": query})

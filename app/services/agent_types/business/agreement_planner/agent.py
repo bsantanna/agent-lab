@@ -26,6 +26,7 @@ from app.services.agent_types.business.agreement_planner.schema import (
     CustomerServiceExpertAnalysis,
     CoordinatorRouter,
 )
+from app.services.agent_types.schema import SolutionPlan
 
 
 class AgentState(MessagesState):
@@ -95,7 +96,11 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
         query = state["query"]
         planner_system_prompt = state["planner_system_prompt"]
         self.logger.info(f"Agent[{agent_id}] -> Planner -> Query -> {query}")
-        chat_model = self.get_chat_model(agent_id)
+        chat_model = (
+            self.get_chat_model(agent_id)
+            .bind_tools(self.get_planner_tools())
+            .with_structured_output(SolutionPlan)
+        )
         response = self.get_planner_chain(
             llm=chat_model, planner_system_prompt=planner_system_prompt
         ).invoke({"query": query})
