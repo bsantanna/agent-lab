@@ -26,6 +26,7 @@ from app.services.agent_types.coordinator_planner_supervisor.schema import (
     CoordinatorRouter,
 )
 from app.services.agent_types.schema import SolutionPlan
+from app.services.tasks import TaskProgress
 
 
 class AgentState(MessagesState):
@@ -207,6 +208,13 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
         coordinator_system_prompt = state["coordinator_system_prompt"]
 
         self.logger.info(f"Agent[{agent_id}] -> Coordinator -> Query -> {query}")
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content=f"Analyzing query: {query}",
+            )
+        )
         chat_model = self.get_chat_model(agent_id)
         chat_model_with_tools = chat_model.bind_tools(self.get_coordinator_tools())
         chat_model_with_structured_output = (
@@ -226,6 +234,13 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
 
     def get_planner(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content="Planning how to reply...",
+            )
+        )
         query = state["query"]
         planner_system_prompt = state["planner_system_prompt"]
         deep_search_mode = state["deep_search_mode"]
@@ -254,6 +269,14 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
         self.logger.info(f"Agent[{agent_id}] -> Planner -> Response -> {response}")
         plain_response = json.dumps(response)
 
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content=response.get("thought"),
+            )
+        )
+
         return Command(
             update={
                 "messages": [AIMessage(content=plain_response, name="planner")],
@@ -267,7 +290,6 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
     ) -> Command[Literal[*SUPERVISED_AGENTS, "__end__"]]:
         agent_id = state["agent_id"]
         messages = self.get_last_interaction_messages(state["messages"])
-
         self.logger.info(f"Agent[{agent_id}] -> Supervisor -> Messages -> {messages}")
         supervisor_system_prompt = state["supervisor_system_prompt"]
         chat_model = self.get_chat_model(agent_id).bind_tools(
@@ -316,6 +338,15 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
         self.logger.info(
             f"Agent[{agent_id}] -> Researcher -> Deep Search Mode -> {deep_search_mode}"
         )
+
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content="Researching the topic...",
+            )
+        )
+
         if deep_search_mode:
             tools = [self.get_web_search_tool(), self.get_web_crawl_tool()]
         else:
@@ -328,6 +359,15 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             prompt=researcher_system_prompt,
         )
         response = researcher.invoke(state)
+
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content=response["messages"][-1].content,
+            )
+        )
+
         self.logger.info(f"Agent[{agent_id}] -> Researcher -> Response -> {response}")
         return Command(
             update={"messages": response["messages"]},
@@ -339,6 +379,15 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
         coder_system_prompt = state["coder_system_prompt"]
 
         self.logger.info(f"Agent[{agent_id}] -> Coder")
+
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content="Generating code...",
+            )
+        )
+
         chat_model = self.get_chat_model(agent_id)
         coder = create_react_agent(
             model=chat_model,
@@ -348,6 +397,13 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
 
         response = coder.invoke(state)
         self.logger.info(f"Agent[{agent_id}] -> Coder -> Response -> {response}")
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content=response["messages"][-1].content,
+            )
+        )
         return Command(
             update={"messages": response["messages"]},
             goto="supervisor",
@@ -358,6 +414,14 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
         browser_system_prompt = state["browser_system_prompt"]
 
         self.logger.info(f"Agent[{agent_id}] -> Browser")
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content="Browsing the web for information...",
+            )
+        )
+
         chat_model = self.get_chat_model(agent_id)
         browser = create_react_agent(
             model=chat_model,
@@ -367,14 +431,29 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
 
         response = browser.invoke(state)
         self.logger.info(f"Agent[{agent_id}] -> Browser -> Response -> {response}")
-        return Command(
+        command = Command(
             update={"messages": response["messages"]},
             goto="supervisor",
         )
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content=response["messages"][-1].content,
+            )
+        )
+        return command
 
     def get_reporter(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
         self.logger.info(f"Agent[{agent_id}] -> Reporter")
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content="Generating report...",
+            )
+        )
         reporter_system_prompt = state["reporter_system_prompt"]
         chat_model = self.get_chat_model(agent_id)
         reporter = create_react_agent(
@@ -383,8 +462,16 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             prompt=reporter_system_prompt,
         )
         response = reporter.invoke(state)
-        self.logger.info(f"Agent[{agent_id}] -> Reporter -> Response -> {response}")
-        return Command(
+        command = Command(
             update={"messages": response["messages"]},
             goto="supervisor",
         )
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content=response["messages"][-1].content,
+            )
+        )
+        self.logger.info(f"Agent[{agent_id}] -> Reporter -> Response -> {response}")
+        return command
