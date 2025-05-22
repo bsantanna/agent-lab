@@ -27,6 +27,7 @@ from app.services.agent_types.business.agreement_planner.schema import (
     CoordinatorRouter,
 )
 from app.services.agent_types.schema import SolutionPlan
+from app.services.tasks import TaskProgress
 
 
 class AgentState(MessagesState):
@@ -67,9 +68,16 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
     ) -> Command[Literal["planner", "impediment_checker", "__end__"]]:
         agent_id = state["agent_id"]
         attachment_id = state["attachment_id"]
+        query = state["query"]
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content=f"Analyzing query '{query}'",
+            )
+        )
 
         if attachment_id is None:
-            query = state["query"]
             self.logger.info(f"Agent[{agent_id}] -> Coordinator -> Query -> {query}")
             coordinator = create_react_agent(
                 model=self.get_chat_model(agent_id),
@@ -78,6 +86,13 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
                 response_format=CoordinatorRouter,
             )
             response = coordinator.invoke(state)
+            self.task_notification_service.publish_update(
+                task_progress=TaskProgress(
+                    agent_id=agent_id,
+                    status="in_progress",
+                    message_content=response["messages"][-1].content,
+                )
+            )
             self.logger.info(
                 f"Agent[{agent_id}] -> Coordinator -> Response -> {response}"
             )
@@ -96,6 +111,13 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
         query = state["query"]
         planner_system_prompt = state["planner_system_prompt"]
         self.logger.info(f"Agent[{agent_id}] -> Planner -> Query -> {query}")
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content="Generating execution plan...",
+            )
+        )
         chat_model = (
             self.get_chat_model(agent_id)
             .bind_tools(self.get_planner_tools())
@@ -104,7 +126,13 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
         response = self.get_planner_chain(
             llm=chat_model, planner_system_prompt=planner_system_prompt
         ).invoke({"query": query})
-
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content=response["messages"][-1].content,
+            )
+        )
         self.logger.info(f"Agent[{agent_id}] -> Planner -> Response -> {response}")
         plain_response = json.dumps(response)
 
@@ -144,6 +172,14 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
             )
             return Command(goto="__end__")
 
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content="Processing request...",
+            )
+        )
+
         response = self.get_supervisor_chain(
             llm=chat_model_with_structured_output,
             supervisor_system_prompt=supervisor_system_prompt,
@@ -155,6 +191,13 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
     def get_reporter(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
         self.logger.info(f"Agent[{agent_id}] -> Reporter")
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content="Generating structured report...",
+            )
+        )
         reporter = create_react_agent(
             model=self.get_chat_model(agent_id),
             tools=self.get_reporter_tools(),
@@ -162,6 +205,13 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
             response_format=StructuredReport,
         )
         response = reporter.invoke(state)
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content=response["messages"][-1].content,
+            )
+        )
         self.logger.info(f"Agent[{agent_id}] -> Reporter -> Response -> {response}")
         return Command(
             update={
@@ -176,6 +226,13 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
     ) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
         self.logger.info(f"Agent[{agent_id}] -> Financial Struggle Analyst")
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content="Generating financial analysis...",
+            )
+        )
         financial_struggle_system_prompt = state["financial_struggle_system_prompt"]
         financial_struggle_analyst = create_react_agent(
             model=self.get_chat_model(agent_id),
@@ -184,6 +241,13 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
             response_format=FinancialExpertAnalysis,
         )
         response = financial_struggle_analyst.invoke(state)
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content=response["messages"][-1].content,
+            )
+        )
         self.logger.info(
             f"Agent[{agent_id}] -> Financial Struggle Analyst -> Response -> {response}"
         )
@@ -206,6 +270,13 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
     ) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
         self.logger.info(f"Agent[{agent_id}] -> Customer Complaint Analyst")
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content="Generating customer complaint analysis...",
+            )
+        )
         customer_complaint_system_prompt = state["customer_complaint_system_prompt"]
         customer_complaint_analyst = create_react_agent(
             model=self.get_chat_model(agent_id),
@@ -214,6 +285,13 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
             response_format=CustomerServiceExpertAnalysis,
         )
         response = customer_complaint_analyst.invoke(state)
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content=response["messages"][-1].content,
+            )
+        )
         self.logger.info(
             f"Agent[{agent_id}] -> Customer Complaint Analyst -> Response -> {response}"
         )
@@ -246,14 +324,28 @@ class AgreementPlanner(SupervisedWorkflowAgentBase):
             .bind_tools(self.get_impediment_checker_tools())
             .with_structured_output(ImpedimentAnalysis)
         )
-        self.logger.info(f"Agent[{agent_id}] -> Claim Support Analyst")
+        self.logger.info(f"Agent[{agent_id}] -> Impediment Checker -> Query -> {query}")
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content="Impediment analysis...",
+            )
+        )
         response = self.get_image_analysis_chain(
             chat_model_with_structured_output,
             impediment_checker_system_prompt,
             image_content_type,
         ).invoke({"query": query, "image_base64": image_base64})
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content=response["messages"][-1].content,
+            )
+        )
         self.logger.info(
-            f"Agent[{agent_id}] -> Claim Support Analyst -> Response -> {response}"
+            f"Agent[{agent_id}] -> Impediment Checket -> Response -> {response}"
         )
         return Command(
             update={
