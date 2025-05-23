@@ -1,6 +1,39 @@
 # CHANGELOG
 
 
+## v0.3.0 (2025-05-23)
+
+### Features
+
+- Support to task status notification for long running requests
+  ([#145](https://github.com/bsantanna/agent-lab/pull/145),
+  [`1a877f8`](https://github.com/bsantanna/agent-lab/commit/1a877f82b31d63597b3bbad1a88a1b48e7e73a01))
+
+* feat: redis application setup
+
+* feat: task notification service on top of redis pub sub
+
+* feat: task notification service for browser tool call
+
+* feat: refactors supervised workflow base class, decouples chain methods
+
+* feat: notification service calls for voice memos agent
+
+* feat: notification service calls for general agent
+
+* feat: notification service calls for vision document and adaptive rag agents
+
+* feat: notification service calls for agreement planner
+
+* feat: websocket endpoint subscribing to redis channel
+
+* feat: updates depdendencies
+
+* fix: linting error on log message
+
+* fix: return types adjust
+
+
 ## v0.2.14 (2025-05-18)
 
 ### Bug Fixes
