@@ -208,9 +208,7 @@ class AdaptiveRagAgent(WebAgentBase):
         else:
             context = context + f"\n\nPrevious messages:{previous_messages}"
 
-        self.logger.info(
-            f"Agent[{agent_id}] -> Generate -> Query -> {query}"
-        )
+        self.logger.info(f"Agent[{agent_id}] -> Generate -> Query -> {query}")
         self.task_notification_service.publish_update(
             task_progress=TaskProgress(
                 agent_id=agent_id,
@@ -263,9 +261,7 @@ class AdaptiveRagAgent(WebAgentBase):
         chat_model = self.get_chat_model(agent_id)
         retrieval_grader_system_prompt = state["retrieval_grader_system_prompt"]
         filtered_docs = []
-        self.logger.info(
-            f"Agent[{agent_id}] -> Document Grader -> Query -> {query} "
-        )
+        self.logger.info(f"Agent[{agent_id}] -> Document Grader -> Query -> {query} ")
         self.task_notification_service.publish_update(
             task_progress=TaskProgress(
                 agent_id=agent_id,
@@ -327,9 +323,7 @@ class AdaptiveRagAgent(WebAgentBase):
         query = state["query"]
         chat_model = self.get_chat_model(agent_id)
         query_rewriter_system_prompt = state["query_rewriter_system_prompt"]
-        self.logger.info(
-            f"Agent[{agent_id}] -> Transform query -> Query -> {query}"
-        )
+        self.logger.info(f"Agent[{agent_id}] -> Transform query -> Query -> {query}")
         self.task_notification_service.publish_update(
             task_progress=TaskProgress(
                 agent_id=agent_id,
@@ -347,9 +341,7 @@ class AdaptiveRagAgent(WebAgentBase):
                 connection="Transformed query can help generating a better answer.",
             )
         ]
-        self.logger.info(
-            f"Agent[{agent_id}] -> Retrieve -> Query -> {query} -- Collection -> {collection_name}"
-        )
+        self.logger.info(f"Agent[{agent_id}] -> Transform query -> Query -> {query}")
         self.task_notification_service.publish_update(
             task_progress=TaskProgress(
                 agent_id=agent_id,
