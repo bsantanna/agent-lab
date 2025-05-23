@@ -34,12 +34,12 @@ from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.vectors import DocumentRepository
 from app.interface.api.messages.schema import MessageRequest, Message
 from app.services.agent_settings import AgentSettingService
-from app.services.agent_types.schema import SolutionPlan, CoordinatorRouter
 from app.services.agents import AgentService
 from app.services.attachments import AttachmentService
 from app.services.integrations import IntegrationService
 from app.services.language_model_settings import LanguageModelSettingService
 from app.services.language_models import LanguageModelService
+from app.services.tasks import TaskNotificationService, TaskProgress
 
 
 def join_messages(left: List, right: List) -> List:
@@ -71,6 +71,7 @@ class AgentUtils:
         vault_client: hvac.Client,
         graph_persistence_factory: GraphPersistenceFactory,
         document_repository: DocumentRepository,
+        task_notification_service: TaskNotificationService,
     ):
         self.base_url = base_url
         self.agent_service = agent_service
@@ -82,6 +83,7 @@ class AgentUtils:
         self.vault_client = vault_client
         self.graph_persistence_factory = graph_persistence_factory
         self.document_repository = document_repository
+        self.task_notification_service = task_notification_service
 
 
 class AgentBase(ABC):
@@ -92,6 +94,7 @@ class AgentBase(ABC):
         self.language_model_service = agent_utils.language_model_service
         self.language_model_setting_service = agent_utils.language_model_setting_service
         self.integration_service = agent_utils.integration_service
+        self.task_notification_service = agent_utils.task_notification_service
         self.vault_client = agent_utils.vault_client
         self.logger = logging.getLogger(__name__)
 
@@ -284,9 +287,27 @@ class WorkflowAgentBase(AgentBase, ABC):
         inputs = self.get_input_params(message_request)
         self.logger.info(f"Agent[{agent_id}] -> Input -> {inputs}")
 
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content="...",
+            )
+        )
+
         workflow_result = workflow.invoke(inputs, config)
         self.logger.info(f"Agent[{agent_id}] -> Result -> {workflow_result}")
         message_content, response_data = self.format_response(workflow_result)
+
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="completed",
+                message_content=message_content,
+                response_data=response_data,
+            )
+        )
+
         return Message(
             message_role="assistant",
             message_content=message_content,
@@ -503,18 +524,20 @@ class WebAgentBase(WorkflowAgentBase, ABC):
             to Reddit and find the top post about AI'."
             """
 
-            browser_config = BrowserConfig(
-                headless=headless
+            self.task_notification_service.publish_update(
+                task_progress=TaskProgress(
+                    agent_id=agent_id,
+                    status="in_progress",
+                    message_content="Starting headless browser tool...",
+                )
             )
 
-            browser = Browser(
-                config=browser_config
-            )
+            browser_config = BrowserConfig(headless=headless)
+
+            browser = Browser(config=browser_config)
 
             browser_agent = BrowserAgent(
-                task=instruction,
-                llm=chat_model,
-                browser=browser
+                task=instruction, llm=chat_model, browser=browser
             )
 
             loop = asyncio.new_event_loop()
@@ -522,6 +545,19 @@ class WebAgentBase(WorkflowAgentBase, ABC):
                 asyncio.set_event_loop(loop)
                 result = loop.run_until_complete(browser_agent.run())
                 if isinstance(result, AgentHistoryList):
+                    for i in range(len(result.action_names())):
+                        self.task_notification_service.publish_update(
+                            task_progress=TaskProgress(
+                                agent_id=agent_id,
+                                status="in_progress",
+                                message_content=(
+                                    f"Step {i + 1}:\n\t"
+                                    f"Action: {result.action_names()[i]}\n\t"
+                                    f"Thought: {result.model_thoughts()[i]}\n\t"
+                                    f"URL: {result.urls()[i]}"
+                                ),
+                            )
+                        )
                     json_result = json.dumps({"result_content": result.final_result()})
                 else:
                     json_result = json.dumps({"result_content": result})
@@ -562,16 +598,13 @@ class SupervisedWorkflowAgentBase(WebAgentBase, ABC):
         pass
 
     def get_coordinator_chain(self, llm, coordinator_system_prompt: str):
-        structured_llm_generator = llm.bind_tools(
-            self.get_coordinator_tools()
-        ).with_structured_output(CoordinatorRouter)
         coordinator_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", coordinator_system_prompt),
                 ("human", WorkflowAgentBase.QUERY_FORMAT),
             ]
         )
-        return coordinator_prompt | structured_llm_generator
+        return coordinator_prompt | llm
 
     def get_planner_tools(self) -> list:
         return [self.get_web_search_tool(), self.get_web_crawl_tool()]
@@ -583,10 +616,6 @@ class SupervisedWorkflowAgentBase(WebAgentBase, ABC):
     def get_planner_chain(
         self, llm, planner_system_prompt: str, search_results: str = None
     ):
-        structured_llm_generator = llm.bind_tools(
-            self.get_planner_tools()
-        ).with_structured_output(SolutionPlan)
-
         if search_results is not None:
             planner_input = (
                 WorkflowAgentBase.QUERY_FORMAT
@@ -601,7 +630,7 @@ class SupervisedWorkflowAgentBase(WebAgentBase, ABC):
                 ("human", planner_input),
             ]
         )
-        return planner_prompt | structured_llm_generator
+        return planner_prompt | llm
 
     def get_supervisor_tools(self) -> list:
         return []

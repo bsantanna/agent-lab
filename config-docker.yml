@@ -1,4 +1,6 @@
 api_base_url: "http://localhost:18000"
+broker:
+  url: "redis://redis:6379/0"
 db:
   url: "postgresql://postgres:postgres@postgres:5432/agent_lab"
   vectors: "postgresql://postgres:postgres@postgres:5432/agent_lab_vectors"

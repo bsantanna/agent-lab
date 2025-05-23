@@ -37,6 +37,7 @@ from app.services.integrations import IntegrationService
 from app.services.language_model_settings import LanguageModelSettingService
 from app.services.language_models import LanguageModelService
 from app.services.messages import MessageService
+from app.services.tasks import TaskNotificationService
 
 
 class Container(containers.DeclarativeContainer):
@@ -73,6 +74,7 @@ class Container(containers.DeclarativeContainer):
         config.set("api_base_url", api_base_url)
         config.set("vault.url", vault_url)
         config.set("vault.token", vault_token)
+        config.set("broker.url", app_secrets["data"]["data"]["broker_url"])
         config.set("db.url", app_secrets["data"]["data"]["db_url"])
         config.set("db.vectors", app_secrets["data"]["data"]["db_vectors"])
         config.set("db.checkpoints", app_secrets["data"]["data"]["db_checkpoints"])
@@ -102,6 +104,11 @@ class Container(containers.DeclarativeContainer):
     integration_service = providers.Factory(
         IntegrationService,
         integration_repository=integration_repository,
+    )
+
+    task_notification_service = providers.Factory(
+        TaskNotificationService,
+        redis_url=config.broker.url,
     )
 
     language_model_setting_repository = providers.Factory(
@@ -182,6 +189,7 @@ class Container(containers.DeclarativeContainer):
         vault_client=vault_client,
         graph_persistence_factory=graph_persistence_factory,
         document_repository=document_repository,
+        task_notification_service=task_notification_service,
     )
 
     adaptive_rag_agent = providers.Factory(AdaptiveRagAgent, agent_utils=agent_utils)

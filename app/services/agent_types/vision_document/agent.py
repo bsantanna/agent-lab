@@ -8,6 +8,7 @@ from langgraph.graph import StateGraph, MessagesState
 
 from app.interface.api.messages.schema import MessageRequest
 from app.services.agent_types.base import WorkflowAgentBase, AgentUtils
+from app.services.tasks import TaskProgress
 
 
 class AgentState(MessagesState):
@@ -37,9 +38,23 @@ class VisionDocumentAgent(WorkflowAgentBase):
         image_base64 = state["image_base64"]
         image_content_type = state["image_content_type"]
         chat_model = self.get_chat_model(agent_id)
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content="Analyzing image...",
+            )
+        )
         generation = self.get_image_analysis_chain(
             chat_model, execution_system_prompt, image_content_type
         ).invoke({"query": query, "image_base64": image_base64})
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content=generation.content,
+            )
+        )
         return {"generation": generation.content}
 
     def get_workflow_builder(self, agent_id: str):

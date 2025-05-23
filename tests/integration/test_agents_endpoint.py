@@ -3,12 +3,21 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
+from app.core.container import Container
 from app.main import app
+from app.services.tasks import TaskProgress
 
 
 @pytest.fixture
 def client():
     yield TestClient(app)
+
+
+@pytest.fixture
+def container():
+    cont = Container()
+    cont.init_resources()
+    yield cont
 
 
 class TestAgentsEndpoints:
@@ -237,3 +246,27 @@ class TestAgentsEndpoints:
             setting["setting_value"] == "another_dummy_value"
             for setting in response_json["ag_settings"]
         )
+
+    @pytest.mark.asyncio
+    async def test_task_notification_websocket_receives_messages(
+        self, client, container
+    ):
+        # Use a test agent id to match the filter inside the endpoint
+        test_agent_id = "test_agent"
+        ws_url = f"/agents/ws/task_updates/{test_agent_id}"
+
+        with client.websocket_connect(ws_url, timeout=10) as websocket:
+            task_notification_service = container.task_notification_service()
+            task_notification_service.subscribe()
+            test_update = TaskProgress(
+                agent_id=test_agent_id,
+                status="in_progress",
+                message_content="Test Message",
+            )
+            task_notification_service.publish_update(test_update)
+
+            # The endpoint should receive and send back the published message.
+            received = websocket.receive_json()
+            assert received["agent_id"] == test_agent_id
+            assert received["message_content"] == "Test Message"
+            websocket.close()
