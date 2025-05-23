@@ -316,9 +316,7 @@ class AdaptiveRagAgent(WebAgentBase):
 
         return {"documents": documents}
 
-    def transform_query(
-        self, state: AgentState
-    ) -> Literal["transform_query", "generate"]:
+    def transform_query(self, state: AgentState):
         agent_id = state["agent_id"]
         query = state["query"]
         chat_model = self.get_chat_model(agent_id)
