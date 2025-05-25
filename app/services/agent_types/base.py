@@ -21,6 +21,7 @@ from langchain_core.messages import HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool, BaseTool
 from langchain_experimental.utilities import PythonREPL
+from langchain_xai import ChatXAI
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_tavily import TavilySearch, TavilyExtract
@@ -180,12 +181,17 @@ class AgentBase(ABC):
 
         if (
             integration.integration_type == "openai_api_v1"
-            or integration.integration_type == "xai_api_v1"
         ):
             return ChatOpenAI(
                 model_name=language_model_tag,
                 openai_api_base=api_endpoint,
                 openai_api_key=api_key,
+            )
+        elif integration.integration_type == "xai_api_v1":
+            return ChatXAI(
+                model=language_model_tag,
+                xai_api_base=api_endpoint,
+                xai_api_key=api_key,
             )
         elif integration.integration_type == "anthropic_api_v1":
             return ChatAnthropic(
