@@ -12,6 +12,7 @@ import icalendar
 from browser_use import Agent as BrowserAgent
 from browser_use.agent.views import AgentHistoryList
 from browser_use.browser.browser import BrowserConfig, Browser
+from dependency_injector.providers import Configuration
 from jinja2 import Environment, DictLoader, select_autoescape
 from langchain_anthropic import ChatAnthropic
 from langchain_core.embeddings import Embeddings
@@ -20,6 +21,7 @@ from langchain_core.messages import HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool, BaseTool
 from langchain_experimental.utilities import PythonREPL
+from langchain_xai import ChatXAI
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_tavily import TavilySearch, TavilyExtract
@@ -28,7 +30,7 @@ from langgraph.types import Command
 from openai import OpenAI
 from typing_extensions import List, Annotated, Literal
 
-from app.domain.exceptions.base import ResourceNotFoundError, ConfigurationError
+from app.domain.exceptions.base import ResourceNotFoundError
 from app.domain.models import Agent, Integration, LanguageModel
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.vectors import DocumentRepository
@@ -61,7 +63,6 @@ def join_messages(left: List, right: List) -> List:
 class AgentUtils:
     def __init__(
         self,
-        base_url: str,
         agent_service: AgentService,
         agent_setting_service: AgentSettingService,
         attachment_service: AttachmentService,
@@ -72,8 +73,9 @@ class AgentUtils:
         graph_persistence_factory: GraphPersistenceFactory,
         document_repository: DocumentRepository,
         task_notification_service: TaskNotificationService,
+        config: Configuration,
     ):
-        self.base_url = base_url
+        self.config = config
         self.agent_service = agent_service
         self.agent_setting_service = agent_setting_service
         self.attachment_service = attachment_service
@@ -88,9 +90,11 @@ class AgentUtils:
 
 class AgentBase(ABC):
     def __init__(self, agent_utils: AgentUtils):
-        self.base_url = agent_utils.base_url
+        self.base_url = agent_utils.config.get("api_base_url")
         self.agent_service = agent_utils.agent_service
         self.agent_setting_service = agent_utils.agent_setting_service
+        self.attachment_service = agent_utils.attachment_service
+        self.document_repository = agent_utils.document_repository
         self.language_model_service = agent_utils.language_model_service
         self.language_model_setting_service = agent_utils.language_model_setting_service
         self.integration_service = agent_utils.integration_service
@@ -177,12 +181,17 @@ class AgentBase(ABC):
 
         if (
             integration.integration_type == "openai_api_v1"
-            or integration.integration_type == "xai_api_v1"
         ):
             return ChatOpenAI(
                 model_name=language_model_tag,
                 openai_api_base=api_endpoint,
                 openai_api_key=api_key,
+            )
+        elif integration.integration_type == "xai_api_v1":
+            return ChatXAI(
+                model=language_model_tag,
+                xai_api_base=api_endpoint,
+                xai_api_key=api_key,
             )
         elif integration.integration_type == "anthropic_api_v1":
             return ChatAnthropic(
@@ -232,7 +241,6 @@ class WorkflowAgentBase(AgentBase, ABC):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
         self.graph_persistence_factory = agent_utils.graph_persistence_factory
-        self.attachment_service = agent_utils.attachment_service
 
     @abstractmethod
     def get_workflow_builder(self, agent_id: str):
@@ -503,9 +511,7 @@ class ContactSupportAgentBase(WorkflowAgentBase, ABC):
 class WebAgentBase(WorkflowAgentBase, ABC):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
-        self.document_repository = agent_utils.document_repository
-        if not os.environ.get("TAVILY_API_KEY"):
-            raise ConfigurationError("TAVILY_API_KEY environment variable not set")
+        self.tavily_api_key = agent_utils.config.get("api.tavily_api_key")
 
     def get_web_browser_tool(
         self,
@@ -575,18 +581,22 @@ class WebAgentBase(WorkflowAgentBase, ABC):
         return browser_tool_call
 
     def get_web_crawl_tool(self, extract_depth="basic") -> BaseTool:
-        return TavilyExtract(extract_depth=extract_depth)
+        return TavilyExtract(
+            extract_depth=extract_depth,
+            tavily_api_key=self.tavily_api_key,
+        )
 
     def get_web_search_tool(self, max_results=5, topic="general") -> BaseTool:
-        return TavilySearch(max_results=max_results, topic=topic)
+        return TavilySearch(
+            max_results=max_results,
+            topic=topic,
+            tavily_api_key=self.tavily_api_key,
+        )
 
 
 class SupervisedWorkflowAgentBase(WebAgentBase, ABC):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
-        self.document_repository = agent_utils.document_repository
-        if not os.environ.get("TAVILY_API_KEY"):
-            raise ConfigurationError("TAVILY_API_KEY environment variable not set")
 
     def get_coordinator_tools(self) -> list:
         return []
