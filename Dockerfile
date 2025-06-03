@@ -1,5 +1,7 @@
 FROM python:3.12-slim
 
+ENV SERVICE_NAME=Agent-Lab
+ENV SERVICE_VERSION=1.0.0
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 ENV HOST=0.0.0.0
@@ -11,8 +13,6 @@ ENV PLAYWRIGHT_BROWSERS_PATH=/agent-lab/.cache
 WORKDIR /agent-lab
 
 COPY requirements.txt /agent-lab/
-COPY app/ /agent-lab/app/
-COPY config-docker.yml /agent-lab/
 
 RUN apt update -q && apt install -yq xvfb ffmpeg \
     && apt clean \
@@ -29,5 +29,7 @@ RUN groupadd -r agent-lab \
     && chown -R agent-lab:agent-lab /agent-lab
 
 USER agent-lab
+COPY app/ /agent-lab/app/
+COPY config-docker.yml /agent-lab/
 
 CMD ["/bin/bash", "-x", "-c", "python -m uvicorn app.main:app --host ${HOST} --port ${PORT} --workers ${WORKERS}"]

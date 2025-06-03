@@ -1,5 +1,6 @@
 [tool.semantic_release]
 version_variables = [
+  "Dockerfile:SERVICE_VERSION",
   "charts/agent-lab/Chart.yaml:version",
   "charts/agent-lab/Chart.yaml:appVersion"
 ]
