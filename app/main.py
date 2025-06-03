@@ -1,4 +1,5 @@
 import logging
+import os
 import re
 
 from fastapi import FastAPI, HTTPException, Request
@@ -23,8 +24,8 @@ def create_app():
     container = Container()
 
     application = FastAPI(
-        title="Agent-Lab",
-        version="0.1.0",
+        title=os.getenv("SERVICE_NAME", "Agent-Lab"),
+        version=os.getenv("SERVICE_VERSION", "snapshot"),
         dependencies=[],
     )
 
