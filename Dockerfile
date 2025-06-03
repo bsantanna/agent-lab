@@ -22,7 +22,9 @@ RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir browser-use==${BROWSER_USE_VERSION} \
     && pip install --no-cache-dir -r requirements.txt
 
-RUN playwright install chromium --with-deps --no-shell
+RUN playwright install chromium --with-deps --no-shell \
+    && apt clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN groupadd -r agent-lab \
     && useradd -r -g agent-lab -d /agent-lab agent-lab \
