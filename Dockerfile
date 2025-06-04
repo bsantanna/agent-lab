@@ -13,21 +13,15 @@ ENV PLAYWRIGHT_BROWSERS_PATH=/agent-lab/.cache
 WORKDIR /agent-lab
 
 COPY requirements.txt /agent-lab/
-
 RUN apt update -q && apt install -yq ffmpeg \
-    && apt clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir browser-use==${BROWSER_USE_VERSION} \
     && pip install --no-cache-dir browser-use[memory]==${BROWSER_USE_VERSION} \
-    && pip install --no-cache-dir -r requirements.txt
-
-RUN playwright install chromium --with-deps --no-shell \
+    && pip install --no-cache-dir -r requirements.txt \
+    && playwright install chromium --with-deps --no-shell \
     && apt clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-RUN groupadd -r agent-lab \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+    && groupadd -r agent-lab \
     && useradd -r -g agent-lab -d /agent-lab agent-lab \
     && chown -R agent-lab:agent-lab /agent-lab
 
