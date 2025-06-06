@@ -15,7 +15,6 @@ WORKDIR /agent-lab
 COPY requirements.txt /agent-lab/
 RUN apt update -q && apt install -yq ffmpeg \
     && pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir browser-use==${BROWSER_USE_VERSION} \
     && pip install --no-cache-dir browser-use[memory]==${BROWSER_USE_VERSION} \
     && pip install --no-cache-dir -r requirements.txt \
     && playwright install chromium --with-deps --no-shell \

@@ -15,6 +15,7 @@ from app.interface.api.integrations.endpoints import router as integrations_rout
 from app.interface.api.language_models.endpoints import router as language_models_router
 from app.interface.api.messages.endpoints import router as messages_router
 from app.interface.api.status.endpoints import router as status_router
+from app.interface.mcp.endpoints import router as mcp_router
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -48,6 +49,7 @@ def setup_routers(application: FastAPI):
     application.include_router(language_models_router, prefix="/llms", tags=["llms"])
     application.include_router(messages_router, prefix="/messages", tags=["messages"])
     application.include_router(status_router, prefix="/status", tags=["status"])
+    application.include_router(mcp_router, prefix="/mcp", tags=["mcp"])
 
 
 def setup_exception_handlers(application: FastAPI):
