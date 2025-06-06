@@ -20,7 +20,7 @@ from app.services.messages import MessageService
 router = APIRouter()
 
 
-@router.post("/list", response_model=List[Message])
+@router.post("/list", response_model=List[Message], operation_id="get_message_list")
 @inject
 async def get_list(
     message_data: MessageListRequest = Body(...),
@@ -30,7 +30,7 @@ async def get_list(
     return [Message.model_validate(message) for message in messages]
 
 
-@router.post("/post", response_model=Message)
+@router.post("/post", response_model=Message, operation_id="post_message")
 @inject
 async def post_message(
     message_data: MessageRequest = Body(...),

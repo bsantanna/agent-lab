@@ -16,7 +16,6 @@ from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.sql import Database
 from app.infrastructure.database.vectors import DocumentRepository
 from app.infrastructure.metrics.tracer import Tracer
-from app.interface.mcp.server import MCPServer
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.adaptive_rag.agent import AdaptiveRagAgent
 from app.services.agent_types.base import AgentUtils
@@ -49,7 +48,6 @@ class Container(containers.DeclarativeContainer):
             "app.interface.api.integrations.endpoints",
             "app.interface.api.language_models.endpoints",
             "app.interface.api.messages.endpoints",
-            "app.interface.mcp.endpoints",
         ]
     )
 
@@ -234,12 +232,6 @@ class Container(containers.DeclarativeContainer):
         vision_document_agent=vision_document_agent,
         voice_memos_agent=voice_memos_agent,
         azure_entra_id_voice_memos_agent=azure_entra_id_voice_memos_agent,
-    )
-
-    mcp_server = providers.Singleton(
-        MCPServer,
-        agent_service=agent_service,
-        message_service=message_service,
     )
 
     tracer = providers.Singleton(Tracer)
