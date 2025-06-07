@@ -43,6 +43,8 @@ def setup_mcp(application: FastAPI):
     mcp = FastApiMCP(
         application,
         include_operations=["get_agent_list", "get_message_list", "post_message"],
+        describe_all_responses=True,
+        describe_full_response_schema=True,
     )
     mcp.mount()
 

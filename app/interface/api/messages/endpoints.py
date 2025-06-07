@@ -1,5 +1,5 @@
 from dependency_injector.wiring import inject, Provide
-from fastapi import APIRouter, Depends, Body, Response, status
+from fastapi import APIRouter, Depends, Body, Response, status, HTTPException
 from typing_extensions import List
 
 from app.core.container import Container
@@ -20,55 +20,249 @@ from app.services.messages import MessageService
 router = APIRouter()
 
 
-@router.post("/list", response_model=List[Message], operation_id="get_message_list")
+@router.post(
+    "/list",
+    response_model=List[Message],
+    operation_id="get_message_list",
+    summary="Retrieve messages for an agent",
+    description="""
+    Retrieve a list of messages associated with a specific agent.
+
+    This endpoint returns all messages (both human and assistant) for the given agent ID.
+    Messages include content, role, timestamps, and relationships.
+
+    **Use cases:**
+    - Display conversation history
+    - Load previous messages for context
+    - Message thread reconstruction
+    """,
+    response_description="List of messages associated with the agent",
+    responses={
+        200: {
+            "description": "Successfully retrieved messages",
+            "content": {
+                "application/json": {
+                    "example": [
+                        {
+                            "id": "msg_123",
+                            "message_role": "human",
+                            "message_content": "Hello, how can you help?",
+                            "agent_id": "agent_456",
+                            "created_at": "2024-01-15T10:30:00Z",
+                            "is_active": True,
+                        }
+                    ]
+                }
+            },
+        },
+        400: {"description": "Invalid request data"},
+        404: {"description": "Agent not found"},
+    },
+)
 @inject
 async def get_list(
-    message_data: MessageListRequest = Body(...),
+    message_data: MessageListRequest = Body(
+        ...,
+        description="Request containing the agent ID to retrieve messages for",
+        example={"agent_id": "agent_456"},
+    ),
     message_service: MessageService = Depends(Provide[Container.message_service]),
 ):
-    messages = message_service.get_messages(message_data.agent_id)
-    return [Message.model_validate(message) for message in messages]
+    """
+    Get all messages for a specific agent.
+
+    Args:
+        message_data: Contains the agent_id to filter messages
+        message_service: Injected message service dependency
+
+    Returns:
+        List[Message]: All messages associated with the agent
+
+    Raises:
+        HTTPException: If agent doesn't exist or has no messages
+    """
+    try:
+        messages = message_service.get_messages(message_data.agent_id)
+        return [Message.model_validate(message) for message in messages]
+    except NotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No messages found for agent {message_data.agent_id}",
+        )
 
 
-@router.post("/post", response_model=Message, operation_id="post_message")
+@router.post(
+    "/post",
+    response_model=Message,
+    operation_id="post_message",
+    summary="Send a message to an agent",
+    description="""
+    Send a new message to an AI agent and receive a response.
+
+    This endpoint processes human messages through the appropriate agent type,
+    stores both the human message and generated response, and returns the
+    assistant's reply.
+
+    **Message Processing Flow:**
+    1. Validates the target agent exists
+    2. Stores the incoming human message
+    3. Routes message to appropriate agent processor
+    4. Generates and stores assistant response
+    5. Returns the assistant message
+
+    **Supported Features:**
+    - Multiple agent types (ChatGPT, Claude, etc.)
+    - File attachments via attachment_id
+    - Message threading and replies
+    - Rich response data (metadata, tokens, etc.)
+    """,
+    response_description="The assistant's response message",
+    responses={
+        200: {
+            "description": "Message successfully processed and response generated",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "id": "msg_789",
+                        "message_role": "assistant",
+                        "message_content": "I'd be happy to help you with that!",
+                        "agent_id": "agent_456",
+                        "created_at": "2024-01-15T10:31:00Z",
+                        "is_active": True,
+                        "replies_to": "msg_123",
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid message data or unsupported agent type"},
+        404: {"description": "Agent not found"},
+        422: {"description": "Message processing failed"},
+        429: {"description": "Rate limit exceeded for agent"},
+        503: {"description": "Agent service temporarily unavailable"},
+    },
+)
 @inject
 async def post_message(
-    message_data: MessageRequest = Body(...),
+    message_data: MessageRequest = Body(
+        ...,
+        description="The message to send to the agent",
+        example={
+            "agent_id": "agent_456",
+            "message_role": "human",
+            "message_content": "Can you help me write a Python function?",
+            "attachment_id": None,
+        },
+    ),
     agent_service: AgentService = Depends(Provide[Container.agent_service]),
     agent_registry: AgentRegistry = Depends(Provide[Container.agent_registry]),
     message_service: MessageService = Depends(Provide[Container.message_service]),
 ):
-    # search matching agent
+    """
+    Process a new message through an AI agent.
+
+    Args:
+        message_data: The message request containing content and agent info
+        agent_service: Service for agent management
+        agent_registry: Registry of available agent types
+        message_service: Service for message persistence
+
+    Returns:
+        Message: The assistant's response message
+
+    Raises:
+        HTTPException: For various error conditions (agent not found, processing failed, etc.)
+    """
+    # Search matching agent
     try:
         agent = agent_service.get_agent_by_id(message_data.agent_id)
         matching_agent = agent_registry.get_agent(agent.agent_type)
     except NotFoundError:
-        return Response(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Agent with ID {message_data.agent_id} not found",
+        )
 
-    # store human message
-    human_message = message_service.create_message(
-        message_role=message_data.message_role,
-        message_content=message_data.message_content,
-        agent_id=message_data.agent_id,
-        attachment_id=message_data.attachment_id,
-    )
+    try:
+        # Store human message
+        human_message = message_service.create_message(
+            message_role=message_data.message_role,
+            message_content=message_data.message_content,
+            agent_id=message_data.agent_id,
+            attachment_id=message_data.attachment_id,
+        )
 
-    # process human message
-    processed_message = matching_agent.process_message(message_data)
+        # Process human message
+        processed_message = matching_agent.process_message(message_data)
 
-    # store assistant message
-    assistant_message = message_service.create_message(
-        message_role="assistant",
-        message_content=processed_message.message_content,
-        response_data=processed_message.response_data,
-        agent_id=processed_message.agent_id,
-        replies_to=human_message,
-    )
+        # Store assistant message
+        assistant_message = message_service.create_message(
+            message_role="assistant",
+            message_content=processed_message.message_content,
+            response_data=processed_message.response_data,
+            agent_id=processed_message.agent_id,
+            replies_to=human_message,
+        )
 
-    return Message.model_validate(assistant_message)
+        return Message.model_validate(assistant_message)
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Failed to process message: {str(e)}",
+        )
 
 
-@router.get("/{message_id}", response_model=MessageExpanded)
+@router.get(
+    "/{message_id}",
+    response_model=MessageExpanded,
+    summary="Get expanded message details",
+    description="""
+    Retrieve detailed information about a specific message and its context.
+
+    This endpoint returns an expanded view of an assistant message that includes:
+    - The assistant message details
+    - The original human message it replies to
+    - Any attachments from the human message
+    - Full conversation context
+
+    **Use cases:**
+    - Display complete message thread
+    - Show message with attachments
+    - Debug conversation flow
+    - Export conversation data
+    """,
+    response_description="Expanded message with full context and attachments",
+    responses={
+        200: {
+            "description": "Message details retrieved successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "id": "msg_789",
+                        "message_role": "assistant",
+                        "message_content": "Here's the Python function you requested...",
+                        "agent_id": "agent_456",
+                        "created_at": "2024-01-15T10:31:00Z",
+                        "is_active": True,
+                        "replies_to": {
+                            "id": "msg_123",
+                            "message_role": "human",
+                            "message_content": "Can you help me write a Python function?",
+                            "created_at": "2024-01-15T10:30:00Z",
+                        },
+                        "attachment": {
+                            "id": "att_456",
+                            "filename": "requirements.txt",
+                            "content_type": "text/plain",
+                        },
+                    }
+                }
+            },
+        },
+        404: {"description": "Message not found"},
+        400: {"description": "Invalid message ID format"},
+    },
+)
 @inject
 async def get_by_id(
     message_id: str,
@@ -77,6 +271,20 @@ async def get_by_id(
         Provide[Container.attachment_service]
     ),
 ):
+    """
+    Get expanded details for a specific message.
+
+    Args:
+        message_id: Unique identifier of the message
+        message_service: Injected message service
+        attachment_service: Injected attachment service
+
+    Returns:
+        MessageExpanded: Complete message details with context
+
+    Raises:
+        HTTPException: If message not found or invalid ID
+    """
     try:
         assistant_message = message_service.get_message_by_id(message_id)
         human_message = message_service.get_message_by_id(assistant_message.replies_to)
@@ -86,21 +294,73 @@ async def get_by_id(
         )
 
     except NotFoundError:
-        return Response(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Message with ID {message_id} not found",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid message ID or data corruption: {str(e)}",
+        )
 
 
-@router.delete("/delete/{message_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/delete/{message_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a message",
+    description="""
+    Permanently delete a message from the system.
+
+    **Warning:** This action cannot be undone. Deleting a message will:
+    - Remove the message from all conversations
+    - Break reply chains if other messages reference it
+    - Not affect related attachments (they remain for other references)
+
+    **Best Practices:**
+    - Consider soft deletion (marking as inactive) instead
+    - Ensure no critical conversation flow depends on this message
+    - Back up important conversations before deletion
+    """,
+    response_description="Message successfully deleted (no content returned)",
+    responses={
+        204: {"description": "Message successfully deleted"},
+        404: {"description": "Message not found"},
+        400: {"description": "Invalid message ID format"},
+        409: {"description": "Cannot delete message due to dependencies"},
+    },
+)
 @inject
 async def remove(
     message_id: str,
     message_service: MessageService = Depends(Provide[Container.message_service]),
 ):
+    """
+    Delete a message by ID.
+
+    Args:
+        message_id: Unique identifier of the message to delete
+        message_service: Injected message service
+
+    Returns:
+        Response: 204 No Content on success
+
+    Raises:
+        HTTPException: If message not found or deletion fails
+    """
     try:
         message_service.delete_message_by_id(message_id)
-    except NotFoundError:
-        return Response(status_code=status.HTTP_404_NOT_FOUND)
-    else:
         return Response(status_code=status.HTTP_204_NO_CONTENT)
+    except NotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Message with ID {message_id} not found",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Cannot delete message: {str(e)}",
+        )
 
 
 def _format_expanded_response(
@@ -108,13 +368,28 @@ def _format_expanded_response(
     human_message: DomainMessage,
     attachment_service: AttachmentService,
 ) -> MessageExpanded:
+    """
+    Format an expanded message response with full context.
+
+    Args:
+        agent_message: The assistant message
+        human_message: The original human message
+        attachment_service: Service to retrieve attachment details
+
+    Returns:
+        MessageExpanded: Formatted response with all related data
+    """
     attachment_response = None
 
     if human_message.attachment_id is not None:
-        attachment = attachment_service.get_attachment_by_id(
-            human_message.attachment_id
-        )
-        attachment_response = Attachment.model_validate(attachment)
+        try:
+            attachment = attachment_service.get_attachment_by_id(
+                human_message.attachment_id
+            )
+            attachment_response = Attachment.model_validate(attachment)
+        except NotFoundError:
+            # Attachment was deleted or corrupted, continue without it
+            pass
 
     response = MessageExpanded(
         id=agent_message.id,
