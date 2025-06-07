@@ -32,7 +32,7 @@ from app.services.tasks import TaskNotificationService
 router = APIRouter()
 
 
-@router.get("/list", response_model=List[Agent])
+@router.get("/list", response_model=List[Agent], operation_id="get_agent_list")
 @inject
 async def get_list(
     agent_service: AgentService = Depends(Provide[Container.agent_service]),

@@ -1,5 +1,6 @@
 charset-normalizer==3.4.1
 dependency-injector==4.46.0
+fastapi-mcp==0.3.4
 fastapi[standard]==0.115.12
 flake8==7.2.0
 hvac==2.3.0
