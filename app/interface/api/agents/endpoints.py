@@ -66,7 +66,7 @@ router = APIRouter()
                             "agent_summary": "Analyzes images and extracts information",
                             "language_model_id": "adeadeakdnekn",
                             "created_at": "2024-01-15T10:30:00Z",
-                            "is_active": True
+                            "is_active": True,
                         },
                         {
                             "id": "agent_987654321",
@@ -75,13 +75,13 @@ router = APIRouter()
                             "agent_summary": "Handles customer inquiries and support requests",
                             "language_model_id": "deafejfiejafje",
                             "created_at": "2024-01-14T15:20:00Z",
-                            "is_active": True
-                        }
+                            "is_active": True,
+                        },
                     ]
                 }
-            }
+            },
         }
-    }
+    },
 )
 @inject
 async def get_list(
@@ -90,13 +90,14 @@ async def get_list(
     agents = agent_service.get_agents()
     return [Agent.model_validate(agent) for agent in agents]
 
+
 @router.get(
     path="/{agent_id}",
     response_model=AgentExpanded,
-    summary = "Get agent by ID",
-    description = "Retrieve detailed information about a specific agent by its unique identifier.",
-    response_description = "Detailed agent information with settings",
-    responses = {
+    summary="Get agent by ID",
+    description="Retrieve detailed information about a specific agent by its unique identifier.",
+    response_description="Detailed agent information with settings",
+    responses={
         200: {
             "description": "Successfully retrieved agent details",
             "content": {
@@ -112,29 +113,27 @@ async def get_list(
                             {
                                 "id": "setting_001",
                                 "setting_key": "max_tokens",
-                                "setting_value": "2048"
+                                "setting_value": "2048",
                             },
                             {
                                 "id": "setting_002",
                                 "setting_key": "temperature",
-                                "setting_value": "0.7"
-                            }
-                        ]
+                                "setting_value": "0.7",
+                            },
+                        ],
                     }
                 }
-            }
+            },
         },
         404: {
             "description": "Agent not found",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Agent with ID 'agent_123456789' not found"
-                    }
+                    "example": {"detail": "Agent with ID 'agent_123456789' not found"}
                 }
-            }
-        }
-    }
+            },
+        },
+    },
 )
 @inject
 async def get_by_id(
@@ -179,20 +178,16 @@ async def get_by_id(
                         "agent_type": "analyzer",
                         "language_model_id": "shdehfuehfuef",
                         "created_at": "2024-01-15T10:30:00Z",
-                        "is_active": True
+                        "is_active": True,
                     }
                 }
-            }
+            },
         },
         400: {
             "description": "Bad request - Invalid agent configuration",
             "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "Invalid agent type"
-                    }
-                }
-            }
+                "application/json": {"example": {"detail": "Invalid agent type"}}
+            },
         },
         404: {
             "description": "Language model not found",
@@ -202,12 +197,12 @@ async def get_by_id(
                         "detail": "Language model with ID 'lm_123456789' not found"
                     }
                 }
-            }
+            },
         },
         422: {
             "description": "Invalid data unprocessable entity",
-        }
-    }
+        },
+    },
 )
 @inject
 async def add(
@@ -233,23 +228,22 @@ async def add(
     description="This endpoint removes an agent from the system including",
     response_description="Agent successfully deleted",
     responses={
-        204: {
-            "description": "Agent successfully deleted"
-        },
+        204: {"description": "Agent successfully deleted"},
         404: {
             "description": "Agent not found",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Agent with ID 'agent_123456789' not found"
-                    }
+                    "example": {"detail": "Agent with ID 'agent_123456789' not found"}
                 }
-            }
-        }
-    }
+            },
+        },
+    },
 )
 @inject
-async def remove(agent_id: str, agent_service: AgentService = Depends(Provide[Container.agent_service])):
+async def remove(
+    agent_id: str,
+    agent_service: AgentService = Depends(Provide[Container.agent_service]),
+):
     agent_service.delete_agent_by_id(agent_id)
 
 
@@ -270,35 +264,27 @@ async def remove(agent_id: str, agent_service: AgentService = Depends(Provide[Co
                         "agent_type": "vision_document",
                         "language_model_id": "23232323",
                         "created_at": "2024-01-15T10:30:00Z",
-                        "is_active": True
+                        "is_active": True,
                     }
                 }
-            }
+            },
         },
         404: {
             "description": "Agent or language model not found",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Agent with ID 'agent_123456789' not found"
-                    }
+                    "example": {"detail": "Agent with ID 'agent_123456789' not found"}
                 }
-            }
+            },
         },
         400: {
             "description": "Bad request - Invalid agent name",
             "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "Invalid agent name"
-                    }
-                }
-            }
+                "application/json": {"example": {"detail": "Invalid agent name"}}
+            },
         },
-        422: {
-            "description": "Validation error"
-        }
-    }
+        422: {"description": "Validation error"},
+    },
 )
 @inject
 async def update(
@@ -347,31 +333,27 @@ async def update(
                                 "id": "setting_002",
                                 "setting_key": "temperature",
                                 "setting_value": "0.5",
-                            }
-                        ]
+                            },
+                        ],
                     }
                 }
-            }
+            },
         },
         404: {
             "description": "Agent not found",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Agent with ID 'agent_123456789' not found"
-                    }
+                    "example": {"detail": "Agent with ID 'agent_123456789' not found"}
                 }
-            }
+            },
         },
         400: {
             "description": "Bad request - Invalid setting key or value",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Invalid value for setting xyz"
-                    }
+                    "example": {"detail": "Invalid value for setting xyz"}
                 }
-            }
+            },
         },
         422: {
             "description": "Invalid setting key or value",
@@ -381,9 +363,9 @@ async def update(
                         "detail": "Setting 'temperature' must be between 0.0 and 2.0"
                     }
                 }
-            }
-        }
-    }
+            },
+        },
+    },
 )
 @inject
 async def update_setting(

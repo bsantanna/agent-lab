@@ -1,9 +1,7 @@
 from typing_extensions import Iterator
 
-from app.domain.exceptions.base import InvalidFieldError
 from app.domain.models import Agent
 from app.domain.repositories.agents import AgentRepository
-from app.domain.repositories.language_models import LanguageModelNotFoundError
 from app.services.agent_settings import AgentSettingService
 from app.services.language_models import LanguageModelService
 
@@ -32,7 +30,9 @@ class AgentService:
         language_model_id: str,
     ) -> Agent:
         # verify language model
-        language_model = self.language_model_service.get_language_model_by_id(language_model_id)
+        language_model = self.language_model_service.get_language_model_by_id(
+            language_model_id
+        )
 
         # create agent
         agent = self.agent_repository.add(
@@ -46,8 +46,19 @@ class AgentService:
     def delete_agent_by_id(self, agent_id: str) -> None:
         return self.agent_repository.delete_by_id(agent_id)
 
-    def update_agent(self, agent_id: str, agent_name: str, language_model_id:str, agent_summary:str=None) -> Agent:
-        language_model = self.language_model_service.get_language_model_by_id(language_model_id)
+    def update_agent(
+        self,
+        agent_id: str,
+        agent_name: str,
+        language_model_id: str,
+        agent_summary: str = None,
+    ) -> Agent:
+        language_model = self.language_model_service.get_language_model_by_id(
+            language_model_id
+        )
         return self.agent_repository.update_agent(
-            agent_id=agent_id, agent_name=agent_name, language_model_id=language_model.id, agent_summary=agent_summary
+            agent_id=agent_id,
+            agent_name=agent_name,
+            language_model_id=language_model.id,
+            agent_summary=agent_summary,
         )

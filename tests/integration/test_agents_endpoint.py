@@ -21,7 +21,6 @@ def container():
 
 
 class TestAgentsEndpoints:
-
     def _create_integration(self, client):
         # create integration
         return client.post(

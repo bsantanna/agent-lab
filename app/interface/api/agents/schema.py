@@ -17,6 +17,7 @@ valid_agent_types = [
     "azure_entra_id_voice_memos",
 ]
 
+
 class AgentCreateRequest(BaseModel):
     agent_name: str
     agent_type: str

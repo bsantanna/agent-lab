@@ -47,7 +47,13 @@ class AgentRepository:
             session.refresh(agent)
             return agent
 
-    def update_agent(self, agent_id: str, agent_name: str, language_model_id:str, agent_summary:str=None) -> Agent:
+    def update_agent(
+        self,
+        agent_id: str,
+        agent_name: str,
+        language_model_id: str,
+        agent_summary: str = None,
+    ) -> Agent:
         with self.session_factory() as session:
             entity: Agent = (
                 session.query(Agent)
