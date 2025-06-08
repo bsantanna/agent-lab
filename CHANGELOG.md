@@ -2,6 +2,47 @@
 
 <!-- version list -->
 
+## v1.1.0 (2025-06-08)
+
+### Features
+
+- Additional test llm endpoint ([#157](https://github.com/bsantanna/agent-lab/pull/157),
+  [`68f4f03`](https://github.com/bsantanna/agent-lab/commit/68f4f033f2b9973fc95f8c4d29194686a143a8a5))
+
+- Cleanup agents endpoint ([#157](https://github.com/bsantanna/agent-lab/pull/157),
+  [`68f4f03`](https://github.com/bsantanna/agent-lab/commit/68f4f033f2b9973fc95f8c4d29194686a143a8a5))
+
+- Cleanup attachments endpoint ([#157](https://github.com/bsantanna/agent-lab/pull/157),
+  [`68f4f03`](https://github.com/bsantanna/agent-lab/commit/68f4f033f2b9973fc95f8c4d29194686a143a8a5))
+
+- Cleanup integrations endpoint ([#157](https://github.com/bsantanna/agent-lab/pull/157),
+  [`68f4f03`](https://github.com/bsantanna/agent-lab/commit/68f4f033f2b9973fc95f8c4d29194686a143a8a5))
+
+- Cleanup llms endpoint ([#157](https://github.com/bsantanna/agent-lab/pull/157),
+  [`68f4f03`](https://github.com/bsantanna/agent-lab/commit/68f4f033f2b9973fc95f8c4d29194686a143a8a5))
+
+- Cleanup messages endpoint ([#157](https://github.com/bsantanna/agent-lab/pull/157),
+  [`68f4f03`](https://github.com/bsantanna/agent-lab/commit/68f4f033f2b9973fc95f8c4d29194686a143a8a5))
+
+- Code cleanup ([#157](https://github.com/bsantanna/agent-lab/pull/157),
+  [`68f4f03`](https://github.com/bsantanna/agent-lab/commit/68f4f033f2b9973fc95f8c4d29194686a143a8a5))
+
+- Code formatting ([#157](https://github.com/bsantanna/agent-lab/pull/157),
+  [`68f4f03`](https://github.com/bsantanna/agent-lab/commit/68f4f033f2b9973fc95f8c4d29194686a143a8a5))
+
+- Improves swagger doc and build env ([#157](https://github.com/bsantanna/agent-lab/pull/157),
+  [`68f4f03`](https://github.com/bsantanna/agent-lab/commit/68f4f033f2b9973fc95f8c4d29194686a143a8a5))
+
+- Mcp server implementation 1 ([#157](https://github.com/bsantanna/agent-lab/pull/157),
+  [`68f4f03`](https://github.com/bsantanna/agent-lab/commit/68f4f033f2b9973fc95f8c4d29194686a143a8a5))
+
+- Prototypes mcp server implementation ([#157](https://github.com/bsantanna/agent-lab/pull/157),
+  [`68f4f03`](https://github.com/bsantanna/agent-lab/commit/68f4f033f2b9973fc95f8c4d29194686a143a8a5))
+
+- Prototypes mcp server with fastapi-mcp ([#157](https://github.com/bsantanna/agent-lab/pull/157),
+  [`68f4f03`](https://github.com/bsantanna/agent-lab/commit/68f4f033f2b9973fc95f8c4d29194686a143a8a5))
+
+
 ## v1.0.2 (2025-06-04)
 
 ### Bug Fixes
