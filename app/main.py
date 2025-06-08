@@ -3,6 +3,7 @@ import os
 import re
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi_mcp import FastApiMCP
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from starlette.middleware.cors import CORSMiddleware
@@ -33,8 +34,19 @@ def create_app():
     setup_exception_handlers(application)
     setup_middleware(application)
     setup_routers(application)
+    setup_mcp(application)
 
     return application
+
+
+def setup_mcp(application: FastAPI):
+    mcp = FastApiMCP(
+        application,
+        include_operations=["get_agent_list", "get_message_list", "post_message"],
+        describe_all_responses=True,
+        describe_full_response_schema=True,
+    )
+    mcp.mount()
 
 
 def setup_routers(application: FastAPI):

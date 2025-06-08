@@ -179,9 +179,7 @@ class AgentBase(ABC):
         if language_model_tag is None:
             language_model_tag = language_model.language_model_tag
 
-        if (
-            integration.integration_type == "openai_api_v1"
-        ):
+        if integration.integration_type == "openai_api_v1":
             return ChatOpenAI(
                 model_name=language_model_tag,
                 openai_api_base=api_endpoint,

@@ -10,9 +10,9 @@ def client():
 
 
 class TestLanguageModelsEndpoint:
-    def _create_language_model(self, client):
+    def _create_integration(self, client):
         # create integration
-        response = client.post(
+        return client.post(
             url="/integrations/create",
             json={
                 "api_endpoint": "https://example.com",
@@ -20,13 +20,17 @@ class TestLanguageModelsEndpoint:
                 "integration_type": "openai_api_v1",
             },
         )
+
+    def _create_language_model(self, client, language_model_tag="any_tag"):
+        # create integration
+        response = self._create_integration(client)
         integration_id = response.json()["id"]
 
         return client.post(
             url="/llms/create",
             json={
                 "integration_id": integration_id,
-                "language_model_tag": "an_invalid_tag",
+                "language_model_tag": language_model_tag,
             },
         )
 
@@ -103,11 +107,68 @@ class TestLanguageModelsEndpoint:
         )
 
         # then
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_create_invalid_language_model_tag(self, client):
+        # given
+        create_response = self._create_integration(client)
+        integration_id = create_response.json()["id"]
+
+        # when
+        response = client.post(
+            url="/llms/create",
+            json={
+                "integration_id": integration_id,
+                "language_model_tag": "invalid tag with spaces",
+            },
+        )
+
+        # then
         assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_create_unprocessable_entity(self, client):
+        # given
+        create_response = self._create_integration(client)
+        integration_id = create_response.json()["id"]
+
+        # when
+        response = client.post(
+            url="/llms/create",
+            json={
+                "integration_id": integration_id,
+                "language_model_tag": 1,
+            },
+        )
+
+        # then
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_update_language_model_integration_not_found(self, client):
+        # given
+        create_response = self._create_language_model(client)
+        language_model_id = create_response.json()["id"]
+
+        # when
+        response = client.post(
+            url="/llms/update",
+            json={
+                "language_model_id": language_model_id,
+                "language_model_tag": "any_tag",
+                "integration_id": "not_existing_integration_id",
+            },
+        )
+
+        # then
+        assert response.status_code == 404
 
     @pytest.mark.asyncio
     async def test_update_language_model_not_found(self, client):
         # given
+        create_response = self._create_integration(client)
+        integration_id = create_response.json()["id"]
         language_model_id = "not_existing_id"
 
         # when
@@ -116,6 +177,7 @@ class TestLanguageModelsEndpoint:
             json={
                 "language_model_id": language_model_id,
                 "language_model_tag": "any_tag",
+                "integration_id": integration_id,
             },
         )
 
@@ -123,10 +185,41 @@ class TestLanguageModelsEndpoint:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
+    async def test_update_integration_not_found(self, client):
+        # given
+        create_response = self._create_integration(client)
+        language_model_id = create_response.json()["id"]
+
+        # when
+        response = client.post(
+            url="/llms/update",
+            json={
+                "language_model_id": language_model_id,
+                "language_model_tag": "any_tag",
+                "integration_id": "non_existing_integration_id",
+            },
+        )
+
+        # then
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_update_unprocessable_entity(self, client):
+        # when
+        response = client.post(
+            url="/llms/update",
+            json={"foo": "bar"},
+        )
+
+        # then
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
     async def test_update_success(self, client):
         # given
         create_response = self._create_language_model(client)
         language_model_id = create_response.json()["id"]
+        integration_id = create_response.json()["integration_id"]
 
         # when
         update_response = client.post(
@@ -134,6 +227,7 @@ class TestLanguageModelsEndpoint:
             json={
                 "language_model_id": language_model_id,
                 "language_model_tag": "another_tag",
+                "integration_id": integration_id,
             },
         )
 
@@ -178,6 +272,63 @@ class TestLanguageModelsEndpoint:
 
         # then
         assert update_response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_update_setting_bad_request(self, client):
+        # given
+        client_response = self._create_language_model(client)
+        language_model_id = client_response.json()["id"]
+
+        # when
+        update_response = client.post(
+            url="/llms/update_setting",
+            json={
+                "language_model_id": language_model_id,
+                "setting_key": "temperature",
+                "setting_value": "very hot",
+            },
+        )
+
+        # then
+        assert update_response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_update_setting_bad_request_setting_key(self, client):
+        # given
+        client_response = self._create_language_model(client)
+        language_model_id = client_response.json()["id"]
+
+        # when
+        update_response = client.post(
+            url="/llms/update_setting",
+            json={
+                "language_model_id": language_model_id,
+                "setting_key": "temperature321",
+                "setting_value": "0.9",
+            },
+        )
+
+        # then
+        assert update_response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_update_setting_unprocessable_entity(self, client):
+        # given
+        client_response = self._create_language_model(client)
+        language_model_id = client_response.json()["id"]
+
+        # when
+        update_response = client.post(
+            url="/llms/update_setting",
+            json={
+                "language_model_id": language_model_id,
+                "setting_key": "temperature",
+                "foo": "bar",
+            },
+        )
+
+        # then
+        assert update_response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_update_setting_success(self, client):

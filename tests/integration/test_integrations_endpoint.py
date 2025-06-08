@@ -109,3 +109,27 @@ class TestIntegrationsEndpoints:
 
         # then
         assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_create_invalid_integration_type_bad_request(self, client):
+        response = client.post(
+            url="/integrations/create",
+            json={
+                "api_endpoint": "https://example.com",
+                "api_key": "an_valid_key",
+                "integration_type": "an_invalid_integration_type",
+            },
+        )
+        assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_create_unprocessable_entity(self, client):
+        response = client.post(
+            url="/integrations/create",
+            json={
+                "api_endpoint": 1,
+                "api_key": "raise_value_error",
+                "integration_type": "openai_api_v1",
+            },
+        )
+        assert response.status_code == 422

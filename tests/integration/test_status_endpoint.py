@@ -31,9 +31,9 @@ def test_metrics(client):
     assert "startup_time" in data["application"], "It should contain 'startup_time'"
 
     assert "system" in data, "The response should contain the 'system' key"
-    assert (
-        "cpu_usage_percent" in data["system"]
-    ), "It should contain 'cpu_usage_percent'"
+    assert "cpu_usage_percent" in data["system"], (
+        "It should contain 'cpu_usage_percent'"
+    )
     assert "memory" in data["system"], "It should contain memory information"
     assert "disk" in data["system"], "It should contain disk information"
 
