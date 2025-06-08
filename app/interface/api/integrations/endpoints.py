@@ -214,9 +214,6 @@ async def add(
 
     Returns:
         Integration: Newly created integration
-
-    Raises:
-        HTTPException: For various creation errors including validation failures
     """
     integration = integration_service.create_integration(
         integration_type=integration_data.integration_type,

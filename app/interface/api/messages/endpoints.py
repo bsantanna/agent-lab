@@ -1,5 +1,5 @@
 from dependency_injector.wiring import inject, Provide
-from fastapi import APIRouter, Depends, Body, Response, status, HTTPException
+from fastapi import APIRouter, Depends, Body, Response, status
 from typing_extensions import List
 
 from app.core.container import Container
@@ -55,7 +55,6 @@ router = APIRouter()
                 }
             },
         },
-        400: {"description": "Invalid request data"},
         404: {"description": "Agent not found"},
     },
 )
@@ -77,18 +76,9 @@ async def get_list(
 
     Returns:
         List[Message]: All messages associated with the agent
-
-    Raises:
-        HTTPException: If agent doesn't exist or has no messages
     """
-    try:
-        messages = message_service.get_messages(message_data.agent_id)
-        return [Message.model_validate(message) for message in messages]
-    except NotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No messages found for agent {message_data.agent_id}",
-        )
+    messages = message_service.get_messages(message_data.agent_id)
+    return [Message.model_validate(message) for message in messages]
 
 
 @router.post(
@@ -134,11 +124,9 @@ async def get_list(
                 }
             },
         },
-        400: {"description": "Invalid message data or unsupported agent type"},
+        400: {"description": "Invalid request data fields"},
         404: {"description": "Agent not found"},
-        422: {"description": "Message processing failed"},
-        429: {"description": "Rate limit exceeded for agent"},
-        503: {"description": "Agent service temporarily unavailable"},
+        422: {"description": "Invalid request data unprocessable entity"},
     },
 )
 @inject
@@ -168,48 +156,31 @@ async def post_message(
 
     Returns:
         Message: The assistant's response message
-
-    Raises:
-        HTTPException: For various error conditions (agent not found, processing failed, etc.)
     """
-    # Search matching agent
-    try:
-        agent = agent_service.get_agent_by_id(message_data.agent_id)
-        matching_agent = agent_registry.get_agent(agent.agent_type)
-    except NotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Agent with ID {message_data.agent_id} not found",
-        )
+    agent = agent_service.get_agent_by_id(message_data.agent_id)
+    matching_agent = agent_registry.get_agent(agent.agent_type)
 
-    try:
-        # Store human message
-        human_message = message_service.create_message(
-            message_role=message_data.message_role,
-            message_content=message_data.message_content,
-            agent_id=message_data.agent_id,
-            attachment_id=message_data.attachment_id,
-        )
+    # Store human message
+    human_message = message_service.create_message(
+        message_role=message_data.message_role,
+        message_content=message_data.message_content,
+        agent_id=message_data.agent_id,
+        attachment_id=message_data.attachment_id,
+    )
 
-        # Process human message
-        processed_message = matching_agent.process_message(message_data)
+    # Process human message
+    processed_message = matching_agent.process_message(message_data)
 
-        # Store assistant message
-        assistant_message = message_service.create_message(
-            message_role="assistant",
-            message_content=processed_message.message_content,
-            response_data=processed_message.response_data,
-            agent_id=processed_message.agent_id,
-            replies_to=human_message,
-        )
+    # Store assistant message
+    assistant_message = message_service.create_message(
+        message_role="assistant",
+        message_content=processed_message.message_content,
+        response_data=processed_message.response_data,
+        agent_id=processed_message.agent_id,
+        replies_to=human_message,
+    )
 
-        return Message.model_validate(assistant_message)
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Failed to process message: {str(e)}",
-        )
+    return Message.model_validate(assistant_message)
 
 
 @router.get(
@@ -260,7 +231,6 @@ async def post_message(
             },
         },
         404: {"description": "Message not found"},
-        400: {"description": "Invalid message ID format"},
     },
 )
 @inject
@@ -281,28 +251,13 @@ async def get_by_id(
 
     Returns:
         MessageExpanded: Complete message details with context
-
-    Raises:
-        HTTPException: If message not found or invalid ID
     """
-    try:
-        assistant_message = message_service.get_message_by_id(message_id)
-        human_message = message_service.get_message_by_id(assistant_message.replies_to)
+    assistant_message = message_service.get_message_by_id(message_id)
+    human_message = message_service.get_message_by_id(assistant_message.replies_to)
 
-        return _format_expanded_response(
-            assistant_message, human_message, attachment_service
-        )
-
-    except NotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Message with ID {message_id} not found",
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid message ID or data corruption: {str(e)}",
-        )
+    return _format_expanded_response(
+        assistant_message, human_message, attachment_service
+    )
 
 
 @router.delete(
@@ -326,8 +281,6 @@ async def get_by_id(
     responses={
         204: {"description": "Message successfully deleted"},
         404: {"description": "Message not found"},
-        400: {"description": "Invalid message ID format"},
-        409: {"description": "Cannot delete message due to dependencies"},
     },
 )
 @inject
@@ -345,22 +298,9 @@ async def remove(
     Returns:
         Response: 204 No Content on success
 
-    Raises:
-        HTTPException: If message not found or deletion fails
     """
-    try:
-        message_service.delete_message_by_id(message_id)
-        return Response(status_code=status.HTTP_204_NO_CONTENT)
-    except NotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Message with ID {message_id} not found",
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Cannot delete message: {str(e)}",
-        )
+    message_service.delete_message_by_id(message_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 def _format_expanded_response(

@@ -85,14 +85,14 @@ class TestMessagesEndpoints:
         assert isinstance(response.json(), list)
 
     @pytest.mark.asyncio
-    async def test_get_list_error_agent_bad_request(self, client):
+    async def test_get_list_error_agent_not_found(self, client):
         agent_id = "unknown"
 
         # when
         response = client.post(url="/messages/list", json={"agent_id": agent_id})
 
         # then
-        assert response.status_code == 400
+        assert response.status_code == 404
 
     @pytest.mark.asyncio
     async def test_post_message(self, client):
@@ -120,6 +120,33 @@ class TestMessagesEndpoints:
         )
         # then
         assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_post_message_invalid_role_bad_request(self, client):
+        agent_id = "unknown"
+
+        # when
+        response = client.post(
+            url="/messages/post",
+            json={
+                "message_role": "vampire",
+                "message_content": "a_message",
+                "agent_id": agent_id,
+                "attachment_id": None,
+            },
+        )
+        # then
+        assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_post_message_invalid_payload_unprocessable_entity(self, client):
+        # when
+        response = client.post(
+            url="/messages/post",
+            json={"foo": "bar"},
+        )
+        # then
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_post_and_read_message_with_attachment(self, client):
@@ -157,6 +184,21 @@ class TestMessagesEndpoints:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
+    async def test_get_message_success(self, client):
+        # given
+        upload_filename = "attachment.zip"
+        upload_response = self._upload_file(client, upload_filename, "application/zip")
+        attachment_id = upload_response.json()["id"]
+        create_message_response = self._create_message(client, attachment_id)
+        message_id = create_message_response.json()["id"]
+
+        # when
+        get_message_response = client.get(f"/messages/{message_id}")
+
+        # then
+        assert get_message_response.status_code == 200
+
+    @pytest.mark.asyncio
     async def test_create_with_attachment_and_delete_success(self, client):
         # given
         upload_filename = "attachment.zip"
@@ -170,3 +212,14 @@ class TestMessagesEndpoints:
 
         # then
         assert delete_message_response.status_code == 204
+
+    @pytest.mark.asyncio
+    async def test_delete_message_not_found(self, client):
+        # given
+        message_id = "unknown"
+
+        # when
+        response = client.delete(f"/messages/delete/{message_id}")
+
+        # then
+        assert response.status_code == 404
