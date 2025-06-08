@@ -1,9 +1,8 @@
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Body, Depends, Response, status, HTTPException
+from fastapi import APIRouter, Body, Depends, Response, status
 from typing_extensions import List
 
 from app.core.container import Container
-from app.domain.exceptions.base import NotFoundError
 from app.domain.models import LanguageModel as DomainLanguageModel
 from app.interface.api.language_models.schema import (
     LanguageModelCreateRequest,
@@ -133,7 +132,6 @@ async def get_list(
             },
         },
         404: {"description": "Language model not found"},
-        400: {"description": "Invalid language model ID format"},
     },
 )
 @inject
@@ -160,21 +158,8 @@ async def get_by_id(
     Raises:
         HTTPException: If model not found or invalid ID
     """
-    try:
-        language_model = language_model_service.get_language_model_by_id(
-            language_model_id
-        )
-        return _format_expanded_response(language_model, language_model_setting_service)
-    except NotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Language model with ID {language_model_id} not found",
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid language model ID or data corruption: {str(e)}",
-        )
+    language_model = language_model_service.get_language_model_by_id(language_model_id)
+    return _format_expanded_response(language_model, language_model_setting_service)
 
 
 @router.post(
@@ -220,12 +205,9 @@ async def get_by_id(
                 }
             },
         },
-        400: {"description": "Invalid request data or unsupported model tag"},
+        400: {"description": "Invalid request data unsupported model tag"},
         404: {"description": "Integration not found"},
-        409: {
-            "description": "Language model with this tag already exists for integration"
-        },
-        422: {"description": "Integration not properly configured"},
+        422: {"description": "Invalid request data format"},
     },
 )
 @inject
@@ -249,25 +231,12 @@ async def add(
     Returns:
         LanguageModel: Newly created language model
 
-    Raises:
-        HTTPException: For various creation errors
     """
-    try:
-        language_model = language_model_service.create_language_model(
-            integration_id=language_model_data.integration_id,
-            language_model_tag=language_model_data.language_model_tag,
-        )
-        return LanguageModel.model_validate(language_model)
-    except NotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Integration with ID {language_model_data.integration_id} not found",
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to create language model: {str(e)}",
-        )
+    language_model = language_model_service.create_language_model(
+        integration_id=language_model_data.integration_id,
+        language_model_tag=language_model_data.language_model_tag,
+    )
+    return LanguageModel.model_validate(language_model)
 
 
 @router.delete(
@@ -297,8 +266,6 @@ async def add(
     responses={
         204: {"description": "Language model successfully deleted"},
         404: {"description": "Language model not found"},
-        409: {"description": "Cannot delete model - still in use by active agents"},
-        400: {"description": "Invalid language model ID format"},
     },
 )
 @inject
@@ -321,19 +288,8 @@ async def remove(
     Raises:
         HTTPException: If model not found or deletion fails
     """
-    try:
-        language_model_service.delete_language_model_by_id(language_model_id)
-        return Response(status_code=status.HTTP_204_NO_CONTENT)
-    except NotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Language model with ID {language_model_id} not found",
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Cannot delete language model: {str(e)}",
-        )
+    language_model_service.delete_language_model_by_id(language_model_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post(
@@ -374,9 +330,9 @@ async def remove(
                 }
             },
         },
-        400: {"description": "Invalid request data or unsupported model tag"},
-        404: {"description": "Language model not found"},
-        422: {"description": "New model tag not supported by integration"},
+        400: {"description": "Invalid request data unsupported model tag"},
+        404: {"description": "Language model or integration not found"},
+        422: {"description": "Invalid request data unprocessable entity"},
     },
 )
 @inject
@@ -403,22 +359,12 @@ async def update(
     Raises:
         HTTPException: If model not found or update fails
     """
-    try:
-        language_model = language_model_service.update_language_model(
-            language_model_id=language_model_data.language_model_id,
-            language_model_tag=language_model_data.language_model_tag,
-        )
-        return LanguageModel.model_validate(language_model)
-    except NotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Language model with ID {language_model_data.language_model_id} not found",
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Failed to update language model: {str(e)}",
-        )
+    language_model = language_model_service.update_language_model(
+        language_model_id=language_model_data.language_model_id,
+        language_model_tag=language_model_data.language_model_tag,
+        integration_id=language_model_data.integration_id,
+    )
+    return LanguageModel.model_validate(language_model)
 
 
 @router.post(
@@ -470,7 +416,7 @@ async def update(
         },
         400: {"description": "Invalid setting key or value"},
         404: {"description": "Language model not found"},
-        422: {"description": "Setting value out of valid range"},
+        422: {"description": "Invalid request data unprocessable entity"},
     },
 )
 @inject
@@ -505,34 +451,17 @@ async def update_setting(
     Raises:
         HTTPException: If model not found or setting update fails
     """
-    try:
-        language_model_setting_service.update_by_key(
-            language_model_id=language_model_data.language_model_id,
-            setting_key=language_model_data.setting_key,
-            setting_value=language_model_data.setting_value,
-        )
+    language_model_setting_service.update_by_key(
+        language_model_id=language_model_data.language_model_id,
+        setting_key=language_model_data.setting_key,
+        setting_value=language_model_data.setting_value,
+    )
 
-        language_model = language_model_service.get_language_model_by_id(
-            language_model_id=language_model_data.language_model_id
-        )
+    language_model = language_model_service.get_language_model_by_id(
+        language_model_id=language_model_data.language_model_id
+    )
 
-        return _format_expanded_response(language_model, language_model_setting_service)
-
-    except NotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Language model with ID {language_model_data.language_model_id} not found",
-        )
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Invalid setting value: {str(e)}",
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to update setting: {str(e)}",
-        )
+    return _format_expanded_response(language_model, language_model_setting_service)
 
 
 def _format_expanded_response(

@@ -46,7 +46,7 @@ class LanguageModelRepository:
             return language_model
 
     def update_language_model(
-        self, language_model_id: str, language_model_tag: str
+        self, language_model_id: str, language_model_tag: str, integration_id: str
     ) -> LanguageModel:
         with self.session_factory() as session:
             entity: LanguageModel = (
@@ -58,6 +58,7 @@ class LanguageModelRepository:
                 raise LanguageModelNotFoundError(language_model_id)
 
             entity.language_model_tag = language_model_tag
+            entity.integration_id = integration_id
             session.commit()
             session.refresh(entity)
             return entity

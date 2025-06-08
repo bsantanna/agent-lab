@@ -1,8 +1,6 @@
 from typing_extensions import Iterator
 
-from app.domain.exceptions.base import InvalidFieldError
 from app.domain.models import LanguageModel
-from app.domain.repositories.integrations import IntegrationNotFoundError
 from app.domain.repositories.language_models import LanguageModelRepository
 from app.services.integrations import IntegrationService
 from app.services.language_model_settings import LanguageModelSettingService
@@ -30,13 +28,8 @@ class LanguageModelService:
         integration_id: str,
         language_model_tag: str,
     ) -> LanguageModel:
-        # verify integration
-        try:
-            integration = self.integration_service.get_integration_by_id(integration_id)
-        except IntegrationNotFoundError:
-            raise InvalidFieldError(
-                field_name="integration_id", reason="integration not found"
-            )
+        # get integration
+        integration = self.integration_service.get_integration_by_id(integration_id)
 
         # create language model
         language_model = self.repository.add(
@@ -70,8 +63,11 @@ class LanguageModelService:
         return self.repository.delete_by_id(language_model_id)
 
     def update_language_model(
-        self, language_model_id: str, language_model_tag: str
+        self, language_model_id: str, language_model_tag: str, integration_id: str
     ) -> LanguageModel:
+        integration = self.integration_service.get_integration_by_id(integration_id)
         return self.repository.update_language_model(
-            language_model_id=language_model_id, language_model_tag=language_model_tag
+            language_model_id=language_model_id,
+            language_model_tag=language_model_tag,
+            integration_id=integration.id,
         )
