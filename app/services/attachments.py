@@ -10,7 +10,7 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
 from markitdown import MarkItDown
 
-from app.domain.exceptions.base import AudioOptimizationError
+from app.domain.exceptions.base import AudioOptimizationError, FileProcessingError
 from app.domain.models import Attachment
 from app.domain.repositories.attachments import AttachmentRepository
 from app.infrastructure.database.vectors import DocumentRepository
@@ -50,7 +50,13 @@ class AttachmentService:
 
         if not file.content_type.startswith("audio/"):
             file_name = file.filename
-            parsed_content = self.markdown.convert(temp_file_path).text_content
+            try:
+                parsed_content = self.markdown.convert(temp_file_path).text_content
+            except Exception as e:
+                raise FileProcessingError(
+                    file_name=file_name,
+                    reason=str(e)
+                )
         else:
             raw_content = self.optimize_audio(temp_file_path)
             file_name = file.filename.replace(file.filename.split('.')[-1],"mp3")

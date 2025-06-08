@@ -1,4 +1,5 @@
 import os
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -62,6 +63,28 @@ class TestAttachmentsEndpoint:
         return client.get(url=f"/attachments/download/{attachment_id}")
 
     @pytest.mark.asyncio
+    async def test_upload_no_file_validation_error(self, client):
+        response = client.post("/attachments/upload")
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_upload_large_file_payload_too_large(self, client):
+        # Create a temporary file with large content to simulate a large payload
+        large_size = 11 * 1024 * 1024  # 11 MB
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+        try:
+            temp_file.write(b"a" * large_size)
+            temp_file.close()
+            with open(temp_file.name, "rb") as file:
+                response = client.post(
+                    url="/attachments/upload",
+                    files={"file": (os.path.basename(temp_file.name), file, "application/pdf")},
+                )
+            assert response.status_code == 413
+        finally:
+            os.remove(temp_file.name)
+
+    @pytest.mark.asyncio
     async def test_embeddings(self, client):
         # given
         upload_filename = "attachment.zip"
@@ -82,6 +105,52 @@ class TestAttachmentsEndpoint:
         assert embeddings_response["embeddings_collection"] == "static_document_data"
 
     @pytest.mark.asyncio
+    async def test_embeddings_invalid_attachment(self, client):
+        # Get a valid LLM for the test
+        llm_response = self._create_llm(client)
+        llm_id = llm_response.json()["id"]
+        # Use a non-existent attachment id to trigger a 404
+        response = self._create_embeddings(
+            client, "non_existent_attachment", llm_id, "static_document_data"
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_embeddings_invalid_language_model(self, client):
+        # Upload a file to get a valid attachment id
+        upload_filename = "attachment.zip"
+        upload_response = self._upload_file(client, upload_filename, "application/zip")
+        attachment_id = upload_response.json()["id"]
+        # Use an invalid language model id to trigger a 404
+        response = self._create_embeddings(
+            client, attachment_id, "non_existent_llm", "static_document_data"
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_embeddings_unprocessable_entity(self, client):
+        response = self._create_embeddings(
+            client, 3, 2, 1 # Start your engines! :D
+        )
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_upload_invalid_file_error(self, client):
+        large_size = 1 * 1024 * 1024  # 11 MB
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+        try:
+            temp_file.write(b"a" * large_size)
+            temp_file.close()
+            with open(temp_file.name, "rb") as file:
+                response = client.post(
+                    url="/attachments/upload",
+                    files={"file": (os.path.basename(temp_file.name), file, "application/pdf")},
+                )
+            assert response.status_code == 422
+        finally:
+            os.remove(temp_file.name)
+
+    @pytest.mark.asyncio
     async def test_file_downloads(self, client):
         # given
         upload_filename = "attachment.zip"
@@ -93,3 +162,11 @@ class TestAttachmentsEndpoint:
 
         # then
         assert download_response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_file_downloads_not_found(self, client):
+        # when
+        download_response = self._download_file(client, "non_existent_id")
+
+        # then
+        assert download_response.status_code == 404

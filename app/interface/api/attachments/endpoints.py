@@ -6,6 +6,7 @@ from starlette import status
 from starlette.responses import StreamingResponse
 
 from app.core.container import Container
+from app.domain.exceptions.base import FileToLargeError
 from app.interface.api.attachments.schema import Attachment, EmbeddingsRequest
 from app.services.attachments import AttachmentService
 
@@ -22,6 +23,8 @@ router = APIRouter()
 
     This endpoint accepts any file type and stores it in the system for later use.
     The file is processed and metadata is extracted and stored along with the file content.
+
+    **Upload size limit is set to 10 MB per file.**
 
     **Example file types:**
     - Documents (PDF, DOC, DOCX, TXT)
@@ -48,11 +51,11 @@ router = APIRouter()
         413: {
             "description": "Payload too large",
             "content": {
-                "application/json": {"example": {"detail": "File size too large"}}
+                "application/json": {"example": {"detail": "File size 1234 exceeds the maximum allowed size of 123 bytes"}}
             },
         },
         422: {
-            "description": "Validation error",
+            "description": "Validation or file processing error",
             "content": {
                 "application/json": {"example": {"detail": "No file provided"}}
             },
@@ -72,6 +75,14 @@ async def upload_attachment(
     This endpoint processes the uploaded file, extracts metadata,
     and stores it securely in the system for later retrieval.
     """
+    # validate file size
+    file.file.seek(0, 2)
+    file_size = file.file.tell()
+    max_size = 10 * 1024 * 1024  # 10 MB
+    if file_size > max_size:
+        raise FileToLargeError(file_size, max_size)
+    file.file.seek(0)
+
     attachment = await attachment_service.create_attachment_with_file(file=file)
     return Attachment.model_validate(attachment)
 
@@ -116,17 +127,7 @@ async def upload_attachment(
                     }
                 }
             },
-        },
-        403: {
-            "description": "Access forbidden - insufficient permissions",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "You don't have permission to access this attachment"
-                    }
-                }
-            },
-        },
+        }
     },
 )
 @inject
@@ -187,6 +188,9 @@ async def download_attachment(
     - Word documents (DOC, DOCX)
     - HTML files
     - CSV files
+    - JSON files
+    - Images (JPG, PNG)
+    - Audio files (WAV, MP3, OGG, WEBM)
     """,
     response_description="Attachment updated with embedding information",
     responses={
@@ -201,16 +205,6 @@ async def download_attachment(
                         "created_at": "2024-01-15T10:30:00Z",
                         "parsed_content": "Extracted text content from the document",
                         "embeddings_collection": "my_documents",
-                    }
-                }
-            },
-        },
-        400: {
-            "description": "Bad request - Invalid parameters or unsupported file type",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "File type not supported for embedding generation"
                     }
                 }
             },
@@ -234,17 +228,7 @@ async def download_attachment(
                     }
                 }
             },
-        },
-        500: {
-            "description": "Internal server error - Embedding generation failed",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "Failed to generate embeddings due to service error"
-                    }
-                }
-            },
-        },
+        }
     },
 )
 @inject
