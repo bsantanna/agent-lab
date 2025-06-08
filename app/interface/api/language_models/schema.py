@@ -54,7 +54,7 @@ class LanguageModelSettingUpdateRequest(BaseModel):
 
     @field_validator("setting_key")
     def validate_setting_key(cls, v):
-        if not re.match(r"^[a-zA-Z0-9_-]+$", v):
+        if not re.match(r"^[a-zA-Z_-]+$", v):
             raise InvalidFieldError("setting_key", "contains invalid characters")
         return v
 

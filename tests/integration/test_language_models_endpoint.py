@@ -293,6 +293,25 @@ class TestLanguageModelsEndpoint:
         assert update_response.status_code == 400
 
     @pytest.mark.asyncio
+    async def test_update_setting_bad_request_setting_key(self, client):
+        # given
+        client_response = self._create_language_model(client)
+        language_model_id = client_response.json()["id"]
+
+        # when
+        update_response = client.post(
+            url="/llms/update_setting",
+            json={
+                "language_model_id": language_model_id,
+                "setting_key": "temperature321",
+                "setting_value": "0.9",
+            },
+        )
+
+        # then
+        assert update_response.status_code == 400
+
+    @pytest.mark.asyncio
     async def test_update_setting_unprocessable_entity(self, client):
         # given
         client_response = self._create_language_model(client)

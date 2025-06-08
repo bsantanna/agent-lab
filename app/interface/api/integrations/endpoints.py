@@ -198,7 +198,7 @@ async def add(
         example={
             "integration_type": "openai_api_v1",
             "api_endpoint": "https://api.openai.com/v1",
-            "api_key": "sk-your-openai-api-key-here",
+            "api_key": "an_api_key",
         },
     ),
     integration_service: IntegrationService = Depends(
