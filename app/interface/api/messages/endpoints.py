@@ -35,6 +35,13 @@ router = APIRouter()
     - Display conversation history
     - Load previous messages for context
     - Message thread reconstruction
+    - Memory and history of dialogues
+    - Chain-of-thought reasoning
+
+    **Recommended Practices:**
+    - Use structured information for details and chain-of-thought reasoning
+    - When displaying messages use the format -role: content
+
     """,
     response_description="List of messages associated with the agent",
     responses={
@@ -100,11 +107,19 @@ async def get_list(
     4. Generates and stores assistant response
     5. Returns the assistant message
 
-    **Supported Features:**
-    - Multiple agent types (ChatGPT, Claude, etc.)
-    - File attachments via attachment_id
-    - Message threading and replies
-    - Rich response data (metadata, tokens, etc.)
+    **Use cases:**
+    - Agent-to-agent interactions
+    - Conversational AI applications
+    - Task scheduling and automation through agents
+    - Request of assistance from available agents
+    - Question answering and information retrieval
+
+    **Recommended Practices:**
+    - Maintain a fluid conversation flow
+    - Use structured information for details and chain-of-thought reasoning
+    - When displaying messages, always present the agent message response to the user
+
+
     """,
     response_description="The assistant's response message",
     responses={

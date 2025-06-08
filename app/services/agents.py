@@ -32,18 +32,13 @@ class AgentService:
         language_model_id: str,
     ) -> Agent:
         # verify language model
-        try:
-            self.language_model_service.get_language_model_by_id(language_model_id)
-        except LanguageModelNotFoundError:
-            raise InvalidFieldError(
-                field_name="language_model_id", reason="language model not found"
-            )
+        language_model = self.language_model_service.get_language_model_by_id(language_model_id)
 
         # create agent
         agent = self.agent_repository.add(
             agent_name=agent_name,
             agent_type=agent_type,
-            language_model_id=language_model_id,
+            language_model_id=language_model.id,
         )
 
         return agent
@@ -51,7 +46,8 @@ class AgentService:
     def delete_agent_by_id(self, agent_id: str) -> None:
         return self.agent_repository.delete_by_id(agent_id)
 
-    def update_agent(self, agent_id: str, agent_name: str) -> Agent:
+    def update_agent(self, agent_id: str, agent_name: str, language_model_id:str, agent_summary:str=None) -> Agent:
+        language_model = self.language_model_service.get_language_model_by_id(language_model_id)
         return self.agent_repository.update_agent(
-            agent_id=agent_id, agent_name=agent_name
+            agent_id=agent_id, agent_name=agent_name, language_model_id=language_model.id, agent_summary=agent_summary
         )

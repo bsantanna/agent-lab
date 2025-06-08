@@ -47,7 +47,7 @@ class AgentRepository:
             session.refresh(agent)
             return agent
 
-    def update_agent(self, agent_id: str, agent_name: str) -> Agent:
+    def update_agent(self, agent_id: str, agent_name: str, language_model_id:str, agent_summary:str=None) -> Agent:
         with self.session_factory() as session:
             entity: Agent = (
                 session.query(Agent)
@@ -58,6 +58,9 @@ class AgentRepository:
                 raise AgentNotFoundError(agent_id)
 
             entity.agent_name = agent_name
+            entity.language_model_id = language_model_id
+            if agent_summary is not None:
+                entity.agent_summary = agent_summary
             session.commit()
             session.refresh(entity)
             return entity

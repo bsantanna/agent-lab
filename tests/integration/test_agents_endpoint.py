@@ -21,9 +21,10 @@ def container():
 
 
 class TestAgentsEndpoints:
-    def _create_agent(self, client):
+
+    def _create_integration(self, client):
         # create integration
-        response = client.post(
+        return client.post(
             url="/integrations/create",
             json={
                 "api_endpoint": "https://example.com",
@@ -31,16 +32,24 @@ class TestAgentsEndpoints:
                 "integration_type": "openai_api_v1",
             },
         )
-        integration_id = response.json()["id"]
 
+    def _create_language_model(self, client, integration_id):
         # create llm
-        response_2 = client.post(
+        return client.post(
             url="/llms/create",
             json={
                 "integration_id": integration_id,
                 "language_model_tag": "an_invalid_tag",
             },
         )
+
+    def _create_agent(self, client):
+        # create integration
+        response = self._create_integration(client)
+        integration_id = response.json()["id"]
+
+        # create llm
+        response_2 = self._create_language_model(client, integration_id)
         language_model_id = response_2.json()["id"]
 
         # create agent
@@ -131,7 +140,7 @@ class TestAgentsEndpoints:
         assert error_response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_create_invalid_language_model_bas_request(self, client):
+    async def test_create_invalid_language_model_not_found(self, client):
         # given
         language_model_id = "an_invalid_language_model_id"
 
@@ -146,11 +155,38 @@ class TestAgentsEndpoints:
         )
 
         # then
-        assert error_response.status_code == 400
+        assert error_response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_create_invalid_unprocessable_entity(self, client):
+        # when
+        error_response = client.post(
+            url="/agents/create",
+            json={"foo": "bar"},
+        )
+
+        # then
+        assert error_response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_update_invalid_unprocessable_entity(self, client):
+        # when
+        error_response = client.post(
+            url="/agents/update",
+            json={"foo": "bar"},
+        )
+
+        # then
+        assert error_response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_update_agent_not_found(self, client):
         # given
+        response = self._create_integration(client)
+        integration_id = response.json()["id"]
+        response_2 = self._create_language_model(client, integration_id)
+        language_model_id = response_2.json()["id"]
+
         agent_id = "not_existing_id"
 
         # when
@@ -159,6 +195,7 @@ class TestAgentsEndpoints:
             json={
                 "agent_id": agent_id,
                 "agent_name": "a_name",
+                "language_model_id": language_model_id,
             },
         )
 
@@ -166,7 +203,7 @@ class TestAgentsEndpoints:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_update_success(self, client):
+    async def test_update_language_model_not_found(self, client):
         # given
         create_response = self._create_agent(client)
         agent_id = create_response.json()["id"]
@@ -177,6 +214,47 @@ class TestAgentsEndpoints:
             json={
                 "agent_id": agent_id,
                 "agent_name": "a_modified_name",
+                "language_model_id": "not_existing_language_model_id",
+            },
+        )
+
+        # then
+        assert update_response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_update_invalid_agent_name_bad_request(self, client):
+        # given
+        create_response = self._create_agent(client)
+        agent_id = create_response.json()["id"]
+        language_model_id = create_response.json()["language_model_id"]
+
+        # when
+        update_response = client.post(
+            url="/agents/update",
+            json={
+                "agent_id": agent_id,
+                "agent_name": "a modified_name",
+                "language_model_id": language_model_id,
+            },
+        )
+
+        # then
+        assert update_response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_update_success(self, client):
+        # given
+        create_response = self._create_agent(client)
+        agent_id = create_response.json()["id"]
+        language_model_id = create_response.json()["language_model_id"]
+
+        # when
+        update_response = client.post(
+            url="/agents/update",
+            json={
+                "agent_id": agent_id,
+                "agent_name": "a_modified_name",
+                "language_model_id": language_model_id,
             },
         )
 
