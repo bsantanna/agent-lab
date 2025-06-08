@@ -78,7 +78,13 @@ class TestAttachmentsEndpoint:
             with open(temp_file.name, "rb") as file:
                 response = client.post(
                     url="/attachments/upload",
-                    files={"file": (os.path.basename(temp_file.name), file, "application/pdf")},
+                    files={
+                        "file": (
+                            os.path.basename(temp_file.name),
+                            file,
+                            "application/pdf",
+                        )
+                    },
                 )
             assert response.status_code == 413
         finally:
@@ -130,7 +136,10 @@ class TestAttachmentsEndpoint:
     @pytest.mark.asyncio
     async def test_embeddings_unprocessable_entity(self, client):
         response = self._create_embeddings(
-            client, 3, 2, 1 # Start your engines! :D
+            client,
+            3,
+            2,
+            1,  # Start your engines! :D
         )
         assert response.status_code == 422
 
@@ -144,7 +153,13 @@ class TestAttachmentsEndpoint:
             with open(temp_file.name, "rb") as file:
                 response = client.post(
                     url="/attachments/upload",
-                    files={"file": (os.path.basename(temp_file.name), file, "application/pdf")},
+                    files={
+                        "file": (
+                            os.path.basename(temp_file.name),
+                            file,
+                            "application/pdf",
+                        )
+                    },
                 )
             assert response.status_code == 422
         finally:

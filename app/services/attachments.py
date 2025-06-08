@@ -53,13 +53,10 @@ class AttachmentService:
             try:
                 parsed_content = self.markdown.convert(temp_file_path).text_content
             except Exception as e:
-                raise FileProcessingError(
-                    file_name=file_name,
-                    reason=str(e)
-                )
+                raise FileProcessingError(file_name=file_name, reason=str(e))
         else:
             raw_content = self.optimize_audio(temp_file_path)
-            file_name = file.filename.replace(file.filename.split('.')[-1],"mp3")
+            file_name = file.filename.replace(file.filename.split(".")[-1], "mp3")
             parsed_content = ""
 
         attachment = await self.create_attachment_with_content(

@@ -28,6 +28,7 @@ class ConfigurationError(HTTPException):
             status_code=500, detail=f"Configuration error, reason: {reason}"
         )
 
+
 class FileToLargeError(HTTPException):
     def __init__(self, file_size, max_size):
         super().__init__(
@@ -35,11 +36,13 @@ class FileToLargeError(HTTPException):
             detail=f"File size {file_size} exceeds the maximum allowed size of {max_size} bytes",
         )
 
+
 class FileProcessingError(HTTPException):
     def __init__(self, file_name, reason):
         super().__init__(
             status_code=422, detail=f"Failed to process file {file_name}: {reason}"
         )
+
 
 class AudioOptimizationError(HTTPException):
     def __init__(self, reason):

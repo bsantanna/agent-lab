@@ -51,7 +51,11 @@ router = APIRouter()
         413: {
             "description": "Payload too large",
             "content": {
-                "application/json": {"example": {"detail": "File size 1234 exceeds the maximum allowed size of 123 bytes"}}
+                "application/json": {
+                    "example": {
+                        "detail": "File size 1234 exceeds the maximum allowed size of 123 bytes"
+                    }
+                }
             },
         },
         422: {
@@ -127,7 +131,7 @@ async def upload_attachment(
                     }
                 }
             },
-        }
+        },
     },
 )
 @inject
@@ -228,7 +232,7 @@ async def download_attachment(
                     }
                 }
             },
-        }
+        },
     },
 )
 @inject

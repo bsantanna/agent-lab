@@ -260,7 +260,7 @@ async def add(
     response_description="Integration successfully deleted (no content returned)",
     responses={
         204: {"description": "Integration successfully deleted"},
-        404: {"description": "Integration not found"}
+        404: {"description": "Integration not found"},
     },
 )
 @inject
