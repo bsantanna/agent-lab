@@ -6,6 +6,14 @@ from pydantic import BaseModel, field_validator
 from app.domain.exceptions.base import InvalidFieldError
 
 
+integration_valid_types = [
+    "anthropic_api_v1",
+    "xai_api_v1",
+    "openai_api_v1",
+    "ollama_api_v1",
+]
+
+
 class IntegrationCreateRequest(BaseModel):
     integration_type: str
     api_endpoint: str
@@ -20,14 +28,11 @@ class IntegrationCreateRequest(BaseModel):
 
     @field_validator("integration_type")
     def validate_integration_type(cls, v):
-        valid_types = [
-            "anthropic_api_v1",
-            "xai_api_v1",
-            "openai_api_v1",
-            "ollama_api_v1",
-        ]
-        if v not in valid_types:
-            raise InvalidFieldError("integration_type", "not supported")
+        if v not in integration_valid_types:
+            raise InvalidFieldError(
+                "integration_type",
+                f"Invalid integration type, please use one of: {integration_valid_types}",
+            )
         return v
 
 

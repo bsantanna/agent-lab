@@ -1,11 +1,13 @@
 from fastapi import HTTPException
 
 
-class NotFoundError(Exception):
+class NotFoundError(HTTPException):
     entity_name: str
 
     def __init__(self, entity_id):
-        super().__init__(f"{self.entity_name} not found, id: {entity_id}")
+        super().__init__(
+            status_code=404, detail=f"{self.entity_name} not found, id: {entity_id}"
+        )
 
 
 class InvalidFieldError(HTTPException):

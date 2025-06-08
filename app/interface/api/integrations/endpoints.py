@@ -1,12 +1,12 @@
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Body, Depends, Response, status, HTTPException
+from fastapi import APIRouter, Body, Depends, Response, status
 from typing_extensions import List
 
 from app.core.container import Container
-from app.domain.exceptions.base import NotFoundError
 from app.interface.api.integrations.schema import (
     IntegrationCreateRequest,
     Integration,
+    integration_valid_types,
 )
 from app.services.integrations import IntegrationService
 
@@ -105,7 +105,6 @@ async def get_list(
             },
         },
         404: {"description": "Integration not found"},
-        400: {"description": "Invalid integration ID format"},
     },
 )
 @inject
@@ -125,22 +124,9 @@ async def get_by_id(
     Returns:
         Integration: Complete integration details
 
-    Raises:
-        HTTPException: If integration not found or invalid ID
     """
-    try:
-        integration = integration_service.get_integration_by_id(integration_id)
-        return Integration.model_validate(integration)
-    except NotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Integration with ID {integration_id} not found",
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid integration ID or data corruption: {str(e)}",
-        )
+    integration = integration_service.get_integration_by_id(integration_id)
+    return Integration.model_validate(integration)
 
 
 @router.post(
@@ -185,27 +171,11 @@ async def get_by_id(
             },
         },
         400: {
-            "description": "Invalid request data",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Invalid API endpoint format"}
-                }
-            },
-        },
-        401: {
-            "description": "Invalid API credentials",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "API key authentication failed"}
-                }
-            },
-        },
-        409: {
-            "description": "Integration already exists",
+            "description": "Invalid integration type",
             "content": {
                 "application/json": {
                     "example": {
-                        "detail": "Integration with this endpoint already configured"
+                        "detail": f"Field integration_type is invalid, reason: Invalid integration type, please use one of: {integration_valid_types}"
                     }
                 }
             },
@@ -214,7 +184,7 @@ async def get_by_id(
             "description": "Integration validation failed",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Unable to connect to API endpoint"}
+                    "example": {"detail": "Invalid integration data format"}
                 }
             },
         },
@@ -248,38 +218,16 @@ async def add(
     Raises:
         HTTPException: For various creation errors including validation failures
     """
-    try:
-        integration = integration_service.create_integration(
-            integration_type=integration_data.integration_type,
-            api_endpoint=integration_data.api_endpoint,
-            api_key=integration_data.api_key,
-        )
-        return Integration.model_validate(integration)
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid integration data: {str(e)}",
-        )
-    except ConnectionError as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Unable to connect to API endpoint: {str(e)}",
-        )
-    except PermissionError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"API key authentication failed: {str(e)}",
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Integration creation failed: {str(e)}",
-        )
+    integration = integration_service.create_integration(
+        integration_type=integration_data.integration_type,
+        api_endpoint=integration_data.api_endpoint,
+        api_key=integration_data.api_key,
+    )
+    return Integration.model_validate(integration)
 
 
 @router.delete(
     "/delete/{integration_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete an integration",
     description="""
     Permanently delete an integration and all its associated configurations.
@@ -313,16 +261,6 @@ async def add(
     responses={
         204: {"description": "Integration successfully deleted"},
         404: {"description": "Integration not found"},
-        409: {
-            "description": "Cannot delete integration - dependencies exist",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "Integration has 3 active language models. Delete them first."
-                    }
-                }
-            },
-        },
         400: {"description": "Invalid integration ID format"},
     },
 )
@@ -343,24 +281,6 @@ async def remove(
     Returns:
         Response: 204 No Content on success
 
-    Raises:
-        HTTPException: If integration not found or has dependencies
     """
-    try:
-        integration_service.delete_integration_by_id(integration_id)
-        return Response(status_code=status.HTTP_204_NO_CONTENT)
-    except NotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Integration with ID {integration_id} not found",
-        )
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Cannot delete integration: {str(e)}",
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to delete integration: {str(e)}",
-        )
+    integration_service.delete_integration_by_id(integration_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
