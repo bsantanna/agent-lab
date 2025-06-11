@@ -2,6 +2,31 @@
 
 <!-- version list -->
 
+## v1.1.1 (2025-06-11)
+
+### Bug Fixes
+
+- Adjust ollama endpoint for experiment utils
+  ([#164](https://github.com/bsantanna/agent-lab/pull/164),
+  [`c8b0683`](https://github.com/bsantanna/agent-lab/commit/c8b06839bd6a696ec11ccdda7ca3f5eca92342d5))
+
+- Adjust regex pattern for model tags ([#164](https://github.com/bsantanna/agent-lab/pull/164),
+  [`c8b0683`](https://github.com/bsantanna/agent-lab/commit/c8b06839bd6a696ec11ccdda7ca3f5eca92342d5))
+
+- Adjusts errors from previous release ([#164](https://github.com/bsantanna/agent-lab/pull/164),
+  [`c8b0683`](https://github.com/bsantanna/agent-lab/commit/c8b06839bd6a696ec11ccdda7ca3f5eca92342d5))
+
+- Adjusts tavily env var setup during runtime
+  ([#164](https://github.com/bsantanna/agent-lab/pull/164),
+  [`c8b0683`](https://github.com/bsantanna/agent-lab/commit/c8b06839bd6a696ec11ccdda7ca3f5eca92342d5))
+
+- Updates libraries ([#164](https://github.com/bsantanna/agent-lab/pull/164),
+  [`c8b0683`](https://github.com/bsantanna/agent-lab/commit/c8b06839bd6a696ec11ccdda7ca3f5eca92342d5))
+
+- Updates libraries pipeline ([#164](https://github.com/bsantanna/agent-lab/pull/164),
+  [`c8b0683`](https://github.com/bsantanna/agent-lab/commit/c8b06839bd6a696ec11ccdda7ca3f5eca92342d5))
+
+
 ## v1.1.0 (2025-06-08)
 
 ### Features
