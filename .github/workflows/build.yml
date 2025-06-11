@@ -31,7 +31,7 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           sudo apt install -yq ffmpeg
         env:
-          BROWSER_USE_VERSION: 0.1.48
+          BROWSER_USE_VERSION: 0.2.6
       - name: Lint
         run: |
           # stop the build if there are Python syntax errors or undefined names
