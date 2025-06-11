@@ -28,14 +28,12 @@ class LanguageModelService:
         integration_id: str,
         language_model_tag: str,
     ) -> LanguageModel:
-
         # get integration
         integration = self.integration_service.get_integration_by_id(integration_id)
 
         # create language model
         language_model = self.repository.add(
-            integration_id=integration.id,
-            language_model_tag=language_model_tag
+            integration_id=integration.id, language_model_tag=language_model_tag
         )
 
         # default embeddings model setting
