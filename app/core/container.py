@@ -61,7 +61,6 @@ class Container(containers.DeclarativeContainer):
 
     if config_file is not None:
         config = providers.Configuration(yaml_files=[config_file])
-        config.set("api.tavily_api_key", os.getenv("TAVILY_API_KEY"))
     else:
         api_base_url = os.getenv("API_BASE_URL")
         vault_url = os.getenv("VAULT_URL")
@@ -79,7 +78,9 @@ class Container(containers.DeclarativeContainer):
         config.set("db.url", app_secrets["data"]["data"]["db_url"])
         config.set("db.vectors", app_secrets["data"]["data"]["db_vectors"])
         config.set("db.checkpoints", app_secrets["data"]["data"]["db_checkpoints"])
-        config.set("api.tavily_api_key", app_secrets["data"]["data"]["tavily_api_key"])
+
+        # dependencies environment variables
+        os.environ["TAVILY_API_KEY"] = app_secrets["data"]["data"]["tavily_api_key"]
 
     db = providers.Singleton(Database, db_url=config.db.url)
 
