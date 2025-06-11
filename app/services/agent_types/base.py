@@ -509,7 +509,6 @@ class ContactSupportAgentBase(WorkflowAgentBase, ABC):
 class WebAgentBase(WorkflowAgentBase, ABC):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
-        self.tavily_api_key = agent_utils.config.get("api.tavily_api_key")
 
     def get_web_browser_tool(
         self,
@@ -579,17 +578,10 @@ class WebAgentBase(WorkflowAgentBase, ABC):
         return browser_tool_call
 
     def get_web_crawl_tool(self, extract_depth="basic") -> BaseTool:
-        return TavilyExtract(
-            extract_depth=extract_depth,
-            tavily_api_key=self.tavily_api_key,
-        )
+        return TavilyExtract(extract_depth=extract_depth)
 
     def get_web_search_tool(self, max_results=5, topic="general") -> BaseTool:
-        return TavilySearch(
-            max_results=max_results,
-            topic=topic,
-            tavily_api_key=self.tavily_api_key,
-        )
+        return TavilySearch(max_results=max_results, topic=topic)
 
 
 class SupervisedWorkflowAgentBase(WebAgentBase, ABC):

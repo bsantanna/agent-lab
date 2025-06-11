@@ -33,14 +33,7 @@ class LanguageModelService:
 
         # create language model
         language_model = self.repository.add(
-            integration_id=integration_id, language_model_tag=language_model_tag
-        )
-
-        # default temperature setting
-        self.setting_service.create_language_model_setting(
-            language_model_id=language_model.id,
-            setting_key="temperature",
-            setting_value="0.5",
+            integration_id=integration.id, language_model_tag=language_model_tag
         )
 
         # default embeddings model setting

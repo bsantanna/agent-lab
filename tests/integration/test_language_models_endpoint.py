@@ -44,6 +44,35 @@ class TestLanguageModelsEndpoint:
         assert isinstance(response.json(), list)
 
     @pytest.mark.asyncio
+    async def test_create_model_tag_chars_validation(self, client):
+        # given
+        create_response = self._create_integration(client)
+        integration_id = create_response.json()["id"]
+
+        # when
+        response = client.post(
+            url="/llms/create",
+            json={
+                "integration_id": integration_id,
+                "language_model_tag": "invalid tag with spaces",
+            },
+        )
+
+        # then
+        assert response.status_code == 400
+
+        # when
+        response = client.post(
+            url="/llms/create",
+            json={
+                "integration_id": integration_id,
+                "language_model_tag": "mistral-small3.1:24b",
+            },
+        )
+        # then
+        assert response.status_code == 201
+
+    @pytest.mark.asyncio
     async def test_create_and_get_by_id_success(self, client):
         # when
         create_response = self._create_language_model(client)
@@ -236,6 +265,19 @@ class TestLanguageModelsEndpoint:
         assert "id" in update_response.json()
         assert "another_tag" == update_response.json()["language_model_tag"]
 
+        # when
+        update_response = client.post(
+            url="/llms/update",
+            json={
+                "language_model_id": language_model_id,
+                "language_model_tag": "mistral-small3.1:24b",
+                "integration_id": integration_id,
+            },
+        )
+
+        # then
+        assert update_response.status_code == 200
+
     @pytest.mark.asyncio
     async def test_update_setting_language_model_not_found(self, client):
         # given
@@ -341,12 +383,12 @@ class TestLanguageModelsEndpoint:
             url="/llms/update_setting",
             json={
                 "language_model_id": language_model_id,
-                "setting_key": "temperature",
-                "setting_value": "0.9",
+                "setting_key": "embeddings",
+                "setting_value": "bge-m3",
             },
         )
 
         # then
         assert update_response.status_code == 200
         assert "id" in update_response.json()
-        assert "0.9" == update_response.json()["lm_settings"][0]["setting_value"]
+        assert "bge-m3" == update_response.json()["lm_settings"][0]["setting_value"]
