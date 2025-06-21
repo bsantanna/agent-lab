@@ -36,11 +36,11 @@ services:
       - "21891"
       - "21892"
     volumes:
-      - ./otel/dataprepper/templates/ss4o_metrics.json:/usr/share/data-prepper/templates/ss4o_metrics.json
-      - ./otel/dataprepper/templates/ss4o_logs.json:/usr/share/data-prepper/templates/ss4o_logs.json
-      - ./otel/dataprepper/templates/ss4o_traces.json:/usr/share/data-prepper/templates/ss4o_traces.json
-      - ./otel/dataprepper/pipelines.yml:/usr/share/data-prepper/pipelines/pipelines.yaml
-      - ./otel/dataprepper/config.yml:/usr/share/data-prepper/config/data-prepper-config.yaml
+      - ./otel/opensearch/dataprepper/templates/ss4o_metrics.json:/usr/share/data-prepper/templates/ss4o_metrics.json
+      - ./otel/opensearch/dataprepper/templates/ss4o_logs.json:/usr/share/data-prepper/templates/ss4o_logs.json
+      - ./otel/opensearch/dataprepper/templates/ss4o_traces.json:/usr/share/data-prepper/templates/ss4o_traces.json
+      - ./otel/opensearch/dataprepper/pipelines.yml:/usr/share/data-prepper/pipelines/pipelines.yaml
+      - ./otel/opensearch/dataprepper/config.yml:/usr/share/data-prepper/config/data-prepper-config.yaml
     depends_on:
       - opensearch
       - opensearch-dashboards
@@ -94,7 +94,7 @@ services:
       - "4318:4318"
       - "55679:55679"
     volumes:
-      - ./otel/otel-config.yml:/etc/otelcol/config.yaml
+      - ./otel/opensearch/otel-config.yml:/etc/otelcol/config.yaml
     command: [ "--config=/etc/otelcol/config.yaml" ]
     depends_on:
       opensearch:
