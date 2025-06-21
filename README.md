@@ -1,4 +1,4 @@
-<h2 align="center"><a href="https://github.com/bsantanna/agent-lab">🤖🧪 Agent-Lab</a></h2>
+<h2 align="center"><a href="https://github.com/bsantanna/agent-lab">Agent-Lab | 🤖🧪</a></h2>
 <h3 align="center">LLM Agent Development and Testing Toolkit</h3>
 
 [![Continuous Integration](https://github.com/bsantanna/agent-lab/actions/workflows/build.yml/badge.svg)](https://github.com/bsantanna/agent-lab/actions/workflows/build.yml)
