@@ -12,6 +12,9 @@
 
 </div>
 
+---
+
+### Table of Contents
 - [What's Agent-Lab?](#whats-agent-lab)
 - [Key Features](#key-features)
 - [Project Goals](#project-goals)
