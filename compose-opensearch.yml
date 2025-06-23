@@ -8,8 +8,6 @@ services:
     environment:
       DOCKER: 1
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
-      OLLAMA_ENDPOINT: ${OLLAMA_ENDPOINT}
-      TAVILY_API_KEY: ${TAVILY_API_KEY}
     depends_on:
       opensearch:
         condition: service_healthy
@@ -92,7 +90,6 @@ services:
     ports:
       - "4317:4317"
       - "4318:4318"
-      - "55679:55679"
     volumes:
       - ./otel/opensearch/otel-config.yml:/etc/otelcol/config.yaml
     command: [ "--config=/etc/otelcol/config.yaml" ]

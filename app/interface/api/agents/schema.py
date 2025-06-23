@@ -8,7 +8,6 @@ from app.domain.exceptions.base import InvalidFieldError
 
 valid_agent_types = [
     "adaptive_rag",
-    "agreement_planner",
     "coordinator_planner_supervisor",
     "react_rag",
     "test_echo",

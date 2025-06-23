@@ -1,0 +1,134 @@
+services:
+  app:
+    build: .
+    networks:
+      - agent-lab
+    ports:
+      - "18000:8000"
+    environment:
+      DOCKER: 1
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
+    depends_on:
+      otel-collector:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      postgres-setup:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    networks:
+      - agent-lab
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - ./otel/grafana/otel-config.yml:/etc/otelcol/config.yaml
+    command: [ "--config=/etc/otelcol/config.yaml" ]
+    depends_on:
+      grafana:
+        condition: service_started
+      tempo:
+        condition: service_started
+      loki:
+        condition: service_started
+
+  prometheus:
+    image: prom/prometheus:latest
+    networks:
+      - agent-lab
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./otel/grafana/prometheus.yml:/etc/prometheus/prometheus.yml
+    command: [ "--config.file=/etc/prometheus/prometheus.yml", "--web.enable-remote-write-receiver" ]
+
+  loki:
+    image: grafana/loki:latest
+    networks:
+      - agent-lab
+    ports:
+      - "3100:3100"
+
+  tempo:
+    image: grafana/tempo:latest
+    networks:
+      - agent-lab
+    ports:
+      - "3200:3200"
+    volumes:
+      - ./otel/grafana/tempo.yml:/etc/tempo/tempo.yml
+    command: ["-config.file=/etc/tempo/tempo.yml"]
+
+
+  grafana:
+    image: grafana/grafana:latest
+    networks:
+      - agent-lab
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./otel/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    ports:
+      - "5432:5432"
+    networks:
+      - agent-lab
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-setup:
+    image: pgvector/pgvector:pg16
+    networks:
+      - agent-lab
+    environment:
+      PGPASSWORD: postgres
+    command: >
+      bash -c '
+        echo "CREATE DATABASE agent_lab;" | psql -h postgres -U postgres
+        echo "CREATE DATABASE agent_lab_checkpoints;" | psql -h postgres -U postgres
+        echo "CREATE DATABASE agent_lab_vectors;" | psql -h postgres -U postgres
+      '
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - agent-lab
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  vault:
+    image: hashicorp/vault:1.18
+    ports:
+      - "8200:8200"
+    networks:
+      - agent-lab
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: "dev-only-token"
+      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
+    cap_add:
+      - IPC_LOCK
+    entrypoint: vault server -dev
+
+networks:
+  agent-lab:
+    name: agent-lab
