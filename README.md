@@ -16,8 +16,8 @@
 
 ### Table of Contents
 - [What's Agent-Lab?](#whats-agent-lab)
-- [Key Features](#key-features)
 - [Project Goals](#project-goals)
+- [Key Features](#key-features)
 - [Getting Started](#getting-started)
 - [Contributing](#contributing)
 - [License](#license)
@@ -30,21 +30,26 @@ Agent-Lab is a robust toolkit specifically engineered for the development and ri
 
 ---
 
-## Key Features:
+## Project Goals
 
-- **REST API**: Seamlessly manage integrations with LLMs, agents, and messages
-- **Relational Persistence**: Robust data storage with PostgreSQL
-- **Secrets Management**: Secure storage and retrieval using Vault
-- **Observability**: Detailed logs, metrics, and traces powered by OpenTelemetry
-  - Reference implementations for Grafana and OpenSearch
-- **Vector Storage and Search**: Efficient vector handling with PgVector
+- Provide a comprehensive toolkit for the development, testing, and experimentation of LLM agents including example implementations.
+- Offer first-class integration testing support to ensure quality assurance.
+- Enable first-class observability for responsible AI explainability and evaluation.
+- Leverage a cloud-native architecture for seamless deployment and scalability.
 
 ---
 
-## Project Goals
- 
-... 
+## Key Features:
 
+- **REST API**: Effortlessly manage integrations with LLMs, agents, and conversation history.
+- **MCP Server**: A Model Control Protocol (MCP) server for agent discovery, dialog history, and agent-to-agent communication.
+- **Cloud-Native**: Optimized for cloud environments with Docker, Kubernetes, and Helm charts for streamlined deployment.
+- **Relational Persistence**: Reliable data storage using PostgreSQL for prompts, agent-specific settings, and conversations.
+- **Secrets Management**: Securely store and retrieve secrets with Vault.
+- **Observability**: Gain detailed insights with logs, metrics, and traces powered by OpenTelemetry.
+  - Includes reference implementations for Grafana and OpenSearch.
+- **Vector Storage and Search**: Efficiently handle vector data with PgVector for similarity search and retrieval.
+- **Unit Testing**: Ensure reliability and correctness with a comprehensive test suite using [TestContainers](https://www.testcontainers.org/).
 --- 
 
 ## Getting Started
