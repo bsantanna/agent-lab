@@ -48,7 +48,7 @@ Agent-Lab is a robust toolkit specifically engineered for the development and ri
 - **Relational Persistence**: Reliable data storage using PostgreSQL for prompts, agent-specific settings, and conversations.
 - **Secrets Management**: Securely store and retrieve secrets with Vault.
 - **Observability**: Gain detailed insights with logs, metrics, and traces powered by OpenTelemetry.
-  - Includes reference implementations for [Grafana](doc/otel/GRAFANA.md) and [OpenSearch](doc/otel/OPENSEARCH.md).
+  - Includes reference implementations for [Grafana](doc/otel/GRAFANA.md) and [OpenSearch Dashboards](doc/otel/OPENSEARCH.md).
 - **Vector Storage and Search**: Efficiently handle vector data with PgVector for similarity search and retrieval.
 - **Unit Testing**: Ensure reliability and correctness with a comprehensive [integration test suite](doc/TESTS.md).
 
