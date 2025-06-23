@@ -10,6 +10,7 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
 from app.core.container import Container
+from app.infrastructure.metrics.logging_middleware import LoggingMiddleware
 from app.interface.api.agents.endpoints import router as agents_router
 from app.interface.api.attachments.endpoints import router as attachments_router
 from app.interface.api.integrations.endpoints import router as integrations_router
@@ -104,6 +105,9 @@ def setup_middleware(application: FastAPI):
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
+    )
+    application.add_middleware(
+        LoggingMiddleware,
     )
 
 

@@ -32,10 +32,10 @@ Agent-Lab is a robust toolkit specifically engineered for the development and ri
 
 ## Project Goals
 
-- Provide a comprehensive toolkit for the development, testing, and experimentation of LLM agents including example implementations.
-- MCP server integration.
+- Deliver a comprehensive toolkit for the development, testing, and experimentation of LLM agents including example implementations.
+- Offer MCP server interface for agent discovery, dialog history, and agent-to-agent communication.
 - Offer first-class integration testing support to ensure quality assurance.
-- Observability for responsible AI explainability and evaluation.
+- Support Observability for responsible AI explainability and agent evaluation.
 - Leverage a cloud-native architecture for seamless deployment and scalability.
 
 ---
@@ -44,13 +44,14 @@ Agent-Lab is a robust toolkit specifically engineered for the development and ri
 
 - **REST API**: Effortlessly manage integrations with LLMs, agents, and conversation history.
 - **MCP Server**: A Model Control Protocol (MCP) server for agent discovery, dialog history, and agent-to-agent communication.
-- **Cloud-Native**: Optimized for cloud environments with Docker, Kubernetes, and Helm charts for streamlined deployment.
+- **Cloud-Native**: Optimized for cloud environments with Docker, Kubernetes, and [Helm charts](doc/CHARTS.md) for streamlined deployment.
 - **Relational Persistence**: Reliable data storage using PostgreSQL for prompts, agent-specific settings, and conversations.
 - **Secrets Management**: Securely store and retrieve secrets with Vault.
 - **Observability**: Gain detailed insights with logs, metrics, and traces powered by OpenTelemetry.
-  - Includes reference implementations for Grafana and OpenSearch.
+  - Includes reference implementations for [Grafana](doc/otel/GRAFANA.md) and [OpenSearch](doc/otel/OPENSEARCH.md).
 - **Vector Storage and Search**: Efficiently handle vector data with PgVector for similarity search and retrieval.
-- **Unit Testing**: Ensure reliability and correctness with a comprehensive test suite using [TestContainers](https://www.testcontainers.org/).
+- **Unit Testing**: Ensure reliability and correctness with a comprehensive [integration test suite](doc/TESTS.md).
+
 ---
 
 ## Getting Started
@@ -61,7 +62,20 @@ Agent-Lab is a robust toolkit specifically engineered for the development and ri
 
 ## Contributing
 
-...
+We appreciate the support from the community and welcome any help to improve this project. If you encounter any issues or have suggestions for enhancements, please report them by creating an issue on our [GitHub Issues](https://github.com/bsantanna/agent-lab/issues) page.
+
+To contribute to the project, follow these steps:
+
+1. Fork the repository.
+2. Create a new branch for your feature or bugfix.
+3. Activate the pre-commit hooks by running `pre-commit install`, make your
+   changes, and commit them with clear and concise messages.
+4. Ensure your changes pass the pre-commit hooks and achieve at least 80% test
+   coverage in SonarQube.
+5. Push your changes to your forked repository.
+6. Create a Pull Request (PR) to the `main` branch of the original repository.
+
+We will review your PR and provide feedback. Thank you for your contributions and support!
 
 ---
 

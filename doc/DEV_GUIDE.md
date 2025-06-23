@@ -1,4 +1,8 @@
-# Dev Guide
+<h2 align="center"><a href="https://github.com/bsantanna/agent-lab">Agent-Lab | 🤖🧪</a></h2>
+<h3 align="center">Development Guide</h3>
+---
+
+The goal of this document is to provide a quick introduction for developers.
 
 ## Environment Setup
 
@@ -19,10 +23,16 @@ After activating the virtual environment, install the dependencies:
 pip install -r requirements.txt
 ```
 
+### Copy the example environment file
+Copy the example environment file to `.env` and adjust the settings as needed:
+
+```bash
+cp .env.example .env
+```
+
 ### Run tests
 
-After installing the dependencies, run the tests to make sure everything is
-working as expected:
+Run the tests to make sure everything is working as expected:
 
 ```bash
 make test
@@ -30,8 +40,7 @@ make test
 
 ### Initialize pre-commit
 
-If you plan to contribute to the codebase, it is recommended to install the
-pre-commit hooks:
+If you plan to contribute to the codebase, it is recommended to install the pre-commit hooks:
 
 ```bash
 pre-commit install
@@ -75,24 +84,3 @@ Access the interactive documentation (OpenAPI):
 ![Domain Model](domain_model_web.png)
 
 ---
-
-## Contributing
-
-We appreciate the support from the community and welcome any help to improve
-this project. If you encounter any issues or have suggestions for enhancements,
-please report them by creating an issue on
-our [GitHub Issues](https://github.com/bsantanna/agent-lab/issues) page.
-
-To contribute to the project, follow these steps:
-
-1. Fork the repository.
-2. Create a new branch for your feature or bugfix.
-3. Activate the pre-commit hooks by running `pre-commit install`, make your
-   changes, and commit them with clear and concise messages.
-4. Ensure your changes pass the pre-commit hooks and achieve at least 80% test
-   coverage in SonarQube.
-5. Push your changes to your forked repository.
-6. Create a Pull Request (PR) to the `main` branch of the original repository.
-
-We will review your PR and provide feedback. Thank you for your contributions
-and support!
