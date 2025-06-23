@@ -8,6 +8,8 @@ services:
     environment:
       DOCKER: 1
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
+      OLLAMA_ENDPOINT: ${OLLAMA_ENDPOINT}
+      TAVILY_API_KEY: ${TAVILY_API_KEY}
     depends_on:
       opensearch:
         condition: service_healthy
@@ -42,6 +44,11 @@ services:
     depends_on:
       - opensearch
       - opensearch-dashboards
+    healthcheck:
+      test: [ "CMD-SHELL", "tail -n 20 /usr/share/data-prepper/log/data-prepper/data-prepper.log | grep 'Started otel_metrics_source...' || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   opensearch:
     image: opensearchproject/opensearch:latest
@@ -97,7 +104,7 @@ services:
       opensearch:
         condition: service_healthy
       data-prepper:
-        condition: service_started
+        condition: service_healthy
 
   postgres:
     image: pgvector/pgvector:pg16

@@ -33,8 +33,9 @@ Agent-Lab is a robust toolkit specifically engineered for the development and ri
 ## Project Goals
 
 - Provide a comprehensive toolkit for the development, testing, and experimentation of LLM agents including example implementations.
+- MCP server integration.
 - Offer first-class integration testing support to ensure quality assurance.
-- Enable first-class observability for responsible AI explainability and evaluation.
+- Observability for responsible AI explainability and evaluation.
 - Leverage a cloud-native architecture for seamless deployment and scalability.
 
 ---
@@ -50,7 +51,7 @@ Agent-Lab is a robust toolkit specifically engineered for the development and ri
   - Includes reference implementations for Grafana and OpenSearch.
 - **Vector Storage and Search**: Efficiently handle vector data with PgVector for similarity search and retrieval.
 - **Unit Testing**: Ensure reliability and correctness with a comprehensive test suite using [TestContainers](https://www.testcontainers.org/).
---- 
+---
 
 ## Getting Started
 
