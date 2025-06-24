@@ -86,6 +86,11 @@ The application uses [Dependency Injector](https://python-dependency-injector.et
 The dependency injection container is defined in `app/core/container.py`. Please use this container to register your dependencies and services.
 
 
+### Entity Domain Model
+
+Please refer to the [Entity Domain Model](doc/DOMAIN.md) for details on the data model used in the application. This model is used to define the entities and their relationships in the application.
+
+
 ### Logging and Observability
 
 The application uses [OpenTelemetry](https://opentelemetry.io/) for logging and observability. The configuration is defined in `app/infrastructure/metrics/tracer.py`.
