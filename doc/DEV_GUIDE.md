@@ -5,21 +5,9 @@
 
 #### Table of Contents
 - [Setup](#setup)
-  - [Install dependencies](#install-dependencies)
-  - [Copy the example environment file](#copy-the-example-environment-file)
 - [Running the Application](#running-the-application)
 - [Development Practices](#development-practices)
-  - [Dependency Injection](#dependency-injection)
-  - [Logging and Observability](#logging-and-observability)
-  - [Testing](#testing)
-  - [Initialize pre-commit](#initialize-pre-commit)
 - [Building agentic workflows](#building-agentic-workflows)
-  - [Define a new Agent implementation](#define-a-new-agent-implementation)
-  - [Register the Agent in dependency injection container](#register-the-agent-in-dependency-injection-container)
-  - [Add agent type to Pydantic validation schema](#add-agent-type-to-pydantic-validation-schema)
-  - [Experimenting the agent implementation](#experimenting-the-agent-implementation)
-  - [Integration testing](#integration-testing)
-  - [MCP Server](#mcp-server)
 - [Contributing](#contributing)
 - [Production deployment](#production-deployment)
 
