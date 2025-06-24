@@ -15,4 +15,6 @@ The reference implementation of Grafana observability is available in the `otel/
 
 These settings are used by the `compose-grafana.yaml` file to start the application with Grafana observability.
 
-**Note:** This implementation is just a reference, for real production scenario it is recommended to take into account privacy and security settings, such as authentication, authorization, and encryption.
+Please refer to the [Developing Guide reference](/doc/DEV_GUIDE.md) for more details on how to execute the Docker Compose files and access Grafana Dashboard.
+
+**Note:** This implementation is just a reference, for a real production scenario it is recommended to take into account privacy and security settings, such as authentication, authorization, and encryption.

@@ -17,11 +17,11 @@ Vault is also used to manage secrets for configured Integrations, please check o
 
 For local development, you can run Vault with provided Docker Compose files, which will set up a Vault server with a development configuration. This is suitable for testing and development purposes.
 
-Please refer to [Developing Guide reference](DEVELOPING.md) for more details on how execute the Docker Compose files.
+Please refer to [Developing Guide reference](DEV_GUIDE.md) for more details on how execute the Docker Compose files.
 
-If you intend to use Vault in production, following our principles we recommend the usage of [Vault Kubernetes HA setup](https://developer.hashicorp.com/vault/docs/deploy/kubernetes).
+If you intend to use Vault in production, following our principles, we recommend the usage of [Vault Kubernetes HA setup](https://developer.hashicorp.com/vault/docs/deploy/kubernetes).
 
---
+---
 
 ## User Interface
 

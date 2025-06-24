@@ -14,4 +14,6 @@ The reference implementation of OpenSearch Dashboards observability is available
 
 These settings are used by the `compose-opensearch.yaml` file to start the application with OpenSearch Dashboards observability.
 
+Please refer to the [Developing Guide reference](/doc/DEV_GUIDE.md) for more details on how to execute the Docker Compose files and access OpenSearch Dashboards.
+
 **Note:** This implementation is just a reference, for real production scenario it is recommended to take into account privacy and security settings, such as authentication, authorization, and encryption.
