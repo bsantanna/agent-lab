@@ -57,7 +57,7 @@ The following example starts application with OpenSearch Dashboards:
 docker compose -f compose-opensearch.yaml up --build
 ```
 
-After the application is started, you can access the API at [http://localhost:18000](http://localhost:18000).
+After the application is started, you can access the API at [http://localhost:18000/docs](http://localhost:18000/docs).
 
 Observability dashboards can be accessed at:
 - Grafana: [http://localhost:3000](http://localhost:3000) (default credentials: `admin`/`admin`). Please refer to the [Grafana example](otel/GRAFANA.md) for more details.
@@ -116,7 +116,7 @@ make test
 
 ### Initialize pre-commit
 
-If you plan to contribute to the codebase, it is recommended to install the pre-commit hooks:
+If you plan to contribute to the codebase or build new agents on top of Agent-Lab, it is recommended to install the pre-commit hooks:
 
 ```bash
 pre-commit install
@@ -161,6 +161,13 @@ The agent type should be added to Pydantic validation schema in `app/interface/a
 
 Please refer to the [notebooks](/notebooks) for examples of how to test the agent implementation using Jupyter notebooks. These notebooks provide a convenient way to interact with the agents and test their behavior in a controlled environment leveraging over the same dependency injection mechanism.
 
+
+### REST API agent interface
+
+Assuming the agent implementation is properly registered and validation schema is updated, you can create multiple agent instances of given implementation using the REST API.
+Please refer to the [API documentation](http://localhost:18000/docs) for details on how to create, update, and delete agents.
+A overall introduction can be found in this repository [REST API section](REST_API.md).
+
 ### Integration testing
 
 Please refer to the [integration tests](/tests/integration) for examples of how to test the agent implementation using pytest. These tests provide a way to ensure that the agent behaves as expected.
@@ -185,7 +192,6 @@ To contribute to the project, follow these steps:
 6. Create a Pull Request (PR) to the `main` branch of the original repository.
 
 We will review your PR and provide feedback.
-
 Thank you for your contributions and support!
 
 ---

@@ -13,3 +13,5 @@
 The reference implementation of OpenSearch Dashboards observability is available in the `otel/opensearch` directory.
 
 These settings are used by the `compose-opensearch.yaml` file to start the application with OpenSearch Dashboards observability.
+
+**Note:** This implementation is just a reference and should not be used in production as it has no security settings.
