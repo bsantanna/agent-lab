@@ -155,3 +155,7 @@ Please refer to the [integration tests](/tests/integration) for examples of how 
 ### MCP Server
 
 Please refer to the [MCP Server documentation](MCP.md) for more details on how to use the MCP server to manage agents, dialog history, and agent-to-agent communication.
+
+### Production deployment
+
+Please refer to the [Helm charts documentation](CHARTS.md) for more details on how to deploy the application in production using Helm charts.
