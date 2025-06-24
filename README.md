@@ -72,7 +72,7 @@ Please consult these guides for detailed instructions on getting started with Ag
 
 Community support is greatly appreciated. If you encounter any issues or have suggestions for enhancements, please report them by creating an issue on our [GitHub Issues](https://github.com/bsantanna/agent-lab/issues) page.
 
-Refer to our [developer\u2019s guide](doc/DEV_GUIDE.md) for instructions on how to contribute to the project.
+Refer to our [developer's guide](doc/DEV_GUIDE.md) for instructions on how to contribute to the project.
 
 ---
 
