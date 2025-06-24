@@ -16,7 +16,7 @@
 
 ### Table of Contents
 - [What is Agent-Lab?](#what-is-agent-lab)
-- [Project Goals](#project-goals)
+- [Project Principles](#project-principles)
 - [Key Features](#key-features)
 - [Getting Started](#getting-started)
 - [Contributing](#contributing)
@@ -30,7 +30,7 @@ Agent-Lab is a robust toolkit engineered for the development and thorough testin
 
 ---
 
-## Project Goals
+## Project Principles
 
 - Support researchers and developers with a comprehensive toolkit for developing, testing, and experimenting with LLM agents, including example implementations.
 - Provide an MCP server interface for agent discovery, dialog history, and agent-to-agent communication.
@@ -42,7 +42,7 @@ Agent-Lab is a robust toolkit engineered for the development and thorough testin
 
 ## Key Features
 
-- **REST API**: Easily manage integrations with LLMs, agents, and conversation histories with our [REST API](doc/REST_API.md).
+- **REST API**: Manage integrations with AI suppliers, LLMs settings, agents, and conversation histories with our [REST API](doc/REST_API.md).
 - **MCP Server**: Utilize the [Model Control Protocol (MCP) server](doc/MCP.md) for agent discovery, dialog history, and agent-to-agent communication.
 - **Observability**: Obtain detailed insights through logs, metrics, and traces powered by [OpenTelemetry](doc/OTEL.md).
   - Includes reference implementations for [Grafana](doc/otel/GRAFANA.md) and [OpenSearch Dashboards](doc/otel/OPENSEARCH.md).
@@ -51,7 +51,7 @@ Agent-Lab is a robust toolkit engineered for the development and thorough testin
 - **Secrets Management**: Securely store and retrieve secrets with [Vault](doc/VAULT.md).
 - **ETL Pipelines**: Integrate external data sources and LLMs using [Apache Airflow](doc/ETL.md) to orchestrate batch processing and data preparation tasks.
 - **Vector Storage and Search**: Efficiently manage vector data using PgVector for similarity search and retrieval.
-- **Agent Memory**: Using PostgreSQL checkpointer to store and retrieve agent memory, enabling agents to maintain context across interactions.
+- **Agent Memory**: Using PostgresSQL checkpointer to store and retrieve agent memory, enabling agents to maintain context across interactions.
 - **Integration Testing**: Ensure reliability and correctness with a comprehensive [integration test suite](doc/TESTS.md).
 
 ---
