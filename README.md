@@ -32,10 +32,10 @@ Agent-Lab is a robust toolkit specifically engineered for the development and ri
 
 ## Project Goals
 
-- Deliver a comprehensive toolkit for the development, testing, and experimentation of LLM agents including example implementations.
+- Support researchers and developers with a comprehensive toolkit for the development, testing, and experimentation of LLM agents including example implementations.
 - Offer MCP server interface for agent discovery, dialog history, and agent-to-agent communication.
-- Offer first-class integration testing support to ensure quality assurance.
-- Support Observability for responsible AI explainability and agent evaluation.
+- First-class integration testing support for quality assurance.
+- Support observability for responsible AI explainability and agent evaluation.
 - Leverage a cloud-native architecture for seamless deployment and scalability.
 
 ---
@@ -47,7 +47,7 @@ Agent-Lab is a robust toolkit specifically engineered for the development and ri
 - **Cloud-Native**: Optimized for cloud environments with Docker, Kubernetes, and [Helm charts](doc/CHARTS.md) for streamlined deployment.
 - **Relational Persistence**: Reliable data storage using PostgreSQL for [entity domain model](doc/DOMAIN.md) containing prompts, agent-specific settings, conversations...
 - **Secrets Management**: Securely store and retrieve secrets with [Vault](doc/VAULT.md).
-- **ETL Pipelines**: Integrates external data sources and LLMs using [Apache Airflow](doc/DAGs.md) for orchestrating batch processing and data-preparation tasks.
+- **ETL Pipelines**: Integrates external data sources and LLMs using [Apache Airflow](doc/ETL.md) for orchestrating batch processing and data-preparation tasks.
 - **Observability**: Gain detailed insights with logs, metrics, and traces powered by [OpenTelemetry](doc/OTEL.md).
   - Includes reference implementations for [Grafana](doc/otel/GRAFANA.md) and [OpenSearch Dashboards](doc/otel/OPENSEARCH.md).
 - **Vector Storage and Search**: Efficiently handle vector data with PgVector for similarity search and retrieval.
@@ -57,7 +57,14 @@ Agent-Lab is a robust toolkit specifically engineered for the development and ri
 
 ## Getting Started
 
-...
+The toolkit is designed to be straightforward to set up and use, whether you are a developer looking to build LLM agents or a researcher wanting to experiment with agentic workflows.
+
+Documentation in this repository is divided into two main sections:
+
+- **Developer Guide**: This section is tailored for developers who want to customize Agent-Lab or build agentic workflows. It includes setup instructions, development practices, and guidelines for contributing to the project. Please refer to our [developer guide](doc/DEV_GUIDE.md).
+- **Researcher Guide**: This section provides detailed instructions for researchers on how to set up and use Agent-Lab, including how to run the MCP server, manage agents, perform experiments, tune prompts, and prototype new agents. Please refer to our [researcher guide](doc/RESEARCHER_GUIDE.md).
+
+Please refer to these guides for detailed instructions on how to get started with Agent-Lab.
 
 ---
 
