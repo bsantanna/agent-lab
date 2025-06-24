@@ -123,7 +123,7 @@ Agent-Lab is built on top of the [LangGraph](https://www.langchain.com) framewor
 
 An **agent** is also a concrete implementation of the following base classes:
 
-![Agent-Lab Base Classes](doc/agent_base_classes_web.png)
+![Agent-Lab Base Classes](agent_base_classes_web.png)
 
 A class that extends `WorkflowAgentBase` should define:
 - a [workflow](https://langchain-ai.github.io/langgraph/how-tos/graph-api/) that represents the agent's behavior. This workflow can include various tasks, decision-making processes, and interactions with other agents or external systems.
