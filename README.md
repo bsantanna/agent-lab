@@ -51,6 +51,7 @@ Agent-Lab is a robust toolkit engineered for the development and thorough testin
 - **Observability**: Obtain detailed insights through logs, metrics, and traces powered by [OpenTelemetry](doc/OTEL.md).
   - Includes reference implementations for [Grafana](doc/otel/GRAFANA.md) and [OpenSearch Dashboards](doc/otel/OPENSEARCH.md).
 - **Vector Storage and Search**: Efficiently manage vector data using PgVector for similarity search and retrieval.
+- **Agent Memory**: Using PostgreSQL checkpointer to store and retrieve agent memory, enabling agents to maintain context across interactions.
 - **Unit Testing**: Ensure reliability and correctness with a comprehensive [integration test suite](doc/TESTS.md).
 
 ---
