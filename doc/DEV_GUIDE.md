@@ -88,7 +88,7 @@ The dependency injection container is defined in `app/core/container.py`. Please
 
 ### Entity Domain Model
 
-Please refer to the [Entity Domain Model](doc/DOMAIN.md) for details on the data model used in the application. This model is used to define the entities and their relationships in the application.
+Please refer to the [Entity Domain Model](DOMAIN.md) for details on the data model used in the application. This model is used to define the entities and their relationships in the application.
 
 
 ### Logging and Observability
