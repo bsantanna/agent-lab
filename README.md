@@ -52,7 +52,7 @@ Agent-Lab is a robust toolkit engineered for the development and thorough testin
 - **ETL Pipelines**: Integrate external data sources and LLMs using [Apache Airflow](doc/ETL.md) to orchestrate batch processing and data preparation tasks.
 - **Vector Storage and Search**: Efficiently manage vector data using PgVector for similarity search and retrieval.
 - **Agent Memory**: Using PostgreSQL checkpointer to store and retrieve agent memory, enabling agents to maintain context across interactions.
-- **Unit Testing**: Ensure reliability and correctness with a comprehensive [integration test suite](doc/TESTS.md).
+- **Integration Testing**: Ensure reliability and correctness with a comprehensive [integration test suite](doc/TESTS.md).
 
 ---
 

@@ -42,13 +42,13 @@ This file contains api keys for various AI suppliers.
 
 At this time, there are two pre-configured docker compose files:
 
-- `compose-graphana.yaml`: Starts the application with Grafana for observability.
+- `compose-grafana.yaml`: Starts the application with Grafana for observability.
 - `compose-opensearch.yaml`: Starts the application with OpenSearch Dashboards for observability.
 
 The following example starts application with Grafana:
 
 ```bash
-docker compose -f compose-graphana.yaml up --build
+docker compose -f compose-grafana.yaml up --build
 ```
 
 The following example starts application with OpenSearch Dashboards:
@@ -164,6 +164,7 @@ Please refer to the [notebooks](/notebooks) for examples of how to test the agen
 
 ### REST API agent interface
 
+While experimenting with Jupyter notebooks is a great way to quickly prototype and validate agent implementations, the main way to interact with agents in Agent-Lab and configured **agent** implementations is through the REST API.
 Assuming the agent implementation is properly registered and validation schema is updated, you can create multiple agent instances of given implementation using the REST API.
 Please refer to the [API documentation](http://localhost:18000/docs) for details on how to create, update, and delete agents.
 A overall introduction can be found in this repository [REST API section](REST_API.md).
