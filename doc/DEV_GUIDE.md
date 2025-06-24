@@ -3,7 +3,26 @@
 
 ---
 
-The goal of this document is to provide a quick introduction for developers.
+#### Table of Contents
+- [Setup](#setup)
+  - [Install dependencies](#install-dependencies)
+  - [Copy the example environment file](#copy-the-example-environment-file)
+- [Running the Application](#running-the-application)
+- [Development Practices](#development-practices)
+  - [Dependency Injection](#dependency-injection)
+  - [Logging and Observability](#logging-and-observability)
+  - [Testing](#testing)
+  - [Initialize pre-commit](#initialize-pre-commit)
+- [Building agentic workflows](#building-agentic-workflows)
+  - [Define a new Agent implementation](#define-a-new-agent-implementation)
+  - [Register the Agent in dependency injection container](#register-the-agent-in-dependency-injection-container)
+  - [Add agent type to Pydantic validation schema](#add-agent-type-to-pydantic-validation-schema)
+  - [Experimenting the agent implementation](#experimenting-the-agent-implementation)
+  - [Integration testing](#integration-testing)
+  - [MCP Server](#mcp-server)
+- [Production deployment](#production-deployment)
+
+---
 
 ## Setup
 
@@ -156,6 +175,9 @@ Please refer to the [integration tests](/tests/integration) for examples of how 
 
 Please refer to the [MCP Server documentation](MCP.md) for more details on how to use the MCP server to manage agents, dialog history, and agent-to-agent communication.
 
-### Production deployment
+
+---
+
+## Production deployment
 
 Please refer to the [Helm charts documentation](CHARTS.md) for more details on how to deploy the application in production using Helm charts.
