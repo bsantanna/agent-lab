@@ -43,9 +43,9 @@ Agent-Lab is a robust toolkit specifically engineered for the development and ri
 ## Key Features:
 
 - **REST API**: Effortlessly manage integrations with LLMs, agents, and conversation history.
-- **MCP Server**: A Model Control Protocol (MCP) server for agent discovery, dialog history, and agent-to-agent communication.
+- **MCP Server**: A [Model Control Protocol (MCP) server](doc/MCP.md) for agent discovery, dialog history, and agent-to-agent communication.
 - **Cloud-Native**: Optimized for cloud environments with Docker, Kubernetes, and [Helm charts](doc/CHARTS.md) for streamlined deployment.
-- **Relational Persistence**: Reliable data storage using PostgreSQL for prompts, agent-specific settings, and conversations.
+- **Relational Persistence**: Reliable data storage using PostgreSQL for [entity domain model](doc/DOMAIN.md) containing prompts, agent-specific settings, conversations...
 - **Secrets Management**: Securely store and retrieve secrets with [Vault](doc/VAULT.md).
 - **ETL Pipelines**: Integrates external data sources and LLMs using [Apache Airflow](doc/DAGs.md) for orchestrating batch processing and data-preparation tasks.
 - **Observability**: Gain detailed insights with logs, metrics, and traces powered by [OpenTelemetry](doc/OTEL.md).
