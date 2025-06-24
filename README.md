@@ -61,7 +61,7 @@ The toolkit is designed to be straightforward to set up and use, whether you are
 
 Documentation in this repository is divided into two main sections:
 
-- **Developer Guide**: This section is tailored for developers who want to customize Agent-Lab or build agentic workflows. It includes setup instructions, development practices, and guidelines for contributing to the project. Please refer to our [developer guide](doc/DEV_GUIDE.md).
+- **Developer Guide**: This section is tailored for developers who want to customize Agent-Lab or build agentic workflows. It includes setup instructions and development practices. Please refer to our [developer guide](doc/DEV_GUIDE.md).
 - **Researcher Guide**: This section provides detailed instructions for researchers on how to set up and use Agent-Lab, including how to run the MCP server, manage agents, perform experiments, tune prompts, and prototype new agents. Please refer to our [researcher guide](doc/RESEARCHER_GUIDE.md).
 
 Please refer to these guides for detailed instructions on how to get started with Agent-Lab.
