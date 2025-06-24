@@ -52,8 +52,8 @@ docker compose -f compose-opensearch.yaml up --build
 After the application is started, you can access the API at [http://localhost:18000](http://localhost:18000).
 
 Observability dashboards can be accessed at:
-- Grafana: [http://localhost:3000](http://localhost:3000) (default credentials: `admin`/`admin`). Please refer to the [Grafana example](doc/otel/GRAFANA.md) for more details.
-- OpenSearch Dashboards: [http://localhost:5601](http://localhost:5601). Please refer to the [OpenSearch example](doc/otel/OPENSEARCH.md) for more details.
+- Grafana: [http://localhost:3000](http://localhost:3000) (default credentials: `admin`/`admin`). Please refer to the [Grafana example](otel/GRAFANA.md) for more details.
+- OpenSearch Dashboards: [http://localhost:5601](http://localhost:5601). Please refer to the [OpenSearch example](otel/OPENSEARCH.md) for more details.
 
 ### Start the application with Uvicorn
 
@@ -82,7 +82,7 @@ The dependency injection container is defined in `app/core/container.py`. Please
 
 The application uses [OpenTelemetry](https://opentelemetry.io/) for logging and observability. The configuration is defined in `app/infrastructure/metrics/tracer.py`.
 
-Please refer to the [OpenTelemetry documentation](doc/OTEL.md) for more details on the implementation.
+Please refer to the [OpenTelemetry documentation](OTEL.md) for more details on the implementation.
 
 
 ### Testing
@@ -111,13 +111,15 @@ pre-commit install
 
 This will ensure that your code follows the project's coding standards and runs the tests before committing.
 
---
-
 ---
 
 ## Building agentic workflows
 
 Agent-Lab is built on top of the [LangGraph](https://www.langchain.com) framework, which provides a powerful way to build agentic workflows using LLMs.
+
+Building agentic workflows is a straightforward process in Agent-Lab, thanks to its modular architecture and the use of LangGraph.
+
+### Define a new Agent implementation
 
 **Agent** is a core concept in Agent-Lab, representing an autonomous entity that can perform tasks, make decisions, and interact with other agents or external systems.
 
@@ -129,3 +131,27 @@ A class that extends `WorkflowAgentBase` should define:
 - a [workflow](https://langchain-ai.github.io/langgraph/how-tos/graph-api/) that represents the agent's behavior. This workflow can include various tasks, decision-making processes, and interactions with other agents or external systems.
 - initialization parameters for the agent such as the prompts (defined as jynja2 templates) and other settings that can be used to customize the agent's behavior, such as vector store collections, temperature or other setting that support the agent functionality.
 
+### Register the Agent in dependency injection container
+
+Adapt the dependency injection container to register the new agent class. This allows the application to manage the agent's lifecycle and dependencies and use factory methods to build the workflow with customized prompts and settings recovered from database.
+
+The dependency injection container is defined in `app/core/container.py`, please include new agent implementation there.
+
+As an additional requirement, the agent class should be registered in the `app/services/agent_types/registry.py` class, this way agents can be resolved by a key called `agent_type` which is used to identify the agent implementation.
+
+### Add agent type to Pydantic validation schema
+
+The agent type should be added to Pydantic validation schema in `app/interface/api/agents/schema.py`. This allows the API to validate the agent type when creating or updating agents.
+
+
+### Experimenting the agent implementation
+
+Please refer to the [notebooks](/notebooks) for examples of how to test the agent implementation using Jupyter notebooks. These notebooks provide a convenient way to interact with the agents and test their behavior in a controlled environment leveraging over the same dependency injection mechanism.
+
+### Integration testing
+
+Please refer to the [integration tests](/tests/integration) for examples of how to test the agent implementation using pytest. These tests provide a way to ensure that the agent behaves as expected.
+
+### MCP Server
+
+Please refer to the [MCP Server documentation](MCP.md) for more details on how to use the MCP server to manage agents, dialog history, and agent-to-agent communication.
