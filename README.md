@@ -44,12 +44,12 @@ Agent-Lab is a robust toolkit engineered for the development and thorough testin
 
 - **REST API**: Easily manage integrations with LLMs, agents, and conversation histories with our [REST API](doc/REST_API.md).
 - **MCP Server**: Utilize the [Model Control Protocol (MCP) server](doc/MCP.md) for agent discovery, dialog history, and agent-to-agent communication.
+- **Observability**: Obtain detailed insights through logs, metrics, and traces powered by [OpenTelemetry](doc/OTEL.md).
+  - Includes reference implementations for [Grafana](doc/otel/GRAFANA.md) and [OpenSearch Dashboards](doc/otel/OPENSEARCH.md).
 - **Cloud-Native**: Optimized for cloud environments with Docker, Kubernetes, and [Helm charts](doc/CHARTS.md) for streamlined deployment.
 - **Relational Persistence**: Store data reliably using PostgreSQL to support the [entity domain model](doc/DOMAIN.md) for prompts, agent-specific settings, conversations, and more.
 - **Secrets Management**: Securely store and retrieve secrets with [Vault](doc/VAULT.md).
 - **ETL Pipelines**: Integrate external data sources and LLMs using [Apache Airflow](doc/ETL.md) to orchestrate batch processing and data preparation tasks.
-- **Observability**: Obtain detailed insights through logs, metrics, and traces powered by [OpenTelemetry](doc/OTEL.md).
-  - Includes reference implementations for [Grafana](doc/otel/GRAFANA.md) and [OpenSearch Dashboards](doc/otel/OPENSEARCH.md).
 - **Vector Storage and Search**: Efficiently manage vector data using PgVector for similarity search and retrieval.
 - **Agent Memory**: Using PostgreSQL checkpointer to store and retrieve agent memory, enabling agents to maintain context across interactions.
 - **Unit Testing**: Ensure reliability and correctness with a comprehensive [integration test suite](doc/TESTS.md).
