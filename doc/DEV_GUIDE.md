@@ -20,6 +20,7 @@
   - [Experimenting the agent implementation](#experimenting-the-agent-implementation)
   - [Integration testing](#integration-testing)
   - [MCP Server](#mcp-server)
+- [Contributing](#contributing)
 - [Production deployment](#production-deployment)
 
 ---
@@ -175,6 +176,24 @@ Please refer to the [integration tests](/tests/integration) for examples of how 
 
 Please refer to the [MCP Server documentation](MCP.md) for more details on how to use the MCP server to manage agents, dialog history, and agent-to-agent communication.
 
+---
+
+## Contributing
+
+To contribute to the project, follow these steps:
+
+1. Fork the repository.
+2. Create a new branch for your feature or bugfix.
+3. Activate the pre-commit hooks by running `pre-commit install`, make your
+   changes, and commit them with clear and concise messages.
+4. Ensure your changes pass the pre-commit hooks and achieve at least 80% test
+   coverage in SonarQube.
+5. Push your changes to your forked repository.
+6. Create a Pull Request (PR) to the `main` branch of the original repository.
+
+We will review your PR and provide feedback.
+
+Thank you for your contributions and support!
 
 ---
 
