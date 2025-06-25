@@ -425,6 +425,13 @@ config:
         exporters: ["otlphttp"]
 EOF
 ```
+
+### Verify dependencies setup
+
+Use `kubectl get pods` to check if all dependencies were properly installed, proceed when Running status is 1/1:
+
+![Pods for dependencies](kubectl_get_pods_dependencies.png)
+
 ---
 
 ## Deploying Agent-Lab with Helm
