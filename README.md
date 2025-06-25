@@ -50,7 +50,7 @@ Agent-Lab is a robust toolkit engineered for the development and thorough testin
 - **Relational Persistence**: Store data reliably using PostgreSQL to support the [entity domain model](doc/DOMAIN.md) for prompts, agent-specific settings, conversations, and more.
 - **Secrets Management**: Securely store and retrieve secrets with [Vault](doc/VAULT.md).
 - **Vector Storage and Search**: Efficiently manage vector data using PgVector for similarity search and retrieval.
-- **Agent Memory**: Using PostgresSQL checkpointer to store and retrieve agent memory, enabling agents to maintain context across interactions.
+- **Agent Memory**: Using PostgreSQL checkpointer to store and retrieve agent memory, enabling agents to maintain context across interactions.
 - **Integration Testing**: Ensure reliability and correctness with a comprehensive [integration test suite](doc/TESTS.md).
 
 ---

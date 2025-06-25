@@ -54,8 +54,7 @@ helm repo update
 2. Install cert-manager using Helm:
 
 ```bash
-helm install \
-  cert-manager jetstack/cert-manager \
+helm install cert-manager jetstack/cert-manager \
   --namespace cert-manager \
   --create-namespace \
   --version v1.17.2 \
@@ -84,6 +83,89 @@ spec:
         ingress:
           class: nginx
 EOF
+```
+
+### Setup Redis
+
+Redis is used by Agent-Lab for pub/sub status updates for long operations. 
+
+1. Add ot-helm's repository:
+
+```bash
+helm repo add ot-helm https://ot-container-kit.github.io/helm-charts/
+helm repo update
+```
+
+2. Install Redis Operator using Helm:
+
+```bash
+helm install redis-operator ot-helm/redis-operator --namespace ot-operators --create-namespace
+```
+
+3. Create a Redis cluster:
+
+```bash
+helm install redis-agent-lab ot-helm/redis
+```
+
+### Setup PostgreSQL
+
+PostgreSQL is used by Agent-Lab to store relational data, vector search and dialog memory (checkpointer).
+Please refer to [Entity Domain Model](DOMAIN.md) for more details about the data model.
+
+1. Add the CPNG helm repository:
+
+```bash
+helm repo add cnpg https://cloudnative-pg.github.io/charts
+helm repo update
+```
+
+2. Install PostgresSQL clusters using Helm:
+
+**Note**: The `bsantanna/cloudnative-pg-vector:17.4` image is used for deployment, it is a custom image that includes the [pgvector](https://github.com/pgvector/pgvector) extension for vector search capabilities, source can be found at [this repository](https://github.com/bsantanna/docker-images/blob/main/images/servers/cloudnative-pg-vector/Dockerfile)
+
+Three instances of PostgreSQL should be created, one for the Agent-Lab application, one for the vector search and another for the dialog memory (checkpointer).
+
+```bash
+helm upgrade --install pg-agent-lab cnpg/cluster --values - <<EOF
+cluster:
+  imageName: bsantanna/cloudnative-pg-vector:17.4
+  instances: 1
+  storage:
+    size: 1Gi
+EOF
+```
+
+```bash
+helm upgrade --install pg-agent-lab-vectors cnpg/cluster --values - <<EOF
+cluster:
+  imageName: bsantanna/cloudnative-pg-vector:17.4
+  instances: 1
+  storage:
+    size: 1Gi
+EOF
+```
+
+```bash
+helm upgrade --install pg-agent-lab-checkpoints cnpg/cluster --values - <<EOF
+cluster:
+  imageName: bsantanna/cloudnative-pg-vector:17.4
+  instances: 1
+  storage:
+    size: 1Gi
+EOF
+```
+
+The connection URL for the PostgreSQL instances can be obtained using the following command:
+
+```bash
+echo "$(kubectl get secret <deployment_name> -o jsonpath='{.data.uri}' | base64 -d)"
+```
+
+Example:
+
+```bash
+echo "$(kubectl get secret pg-agent-lab -o jsonpath='{.data.uri}' | base64 -d)"
 ```
 
 --- 
