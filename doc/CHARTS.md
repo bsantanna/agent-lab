@@ -20,7 +20,7 @@ In this document, we will cover a example deployment of Agent-Lab by on Kubernet
 
 **Note**: In this reference documentation, a [Minikube](https://minikube.sigs.k8s.io/docs/) cluster is used, in a real scenario you should use a production-ready Kubernetes cluster.
 
---- 
+---
 
 ## Setup Dependencies
 
@@ -40,9 +40,34 @@ minikube start --memory=6g --cpus=4
 minikube addons enable ingress
 ```
 
+### Setup Networking
+
+A few services in this guide are accessible via Web Browser UI, it is required to determine FQDN in advance:
+
+- `<agent_lab_fqdn>`: a fqdn to access Agent-Lab via nginx ingress, example: *agent-lab.my-domain.com*
+- `<elasticsearch_fqdn>`: a fqdn to access elasticsearch cluster via nginx ingress, example: *elasticsearch.my-domain.com*
+- `<kibana_fqdn>`: a fqdn to access kibana via nginx ingress, example: *kibana.my-domain.com*
+- `<vault_fqdn>`: a fqdn to access vault via nginx ingress, example: *vault.my-domain.com*
+
+Obtain minikube vm ip address:
+
+```bash
+minikube ip
+# 192.168.49.2
+```
+
+After the domain names are determined, modify system hosts file to include all these domains assigned to minikube vm ip address:
+```txt
+
+192.168.49.2 vault.my-domain.com kibana.my-domain.com elasticsearch.my-domain.com agent-lab.my-domain.com
+
+```
+
 ### Setup Certificate Manager
 
 To manage TLS certificates, we will use the [cert-manager](https://cert-manager.io/docs/). This tool automates the management and issuance of TLS certificates.
+
+**Note**: If the deployment does not require a valid HTTPS certificate, this step can be skipped.
 
 1. Add Jetstack's Helm repository:
 
@@ -63,7 +88,7 @@ helm install cert-manager jetstack/cert-manager \
 
 3. Create a ClusterIssuer for Let's Encrypt staging environment:
 
-Next step is creating a ClusterIssuer resource that will be used to issue certificates from Let's Encrypt. 
+Next step is creating a ClusterIssuer resource that will be used to issue certificates from Let's Encrypt.
 Please replace `<your_email_address>` with your actual email address to receive notifications about certificate expiration and issues.
 
 ```bash
@@ -87,7 +112,7 @@ EOF
 
 ### Setup Redis
 
-Redis is used by Agent-Lab for pub/sub status updates for long operations. 
+Redis is used by Agent-Lab for pub/sub status updates for long operations.
 
 1. Add ot-helm's repository:
 
@@ -120,7 +145,13 @@ helm repo add cnpg https://cloudnative-pg.github.io/charts
 helm repo update
 ```
 
-2. Install PostgresSQL clusters using Helm:
+2. Install CNPG Operator:
+
+```bash
+helm upgrade --install cnpg --namespace cnpg-system --create-namespace cnpg/cloudnative-pg
+```
+
+3. Install PostgresSQL clusters using Helm:
 
 **Note**: The `bsantanna/cloudnative-pg-vector:17.4` image is used for deployment, it is a custom image that includes the [pgvector](https://github.com/pgvector/pgvector) extension for vector search capabilities, source can be found at [this repository](https://github.com/bsantanna/docker-images/blob/main/images/servers/cloudnative-pg-vector/Dockerfile)
 
@@ -159,25 +190,29 @@ EOF
 The connection URL for the PostgreSQL instances can be obtained using the following command:
 
 ```bash
-echo "$(kubectl get secret <deployment_name> -o jsonpath='{.data.uri}' | base64 -d)"
+echo "$(kubectl get secret <deployment_name>-cluster-app -o jsonpath='{.data.uri}' | base64 -d)"
 ```
 
 Example:
 
 ```bash
-echo "$(kubectl get secret pg-agent-lab -o jsonpath='{.data.uri}' | base64 -d)"
+echo "$(kubectl get secret pg-agent-lab-cluster-app -o jsonpath='{.data.uri}' | base64 -d)"
 ```
 
 To access SQL console for the PostgreSQL instance, you can use the following command:
 
 ```bash
-kubectl exec -it <deployment_name> -- psql -U postgres
+kubectl exec -it <deployment_name>-cluster-1 -- psql -U postgres
 ```
 
 Example:
 
 ```bash
-kubectl exec -it pg-agent-lab -- psql -U postgres
+kubectl exec -it pg-agent-lab-vectors-cluster-1 -- psql -U postgres
+```
+
+```postgresql
+CREATE EXTENSION IF NOT EXISTS vector;
 ```
 
 ### Setup Vault
@@ -193,7 +228,7 @@ helm repo update
 
 2. Install Vault using Helm:
 
-Please replace `<host_fqdn>` with the fully qualified domain name (FQDN) you want to use for accessing Vault, example `vault.my-domain.com`.
+Please replace `<vault_fqdn>` with the fully qualified domain name (FQDN) you want to use for accessing Vault, example `vault.my-domain.com`.
 
 ```bash
 helm install agent-lab-vault hashicorp/vault --values - <<EOF
@@ -203,13 +238,13 @@ server:
     enabled: true
     ingressClassName: nginx
     hosts:
-      - host: "<host_fqdn>"
+      - host: "<vault_fqdn>"
         paths:
           - "/"
     tls:
       - secretName: "vault-tls-secret"
         hosts:
-          - "<host_fqdn>"
+          - "<vault_fqdn>"
 EOF
 ```
 
@@ -226,14 +261,12 @@ kubectl exec agent-lab-vault-0 -- vault operator init \
 
 ```bash
 export VAULT_UNSEAL_KEY=$(jq -r ".unseal_keys_b64[]" cluster-keys.json)
-kubectl -n infra exec agent-lab-vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY
+kubectl exec agent-lab-vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY
 ```
 
 **Note**: This is a reference implementation, in a real scenario you should use a production-ready Vault cluster, please refer to [Vault section](VAULT.md) for more details.
 
-5. Initialize Vault Secrets Engine with Agent-Lab secrets:
-
-...
+5. Initialize Vault Secrets Engine with Agent-Lab secrets, assuming the same domain used in the example: [https://vault.my-domain.com](https://vault.my-domain.com)
 
 
 ### Setup Elastic Kubernetes Cluster (ECK) for Observability
@@ -311,7 +344,7 @@ eck-apm-server:
 EOF
 ```
 
---- 
+---
 
 ## Deploying Agent-Lab with Helm
 
