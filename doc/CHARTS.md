@@ -284,8 +284,8 @@ For the *Path* value, use `secret`
 {
   "broker_url": "redis://redis-agent-lab.default.svc.cluster.local:6379/0",
   "db_checkpoints": "postgresql://???:???@pg-agent-lab-checkpoints-cluster-rw.default.svc.cluster.local:5432/app",
-  "db_url": "postgresql://???:???@pg-agent-lab-cluster-rw.infra.svc.cluster.local:5432/app",
-  "db_vectors": "postgresql://???:???@pg-agent-lab-vectors-cluster-rw.infra.svc.cluster.local:5432/app",
+  "db_url": "postgresql://???:???@pg-agent-lab-cluster-rw.default.svc.cluster.local:5432/app",
+  "db_vectors": "postgresql://???:???@pg-agent-lab-vectors-cluster-rw.default.svc.cluster.local:5432/app",
   "tavily_api_key": "???"
 }
 ```
@@ -311,13 +311,13 @@ helm install elastic-operator elastic/eck-operator --namespace elastic-system --
 
 3. Create the ElasticSearch cluster:
 
-- Replace `<elasticsearch_fqdn>` with the fully qualified domain name (FQDN) you want to use for accessing ElasticSearch, example `elasticsearch.my-domain.com`.
+  - Replace `<elasticsearch_fqdn>` with the fully qualified domain name (FQDN) you want to use for accessing ElasticSearch, example `elasticsearch.my-domain.com`.
 
-- Replace `<kibana_fqdn>` with the fully qualified domain name (FQDN) you want to use for accessing Kibana, example `kibana.my-domain.com`.
+  - Replace `<kibana_fqdn>` with the fully qualified domain name (FQDN) you want to use for accessing Kibana, example `kibana.my-domain.com`.
 
 
 ```bash
-helm install agent-lab-elastic elastic/eck-stack --namespace infra --values - <<EOF
+helm install agent-lab-elastic elastic/eck-stack --values - <<EOF
 eck-elasticsearch:
   enabled: true
   fullnameOverride: elasticsearch
@@ -367,11 +367,69 @@ eck-apm-server:
 EOF
 ```
 
+Use the following command to obtain `elastic` user password:
+
+```bash
+echo "$(kubectl get secret elasticsearch-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode)"
+```
+
+Take note of APM Access Token, it is used in the next step to configure OpenTelemetry Collector.
+```bash
+echo "$(kubectl get secret/agent-lab-elastic-eck-apm-server-apm-token \
+    -o go-template='{{index .data "secret-token" | base64decode}}')"
+```
+
+### Setup OpenTelemetry Collector
+
+1. Add OpenTelemetry Helm repository:
+
+```bash
+helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
+helm repo update
+```
+
+2. Install Otel Collector using Helm Chart:
+
+  - Replace `<ELASTIC_APM_SECRET_TOKEN>` by the APM Access Token obtained in the last step.
+
+
+```bash
+helm install agent-lab-telemetry open-telemetry/opentelemetry-collector --values - <<EOF
+mode: deployment
+image:
+  repository: otel/opentelemetry-collector-contrib
+  tag: latest
+config:
+  receivers:
+    otlp:
+      protocols:
+        http:
+          endpoint: "0.0.0.0:4318"
+  exporters:
+    otlphttp:
+      endpoint: "https://agent-lab-elastic-eck-apm-server-apm-http:8200"
+      headers:
+        Authorization: "Bearer <ELASTIC_APM_SECRET_TOKEN>"
+      tls:
+        insecure_skip_verify: true
+  service:
+    pipelines:
+      traces:
+        receivers: ["otlp"]
+        exporters: ["otlphttp"]
+      metrics:
+        receivers: ["otlp"]
+        exporters: ["otlphttp"]
+      logs:
+        receivers: ["otlp"]
+        exporters: ["otlphttp"]
+EOF
+```
 ---
 
 ## Deploying Agent-Lab with Helm
 
-...
+
 
 ---
 
