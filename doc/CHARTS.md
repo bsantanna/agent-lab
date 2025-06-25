@@ -264,10 +264,35 @@ export VAULT_UNSEAL_KEY=$(jq -r ".unseal_keys_b64[]" cluster-keys.json)
 kubectl exec agent-lab-vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY
 ```
 
+Copy the root_token from cluster_keys.json file to a safe place, this token is used in the next step for logging in:
+
+5. Access the `<vault_fqdn>` using web browser, assuming the same domain used in the example: [https://vault.my-domain.com](https://vault.my-domain.com)
+
+![Vault Login](vault_login.png)
+
+6. Create a engine:
+
+```txt
+Secrets Engine > Enable new engine + > KV
+```
+
+For the *Path* value, use `secret`
+
+Finally click `Enable engine`
+
+7. Inside engine `secret` create a secret with path `app_secrets` and following content (replace ??? by valid values):
+
+```json
+{
+  "broker_url": "redis://redis-agent-lab.default.svc.cluster.local:6379/0",
+  "db_checkpoints": "postgresql://???:???@pg-agent-lab-checkpoints-cluster-rw.default.svc.cluster.local:5432/app",
+  "db_url": "postgresql://???:???@pg-agent-lab-cluster-rw.infra.svc.cluster.local:5432/app",
+  "db_vectors": "postgresql://???:???@pg-agent-lab-vectors-cluster-rw.infra.svc.cluster.local:5432/app",
+  "tavily_api_key": "???"
+}
+```
+
 **Note**: This is a reference implementation, in a real scenario you should use a production-ready Vault cluster, please refer to [Vault section](VAULT.md) for more details.
-
-5. Initialize Vault Secrets Engine with Agent-Lab secrets, assuming the same domain used in the example: [https://vault.my-domain.com](https://vault.my-domain.com)
-
 
 ### Setup Elastic Kubernetes Cluster (ECK) for Observability
 
