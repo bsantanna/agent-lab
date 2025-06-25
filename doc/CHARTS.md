@@ -7,7 +7,7 @@
 
 - [Introduction](#introduction)
 - [Setup Dependencies](#setup-dependencies)
-- [Deploying Agent-Lab with Helm](#deploying-agent-lab-with-helm)
+- [Agent-Lab with Helm](#deploying-agent-lab-with-helm)
 
 ---
 
@@ -60,53 +60,6 @@ After the domain names are determined, modify system hosts file to include all t
 
 192.168.49.2 vault.my-domain.com kibana.my-domain.com elasticsearch.my-domain.com agent-lab.my-domain.com
 
-```
-
-### Setup Certificate Manager
-
-To manage TLS certificates, we will use the [cert-manager](https://cert-manager.io/docs/). This tool automates the management and issuance of TLS certificates.
-
-**Note**: If the deployment does not require a valid HTTPS certificate, this step can be skipped.
-
-1. Add Jetstack's Helm repository:
-
-```bash
-helm repo add jetstack https://charts.jetstack.io
-helm repo update
-```
-
-2. Install cert-manager using Helm:
-
-```bash
-helm install cert-manager jetstack/cert-manager \
-  --namespace cert-manager \
-  --create-namespace \
-  --version v1.17.2 \
-  --set crds.enabled=true
-```
-
-3. Create a ClusterIssuer for Let's Encrypt staging environment:
-
-Next step is creating a ClusterIssuer resource that will be used to issue certificates from Let's Encrypt.
-Please replace `<your_email_address>` with your actual email address to receive notifications about certificate expiration and issues.
-
-```bash
-kubectl apply -f - <<EOF
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: letsencrypt-prod
-spec:
-  acme:
-    server: https://acme-v02.api.letsencrypt.org/directory
-    email: <your_email_address>
-    privateKeySecretRef:
-      name: letsencrypt-prod
-    solvers:
-    - http01:
-        ingress:
-          class: nginx
-EOF
 ```
 
 ### Setup Redis
@@ -485,6 +438,55 @@ EOF
 ![Deployment example](agent_lab_deployment_example.png)
 
 ### Install Agent-Lab Managed TLS certificate
+
+#### Setup Certificate Manager
+
+To manage TLS certificates, we will use the [cert-manager](https://cert-manager.io/docs/). This tool automates the management and issuance of TLS certificates.
+
+**Note**: If the deployment does not require a valid HTTPS certificate, this step can be skipped.
+
+1. Add Jetstack's Helm repository:
+
+```bash
+helm repo add jetstack https://charts.jetstack.io
+helm repo update
+```
+
+2. Install cert-manager using Helm:
+
+```bash
+helm install cert-manager jetstack/cert-manager \
+  --namespace cert-manager \
+  --create-namespace \
+  --version v1.17.2 \
+  --set crds.enabled=true
+```
+
+3. Create a ClusterIssuer for Let's Encrypt staging environment:
+
+Next step is creating a ClusterIssuer resource that will be used to issue certificates from Let's Encrypt.
+Please replace `<your_email_address>` with your actual email address to receive notifications about certificate expiration and issues.
+
+```bash
+kubectl apply -f - <<EOF
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: <your_email_address>
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+EOF
+```
+
+#### Deploy helm chart with cert-manager cluster issuer.
 
   - Replace `<ollama_endpoint>` by a valid ollama endpoint in your LAN, example: `http://192.168.1.1:11434`
   - Replace `<agent_lab_fqdn>` by a valid domain name, example `agent-lab.my-domain.com`
