@@ -8,7 +8,6 @@
 - [Introduction](#introduction)
 - [Setup Dependencies](#setup-dependencies)
 - [Deploying Agent-Lab with Helm](#deploying-agent-lab-with-helm)
-- [Verifying the Deployment](#verifying-the-deployment)
 
 ---
 
@@ -436,12 +435,90 @@ Use `kubectl get pods` to check if all dependencies were properly installed, pro
 
 ## Deploying Agent-Lab with Helm
 
+### Create App Secret
+
+This Secret is used to access the Vault.
+
+  - Replace ??? by vault `root_token` obtained in previous steps.
+
+```bash
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: agent-lab-secret
+type: Opaque
+stringData:
+  VAULT_URL: "http://agent-lab-vault.default.svc.cluster.local:8200"
+  VAULT_TOKEN: "???"
+EOF
+```
+
+### Install Agent-Lab with self-signed TLS certificate
+
+  - Replace `<ollama_endpoint>` by a valid ollama endpoint in your LAN, example: `http://192.168.1.1:11434`
+  - Replace `<agent_lab_fqdn>` by a valid domain name, example `agent-lab.my-domain.com`
+
+```bash
+helm upgrade --install agent-lab agent-lab \
+  --repo "https://bsantanna.github.io/agent-lab" \
+  --version "1.1.1" --values - <<EOF
+config:
+  ollama_endpoint: "<ollama_endpoint>"
+  telemetry_endpoint: "http://agent-lab-telemetry-opentelemetry-collector.default.svc.cluster.local:4318"
+ingress:
+  enabled: true
+  hosts:
+    - host: "<agent_lab_fqdn>"
+      paths:
+        - path: "/"
+          pathType: "Prefix"
+livenessProbe:
+  timeoutSeconds: 60
+readinessProbe:
+  timeoutSeconds: 60
+image:
+  tag: "v1.1.1"
+EOF
+```
+
+![Deployment example](agent_lab_deployment_example.png)
+
+### Install Agent-Lab Managed TLS certificate
+
+  - Replace `<ollama_endpoint>` by a valid ollama endpoint in your LAN, example: `http://192.168.1.1:11434`
+  - Replace `<agent_lab_fqdn>` by a valid domain name, example `agent-lab.my-domain.com`
+  - Make sure the nginx ingress controller is accessible on port 80 via public internet, Cert Manager challenges are validated via HTTP.
+
+```bash
+helm upgrade --install agent-lab agent-lab \
+  --repo "https://bsantanna.github.io/agent-lab" \
+  --version "1.1.1" --values - <<EOF
+config:
+  ollama_endpoint: "<ollama_endpoint>"
+  telemetry_endpoint: "http://agent-lab-telemetry-opentelemetry-collector.default.svc.cluster.local:4318"
+ingress:
+  enabled: true
+  hosts:
+    - host: "<agent_lab_fqdn>"
+      paths:
+        - path: "/"
+          pathType: "Prefix"
+  tls:
+    - hosts:
+        - "<agent_lab_fqdn>"
+      secretName: "agent-lab"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+livenessProbe:
+  timeoutSeconds: 60
+readinessProbe:
+  timeoutSeconds: 60
+image:
+  tag: "v1.1.1"
+EOF
+```
 
 
 ---
 
-## Verifying the Deployment
-
-...
-
----
