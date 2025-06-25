@@ -274,11 +274,9 @@ Copy the root_token from cluster_keys.json file to a safe place, this token is u
 
 ```txt
 Secrets Engine > Enable new engine + > KV
-```
 
 For the *Path* value, use `secret`
-
-Finally click `Enable engine`
+```
 
 7. Inside engine `secret` create a secret with path `app_secrets` and following content (replace ??? by valid values):
 
