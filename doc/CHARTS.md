@@ -168,6 +168,69 @@ Example:
 echo "$(kubectl get secret pg-agent-lab -o jsonpath='{.data.uri}' | base64 -d)"
 ```
 
+To access SQL console for the PostgreSQL instance, you can use the following command:
+
+```bash
+kubectl exec -it <deployment_name> -- psql -U postgres
+```
+
+Example:
+
+```bash
+kubectl exec -it pg-agent-lab -- psql -U postgres
+```
+
+### Setup Vault
+
+[Vault](https://developer.hashicorp.com/vault/docs) is used by Agent-Lab to manage secrets and sensitive data.
+
+1. Add the HashiCorp Helm repository:
+
+```bash
+helm repo add hashicorp https://helm.releases.hashicorp.com
+helm repo update
+```
+
+2. Install Vault using Helm:
+
+Please replace `<host_fqdn>` with the fully qualified domain name (FQDN) you want to use for accessing Vault, example `vault.my-domain.com`.
+
+```bash
+helm install agent-lab-vault hashicorp/vault --values - <<EOF
+server:
+  affinity: ""
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - host: "<host_fqdn>"
+        paths:
+          - "/"
+    tls:
+      - secretName: "vault-tls-secret"
+        hosts:
+          - "<host_fqdn>"
+EOF
+```
+
+3. Initialize Vault cluster:
+
+```bash
+kubectl exec agent-lab-vault-0 -- vault operator init \
+    -key-shares=1 \
+    -key-threshold=1 \
+    -format=json > cluster-keys.json
+```
+
+4. Unseal Vault cluster:
+
+```bash
+export VAULT_UNSEAL_KEY=$(jq -r ".unseal_keys_b64[]" cluster-keys.json)
+kubectl -n infra exec agent-lab-vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY
+```
+
+**Note**: This is a reference implementation, in a real scenario you should use a production-ready Vault cluster, please refer to [Vault section](VAULT.md) for more details.
+
 --- 
 
 ## Deploying Agent-Lab with Helm
