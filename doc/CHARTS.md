@@ -231,6 +231,86 @@ kubectl -n infra exec agent-lab-vault-0 -- vault operator unseal $VAULT_UNSEAL_K
 
 **Note**: This is a reference implementation, in a real scenario you should use a production-ready Vault cluster, please refer to [Vault section](VAULT.md) for more details.
 
+5. Initialize Vault Secrets Engine with Agent-Lab secrets:
+
+...
+
+
+### Setup Elastic Kubernetes Cluster (ECK) for Observability
+
+This section describes how to setup an Elastic Kubernetes Cluster (ECK) for observability purposes, including logging and monitoring, while it is not strictly necessary for running Agent-Lab, it is highly recommended to have a proper observability stack in place.
+
+1. Add the Elastic Helm repository:
+
+```bash
+helm repo add elastic https://helm.elastic.co
+helm repo update
+```
+
+2. Install the ECK operator:
+
+```bash
+helm install elastic-operator elastic/eck-operator --namespace elastic-system --create-namespace
+```
+
+3. Create the ElasticSearch cluster:
+
+- Replace `<elasticsearch_fqdn>` with the fully qualified domain name (FQDN) you want to use for accessing ElasticSearch, example `elasticsearch.my-domain.com`.
+
+- Replace `<kibana_fqdn>` with the fully qualified domain name (FQDN) you want to use for accessing Kibana, example `kibana.my-domain.com`.
+
+
+```bash
+helm install agent-lab-elastic elastic/eck-stack --namespace infra --values - <<EOF
+eck-elasticsearch:
+  enabled: true
+  fullnameOverride: elasticsearch
+  ingress:
+    enabled: true
+    className: nginx
+    hosts:
+      - host: <elasticsearch_fqdn>
+        path: /
+    tls:
+      enabled: true
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      kubernetes.io/tls-acme: "true"
+      nginx.ingress.kubernetes.io/proxy-ssl-verify: "false"
+      nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+
+eck-kibana:
+  enabled: true
+  fullnameOverride: kibana
+  config:
+    xpack:
+      fleet:
+        packages:
+          - name: apm
+            version: latest
+  ingress:
+    enabled: true
+    className: nginx
+    hosts:
+      - host: <kibana_fqdn>
+        path: /
+    tls:
+      enabled: true
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      kubernetes.io/tls-acme: "true"
+      nginx.ingress.kubernetes.io/proxy-ssl-verify: "false"
+      nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+
+eck-apm-server:
+  enabled: true
+  elasticsearchRef:
+    name: elasticsearch
+  kibanaRef:
+    name: kibana
+EOF
+```
+
 --- 
 
 ## Deploying Agent-Lab with Helm
