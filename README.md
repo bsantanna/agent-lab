@@ -28,7 +28,11 @@
 
 Agent-Lab is a robust toolkit engineered for the development and thorough testing of Large Language Model (LLM) agents. It offers key features designed to streamline the process, including a REST API for managing interactions, relational persistence with PostgreSQL for data storage, and secure secrets management using Vault. In addition, Agent-Lab emphasizes observability through OpenTelemetry for detailed insights and leverages PgVector for effective vector storage and search, ultimately providing a comprehensive platform for building and evaluating LLM-powered agents.
 
-![Observability Demo](doc/otel/grafana_demo.gif)
+<div align="center">
+
+![MCP Inspector Demo](doc/mcp_inspector_demo.gif)
+
+</div>
 
 ---
 

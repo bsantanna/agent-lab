@@ -74,8 +74,11 @@ After the domain names are determined, modify system hosts file to include domai
 
 #### Enable Kubernetes on Docker Desktop
 
+<div align="center">
+
 ![Enable Kubernetes](docker_desktop_kubernetes.png)
 
+</div>
 
 #### Install Nginx Ingress with Helm Chart
 
@@ -256,7 +259,11 @@ Copy the root_token from cluster_keys.json file to a safe place, this token is u
 
 5. Access the `<vault_fqdn>` using web browser, assuming the same domain used in the example: [https://vault.my-domain.com](https://vault.my-domain.com)
 
+<div align="center">
+
 ![Vault Login](vault_login.png)
+
+</div>
 
 6. Create a engine:
 
@@ -418,7 +425,11 @@ EOF
 
 Use `kubectl get pods` to check if all dependencies were properly installed, proceed when Running status is 1/1:
 
+<div align="center">
+
 ![Pods for dependencies](kubectl_get_pods_dependencies.png)
+
+</div>
 
 ---
 
@@ -471,7 +482,11 @@ image:
 EOF
 ```
 
+<div align="center">
+
 ![Deployment example](agent_lab_deployment_example.png)
+
+</div>
 
 ### Install Agent-Lab Managed TLS certificate
 

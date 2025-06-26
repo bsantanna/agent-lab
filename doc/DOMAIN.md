@@ -2,7 +2,12 @@
 <h3 align="center">Entity domain model</h3>
 
 ---
+
+<div align="center">
+
 ![Entity domain model](domain_model_web.png)
+
+</div>
 
 ---
 ## Entities:
@@ -18,8 +23,12 @@ The following entities are defined in the domain model:
 - **Attachments**: Handles file attachments with raw content, parsed content, and embeddings collection references.
 
 Here an example of agent settings containing prompts and custom values for an agent [example implementation](/notebooks/voice_memos_agent.ipynb):
+
+<div align="center">
+
 ![Agent Settings Example](agent_settings_example.png)
 
+</div>
 
 ### Security and Secrets Management:
 

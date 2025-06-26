@@ -148,14 +148,23 @@ Building agentic workflows is a straightforward process in Agent-Lab, thanks to 
 
 An **agent** is also a concrete implementation of the following base classes:
 
+<div align="center">
+
 ![Agent-Lab Base Classes](agent_base_classes_web.png)
+
+</div>
 
 A class that extends `WorkflowAgentBase` should define:
 - a [workflow](https://langchain-ai.github.io/langgraph/how-tos/graph-api/) that represents the agent's behavior. This workflow can include various tasks, decision-making processes, and interactions with other agents or external systems.
 - initialization parameters for the agent such as the prompts (defined as jynja2 templates) and other settings that can be used to customize the agent's behavior, such as vector store collections, temperature or other setting that support the agent functionality.
 
 Here is an example of a set of persisted initialization parameters for an agent that performs voice transcription and analysis after an agent is created and stored in the database:
+
+<div align="center">
+
 ![Agent Initialization Parameters](agent_settings_example.png)
+
+</div>
 
 Multiple agents with the same reference implementation can be created and further refined via the REST API.
 
