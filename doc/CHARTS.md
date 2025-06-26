@@ -6,6 +6,7 @@
 #### Table of Contents
 
 - [Introduction](#introduction)
+- [Setup Kubernetes Cluster](#setup-kubernetes-cluster)
 - [Setup Dependencies](#setup-dependencies)
 - [Agent-Lab with Helm](#deploying-agent-lab-with-helm)
 
@@ -17,13 +18,25 @@ Agent-Lab provides a Helm chart to deploy the application on Kubernetes clusters
 
 In this document, we will cover a example deployment of Agent-Lab by on Kubernetes using the provided Helm chart.
 
-**Note**: In this reference documentation, a [Minikube](https://minikube.sigs.k8s.io/docs/) cluster is used, in a real scenario you should use a production-ready Kubernetes cluster.
+### Preparation / Determine FQDNs
+
+A few services in this guide are accessible via Web Browser UI, it is required to determine FQDN in advance:
+
+- `<agent_lab_fqdn>`: a fqdn to access Agent-Lab via nginx ingress, example: *agent-lab.my-domain.com*
+- `<elasticsearch_fqdn>`: a fqdn to access elasticsearch cluster via nginx ingress, example: *elasticsearch.my-domain.com*
+- `<kibana_fqdn>`: a fqdn to access kibana via nginx ingress, example: *kibana.my-domain.com*
+- `<vault_fqdn>`: a fqdn to access vault via nginx ingress, example: *vault.my-domain.com*
+
 
 ---
 
-## Setup Dependencies
+## Setup Kubernetes Cluster
 
-### Setup Kubernetes Cluster with Minikube
+### Setup for Linux Users
+
+**Note**: In this reference documentation, a [Minikube](https://minikube.sigs.k8s.io/docs/) cluster is used, in a real scenario you should use a production-ready Kubernetes cluster.
+
+#### Setup Kubernetes Cluster with Minikube
 
 This section describes how to setup a Kubernetes cluster with the necessary resources for running Agent-Lab and its dependencies.
 
@@ -39,14 +52,7 @@ minikube start --memory=6g --cpus=4
 minikube addons enable ingress
 ```
 
-### Setup Networking
-
-A few services in this guide are accessible via Web Browser UI, it is required to determine FQDN in advance:
-
-- `<agent_lab_fqdn>`: a fqdn to access Agent-Lab via nginx ingress, example: *agent-lab.my-domain.com*
-- `<elasticsearch_fqdn>`: a fqdn to access elasticsearch cluster via nginx ingress, example: *elasticsearch.my-domain.com*
-- `<kibana_fqdn>`: a fqdn to access kibana via nginx ingress, example: *kibana.my-domain.com*
-- `<vault_fqdn>`: a fqdn to access vault via nginx ingress, example: *vault.my-domain.com*
+#### Setup Networking
 
 Obtain minikube vm ip address:
 
@@ -55,12 +61,42 @@ minikube ip
 # 192.168.49.2
 ```
 
-After the domain names are determined, modify system hosts file to include all these domains assigned to minikube vm ip address:
+After the domain names are determined, modify system hosts file to include domains assigned to minikube vm ip address:
 ```txt
 
 192.168.49.2 vault.my-domain.com kibana.my-domain.com elasticsearch.my-domain.com agent-lab.my-domain.com
 
 ```
+
+### Setup for Docker Desktop Users (Mac / Windows)
+
+**Note**: In this reference documentation, a [Docker Desktop](https://docs.docker.com/desktop/features/kubernetes/) cluster is used, in a real scenario you should use a production-ready Kubernetes cluster.
+
+#### Enable Kubernetes on Docker Desktop
+
+![Enable Kubernetes](docker_desktop_kubernetes.png)
+
+
+#### Install Nginx Ingress with Helm Chart
+
+```bash
+helm upgrade --install ingress-nginx ingress-nginx \
+  --repo https://kubernetes.github.io/ingress-nginx \
+  --namespace ingress-nginx --create-namespace
+```
+
+#### Setup Networking
+
+Modify system hosts file to include domains assigned to localhost address:
+```txt
+
+127.0.0.1 vault.my-domain.com kibana.my-domain.com elasticsearch.my-domain.com agent-lab.my-domain.com
+
+```
+
+---
+
+## Setup Dependencies
 
 ### Setup Redis
 
