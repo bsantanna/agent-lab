@@ -41,6 +41,6 @@ pip install mcp-proxy
 
 <div align="center">
 
-![Claude Desktop Demo](claude_demo.png)
+![Claude Desktop Demo](claude_demo.gif)
 
 </div>

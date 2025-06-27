@@ -30,7 +30,7 @@ Agent-Lab is a robust toolkit engineered for the development and thorough testin
 
 <div align="center">
 
-![MCP Inspector Demo](doc/mcp_inspector_demo.gif)
+![Claude Desktop Demo](doc/claude_demo.gif)
 
 </div>
 
