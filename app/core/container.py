@@ -19,7 +19,6 @@ from app.infrastructure.metrics.tracer import Tracer
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.adaptive_rag.agent import AdaptiveRagAgent
 from app.services.agent_types.base import AgentUtils
-from app.services.agent_types.business.agreement_planner.agent import AgreementPlanner
 from app.services.agent_types.coordinator_planner_supervisor.agent import (
     CoordinatorPlannerSupervisorAgent,
 )
@@ -197,10 +196,6 @@ class Container(containers.DeclarativeContainer):
 
     adaptive_rag_agent = providers.Factory(AdaptiveRagAgent, agent_utils=agent_utils)
 
-    agreement_planner_agent = providers.Factory(
-        AgreementPlanner, agent_utils=agent_utils
-    )
-
     coordinator_planner_supervisor_agent = providers.Factory(
         CoordinatorPlannerSupervisorAgent, agent_utils=agent_utils
     )
@@ -226,7 +221,6 @@ class Container(containers.DeclarativeContainer):
     agent_registry = providers.Singleton(
         AgentRegistry,
         adaptive_rag_agent=adaptive_rag_agent,
-        agreement_planner_agent=agreement_planner_agent,
         coordinator_planner_supervisor_agent=coordinator_planner_supervisor_agent,
         react_rag_agent=react_rag_agent,
         test_echo_agent=test_echo_agent,

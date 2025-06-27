@@ -219,3 +219,7 @@ typings
 
 # System files
 Thumbs.db
+
+
+# Docker compose default file name
+[Dd]ocker-compose.yml

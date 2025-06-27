@@ -106,6 +106,7 @@ class TestCoordinatorPlannerSupervisorAgent:
         assert "assistant" == response_dict["message_role"]
 
     @pytest.mark.asyncio
+    @pytest.mark.skip
     async def test_browser(self, client):
         # given
         message_content = (

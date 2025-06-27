@@ -5,7 +5,6 @@ class AgentRegistry:
     def __init__(
         self,
         adaptive_rag_agent: AgentBase,
-        agreement_planner_agent: AgentBase,
         coordinator_planner_supervisor_agent: AgentBase,
         react_rag_agent: AgentBase,
         test_echo_agent: AgentBase,
@@ -15,7 +14,6 @@ class AgentRegistry:
     ):
         self.registry = {
             "adaptive_rag": adaptive_rag_agent,
-            "agreement_planner": agreement_planner_agent,
             "coordinator_planner_supervisor": coordinator_planner_supervisor_agent,
             "react_rag": react_rag_agent,
             "test_echo": test_echo_agent,
