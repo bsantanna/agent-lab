@@ -18,6 +18,7 @@
 - [What is Agent-Lab?](#what-is-agent-lab)
 - [Project Principles](#project-principles)
 - [Key Features](#key-features)
+- [MCP Server](#mcp-server)
 - [Getting Started](#getting-started)
 - [Contributing](#contributing)
 - [License](#license)
@@ -27,12 +28,6 @@
 ## What is Agent-Lab?
 
 Agent-Lab is a robust toolkit engineered for the development and thorough testing of Large Language Model (LLM) agents. It offers key features designed to streamline the process, including a REST API for managing interactions, relational persistence with PostgreSQL for data storage, and secure secrets management using Vault. In addition, Agent-Lab emphasizes observability through OpenTelemetry for detailed insights and leverages PgVector for effective vector storage and search, ultimately providing a comprehensive platform for building and evaluating LLM-powered agents.
-
-<div align="center">
-
-![Claude Desktop Demo](doc/claude_demo.gif)
-
-</div>
 
 ---
 
@@ -58,6 +53,22 @@ Agent-Lab is a robust toolkit engineered for the development and thorough testin
 - **Vector Storage and Search**: Efficiently manage vector data using PgVector for similarity search and retrieval.
 - **Agent Memory**: Using PostgreSQL checkpointer to store and retrieve agent memory, enabling agents to maintain context across interactions.
 - **Integration Testing**: Ensure reliability and correctness with a comprehensive [integration test suite](doc/TESTS.md).
+
+---
+
+## MCP Server
+
+Agent-Lab features a MCP Server that allows agent discovery (`get_agent_list` tool), dialog history (`get_message_list` tool) and agent-to-agent communication (`post_message` tool).
+
+The following example shows MCP Server discovering and obtaining dialog history of a [supervised coder agent](/notebooks/coordinator_planner_supervisor_agent.ipynb) instance:
+
+<div align="center">
+
+![Claude Desktop Demo](doc/claude_demo.gif)
+
+</div>
+
+**Note**: Claude Desktop is used only for demonstration purposes. This project is not affiliated with Anthropic AI. 
 
 ---
 
