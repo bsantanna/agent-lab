@@ -68,6 +68,9 @@ The following example shows MCP Server discovering and obtaining dialog history 
 
 </div>
 
+Please refer to [MCP guide](doc/MCP.md) for more details.
+
+
 **Note**: Claude Desktop is used only for demonstration purposes. This project is not affiliated with Anthropic AI. 
 
 ---
