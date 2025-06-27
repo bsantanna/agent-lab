@@ -2,6 +2,188 @@
 
 <!-- version list -->
 
+## v1.2.0 (2025-06-27)
+
+### Features
+
+- Add MCP Inspector Demo section and accompanying GIF
+  ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Add PostgreSQL access instructions and Vault setup documentation
+  ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Add reference to MCP guide in README for additional details
+  ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Add setup instructions for Elastic Kubernetes Cluster (ECK) to enhance observability
+  ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Additional documentation ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Additional documentation (dev -> domain) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Additional documentation (dev / 1) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Additional documentation (dev / 2) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Additional documentation (dev / 3) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Additional documentation (dev / 4) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Additional documentation (dev / 5) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Additional documentation (dev / 6) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Additional documentation (dev / 7) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Additional documentation (dev / 8) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Additional documentation (dev / 9) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Additional documentation (grafana/opensearch)
+  ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Additional documentation resources ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Adjusts doc for dev ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Adjusts doc for domain model ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Adjusts in doc ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Adjusts readme ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Adjusts readme (charts / 2) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Adjusts readme (charts / 3) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Adjusts readme (charts / 4) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Adjusts readme (charts / 5) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Adjusts readme (charts) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Adjusts readme (otel) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Adjusts readme (tests) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Adjusts readme (vault) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Adjusts readme priority ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Charts cert manager section ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Clarifications dev guide ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Data-prepper healthcheck script ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Documentation links for in depth features
+  ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Enhance documentation with additional images and formatting for clarity
+  ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Enhance documentation with MCP Server details and Claude Desktop integration
+  ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Enhance MCP documentation with demo instructions and images
+  ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Grafana observability stack ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Logging middleware and adjusts in doc ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Otel demos ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Readme adjusts ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Readme adjusts (1) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Readme adjusts (2) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Readme adjusts (3) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Readme adjusts (4) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Readme adjusts (5) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Readme adjusts (7) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Readme adjusts (8) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Readme adjusts (9) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Readme adjusts (?) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Readme documentation (mcp) ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Refactoring compose file for opensearch ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Update CHARTS.md and add Docker Desktop setup instructions
+  ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Update demo images in documentation and skip browser test
+  ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+- Update README and CHARTS documentation for PostgreSQL and Redis setup
+  ([#171](https://github.com/bsantanna/agent-lab/pull/171),
+  [`48ac05b`](https://github.com/bsantanna/agent-lab/commit/48ac05b19a8ba1405a0a64066007e18eddca41d5))
+
+
 ## v1.1.1 (2025-06-11)
 
 ### Bug Fixes
