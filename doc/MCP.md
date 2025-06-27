@@ -15,9 +15,13 @@ The application integrates with [FastAPI-MCP](https://github.com/tadata-org/fast
 
 ## MCP Inspector Demo
 
+Start [MCP Inspector](https://github.com/modelcontextprotocol/inspector)
+
 ```bash
 npx @modelcontextprotocol/inspector@0.14.3
 ```
+
+Access Web console (use link with proxy given in the console).
 
 <div align="center">
 
@@ -27,10 +31,16 @@ npx @modelcontextprotocol/inspector@0.14.3
 
 ---
 
-## Claude Desktop Demo
+## Claude Desktop Integration
+
+Install [mcp-proxy](https://pypi.org/project/mcp-proxy/)
+
+```bash
+pip install mcp-proxy
+```
 
 <div align="center">
 
-...
+![Claude Desktop Demo](claude_demo.png)
 
 </div>
