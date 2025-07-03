@@ -6,15 +6,19 @@ from typing_extensions import List, Optional
 
 from app.domain.exceptions.base import InvalidFieldError
 
+invalid_characters_description = "contains invalid characters"
+
 
 class LanguageModelCreateRequest(BaseModel):
     integration_id: str
     language_model_tag: str
 
     @field_validator("language_model_tag")
-    def validate_language_model_tag(cls, v):
+    def validate_language_model_tag(cls, v: str):
         if not re.match(r"^[a-zA-Z0-9\\.:_-]+$", v):
-            raise InvalidFieldError("language_model_tag", "contains invalid characters")
+            raise InvalidFieldError(
+                "language_model_tag", invalid_characters_description
+            )
         return v
 
 
@@ -23,15 +27,15 @@ class LanguageModelSetting(BaseModel):
     setting_value: str
 
     @field_validator("setting_key")
-    def validate_setting_key(cls, v):
+    def validate_setting_key(cls, v: str):
         if not re.match(r"^[a-zA-Z_-]+$", v):
-            raise InvalidFieldError("setting_key", "contains invalid characters")
+            raise InvalidFieldError("setting_key", invalid_characters_description)
         return v
 
     @field_validator("setting_value")
-    def validate_setting_value(cls, v):
+    def validate_setting_value(cls, v: str):
         if not re.match(r"^[a-zA-Z0-9\\._-]+$", v):
-            raise InvalidFieldError("setting_value", "contains invalid characters")
+            raise InvalidFieldError("setting_value", invalid_characters_description)
         return v
 
     class Config:
@@ -59,9 +63,11 @@ class LanguageModelUpdateRequest(BaseModel):
     integration_id: str
 
     @field_validator("language_model_tag")
-    def validate_language_model_tag(cls, v):
+    def validate_language_model_tag(cls, v: str):
         if not re.match(r"^[a-zA-Z0-9\\.:_-]+$", v):
-            raise InvalidFieldError("language_model_tag", "contains invalid characters")
+            raise InvalidFieldError(
+                "language_model_tag", invalid_characters_description
+            )
         return v
 
 
@@ -71,13 +77,13 @@ class LanguageModelSettingUpdateRequest(BaseModel):
     setting_value: str
 
     @field_validator("setting_key")
-    def validate_setting_key(cls, v):
+    def validate_setting_key(cls, v: str):
         if not re.match(r"^[a-zA-Z_-]+$", v):
-            raise InvalidFieldError("setting_key", "contains invalid characters")
+            raise InvalidFieldError("setting_key", invalid_characters_description)
         return v
 
     @field_validator("setting_value")
-    def validate_setting_value(cls, v):
+    def validate_setting_value(cls, v: str):
         if not re.match(r"^[a-zA-Z0-9\\._-]+$", v):
-            raise InvalidFieldError("setting_value", "contains invalid characters")
+            raise InvalidFieldError("setting_value", invalid_characters_description)
         return v
