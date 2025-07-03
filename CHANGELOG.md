@@ -2,6 +2,17 @@
 
 <!-- version list -->
 
+## v1.2.1 (2025-07-03)
+
+### Bug Fixes
+
+- Sonar issues ([#176](https://github.com/bsantanna/agent-lab/pull/176),
+  [`c3e22a6`](https://github.com/bsantanna/agent-lab/commit/c3e22a66f7fb0c0b93b4ddb140d1b6167a3221c8))
+
+- Upgrades dependencies ([#176](https://github.com/bsantanna/agent-lab/pull/176),
+  [`c3e22a6`](https://github.com/bsantanna/agent-lab/commit/c3e22a66f7fb0c0b93b4ddb140d1b6167a3221c8))
+
+
 ## v1.2.0 (2025-06-27)
 
 ### Features
