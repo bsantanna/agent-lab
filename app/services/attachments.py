@@ -1,6 +1,7 @@
 import os
 from uuid import uuid4
 import subprocess
+import anyio
 
 import hvac
 from fastapi import File
@@ -44,9 +45,9 @@ class AttachmentService:
     async def create_attachment_with_file(self, file: File) -> Attachment:
         temp_file_path = f"temp-{uuid4()}"
 
-        with open(temp_file_path, "wb") as buffer:
+        async with await anyio.open_file(temp_file_path, "wb") as buffer:
             raw_content = await file.read()
-            buffer.write(raw_content)
+            await buffer.write(raw_content)
 
         if not file.content_type.startswith("audio/"):
             file_name = file.filename
@@ -127,8 +128,8 @@ class AttachmentService:
 
         attachment = self.attachment_repository.get_by_id(attachment_id)
         temp_file_path = f"temp-{uuid4()}"
-        with open(temp_file_path, "wb") as buffer:
-            buffer.write(attachment.parsed_content.encode())
+        async with await anyio.open_file(temp_file_path, "wb") as buffer:
+            await buffer.write(attachment.parsed_content.encode())
 
         loader = UnstructuredMarkdownLoader(temp_file_path)
         documents = loader.load_and_split(

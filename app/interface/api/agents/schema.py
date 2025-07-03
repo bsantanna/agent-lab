@@ -16,6 +16,8 @@ valid_agent_types = [
     "azure_entra_id_voice_memos",
 ]
 
+invalid_characters_description = "contains invalid characters"
+
 
 class AgentCreateRequest(BaseModel):
     agent_name: str
@@ -23,13 +25,13 @@ class AgentCreateRequest(BaseModel):
     language_model_id: str
 
     @field_validator("agent_name")
-    def validate_agent_name(cls, v):
+    def validate_agent_name(cls, v: str):
         if not re.match(r"^[a-zA-Z0-9_-]+$", v):
-            raise InvalidFieldError("agent_name", "contains invalid characters")
+            raise InvalidFieldError("agent_name", invalid_characters_description)
         return v
 
     @field_validator("agent_type")
-    def validate_agent_type(cls, v):
+    def validate_agent_type(cls, v: str):
         valid_types = valid_agent_types
         if v not in valid_types:
             raise InvalidFieldError("agent_type", "not supported")
@@ -40,17 +42,17 @@ class AgentSetting(BaseModel):
     setting_key: str
 
     @field_validator("setting_key")
-    def validate_setting_key(cls, v):
+    def validate_setting_key(cls, v: str):
         if not re.match(r"^[a-zA-Z_-]+$", v):
-            raise InvalidFieldError("setting_key", "contains invalid characters")
+            raise InvalidFieldError("setting_key", invalid_characters_description)
         return v
 
     setting_value: str
 
     @field_validator("setting_value")
-    def validate_setting_value(cls, v):
+    def validate_setting_value(cls, v: str):
         if not re.match(r"^[a-zA-Z0-9\\._-]+$", v):
-            raise InvalidFieldError("setting_value", "contains invalid characters")
+            raise InvalidFieldError("setting_value", invalid_characters_description)
         return v
 
     class Config:
@@ -81,9 +83,9 @@ class AgentUpdateRequest(BaseModel):
     agent_summary: Optional[str] = None
 
     @field_validator("agent_name")
-    def validate_agent_name(cls, v):
+    def validate_agent_name(cls, v: str):
         if not re.match(r"^[a-zA-Z0-9_-]+$", v):
-            raise InvalidFieldError("agent_name", "contains invalid characters")
+            raise InvalidFieldError("agent_name", invalid_characters_description)
         return v
 
 
@@ -93,13 +95,13 @@ class AgentSettingUpdateRequest(BaseModel):
     setting_value: str
 
     @field_validator("setting_value")
-    def validate_setting_value(cls, v):
+    def validate_setting_value(cls, v: str):
         if not re.match(r"^[a-zA-Z0-9\\._-]+$", v):
-            raise InvalidFieldError("setting_value", "contains invalid characters")
+            raise InvalidFieldError("setting_value", invalid_characters_description)
         return v
 
     @field_validator("setting_key")
-    def validate_setting_key(cls, v):
+    def validate_setting_key(cls, v: str):
         if not re.match(r"^[a-zA-Z_-]+$", v):
-            raise InvalidFieldError("setting_key", "contains invalid characters")
+            raise InvalidFieldError("setting_key", invalid_characters_description)
         return v
