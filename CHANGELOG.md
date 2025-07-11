@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.2.2 (2025-07-11)
+
+### Bug Fixes
+
+- Upgrades dependencies ([#182](https://github.com/bsantanna/agent-lab/pull/182),
+  [`152a0ab`](https://github.com/bsantanna/agent-lab/commit/152a0ab9efc4c453219523900788ab43dd74f576))
+
+
 ## v1.2.1 (2025-07-03)
 
 ### Bug Fixes
