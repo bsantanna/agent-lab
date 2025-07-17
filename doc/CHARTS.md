@@ -473,6 +473,8 @@ ingress:
       paths:
         - path: "/"
           pathType: "Prefix"
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 50m
 livenessProbe:
   timeoutSeconds: 60
 readinessProbe:
@@ -563,6 +565,7 @@ ingress:
       secretName: "agent-lab"
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-body-size: 50m
 livenessProbe:
   timeoutSeconds: 60
 readinessProbe:

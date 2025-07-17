@@ -13,6 +13,7 @@ valid_agent_types = [
     "test_echo",
     "vision_document",
     "voice_memos",
+    "fast_voice_memos",
     "azure_entra_id_voice_memos",
 ]
 
