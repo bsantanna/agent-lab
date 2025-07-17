@@ -2,6 +2,32 @@
 
 <!-- version list -->
 
+## v1.2.3 (2025-07-17)
+
+### Bug Fixes
+
+- Fast voice memos agent (1) ([#188](https://github.com/bsantanna/agent-lab/pull/188),
+  [`83278b4`](https://github.com/bsantanna/agent-lab/commit/83278b42d191c5a162747165972f53b5eb748eae))
+
+- Fast voice memos agent (2) ([#188](https://github.com/bsantanna/agent-lab/pull/188),
+  [`83278b4`](https://github.com/bsantanna/agent-lab/commit/83278b42d191c5a162747165972f53b5eb748eae))
+
+- Fast voice memos agent (3) ([#188](https://github.com/bsantanna/agent-lab/pull/188),
+  [`83278b4`](https://github.com/bsantanna/agent-lab/commit/83278b42d191c5a162747165972f53b5eb748eae))
+
+- Fast voice memos agent (4) ([#188](https://github.com/bsantanna/agent-lab/pull/188),
+  [`83278b4`](https://github.com/bsantanna/agent-lab/commit/83278b42d191c5a162747165972f53b5eb748eae))
+
+- Fast voice memos agent (5) ([#188](https://github.com/bsantanna/agent-lab/pull/188),
+  [`83278b4`](https://github.com/bsantanna/agent-lab/commit/83278b42d191c5a162747165972f53b5eb748eae))
+
+- Fast voice memos agent (6) ([#188](https://github.com/bsantanna/agent-lab/pull/188),
+  [`83278b4`](https://github.com/bsantanna/agent-lab/commit/83278b42d191c5a162747165972f53b5eb748eae))
+
+- Upgrades dependencies ([#188](https://github.com/bsantanna/agent-lab/pull/188),
+  [`83278b4`](https://github.com/bsantanna/agent-lab/commit/83278b42d191c5a162747165972f53b5eb748eae))
+
+
 ## v1.2.2 (2025-07-11)
 
 ### Bug Fixes
