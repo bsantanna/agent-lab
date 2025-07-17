@@ -14,7 +14,7 @@ def client():
 
 
 class TestVoiceMemosAgent:
-    def _create_agent(self, client):
+    def _create_agent(self, client, agent_type="voice_memos"):
         # create integration
         response = client.post(
             url="/integrations/create",
@@ -41,7 +41,7 @@ class TestVoiceMemosAgent:
             url="/agents/create",
             json={
                 "language_model_id": language_model_id,
-                "agent_type": "voice_memos",
+                "agent_type": agent_type,
                 "agent_name": f"agent-{uuid4()}",
             },
         )
@@ -111,3 +111,27 @@ class TestVoiceMemosAgent:
         assert "id" in response_dict
         assert "assistant" == response_dict["message_role"]
         assert "Aline" in response_dict["message_content"]
+
+
+class TestFastVoiceMemosAgent(TestVoiceMemosAgent):
+
+    @pytest.mark.asyncio
+    async def test_post_message(self, client):
+        # given
+        create_agent_response = self._create_agent(client, agent_type="fast_voice_memos")
+        agent_id = create_agent_response.json()["id"]
+        upload_filename = "voice_memos_01_pt_BR.mp3"
+        upload_response = self._upload_file(client, upload_filename, "audio/mp3")
+        attachment_id = upload_response.json()["id"]
+        message_content = "Analyse the given audio."
+
+        # when
+        create_message_response = self._create_message(
+            client, message_content, attachment_id=attachment_id, agent_id=agent_id
+        )
+
+        # then
+        assert create_message_response.status_code == 200
+        response_dict = create_message_response.json()
+        assert "id" in response_dict
+        assert "assistant" == response_dict["message_role"]

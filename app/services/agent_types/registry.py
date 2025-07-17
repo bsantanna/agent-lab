@@ -11,6 +11,7 @@ class AgentRegistry:
         vision_document_agent: AgentBase,
         voice_memos_agent: AgentBase,
         azure_entra_id_voice_memos_agent: AgentBase,
+        fast_voice_memos_agent: AgentBase,
     ):
         self.registry = {
             "adaptive_rag": adaptive_rag_agent,
@@ -20,6 +21,7 @@ class AgentRegistry:
             "vision_document": vision_document_agent,
             "voice_memos": voice_memos_agent,
             "azure_entra_id_voice_memos": azure_entra_id_voice_memos_agent,
+            "fast_voice_memos": fast_voice_memos_agent,
         }
 
     def get_agent(self, agent_type: str) -> AgentBase:

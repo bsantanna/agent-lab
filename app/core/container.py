@@ -29,6 +29,7 @@ from app.services.agent_types.vision_document.agent import VisionDocumentAgent
 from app.services.agent_types.business.voice_memos.agent import (
     VoiceMemosAgent,
     AzureEntraIdVoiceMemosAgent,
+    FastVoiceMemosAgent,
 )
 from app.services.agents import AgentService
 from app.services.attachments import AttachmentService
@@ -218,6 +219,11 @@ class Container(containers.DeclarativeContainer):
         agent_utils=agent_utils,
     )
 
+    fast_voice_memos_agent = providers.Factory(
+        FastVoiceMemosAgent,
+        agent_utils=agent_utils
+    )
+
     agent_registry = providers.Singleton(
         AgentRegistry,
         adaptive_rag_agent=adaptive_rag_agent,
@@ -227,6 +233,7 @@ class Container(containers.DeclarativeContainer):
         vision_document_agent=vision_document_agent,
         voice_memos_agent=voice_memos_agent,
         azure_entra_id_voice_memos_agent=azure_entra_id_voice_memos_agent,
+        fast_voice_memos_agent=fast_voice_memos_agent,
     )
 
     tracer = providers.Singleton(Tracer)

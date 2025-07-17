@@ -481,3 +481,66 @@ class AzureEntraIdVoiceMemosAgent(
 
     def get_content_analyst_tools(self) -> list:
         return [self.get_person_search_tool(), self.get_person_details_tool()]
+
+
+class FastVoiceMemosAgent(VoiceMemosAgent):
+
+    def __init__(self, agent_utils: AgentUtils):
+        super().__init__(agent_utils)
+
+    def get_input_params(self, message_request: MessageRequest) -> dict:
+        settings = self.agent_setting_service.get_agent_settings(
+            message_request.agent_id
+        )
+        settings_dict = {
+            setting.setting_key: setting.setting_value for setting in settings
+        }
+
+        template_vars = {
+            "CURRENT_TIME": datetime.now().strftime("%a %b %d %Y %H:%M:%S %z"),
+            "COORDINATOR_TOOLS": [],
+            "COORDINATOR_TOOLS_CONFIGURATION": {},
+            "CONTENT_ANALYST_TOOLS": [],
+            "CONTENT_ANALYST_TOOLS_CONFIGURATION": {},
+            "HAS_AUDIO_ATTACHMENT": message_request.attachment_id is not None,
+        }
+
+        return {
+            "agent_id": message_request.agent_id,
+            "attachment_id": message_request.attachment_id,
+            "audio_language_model": settings_dict.get("audio_language_model"),
+            "audio_format": settings_dict.get("audio_format"),
+            "query": message_request.message_content,
+            "structured_report": None,
+            "content_analyst_system_prompt": self.parse_prompt_template(
+                settings_dict, "content_analyst_system_prompt", template_vars
+            ),
+            "coordinator_system_prompt": self.parse_prompt_template(
+                settings_dict, "coordinator_system_prompt", template_vars
+            ),
+            "messages": [HumanMessage(content=message_request.message_content)],
+        }
+
+    def get_workflow_builder(self, agent_id: str):
+        workflow_builder = StateGraph(AgentState)
+        workflow_builder.add_edge(START, "coordinator")
+        workflow_builder.add_node("coordinator", self.get_coordinator)
+        workflow_builder.add_node("content_analyst", self.get_content_analyst)
+        return workflow_builder
+
+    def get_coordinator(self, state: AgentState) -> Command[Literal["content_analyst", "__end__"]]:
+        original_command = super().get_coordinator(state)
+
+        return Command(
+            goto= "__end__" if original_command == "__end__" else "content_analyst",
+            update=original_command.update,
+        )
+
+    def get_content_analyst(self, state: AgentState) -> Command[Literal["__end__"]]:
+        original_command = super().get_content_analyst(state)
+
+        return Command(
+            goto="__end__",
+            update=original_command.update,
+        )
+
