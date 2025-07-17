@@ -135,3 +135,4 @@ class TestFastVoiceMemosAgent(TestVoiceMemosAgent):
         response_dict = create_message_response.json()
         assert "id" in response_dict
         assert "assistant" == response_dict["message_role"]
+        assert response_dict["structured_report"] is not None

@@ -538,10 +538,39 @@ class FastVoiceMemosAgent(VoiceMemosAgent):
         )
 
     def get_content_analyst(self, state: AgentState) -> Command[Literal["__end__"]]:
-        original_command = super().get_content_analyst(state)
+        agent_id = state["agent_id"]
+        self.logger.info(f"Agent[{agent_id}] -> Content Analyst")
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content="Analysing transcription content...",
+            )
+        )
+        content_analyst_system_prompt = state["content_analyst_system_prompt"]
+        content_analyst = create_react_agent(
+            model=self.get_chat_model(agent_id),
+            tools=self.get_content_analyst_tools(),
+            prompt=content_analyst_system_prompt,
+            response_format=AudioAnalysisReport
+        )
+        response = content_analyst.invoke(state)
 
+        self.task_notification_service.publish_update(
+            task_progress=TaskProgress(
+                agent_id=agent_id,
+                status="in_progress",
+                message_content=f"Content analysis complete: {response.get('messages')[-1].content}",
+            )
+        )
+        self.logger.info(
+            f"Agent[{agent_id}] -> Content Analyst -> Response -> {response}"
+        )
         return Command(
+            update={
+                "messages": response["messages"],
+                "structured_report": response["structured_response"]
+            },
             goto="__end__",
-            update=original_command.update,
         )
 
