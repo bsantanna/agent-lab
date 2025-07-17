@@ -35,6 +35,7 @@ from app.services.agent_types.business.voice_memos.schema import (
 from app.services.agent_types.schema import SolutionPlan
 from app.services.tasks import TaskProgress
 
+CURRENT_TIME_PATTERN = "%a %b %d %Y %H:%M:%S %z"
 
 class AgentState(MessagesState):
     agent_id: str
@@ -153,7 +154,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
         }
 
         template_vars = {
-            "CURRENT_TIME": datetime.now().strftime("%a %b %d %Y %H:%M:%S %z"),
+            "CURRENT_TIME": datetime.now().strftime(CURRENT_TIME_PATTERN),
             "SUPERVISED_AGENTS": SUPERVISED_AGENTS,
             "SUPERVISED_AGENT_CONFIGURATION": SUPERVISED_AGENT_CONFIGURATION,
             "COORDINATOR_TOOLS": COORDINATOR_TOOLS,
@@ -468,7 +469,7 @@ class AzureEntraIdVoiceMemosAgent(
             setting.setting_key: setting.setting_value for setting in settings
         }
         template_vars = {
-            "CURRENT_TIME": datetime.now().strftime("%a %b %d %Y %H:%M:%S %z"),
+            "CURRENT_TIME": datetime.now().strftime(CURRENT_TIME_PATTERN),
             "COORDINATOR_TOOLS": AZURE_COORDINATOR_TOOLS,
             "COORDINATOR_TOOLS_CONFIGURATION": AZURE_COORDINATOR_TOOLS_CONFIGURATION,
             "CONTENT_ANALYST_TOOLS": AZURE_CONTENT_ANALYST_TOOLS,
@@ -497,7 +498,7 @@ class FastVoiceMemosAgent(VoiceMemosAgent):
         }
 
         template_vars = {
-            "CURRENT_TIME": datetime.now().strftime("%a %b %d %Y %H:%M:%S %z"),
+            "CURRENT_TIME": datetime.now().strftime(CURRENT_TIME_PATTERN),
             "COORDINATOR_TOOLS": [],
             "COORDINATOR_TOOLS_CONFIGURATION": {},
             "CONTENT_ANALYST_TOOLS": [],
