@@ -136,3 +136,9 @@ class TestFastVoiceMemosAgent(TestVoiceMemosAgent):
         assert "id" in response_dict
         assert "assistant" == response_dict["message_role"]
         assert response_dict["structured_report"] is not None
+        assert response_dict["structured_report"]["main_topic"] is not None
+        assert response_dict["structured_report"]["discussed_points"] is not None
+        assert response_dict["structured_report"]["decisions_taken"] is not None
+        assert response_dict["structured_report"]["next_steps"] is not None
+        assert response_dict["structured_report"]["action_points"] is not None
+        assert response_dict["structured_report"]["named_entities"] is not None
