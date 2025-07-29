@@ -68,6 +68,15 @@ After the domain names are determined, modify system hosts file to include domai
 
 ```
 
+#### Create agent-lab namespace
+
+In this guide we are going to use `agent-lab` namespace to deploy dependencies and application.
+
+```bash
+kubectl create namespace agent-lab
+```
+
+
 ### Setup for Docker Desktop Users (Mac / Windows)
 
 **Note**: In this reference documentation, a [Docker Desktop](https://docs.docker.com/desktop/features/kubernetes/) cluster is used, in a real scenario you should use a production-ready Kubernetes cluster.
@@ -121,7 +130,7 @@ helm install redis-operator ot-helm/redis-operator --namespace ot-operators --cr
 3. Create a Redis cluster:
 
 ```bash
-helm install redis-agent-lab ot-helm/redis
+helm install --namespace agent-lab redis-agent-lab ot-helm/redis
 ```
 
 ### Setup PostgreSQL
@@ -149,7 +158,7 @@ helm upgrade --install cnpg --namespace cnpg-system --create-namespace cnpg/clou
 Three instances of PostgreSQL should be created, one for the Agent-Lab application, one for the vector search and another for the dialog memory (checkpointer).
 
 ```bash
-helm upgrade --install pg-agent-lab cnpg/cluster --values - <<EOF
+helm upgrade --install --namespace agent-lab pg-agent-lab cnpg/cluster --values - <<EOF
 cluster:
   imageName: bsantanna/cloudnative-pg-vector:17.4
   instances: 1
@@ -159,7 +168,7 @@ EOF
 ```
 
 ```bash
-helm upgrade --install pg-agent-lab-vectors cnpg/cluster --values - <<EOF
+helm upgrade --install --namespace agent-lab pg-agent-lab-vectors cnpg/cluster --values - <<EOF
 cluster:
   imageName: bsantanna/cloudnative-pg-vector:17.4
   instances: 1
@@ -169,7 +178,17 @@ EOF
 ```
 
 ```bash
-helm upgrade --install pg-agent-lab-checkpoints cnpg/cluster --values - <<EOF
+helm upgrade --install --namespace agent-lab pg-agent-lab-checkpoints cnpg/cluster --values - <<EOF
+cluster:
+  imageName: bsantanna/cloudnative-pg-vector:17.4
+  instances: 1
+  storage:
+    size: 1Gi
+EOF
+```
+
+```bash
+helm upgrade --install --namespace agent-lab pg-agent-lab-auth cnpg/cluster --values - <<EOF
 cluster:
   imageName: bsantanna/cloudnative-pg-vector:17.4
   instances: 1
@@ -205,6 +224,34 @@ kubectl exec -it pg-agent-lab-vectors-cluster-1 -- psql -U postgres
 ```postgresql
 CREATE EXTENSION IF NOT EXISTS vector;
 ```
+
+### Setup Keycloak
+
+[Keycloak](https://www.keycloak.org/operator/installation#_installing_by_using_kubectl_without_operator_lifecycle_manager) is used by Agent-Lab to manage user authentication.
+
+1. Install Keycloak CRDs
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.3.2/kubernetes/keycloaks.k8s.keycloak.org-v1.yml
+kubectl apply -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.3.2/kubernetes/keycloakrealmimports.k8s.keycloak.org-v1.yml
+```
+
+2. Install Keycloak Operator
+
+```bash
+kubectl create namespace keycloak
+kubectl --namespace keycloak apply -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.3.2/kubernetes/kubernetes.yml
+```
+
+3. Create keycloak database secret
+
+```bash
+kubectl apply -f - <<EOF
+
+EOF
+```
+
+
 
 ### Setup Vault
 
