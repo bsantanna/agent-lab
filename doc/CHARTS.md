@@ -424,7 +424,7 @@ helm install elastic-operator elastic/eck-operator --namespace elastic-system --
 
 
 ```bash
-helm --namespace agent-lab install agent-lab-elastic elastic/eck-stack --values - <<EOF
+helm --namespace agent-lab upgrade --install agent-lab-elastic elastic/eck-stack --values - <<EOF
 eck-elasticsearch:
   enabled: true
   fullnameOverride: elasticsearch
@@ -436,9 +436,10 @@ eck-elasticsearch:
         path: /
     tls:
       enabled: true
+      secretName: elasticsearch-tls
     annotations:
       kubernetes.io/ingress.class: nginx
-      kubernetes.io/tls-acme: "true"
+      cert-manager.io/cluster-issuer: letsencrypt-prod
       nginx.ingress.kubernetes.io/proxy-ssl-verify: "false"
       nginx.ingress.kubernetes.io/backend-protocol: HTTPS
 
@@ -459,9 +460,10 @@ eck-kibana:
         path: /
     tls:
       enabled: true
+      secretName: kibana-tls
     annotations:
       kubernetes.io/ingress.class: nginx
-      kubernetes.io/tls-acme: "true"
+      cert-manager.io/cluster-issuer: letsencrypt-prod
       nginx.ingress.kubernetes.io/proxy-ssl-verify: "false"
       nginx.ingress.kubernetes.io/backend-protocol: HTTPS
 
@@ -554,14 +556,14 @@ This Secret is used to access the Vault.
   - Replace ??? by vault `root_token` obtained in previous steps.
 
 ```bash
-kubectl apply -f - <<EOF
+kubectl --namespace agent-lab apply -f - <<EOF
 apiVersion: v1
 kind: Secret
 metadata:
   name: agent-lab-secret
 type: Opaque
 stringData:
-  VAULT_URL: "http://agent-lab-vault.default.svc.cluster.local:8200"
+  VAULT_URL: "http://agent-lab-vault.agent-lab.svc.cluster.local:8200"
   VAULT_TOKEN: "???"
 EOF
 ```
@@ -572,7 +574,7 @@ EOF
   - Replace `<agent_lab_fqdn>` by a valid domain name, example `agent-lab.my-domain.com`
 
 ```bash
-helm upgrade --install agent-lab agent-lab \
+helm --namespace agent-lab upgrade --install agent-lab agent-lab \
   --repo "https://bsantanna.github.io/agent-lab" \
   --version "1.1.1" --values - <<EOF
 config:
@@ -611,7 +613,7 @@ EOF
   - Make sure the nginx ingress controller is accessible on port 80 via public internet, Cert Manager challenges are validated via HTTP.
 
 ```bash
-helm upgrade --install agent-lab agent-lab \
+helm --namespace agent-lab upgrade --install agent-lab agent-lab \
   --repo "https://bsantanna.github.io/agent-lab" \
   --version "1.1.1" --values - <<EOF
 config:
