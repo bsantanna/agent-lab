@@ -334,7 +334,7 @@ helm repo update
 Please replace `<vault_fqdn>` with the fully qualified domain name (FQDN) you want to use for accessing Vault, example `vault.my-domain.com`.
 
 ```bash
-helm install agent-lab-vault hashicorp/vault --values - <<EOF
+helm --namespace agent-lab install agent-lab-vault hashicorp/vault --values - <<EOF
 server:
   affinity: ""
   ingress:
@@ -354,7 +354,7 @@ EOF
 3. Initialize Vault cluster:
 
 ```bash
-kubectl exec agent-lab-vault-0 -- vault operator init \
+kubectl --namespace agent-lab exec agent-lab-vault-0 -- vault operator init \
     -key-shares=1 \
     -key-threshold=1 \
     -format=json > cluster-keys.json
@@ -364,7 +364,7 @@ kubectl exec agent-lab-vault-0 -- vault operator init \
 
 ```bash
 export VAULT_UNSEAL_KEY=$(jq -r ".unseal_keys_b64[]" cluster-keys.json)
-kubectl exec agent-lab-vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY
+kubectl --namespace agent-lab exec agent-lab-vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY
 ```
 
 Copy the root_token from cluster_keys.json file to a safe place, this token is used in the next step for logging in:
@@ -389,10 +389,10 @@ For the *Path* value, use `secret`
 
 ```json
 {
-  "broker_url": "redis://redis-agent-lab.default.svc.cluster.local:6379/0",
-  "db_checkpoints": "postgresql://???:???@pg-agent-lab-checkpoints-cluster-rw.default.svc.cluster.local:5432/app",
-  "db_url": "postgresql://???:???@pg-agent-lab-cluster-rw.default.svc.cluster.local:5432/app",
-  "db_vectors": "postgresql://???:???@pg-agent-lab-vectors-cluster-rw.default.svc.cluster.local:5432/app",
+  "broker_url": "redis://redis-agent-lab.agent-lab.svc.cluster.local:6379/0",
+  "db_checkpoints": "postgresql://???:???@pg-agent-lab-checkpoints-cluster-rw.agent-lab.svc.cluster.local:5432/app",
+  "db_url": "postgresql://???:???@pg-agent-lab-cluster-rw.agent-lab.svc.cluster.local:5432/app",
+  "db_vectors": "postgresql://???:???@pg-agent-lab-vectors-cluster-rw.agent-lab.svc.cluster.local:5432/app",
   "tavily_api_key": "???"
 }
 ```
@@ -424,7 +424,7 @@ helm install elastic-operator elastic/eck-operator --namespace elastic-system --
 
 
 ```bash
-helm install agent-lab-elastic elastic/eck-stack --values - <<EOF
+helm --namespace agent-lab install agent-lab-elastic elastic/eck-stack --values - <<EOF
 eck-elasticsearch:
   enabled: true
   fullnameOverride: elasticsearch
@@ -477,12 +477,12 @@ EOF
 Use the following command to obtain `elastic` user password:
 
 ```bash
-echo "$(kubectl get secret elasticsearch-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode)"
+echo "$(kubectl --namespace agent-lab get secret elasticsearch-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode)"
 ```
 
 Take note of APM Access Token, it is used in the next step to configure OpenTelemetry Collector.
 ```bash
-echo "$(kubectl get secret/agent-lab-elastic-eck-apm-server-apm-token \
+echo "$(kubectl --namespace agent-lab get secret/agent-lab-elastic-eck-apm-server-apm-token \
     -o go-template='{{index .data "secret-token" | base64decode}}')"
 ```
 
@@ -501,7 +501,7 @@ helm repo update
 
 
 ```bash
-helm install agent-lab-telemetry open-telemetry/opentelemetry-collector --values - <<EOF
+helm --namespace agent-lab install agent-lab-telemetry open-telemetry/opentelemetry-collector --values - <<EOF
 mode: deployment
 image:
   repository: otel/opentelemetry-collector-contrib
@@ -535,7 +535,7 @@ EOF
 
 ### Verify dependencies setup
 
-Use `kubectl get pods` to check if all dependencies were properly installed, proceed when Running status is 1/1:
+Use `kubectl --namespace agent-lab get pods` to check if all dependencies were properly installed, proceed when Running status is 1/1:
 
 <div align="center">
 
