@@ -25,7 +25,8 @@ A few services in this guide are accessible via Web Browser UI, it is required t
 - `<agent_lab_fqdn>`: a fqdn to access Agent-Lab via nginx ingress, example: *agent-lab.my-domain.com*
 - `<elasticsearch_fqdn>`: a fqdn to access elasticsearch cluster via nginx ingress, example: *elasticsearch.my-domain.com*
 - `<kibana_fqdn>`: a fqdn to access kibana via nginx ingress, example: *kibana.my-domain.com*
-- `<vault_fqdn>`: a fqdn to access vault via nginx ingress, example: *vault.my-domain.com*
+- `<vault_fqdn>`: a fqdn to access Vault via nginx ingress, example: *vault.my-domain.com*
+- `<auth_fqdn>`: a fqdn to access Keycloak via nginx ingress, example: *auth.my-domain.com*
 
 
 ---
@@ -68,15 +69,6 @@ After the domain names are determined, modify system hosts file to include domai
 
 ```
 
-#### Create agent-lab namespace
-
-In this guide we are going to use `agent-lab` namespace to deploy dependencies and application.
-
-```bash
-kubectl create namespace agent-lab
-```
-
-
 ### Setup for Docker Desktop Users (Mac / Windows)
 
 **Note**: In this reference documentation, a [Docker Desktop](https://docs.docker.com/desktop/features/kubernetes/) cluster is used, in a real scenario you should use a production-ready Kubernetes cluster.
@@ -104,6 +96,61 @@ Modify system hosts file to include domains assigned to localhost address:
 
 127.0.0.1 vault.my-domain.com kibana.my-domain.com elasticsearch.my-domain.com agent-lab.my-domain.com
 
+```
+
+### Create agent-lab namespace
+
+In this guide we are going to use `agent-lab` namespace to deploy dependencies and application.
+
+```bash
+kubectl create namespace agent-lab
+```
+
+### (Optional) Setup Certificate Manager
+
+To manage TLS certificates, we will use the [cert-manager](https://cert-manager.io/docs/). This tool automates the management and issuance of TLS certificates.
+
+**Note**: If the deployment does not require a valid HTTPS certificate, this step can be skipped.
+
+1. Add Jetstack's Helm repository:
+
+```bash
+helm repo add jetstack https://charts.jetstack.io
+helm repo update
+```
+
+2. Install cert-manager using Helm:
+
+```bash
+helm install cert-manager jetstack/cert-manager \
+  --namespace cert-manager \
+  --create-namespace \
+  --version v1.17.4 \
+  --set crds.enabled=true
+```
+
+3. Create a ClusterIssuer for Let's Encrypt prod environment:
+
+Next step is creating a ClusterIssuer resource that will be used to issue certificates from Let's Encrypt.
+Please replace `<your_email_address>` with your actual email address to receive notifications about certificate expiration and issues.
+
+```bash
+kubectl apply -f - <<EOF
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: <your_email_address>
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+EOF
 ```
 
 ---
@@ -155,7 +202,9 @@ helm upgrade --install cnpg --namespace cnpg-system --create-namespace cnpg/clou
 
 **Note**: The `bsantanna/cloudnative-pg-vector:17.4` image is used for deployment, it is a custom image that includes the [pgvector](https://github.com/pgvector/pgvector) extension for vector search capabilities, source can be found at [this repository](https://github.com/bsantanna/docker-images/blob/main/images/servers/cloudnative-pg-vector/Dockerfile)
 
-Three instances of PostgreSQL should be created, one for the Agent-Lab application, one for the vector search and another for the dialog memory (checkpointer).
+Four instances of PostgreSQL should be created, one for the Agent-Lab application, one for the vector search, one for the dialog memory (checkpointer) and one for authentication (Keycloak).
+
+This database deployment is used for application [domain entities](DOMAIN.md):
 
 ```bash
 helm upgrade --install --namespace agent-lab pg-agent-lab cnpg/cluster --values - <<EOF
@@ -167,6 +216,8 @@ cluster:
 EOF
 ```
 
+This database deployment is used for Vector search and RAG:
+
 ```bash
 helm upgrade --install --namespace agent-lab pg-agent-lab-vectors cnpg/cluster --values - <<EOF
 cluster:
@@ -177,6 +228,8 @@ cluster:
 EOF
 ```
 
+This database deployment is used for checkpoints and storing dialog memory:
+
 ```bash
 helm upgrade --install --namespace agent-lab pg-agent-lab-checkpoints cnpg/cluster --values - <<EOF
 cluster:
@@ -186,6 +239,8 @@ cluster:
     size: 1Gi
 EOF
 ```
+
+This database deployment is used for authentication with Keycloak:
 
 ```bash
 helm upgrade --install --namespace agent-lab pg-agent-lab-auth cnpg/cluster --values - <<EOF
@@ -200,25 +255,25 @@ EOF
 The connection URL for the PostgreSQL instances can be obtained using the following command:
 
 ```bash
-echo "$(kubectl get secret <deployment_name>-cluster-app -o jsonpath='{.data.uri}' | base64 -d)"
+echo "$(kubectl --namespace agent-lab get secret <deployment_name>-cluster-app -o jsonpath='{.data.uri}' | base64 -d)"
 ```
 
 Example:
 
 ```bash
-echo "$(kubectl get secret pg-agent-lab-cluster-app -o jsonpath='{.data.uri}' | base64 -d)"
+echo "$(kubectl --namespace agent-lab get secret pg-agent-lab-cluster-app -o jsonpath='{.data.uri}' | base64 -d)"
 ```
 
 To access SQL console for the PostgreSQL instance, you can use the following command:
 
 ```bash
-kubectl exec -it <deployment_name>-cluster-1 -- psql -U postgres
+kubectl --namespace agent-lab exec -it <deployment_name>-cluster-1 -- psql -U postgres
 ```
 
 Example:
 
 ```bash
-kubectl exec -it pg-agent-lab-vectors-cluster-1 -- psql -U postgres
+kubectl --namespace agent-lab exec -it pg-agent-lab-vectors-cluster-1 -- psql -U postgres
 ```
 
 ```postgresql
@@ -229,28 +284,38 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 [Keycloak](https://www.keycloak.org/operator/installation#_installing_by_using_kubectl_without_operator_lifecycle_manager) is used by Agent-Lab to manage user authentication.
 
-1. Install Keycloak CRDs
+- Replace `<auth_fqdn>` with the fully qualified domain name (FQDN) you want to use for accessing Keycloak, example `auth.my-domain.com`.
+- Replace database connection settings by the values obtained using connection url command mentioned above.
+- Replace `<admin_user>` and `<admin_password>` by proper values.
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.3.2/kubernetes/keycloaks.k8s.keycloak.org-v1.yml
-kubectl apply -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.3.2/kubernetes/keycloakrealmimports.k8s.keycloak.org-v1.yml
-```
-
-2. Install Keycloak Operator
-
-```bash
-kubectl create namespace keycloak
-kubectl --namespace keycloak apply -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.3.2/kubernetes/kubernetes.yml
-```
-
-3. Create keycloak database secret
-
-```bash
-kubectl apply -f - <<EOF
-
+helm install --namespace agent-lab kc-agent-lab oci://registry-1.docker.io/bitnamicharts/keycloak --values - <<EOF
+ingress:
+  enabled: true
+  hostname: <auth_fqdn>
+  ingressClassName: nginx
+  path: /
+  pathType: Prefix
+  tls: true
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    kubernetes.io/ingress.class: nginx
+tls:
+  enabled: true
+  autoGenerated: true
+postgresql:
+  enabled: false
+externalDatabase:
+  host: <db_host>
+  user: <db_user>
+  password: <db_password>
+  database: <db_database>
+  port: <db_port>
+auth:
+  adminUser: <admin_user>
+  adminPassword: <admin_password>
 EOF
 ```
-
 
 
 ### Setup Vault
@@ -538,53 +603,6 @@ EOF
 </div>
 
 ### Install Agent-Lab Managed TLS certificate
-
-#### Setup Certificate Manager
-
-To manage TLS certificates, we will use the [cert-manager](https://cert-manager.io/docs/). This tool automates the management and issuance of TLS certificates.
-
-**Note**: If the deployment does not require a valid HTTPS certificate, this step can be skipped.
-
-1. Add Jetstack's Helm repository:
-
-```bash
-helm repo add jetstack https://charts.jetstack.io
-helm repo update
-```
-
-2. Install cert-manager using Helm:
-
-```bash
-helm install cert-manager jetstack/cert-manager \
-  --namespace cert-manager \
-  --create-namespace \
-  --version v1.17.2 \
-  --set crds.enabled=true
-```
-
-3. Create a ClusterIssuer for Let's Encrypt staging environment:
-
-Next step is creating a ClusterIssuer resource that will be used to issue certificates from Let's Encrypt.
-Please replace `<your_email_address>` with your actual email address to receive notifications about certificate expiration and issues.
-
-```bash
-kubectl apply -f - <<EOF
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: letsencrypt-prod
-spec:
-  acme:
-    server: https://acme-v02.api.letsencrypt.org/directory
-    email: <your_email_address>
-    privateKeySecretRef:
-      name: letsencrypt-prod
-    solvers:
-    - http01:
-        ingress:
-          class: nginx
-EOF
-```
 
 #### Deploy helm chart with cert-manager cluster issuer.
 
