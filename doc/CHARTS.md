@@ -390,6 +390,11 @@ For the *Path* value, use `secret`
 
 ```json
 {
+  "auth_enabled": "True",
+  "auth_url": "https://<auth_fqdn>/",
+  "auth_realm": "<realm_name>",
+  "auth_client_id": "<client_id>",
+  "auth_client_secret": "<client_secret>",
   "broker_url": "redis://redis-agent-lab.agent-lab.svc.cluster.local:6379/0",
   "db_checkpoints": "postgresql://???:???@pg-agent-lab-checkpoints-cluster-rw.agent-lab.svc.cluster.local:5432/app",
   "db_url": "postgresql://???:???@pg-agent-lab-cluster-rw.agent-lab.svc.cluster.local:5432/app",
