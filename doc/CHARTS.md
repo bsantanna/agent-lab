@@ -317,6 +317,7 @@ auth:
 EOF
 ```
 
+Please refer to [Keycloak guide](KEYCLOAK.md) for detailed steps how setting up OIDC connection.
 
 ### Setup Vault
 
