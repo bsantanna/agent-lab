@@ -29,8 +29,9 @@ def create_app():
         version=os.getenv("SERVICE_VERSION", "snapshot"),
         dependencies=[],
     )
+    application.container = container
 
-    setup_dependency_injection(container, application)
+    setup_tracing(container, application)
     setup_auth(container, application)
     setup_exception_handlers(application)
     setup_middleware(application)
@@ -49,6 +50,7 @@ def setup_auth(container, application):
             "username": userinfo.get("preferred_username"),
             "email": userinfo.get("email"),
         }
+
     config = container.config()
     if config["auth"]["enabled"] == "True":
         keycloak_config = KeycloakConfiguration(
@@ -110,20 +112,9 @@ def setup_exception_handlers(application: FastAPI):
         )
 
 
-def setup_database(container: Container):
-    db = container.db()
-    db.create_database()
-
-
 def setup_tracing(container: Container, application: FastAPI):
     tracer = container.tracer()
     tracer.setup(application)
-
-
-def setup_dependency_injection(container: Container, application: FastAPI):
-    application.container = container
-    setup_database(container)
-    setup_tracing(container, application)
 
 
 def setup_middleware(application: FastAPI):
