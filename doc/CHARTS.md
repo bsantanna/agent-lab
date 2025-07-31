@@ -390,6 +390,7 @@ For the *Path* value, use `secret`
 
 ```json
 {
+  "api_base_url": "https://<agent_lab_fqdn>/",
   "auth_enabled": "True",
   "auth_url": "https://<auth_fqdn>/",
   "auth_realm": "<realm_name>",
@@ -650,4 +651,3 @@ EOF
 
 
 ---
-

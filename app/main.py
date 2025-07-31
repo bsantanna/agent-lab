@@ -3,9 +3,8 @@ import os
 import re
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi_keycloak_middleware import KeycloakConfiguration, setup_keycloak_middleware
 from fastapi_mcp import FastApiMCP
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
@@ -32,12 +31,42 @@ def create_app():
     )
 
     setup_dependency_injection(container, application)
+    setup_auth(container, application)
     setup_exception_handlers(application)
     setup_middleware(application)
     setup_routers(application)
     setup_mcp(application)
 
     return application
+
+
+def setup_auth(container, application):
+    async def map_user(userinfo: dict) -> dict:
+        user_id = userinfo.get("sub")
+        container.db().create_database(schema_name=user_id)
+        return {
+            "id": user_id,
+            "username": userinfo.get("preferred_username"),
+            "email": userinfo.get("email"),
+        }
+
+    if container.config.auth.enabled == "True":
+        keycloak_config = KeycloakConfiguration(
+            url=container.config.auth.url,
+            realm=container.config.auth.realm,
+            client_id=container.config.auth.client_id,
+            client_secret=container.config.auth.client_secret,
+        )
+
+        setup_keycloak_middleware(
+            application,
+            keycloak_configuration=keycloak_config,
+            user_mapper=map_user,
+            exclude_patterns=["/docs", "/status/*"],
+        )
+
+    else:
+        logger.warning("Authentication disabled")
 
 
 def setup_mcp(application: FastAPI):
@@ -47,7 +76,8 @@ def setup_mcp(application: FastAPI):
         describe_all_responses=True,
         describe_full_response_schema=True,
     )
-    mcp.mount()
+    mcp.mount_http()
+    mcp.mount_sse()
 
 
 def setup_routers(application: FastAPI):
@@ -64,8 +94,6 @@ def setup_routers(application: FastAPI):
 
 
 def setup_exception_handlers(application: FastAPI):
-    application.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
     @application.exception_handler(HTTPException)
     async def http_exception_handler(request: Request, exc: HTTPException):
         match = re.match(r"^(\d+):", exc.detail)

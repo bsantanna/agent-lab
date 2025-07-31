@@ -62,7 +62,6 @@ class Container(containers.DeclarativeContainer):
     if config_file is not None:
         config = providers.Configuration(yaml_files=[config_file])
     else:
-        api_base_url = os.getenv("API_BASE_URL")
         vault_url = os.getenv("VAULT_URL")
         vault_token = os.getenv("VAULT_TOKEN")
         vault_client = hvac.Client(url=vault_url, token=vault_token, verify=False)
@@ -71,7 +70,14 @@ class Container(containers.DeclarativeContainer):
         )
 
         config = providers.Configuration()
-        config.set("api_base_url", api_base_url)
+        config.set("api_base_url", app_secrets["data"]["data"]["api_base_url"])
+        config.set("auth.enabled", app_secrets["data"]["data"]["auth_enabled"])
+        config.set("auth.url", app_secrets["data"]["data"]["auth_url"])
+        config.set("auth.realm", app_secrets["data"]["data"]["auth_realm"])
+        config.set("auth.client_id", app_secrets["data"]["data"]["auth_client_id"])
+        config.set(
+            "auth.client_secret", app_secrets["data"]["data"]["auth_client_secret"]
+        )
         config.set("vault.url", vault_url)
         config.set("vault.token", vault_token)
         config.set("broker.url", app_secrets["data"]["data"]["broker_url"])
@@ -220,8 +226,7 @@ class Container(containers.DeclarativeContainer):
     )
 
     fast_voice_memos_agent = providers.Factory(
-        FastVoiceMemosAgent,
-        agent_utils=agent_utils
+        FastVoiceMemosAgent, agent_utils=agent_utils
     )
 
     agent_registry = providers.Singleton(
