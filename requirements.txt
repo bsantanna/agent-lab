@@ -1,4 +1,5 @@
 browser-use
+charset-normalizer==3.4.1
 dependency-injector~=4.47.1
 fastapi-mcp~=0.3.4
 fastapi[standard]~=0.115.12
