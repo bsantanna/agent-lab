@@ -49,20 +49,20 @@ def setup_auth(container, application):
             "username": userinfo.get("preferred_username"),
             "email": userinfo.get("email"),
         }
-
-    if container.config.auth.enabled == "True":
+    config = container.config()
+    if config["auth"]["enabled"] == "True":
         keycloak_config = KeycloakConfiguration(
-            url=container.config.auth.url,
-            realm=container.config.auth.realm,
-            client_id=container.config.auth.client_id,
-            client_secret=container.config.auth.client_secret,
+            url=config["auth"]["url"],
+            realm=config["auth"]["realm"],
+            client_id=config["auth"]["client_id"],
+            client_secret=config["auth"]["client_secret"],
         )
 
         setup_keycloak_middleware(
             application,
             keycloak_configuration=keycloak_config,
             user_mapper=map_user,
-            exclude_patterns=["/docs", "/status/*"],
+            exclude_patterns=["/docs", "/openapi.json", "/status/*"],
         )
 
     else:
