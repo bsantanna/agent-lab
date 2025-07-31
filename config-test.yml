@@ -4,7 +4,7 @@ auth:
 broker:
   url: "redis://localhost:16379/0"
 db:
-  url: "postgresql://postgres:postgres@postgres:15432/agent_lab"
+  url: "postgresql://postgres:postgres@localhost:15432/agent_lab"
   vectors: "postgresql://postgres:postgres@localhost:15432/agent_lab_vectors"
   checkpoints: "postgresql://postgres:postgres@localhost:15432/agent_lab_checkpoints"
 vault:

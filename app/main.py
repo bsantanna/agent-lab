@@ -43,7 +43,7 @@ def create_app():
 def setup_auth(container, application):
     async def map_user(userinfo: dict) -> dict:
         user_id = userinfo.get("sub")
-        container.db().create_database(schema_name=user_id)
+        # container.db().create_database(schema_name=user_id)
         return {
             "id": user_id,
             "username": userinfo.get("preferred_username"),
