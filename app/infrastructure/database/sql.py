@@ -43,6 +43,7 @@ class Database:
         with self.engine.connect() as conn:
             conn.execute(text(f"SET search_path TO {schema_name}"))
             conn.commit()
+        self.create_database(schema_name)
 
     @contextmanager
     def session(
