@@ -42,14 +42,6 @@ def create_app():
 
 
 def setup_auth(container, application):
-    async def map_user(userinfo: dict) -> dict:
-        user_id = userinfo.get("sub")
-        # container.db().create_database(schema_name=user_id)
-        return {
-            "id": user_id,
-            "username": userinfo.get("preferred_username"),
-            "email": userinfo.get("email"),
-        }
 
     config = container.config()
     if config["auth"]["enabled"] == "True":
@@ -63,7 +55,6 @@ def setup_auth(container, application):
         setup_keycloak_middleware(
             application,
             keycloak_configuration=keycloak_config,
-            user_mapper=map_user,
             exclude_patterns=["/docs", "/openapi.json", "/status/*"],
         )
 
