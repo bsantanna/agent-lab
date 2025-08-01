@@ -1,8 +1,10 @@
 api_base_url: "http://test"
+auth:
+  enabled: False
 broker:
   url: "redis://localhost:16379/0"
 db:
-  url: "sqlite:///./agent_lab.db"
+  url: "postgresql://postgres:postgres@localhost:15432/agent_lab"
   vectors: "postgresql://postgres:postgres@localhost:15432/agent_lab_vectors"
   checkpoints: "postgresql://postgres:postgres@localhost:15432/agent_lab_checkpoints"
 vault:

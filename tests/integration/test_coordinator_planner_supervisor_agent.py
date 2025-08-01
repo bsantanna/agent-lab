@@ -17,6 +17,7 @@ class TestCoordinatorPlannerSupervisorAgent:
         # create integration
         response = client.post(
             url="/integrations/create",
+            headers={"Authorization": "Bearer x"},
             json={
                 "api_endpoint": "https://api.x.ai/v1/",
                 "api_key": os.environ["XAI_API_KEY"],
@@ -28,6 +29,7 @@ class TestCoordinatorPlannerSupervisorAgent:
         # create llm
         response_2 = client.post(
             url="/llms/create",
+            headers={"Authorization": "Bearer x"},
             json={
                 "integration_id": integration_id,
                 "language_model_tag": "grok-2-vision",
@@ -38,6 +40,7 @@ class TestCoordinatorPlannerSupervisorAgent:
         # create agent
         return client.post(
             url="/agents/create",
+            headers={"Authorization": "Bearer x"},
             json={
                 "language_model_id": language_model_id,
                 "agent_type": "coordinator_planner_supervisor",
@@ -52,6 +55,7 @@ class TestCoordinatorPlannerSupervisorAgent:
 
         return client.post(
             "/messages/post",
+            headers={"Authorization": "Bearer x"},
             json={
                 "message_role": "human",
                 "message_content": message_content,

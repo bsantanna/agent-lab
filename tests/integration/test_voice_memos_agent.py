@@ -18,6 +18,7 @@ class TestVoiceMemosAgent:
         # create integration
         response = client.post(
             url="/integrations/create",
+            headers={"Authorization": "Bearer x"},
             json={
                 "api_endpoint": "https://api.openai.com/v1/",
                 "api_key": os.environ["OPENAI_API_KEY"],
@@ -29,6 +30,7 @@ class TestVoiceMemosAgent:
         # create llm
         response_2 = client.post(
             url="/llms/create",
+            headers={"Authorization": "Bearer x"},
             json={
                 "integration_id": integration_id,
                 "language_model_tag": "o3-mini",
@@ -39,6 +41,7 @@ class TestVoiceMemosAgent:
         # create agent
         return client.post(
             url="/agents/create",
+            headers={"Authorization": "Bearer x"},
             json={
                 "language_model_id": language_model_id,
                 "agent_type": agent_type,
@@ -55,6 +58,7 @@ class TestVoiceMemosAgent:
 
         return client.post(
             "/messages/post",
+            headers={"Authorization": "Bearer x"},
             json={
                 "message_role": "human",
                 "message_content": message_content,
@@ -71,6 +75,7 @@ class TestVoiceMemosAgent:
         with open(file_path, "rb") as file:
             upload_response = client.post(
                 url="/attachments/upload",
+                headers={"Authorization": "Bearer x"},
                 files={"file": (filename, file, content_type)},
             )
 
@@ -114,11 +119,12 @@ class TestVoiceMemosAgent:
 
 
 class TestFastVoiceMemosAgent(TestVoiceMemosAgent):
-
     @pytest.mark.asyncio
     async def test_post_message(self, client):
         # given
-        create_agent_response = self._create_agent(client, agent_type="fast_voice_memos")
+        create_agent_response = self._create_agent(
+            client, agent_type="fast_voice_memos"
+        )
         agent_id = create_agent_response.json()["id"]
         upload_filename = "voice_memos_01_pt_BR.mp3"
         upload_response = self._upload_file(client, upload_filename, "audio/mp3")

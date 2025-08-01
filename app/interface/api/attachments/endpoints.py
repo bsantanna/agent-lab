@@ -2,19 +2,24 @@ from io import BytesIO
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, File, Depends, Body, Path
+from fastapi.security import HTTPBearer
+from fastapi_keycloak_middleware import get_user
 from starlette import status
 from starlette.responses import StreamingResponse
 
 from app.core.container import Container
 from app.domain.exceptions.base import FileToLargeError
+from app.infrastructure.auth.schema import User
 from app.interface.api.attachments.schema import Attachment, EmbeddingsRequest
 from app.services.attachments import AttachmentService
 
 router = APIRouter()
+bearer_scheme = HTTPBearer()
 
 
 @router.post(
     "/upload",
+    dependencies=[Depends(bearer_scheme)],
     status_code=status.HTTP_201_CREATED,
     response_model=Attachment,
     summary="Upload a file attachment",
@@ -72,6 +77,7 @@ async def upload_attachment(
     attachment_service: AttachmentService = Depends(
         Provide[Container.attachment_service]
     ),
+    user: User = Depends(get_user),
 ):
     """
     Upload a file attachment to the system.
@@ -79,6 +85,7 @@ async def upload_attachment(
     This endpoint processes the uploaded file, extracts metadata,
     and stores it securely in the system for later retrieval.
     """
+    schema = user.id.replace("-", "_") if user is not None else "public"
     # validate file size
     file.file.seek(0, 2)
     file_size = file.file.tell()
@@ -87,12 +94,15 @@ async def upload_attachment(
         raise FileToLargeError(file_size, max_size)
     file.file.seek(0)
 
-    attachment = await attachment_service.create_attachment_with_file(file=file)
+    attachment = await attachment_service.create_attachment_with_file(
+        file=file, schema=schema
+    )
     return Attachment.model_validate(attachment)
 
 
 @router.get(
     "/download/{attachment_id}",
+    dependencies=[Depends(bearer_scheme)],
     status_code=status.HTTP_200_OK,
     response_class=StreamingResponse,
     summary="Download an attachment by ID",
@@ -146,6 +156,7 @@ async def download_attachment(
     attachment_service: AttachmentService = Depends(
         Provide[Container.attachment_service]
     ),
+    user: User = Depends(get_user),
 ):
     """
     Download an attachment by its unique identifier.
@@ -153,7 +164,8 @@ async def download_attachment(
     Returns the file content as a streaming response with appropriate
     headers for file download.
     """
-    attachment = attachment_service.get_attachment_by_id(attachment_id)
+    schema = user.id.replace("-", "_") if user is not None else "public"
+    attachment = attachment_service.get_attachment_by_id(attachment_id, schema)
     response = StreamingResponse(
         BytesIO(attachment.raw_content),
         media_type="application/octet-stream",
@@ -166,6 +178,7 @@ async def download_attachment(
 
 @router.post(
     "/embeddings",
+    dependencies=[Depends(bearer_scheme)],
     status_code=status.HTTP_201_CREATED,
     response_model=Attachment,
     summary="Generate embeddings for an attachment",
@@ -249,6 +262,7 @@ async def create_embeddings(
     attachment_service: AttachmentService = Depends(
         Provide[Container.attachment_service]
     ),
+    user: User = Depends(get_user),
 ):
     """
     Generate vector embeddings for an attachment.
@@ -256,9 +270,11 @@ async def create_embeddings(
     This endpoint processes the attachment content and generates
     vector embeddings using the specified language model.
     """
+    schema = user.id.replace("-", "_") if user is not None else "public"
     attachment = await attachment_service.create_embeddings(
         attachment_id=embeddings.attachment_id,
         language_model_id=embeddings.language_model_id,
         collection_name=embeddings.collection_name,
+        schema=schema,
     )
     return Attachment.model_validate(attachment)

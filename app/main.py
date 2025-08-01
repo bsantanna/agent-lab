@@ -3,13 +3,13 @@ import os
 import re
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi_keycloak_middleware import KeycloakConfiguration, setup_keycloak_middleware
 from fastapi_mcp import FastApiMCP
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
 from app.core.container import Container
+from app.infrastructure.auth.user import map_user
 from app.infrastructure.metrics.logging_middleware import LoggingMiddleware
 from app.interface.api.agents.endpoints import router as agents_router
 from app.interface.api.attachments.endpoints import router as attachments_router
@@ -30,14 +30,37 @@ def create_app():
         version=os.getenv("SERVICE_VERSION", "snapshot"),
         dependencies=[],
     )
+    application.container = container
 
-    setup_dependency_injection(container, application)
+    setup_tracing(container, application)
+    setup_auth(container, application)
     setup_exception_handlers(application)
     setup_middleware(application)
     setup_routers(application)
     setup_mcp(application)
 
     return application
+
+
+def setup_auth(container, application):
+    config = container.config()
+    if config["auth"]["enabled"] == "True":
+        keycloak_config = KeycloakConfiguration(
+            url=config["auth"]["url"],
+            realm=config["auth"]["realm"],
+            client_id=config["auth"]["client_id"],
+            client_secret=config["auth"]["client_secret"],
+        )
+
+        setup_keycloak_middleware(
+            application,
+            keycloak_configuration=keycloak_config,
+            exclude_patterns=["/docs", "/openapi.json", "/status/*"],
+            user_mapper=map_user,
+        )
+
+    else:
+        logger.warning("Authentication disabled")
 
 
 def setup_mcp(application: FastAPI):
@@ -47,7 +70,8 @@ def setup_mcp(application: FastAPI):
         describe_all_responses=True,
         describe_full_response_schema=True,
     )
-    mcp.mount()
+    mcp.mount_http()
+    mcp.mount_sse()
 
 
 def setup_routers(application: FastAPI):
@@ -64,8 +88,6 @@ def setup_routers(application: FastAPI):
 
 
 def setup_exception_handlers(application: FastAPI):
-    application.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
     @application.exception_handler(HTTPException)
     async def http_exception_handler(request: Request, exc: HTTPException):
         match = re.match(r"^(\d+):", exc.detail)
@@ -82,20 +104,9 @@ def setup_exception_handlers(application: FastAPI):
         )
 
 
-def setup_database(container: Container):
-    db = container.db()
-    db.create_database()
-
-
 def setup_tracing(container: Container, application: FastAPI):
     tracer = container.tracer()
     tracer.setup(application)
-
-
-def setup_dependency_injection(container: Container, application: FastAPI):
-    application.container = container
-    setup_database(container)
-    setup_tracing(container, application)
 
 
 def setup_middleware(application: FastAPI):

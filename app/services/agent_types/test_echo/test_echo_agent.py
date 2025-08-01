@@ -10,17 +10,18 @@ class TestEchoAgent(AgentBase):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
 
-    def create_default_settings(self, agent_id: str):
+    def create_default_settings(self, agent_id: str, schema: str):
         self.agent_setting_service.create_agent_setting(
             agent_id=agent_id,
             setting_key="dummy_setting",
             setting_value="dummy_value",
+            schema=schema,
         )
 
-    def get_input_params(self, message_request: MessageRequest) -> dict:
+    def get_input_params(self, message_request: MessageRequest, schema: str) -> dict:
         return message_request.to_dict()
 
-    def process_message(self, message_request: MessageRequest) -> Message:
+    def process_message(self, message_request: MessageRequest, schema: str) -> Message:
         message_content, response_data = self.format_response(
             MessagesState(
                 messages=[AIMessage(content=f"Echo: {message_request.message_content}")]

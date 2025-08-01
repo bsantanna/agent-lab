@@ -31,6 +31,7 @@ from app.services.tasks import TaskProgress
 
 class AgentState(MessagesState):
     agent_id: str
+    schema: str
     query: str
     next: str
     collection_name: str
@@ -61,7 +62,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
         }
         return workflow_state["messages"][-1].content, response_data
 
-    def create_default_settings(self, agent_id: str):
+    def create_default_settings(self, agent_id: str, schema: str):
         current_dir = Path(__file__).parent
 
         coordinator_prompt = self.read_file_content(
@@ -71,6 +72,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             agent_id=agent_id,
             setting_key="coordinator_system_prompt",
             setting_value=coordinator_prompt,
+            schema=schema,
         )
 
         planner_prompt = self.read_file_content(
@@ -80,6 +82,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             agent_id=agent_id,
             setting_key="planner_system_prompt",
             setting_value=planner_prompt,
+            schema=schema,
         )
 
         supervisor_prompt = self.read_file_content(
@@ -89,6 +92,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             agent_id=agent_id,
             setting_key="supervisor_system_prompt",
             setting_value=supervisor_prompt,
+            schema=schema,
         )
 
         researcher_prompt = self.read_file_content(
@@ -98,6 +102,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             agent_id=agent_id,
             setting_key="researcher_system_prompt",
             setting_value=researcher_prompt,
+            schema=schema,
         )
 
         coder_prompt = self.read_file_content(
@@ -107,6 +112,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             agent_id=agent_id,
             setting_key="coder_system_prompt",
             setting_value=coder_prompt,
+            schema=schema,
         )
 
         browser_prompt = self.read_file_content(
@@ -116,6 +122,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             agent_id=agent_id,
             setting_key="browser_system_prompt",
             setting_value=browser_prompt,
+            schema=schema,
         )
 
         reporter_prompt = self.read_file_content(
@@ -125,6 +132,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             agent_id=agent_id,
             setting_key="reporter_system_prompt",
             setting_value=reporter_prompt,
+            schema=schema,
         )
 
         collection_name = self.read_file_content(
@@ -134,12 +142,14 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             agent_id=agent_id,
             setting_key="collection_name",
             setting_value=collection_name,
+            schema=schema,
         )
 
         self.agent_setting_service.create_agent_setting(
             agent_id=agent_id,
             setting_key="deep_search_mode",
             setting_value="False",
+            schema=schema,
         )
 
     def get_workflow_builder(self, agent_id: str):
@@ -154,9 +164,9 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
         workflow_builder.add_node("reporter", self.get_reporter)
         return workflow_builder
 
-    def get_input_params(self, message_request: MessageRequest):
+    def get_input_params(self, message_request: MessageRequest, schema: str) -> dict:
         settings = self.agent_setting_service.get_agent_settings(
-            message_request.agent_id
+            message_request.agent_id, schema
         )
         settings_dict = {
             setting.setting_key: setting.setting_value for setting in settings
@@ -173,6 +183,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
 
         return {
             "agent_id": message_request.agent_id,
+            "schema": schema,
             "query": message_request.message_content,
             "collection_name": settings_dict["collection_name"],
             "deep_search_mode": deep_search_mode,
@@ -204,6 +215,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
         self, state: AgentState
     ) -> Command[Literal["planner", "__end__"]]:
         agent_id = state["agent_id"]
+        schema = state["schema"]
         query = state["query"]
         coordinator_system_prompt = state["coordinator_system_prompt"]
 
@@ -215,7 +227,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
                 message_content=f"Analyzing query: {query}",
             )
         )
-        chat_model = self.get_chat_model(agent_id)
+        chat_model = self.get_chat_model(agent_id, schema)
         chat_model_with_tools = chat_model.bind_tools(self.get_coordinator_tools())
         chat_model_with_structured_output = (
             chat_model_with_tools.with_structured_output(CoordinatorRouter)
@@ -234,6 +246,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
 
     def get_planner(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
+        schema = state["schema"]
         self.task_notification_service.publish_update(
             task_progress=TaskProgress(
                 agent_id=agent_id,
@@ -248,7 +261,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             f"Agent[{agent_id}] -> Planner -> Query -> {query} -> Deep Search Mode -> {deep_search_mode}"
         )
         chat_model = (
-            self.get_chat_model(agent_id)
+            self.get_chat_model(agent_id, schema)
             .bind_tools(self.get_planner_tools())
             .with_structured_output(SolutionPlan)
         )
@@ -289,10 +302,11 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
         self, state: AgentState
     ) -> Command[Literal[*SUPERVISED_AGENTS, "__end__"]]:
         agent_id = state["agent_id"]
+        schema = state["schema"]
         messages = self.get_last_interaction_messages(state["messages"])
         self.logger.info(f"Agent[{agent_id}] -> Supervisor -> Messages -> {messages}")
         supervisor_system_prompt = state["supervisor_system_prompt"]
-        chat_model = self.get_chat_model(agent_id).bind_tools(
+        chat_model = self.get_chat_model(agent_id, schema).bind_tools(
             self.get_supervisor_tools()
         )
         chat_model_with_structured_output = chat_model.with_structured_output(
@@ -332,6 +346,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
 
     def get_researcher(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
+        schema = state["schema"]
         deep_search_mode = state["deep_search_mode"]
         researcher_system_prompt = state["researcher_system_prompt"]
 
@@ -352,7 +367,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
         else:
             tools = [self.get_research_knowledge_base_tool(state)]
 
-        chat_model = self.get_chat_model(agent_id)
+        chat_model = self.get_chat_model(agent_id, schema)
         researcher = create_react_agent(
             model=chat_model,
             tools=tools,
@@ -376,6 +391,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
 
     def get_coder(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
+        schema = state["schema"]
         coder_system_prompt = state["coder_system_prompt"]
 
         self.logger.info(f"Agent[{agent_id}] -> Coder")
@@ -388,7 +404,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             )
         )
 
-        chat_model = self.get_chat_model(agent_id)
+        chat_model = self.get_chat_model(agent_id, schema)
         coder = create_react_agent(
             model=chat_model,
             tools=[self.get_bash_tool(), self.get_python_tool()],
@@ -411,6 +427,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
 
     def get_browser(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
+        schema = state["schema"]
         browser_system_prompt = state["browser_system_prompt"]
 
         self.logger.info(f"Agent[{agent_id}] -> Browser")
@@ -422,10 +439,10 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             )
         )
 
-        chat_model = self.get_chat_model(agent_id)
+        chat_model = self.get_chat_model(agent_id, schema)
         browser = create_react_agent(
             model=chat_model,
-            tools=[self.get_web_browser_tool(agent_id)],
+            tools=[self.get_web_browser_tool(agent_id, schema)],
             prompt=browser_system_prompt,
         )
 
@@ -446,6 +463,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
 
     def get_reporter(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
+        schema = state["schema"]
         self.logger.info(f"Agent[{agent_id}] -> Reporter")
         self.task_notification_service.publish_update(
             task_progress=TaskProgress(
@@ -455,7 +473,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             )
         )
         reporter_system_prompt = state["reporter_system_prompt"]
-        chat_model = self.get_chat_model(agent_id)
+        chat_model = self.get_chat_model(agent_id, schema)
         reporter = create_react_agent(
             model=chat_model,
             tools=self.get_reporter_tools(),

@@ -25,6 +25,7 @@ class TestAgentsEndpoints:
         # create integration
         return client.post(
             url="/integrations/create",
+            headers={"Authorization": "Bearer x"},
             json={
                 "api_endpoint": "https://example.com",
                 "api_key": "an_invalid_key",
@@ -36,6 +37,7 @@ class TestAgentsEndpoints:
         # create llm
         return client.post(
             url="/llms/create",
+            headers={"Authorization": "Bearer x"},
             json={
                 "integration_id": integration_id,
                 "language_model_tag": "an_invalid_tag",
@@ -54,6 +56,7 @@ class TestAgentsEndpoints:
         # create agent
         return client.post(
             url="/agents/create",
+            headers={"Authorization": "Bearer x"},
             json={
                 "language_model_id": language_model_id,
                 "agent_type": "test_echo",
@@ -64,7 +67,10 @@ class TestAgentsEndpoints:
     @pytest.mark.asyncio
     async def test_get_list(self, client):
         # when
-        response = client.get("/agents/list")
+        response = client.get(
+            "/agents/list",
+            headers={"Authorization": "Bearer x"},
+        )
 
         # then
         assert response.status_code == 200
@@ -77,7 +83,10 @@ class TestAgentsEndpoints:
         agent_id = create_agent_response.json()["id"]
 
         # when
-        read_agent_response = client.get(f"/agents/{agent_id}")
+        read_agent_response = client.get(
+            f"/agents/{agent_id}",
+            headers={"Authorization": "Bearer x"},
+        )
 
         # then
         assert read_agent_response.status_code == 200
@@ -91,7 +100,10 @@ class TestAgentsEndpoints:
         agent_id = "not_existing_id"
 
         # when
-        response = client.get(f"/agents/{agent_id}")
+        response = client.get(
+            f"/agents/{agent_id}",
+            headers={"Authorization": "Bearer x"},
+        )
 
         # then
         assert response.status_code == 404
@@ -103,7 +115,10 @@ class TestAgentsEndpoints:
         agent_id = create_agent_response.json()["id"]
 
         # when
-        delete_agent_response = client.delete(f"/agents/delete/{agent_id}")
+        delete_agent_response = client.delete(
+            f"/agents/delete/{agent_id}",
+            headers={"Authorization": "Bearer x"},
+        )
 
         # then
         assert delete_agent_response.status_code == 204
@@ -114,7 +129,10 @@ class TestAgentsEndpoints:
         agent_id = "not_existing_id"
 
         # when
-        response = client.delete(f"/agents/delete/{agent_id}")
+        response = client.delete(
+            f"/agents/delete/{agent_id}",
+            headers={"Authorization": "Bearer x"},
+        )
 
         # then
         assert response.status_code == 404
@@ -128,6 +146,7 @@ class TestAgentsEndpoints:
         # when
         error_response = client.post(
             url="/agents/create",
+            headers={"Authorization": "Bearer x"},
             json={
                 "language_model_id": language_model_id,
                 "agent_type": "an_invalid_agent_type",
@@ -146,6 +165,7 @@ class TestAgentsEndpoints:
         # when
         error_response = client.post(
             url="/agents/create",
+            headers={"Authorization": "Bearer x"},
             json={
                 "language_model_id": language_model_id,
                 "agent_type": "test_echo",
@@ -161,6 +181,7 @@ class TestAgentsEndpoints:
         # when
         error_response = client.post(
             url="/agents/create",
+            headers={"Authorization": "Bearer x"},
             json={"foo": "bar"},
         )
 
@@ -172,6 +193,7 @@ class TestAgentsEndpoints:
         # when
         error_response = client.post(
             url="/agents/update",
+            headers={"Authorization": "Bearer x"},
             json={"foo": "bar"},
         )
 
@@ -191,6 +213,7 @@ class TestAgentsEndpoints:
         # when
         response = client.post(
             url="/agents/update",
+            headers={"Authorization": "Bearer x"},
             json={
                 "agent_id": agent_id,
                 "agent_name": "a_name",
@@ -210,6 +233,7 @@ class TestAgentsEndpoints:
         # when
         update_response = client.post(
             url="/agents/update",
+            headers={"Authorization": "Bearer x"},
             json={
                 "agent_id": agent_id,
                 "agent_name": "a_modified_name",
@@ -230,6 +254,7 @@ class TestAgentsEndpoints:
         # when
         update_response = client.post(
             url="/agents/update",
+            headers={"Authorization": "Bearer x"},
             json={
                 "agent_id": agent_id,
                 "agent_name": "a modified_name",
@@ -250,6 +275,7 @@ class TestAgentsEndpoints:
         # when
         update_response = client.post(
             url="/agents/update",
+            headers={"Authorization": "Bearer x"},
             json={
                 "agent_id": agent_id,
                 "agent_name": "a_modified_name",
@@ -270,6 +296,7 @@ class TestAgentsEndpoints:
         # when
         response = client.post(
             url="/agents/update_setting",
+            headers={"Authorization": "Bearer x"},
             json={
                 "agent_id": agent_id,
                 "setting_key": "a_key",
@@ -289,6 +316,7 @@ class TestAgentsEndpoints:
         # when
         update_response = client.post(
             url="/agents/update_setting",
+            headers={"Authorization": "Bearer x"},
             json={
                 "agent_id": agent_id,
                 "setting_key": "a_key",
@@ -308,6 +336,7 @@ class TestAgentsEndpoints:
         # when
         update_response = client.post(
             url="/agents/update_setting",
+            headers={"Authorization": "Bearer x"},
             json={
                 "agent_id": agent_id,
                 "setting_key": "dummy_setting",

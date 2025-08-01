@@ -1,4 +1,6 @@
 api_base_url: "http://localhost:18000"
+auth:
+  enabled: False
 broker:
   url: "redis://redis:6379/0"
 db:

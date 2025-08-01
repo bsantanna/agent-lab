@@ -62,7 +62,6 @@ class Container(containers.DeclarativeContainer):
     if config_file is not None:
         config = providers.Configuration(yaml_files=[config_file])
     else:
-        api_base_url = os.getenv("API_BASE_URL")
         vault_url = os.getenv("VAULT_URL")
         vault_token = os.getenv("VAULT_TOKEN")
         vault_client = hvac.Client(url=vault_url, token=vault_token, verify=False)
@@ -71,7 +70,14 @@ class Container(containers.DeclarativeContainer):
         )
 
         config = providers.Configuration()
-        config.set("api_base_url", api_base_url)
+        config.set("api_base_url", app_secrets["data"]["data"]["api_base_url"])
+        config.set("auth.enabled", app_secrets["data"]["data"]["auth_enabled"])
+        config.set("auth.url", app_secrets["data"]["data"]["auth_url"])
+        config.set("auth.realm", app_secrets["data"]["data"]["auth_realm"])
+        config.set("auth.client_id", app_secrets["data"]["data"]["auth_client_id"])
+        config.set(
+            "auth.client_secret", app_secrets["data"]["data"]["auth_client_secret"]
+        )
         config.set("vault.url", vault_url)
         config.set("vault.token", vault_token)
         config.set("broker.url", app_secrets["data"]["data"]["broker_url"])
@@ -100,7 +106,7 @@ class Container(containers.DeclarativeContainer):
 
     integration_repository = providers.Factory(
         IntegrationRepository,
-        session_factory=db.provided.session,
+        db=db,
         vault_client=vault_client,
     )
 
@@ -115,7 +121,8 @@ class Container(containers.DeclarativeContainer):
     )
 
     language_model_setting_repository = providers.Factory(
-        LanguageModelSettingRepository, session_factory=db.provided.session
+        LanguageModelSettingRepository,
+        db=db,
     )
 
     language_model_setting_service = providers.Factory(
@@ -123,9 +130,7 @@ class Container(containers.DeclarativeContainer):
         language_model_setting_repository=language_model_setting_repository,
     )
 
-    language_model_repository = providers.Factory(
-        LanguageModelRepository, session_factory=db.provided.session
-    )
+    language_model_repository = providers.Factory(LanguageModelRepository, db=db)
 
     language_model_service = providers.Factory(
         LanguageModelService,
@@ -134,9 +139,7 @@ class Container(containers.DeclarativeContainer):
         integration_service=integration_service,
     )
 
-    attachment_repository = providers.Factory(
-        AttachmentRepository, session_factory=db.provided.session
-    )
+    attachment_repository = providers.Factory(AttachmentRepository, db=db)
 
     attachment_service = providers.Factory(
         AttachmentService,
@@ -149,18 +152,14 @@ class Container(containers.DeclarativeContainer):
         markdown=markdown,
     )
 
-    agent_setting_repository = providers.Factory(
-        AgentSettingRepository, session_factory=db.provided.session
-    )
+    agent_setting_repository = providers.Factory(AgentSettingRepository, db=db)
 
     agent_setting_service = providers.Factory(
         AgentSettingService,
         agent_setting_repository=agent_setting_repository,
     )
 
-    agent_repository = providers.Factory(
-        AgentRepository, session_factory=db.provided.session
-    )
+    agent_repository = providers.Factory(AgentRepository, db=db)
 
     agent_service = providers.Factory(
         AgentService,
@@ -169,9 +168,7 @@ class Container(containers.DeclarativeContainer):
         language_model_service=language_model_service,
     )
 
-    message_repository = providers.Factory(
-        MessageRepository, session_factory=db.provided.session
-    )
+    message_repository = providers.Factory(MessageRepository, db=db)
 
     message_service = providers.Factory(
         MessageService,
@@ -220,8 +217,7 @@ class Container(containers.DeclarativeContainer):
     )
 
     fast_voice_memos_agent = providers.Factory(
-        FastVoiceMemosAgent,
-        agent_utils=agent_utils
+        FastVoiceMemosAgent, agent_utils=agent_utils
     )
 
     agent_registry = providers.Singleton(

@@ -17,23 +17,27 @@ class LanguageModelService:
         self.setting_service = language_model_setting_service
         self.integration_service = integration_service
 
-    def get_language_models(self) -> Iterator[LanguageModel]:
-        return self.repository.get_all()
+    def get_language_models(self, schema: str) -> Iterator[LanguageModel]:
+        return self.repository.get_all(schema)
 
-    def get_language_model_by_id(self, language_model_id: str) -> LanguageModel:
-        return self.repository.get_by_id(language_model_id)
+    def get_language_model_by_id(
+        self, language_model_id: str, schema: str
+    ) -> LanguageModel:
+        return self.repository.get_by_id(language_model_id, schema)
 
     def create_language_model(
-        self,
-        integration_id: str,
-        language_model_tag: str,
+        self, integration_id: str, language_model_tag: str, schema: str
     ) -> LanguageModel:
         # get integration
-        integration = self.integration_service.get_integration_by_id(integration_id)
+        integration = self.integration_service.get_integration_by_id(
+            integration_id, schema
+        )
 
         # create language model
         language_model = self.repository.add(
-            integration_id=integration.id, language_model_tag=language_model_tag
+            integration_id=integration.id,
+            language_model_tag=language_model_tag,
+            schema=schema,
         )
 
         # default embeddings model setting
@@ -42,25 +46,34 @@ class LanguageModelService:
                 language_model_id=language_model.id,
                 setting_key="embeddings",
                 setting_value="text-embedding-3-large",
+                schema=schema,
             )
         else:
             self.setting_service.create_language_model_setting(
                 language_model_id=language_model.id,
                 setting_key="embeddings",
                 setting_value="bge-m3",
+                schema=schema,
             )
 
         return language_model
 
-    def delete_language_model_by_id(self, language_model_id: str) -> None:
-        return self.repository.delete_by_id(language_model_id)
+    def delete_language_model_by_id(self, language_model_id: str, schema: str) -> None:
+        return self.repository.delete_by_id(language_model_id, schema)
 
     def update_language_model(
-        self, language_model_id: str, language_model_tag: str, integration_id: str
+        self,
+        language_model_id: str,
+        language_model_tag: str,
+        integration_id: str,
+        schema: str,
     ) -> LanguageModel:
-        integration = self.integration_service.get_integration_by_id(integration_id)
+        integration = self.integration_service.get_integration_by_id(
+            integration_id, schema
+        )
         return self.repository.update_language_model(
             language_model_id=language_model_id,
             language_model_tag=language_model_tag,
             integration_id=integration.id,
+            schema=schema,
         )

@@ -25,7 +25,8 @@ A few services in this guide are accessible via Web Browser UI, it is required t
 - `<agent_lab_fqdn>`: a fqdn to access Agent-Lab via nginx ingress, example: *agent-lab.my-domain.com*
 - `<elasticsearch_fqdn>`: a fqdn to access elasticsearch cluster via nginx ingress, example: *elasticsearch.my-domain.com*
 - `<kibana_fqdn>`: a fqdn to access kibana via nginx ingress, example: *kibana.my-domain.com*
-- `<vault_fqdn>`: a fqdn to access vault via nginx ingress, example: *vault.my-domain.com*
+- `<vault_fqdn>`: a fqdn to access Vault via nginx ingress, example: *vault.my-domain.com*
+- `<auth_fqdn>`: a fqdn to access Keycloak via nginx ingress, example: *auth.my-domain.com*
 
 
 ---
@@ -97,6 +98,61 @@ Modify system hosts file to include domains assigned to localhost address:
 
 ```
 
+### Create agent-lab namespace
+
+In this guide we are going to use `agent-lab` namespace to deploy dependencies and application.
+
+```bash
+kubectl create namespace agent-lab
+```
+
+### (Optional) Setup Certificate Manager
+
+To manage TLS certificates, we will use the [cert-manager](https://cert-manager.io/docs/). This tool automates the management and issuance of TLS certificates.
+
+**Note**: If the deployment does not require a valid HTTPS certificate, this step can be skipped.
+
+1. Add Jetstack's Helm repository:
+
+```bash
+helm repo add jetstack https://charts.jetstack.io
+helm repo update
+```
+
+2. Install cert-manager using Helm:
+
+```bash
+helm install cert-manager jetstack/cert-manager \
+  --namespace cert-manager \
+  --create-namespace \
+  --version v1.17.4 \
+  --set crds.enabled=true
+```
+
+3. Create a ClusterIssuer for Let's Encrypt prod environment:
+
+Next step is creating a ClusterIssuer resource that will be used to issue certificates from Let's Encrypt.
+Please replace `<your_email_address>` with your actual email address to receive notifications about certificate expiration and issues.
+
+```bash
+kubectl apply -f - <<EOF
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: <your_email_address>
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+EOF
+```
+
 ---
 
 ## Setup Dependencies
@@ -121,7 +177,7 @@ helm install redis-operator ot-helm/redis-operator --namespace ot-operators --cr
 3. Create a Redis cluster:
 
 ```bash
-helm install redis-agent-lab ot-helm/redis
+helm install --namespace agent-lab redis-agent-lab ot-helm/redis
 ```
 
 ### Setup PostgreSQL
@@ -146,10 +202,12 @@ helm upgrade --install cnpg --namespace cnpg-system --create-namespace cnpg/clou
 
 **Note**: The `bsantanna/cloudnative-pg-vector:17.4` image is used for deployment, it is a custom image that includes the [pgvector](https://github.com/pgvector/pgvector) extension for vector search capabilities, source can be found at [this repository](https://github.com/bsantanna/docker-images/blob/main/images/servers/cloudnative-pg-vector/Dockerfile)
 
-Three instances of PostgreSQL should be created, one for the Agent-Lab application, one for the vector search and another for the dialog memory (checkpointer).
+Four instances of PostgreSQL should be created, one for the Agent-Lab application, one for the vector search, one for the dialog memory (checkpointer) and one for authentication (Keycloak).
+
+This database deployment is used for application [domain entities](DOMAIN.md):
 
 ```bash
-helm upgrade --install pg-agent-lab cnpg/cluster --values - <<EOF
+helm upgrade --install --namespace agent-lab pg-agent-lab cnpg/cluster --values - <<EOF
 cluster:
   imageName: bsantanna/cloudnative-pg-vector:17.4
   instances: 1
@@ -158,8 +216,10 @@ cluster:
 EOF
 ```
 
+This database deployment is used for Vector search and RAG:
+
 ```bash
-helm upgrade --install pg-agent-lab-vectors cnpg/cluster --values - <<EOF
+helm upgrade --install --namespace agent-lab pg-agent-lab-vectors cnpg/cluster --values - <<EOF
 cluster:
   imageName: bsantanna/cloudnative-pg-vector:17.4
   instances: 1
@@ -168,8 +228,22 @@ cluster:
 EOF
 ```
 
+This database deployment is used for checkpoints and storing dialog memory:
+
 ```bash
-helm upgrade --install pg-agent-lab-checkpoints cnpg/cluster --values - <<EOF
+helm upgrade --install --namespace agent-lab pg-agent-lab-checkpoints cnpg/cluster --values - <<EOF
+cluster:
+  imageName: bsantanna/cloudnative-pg-vector:17.4
+  instances: 1
+  storage:
+    size: 1Gi
+EOF
+```
+
+This database deployment is used for authentication with Keycloak:
+
+```bash
+helm upgrade --install --namespace agent-lab pg-agent-lab-auth cnpg/cluster --values - <<EOF
 cluster:
   imageName: bsantanna/cloudnative-pg-vector:17.4
   instances: 1
@@ -181,30 +255,69 @@ EOF
 The connection URL for the PostgreSQL instances can be obtained using the following command:
 
 ```bash
-echo "$(kubectl get secret <deployment_name>-cluster-app -o jsonpath='{.data.uri}' | base64 -d)"
+echo "$(kubectl --namespace agent-lab get secret <deployment_name>-cluster-app -o jsonpath='{.data.uri}' | base64 -d)"
 ```
 
 Example:
 
 ```bash
-echo "$(kubectl get secret pg-agent-lab-cluster-app -o jsonpath='{.data.uri}' | base64 -d)"
+echo "$(kubectl --namespace agent-lab get secret pg-agent-lab-cluster-app -o jsonpath='{.data.uri}' | base64 -d)"
 ```
 
 To access SQL console for the PostgreSQL instance, you can use the following command:
 
 ```bash
-kubectl exec -it <deployment_name>-cluster-1 -- psql -U postgres
+kubectl --namespace agent-lab exec -it <deployment_name>-cluster-1 -- psql -U postgres
 ```
 
 Example:
 
 ```bash
-kubectl exec -it pg-agent-lab-vectors-cluster-1 -- psql -U postgres
+kubectl --namespace agent-lab exec -it pg-agent-lab-vectors-cluster-1 -- psql -U postgres
 ```
 
 ```postgresql
 CREATE EXTENSION IF NOT EXISTS vector;
 ```
+
+### Setup Keycloak
+
+[Keycloak](https://www.keycloak.org/operator/installation#_installing_by_using_kubectl_without_operator_lifecycle_manager) is used by Agent-Lab to manage user authentication.
+
+- Replace `<auth_fqdn>` with the fully qualified domain name (FQDN) you want to use for accessing Keycloak, example `auth.my-domain.com`.
+- Replace database connection settings by the values obtained using connection url command mentioned above.
+- Replace `<admin_user>` and `<admin_password>` by proper values.
+
+```bash
+helm install --namespace agent-lab kc-agent-lab oci://registry-1.docker.io/bitnamicharts/keycloak --values - <<EOF
+ingress:
+  enabled: true
+  hostname: <auth_fqdn>
+  ingressClassName: nginx
+  path: /
+  pathType: Prefix
+  tls: true
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    kubernetes.io/ingress.class: nginx
+tls:
+  enabled: true
+  autoGenerated: true
+postgresql:
+  enabled: false
+externalDatabase:
+  host: <db_host>
+  user: <db_user>
+  password: <db_password>
+  database: <db_database>
+  port: <db_port>
+auth:
+  adminUser: <admin_user>
+  adminPassword: <admin_password>
+EOF
+```
+
+Please refer to [Keycloak guide](KEYCLOAK.md) for detailed steps how setting up OIDC connection.
 
 ### Setup Vault
 
@@ -222,7 +335,7 @@ helm repo update
 Please replace `<vault_fqdn>` with the fully qualified domain name (FQDN) you want to use for accessing Vault, example `vault.my-domain.com`.
 
 ```bash
-helm install agent-lab-vault hashicorp/vault --values - <<EOF
+helm --namespace agent-lab install agent-lab-vault hashicorp/vault --values - <<EOF
 server:
   affinity: ""
   ingress:
@@ -242,7 +355,7 @@ EOF
 3. Initialize Vault cluster:
 
 ```bash
-kubectl exec agent-lab-vault-0 -- vault operator init \
+kubectl --namespace agent-lab exec agent-lab-vault-0 -- vault operator init \
     -key-shares=1 \
     -key-threshold=1 \
     -format=json > cluster-keys.json
@@ -252,7 +365,7 @@ kubectl exec agent-lab-vault-0 -- vault operator init \
 
 ```bash
 export VAULT_UNSEAL_KEY=$(jq -r ".unseal_keys_b64[]" cluster-keys.json)
-kubectl exec agent-lab-vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY
+kubectl --namespace agent-lab exec agent-lab-vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY
 ```
 
 Copy the root_token from cluster_keys.json file to a safe place, this token is used in the next step for logging in:
@@ -277,10 +390,16 @@ For the *Path* value, use `secret`
 
 ```json
 {
-  "broker_url": "redis://redis-agent-lab.default.svc.cluster.local:6379/0",
-  "db_checkpoints": "postgresql://???:???@pg-agent-lab-checkpoints-cluster-rw.default.svc.cluster.local:5432/app",
-  "db_url": "postgresql://???:???@pg-agent-lab-cluster-rw.default.svc.cluster.local:5432/app",
-  "db_vectors": "postgresql://???:???@pg-agent-lab-vectors-cluster-rw.default.svc.cluster.local:5432/app",
+  "api_base_url": "https://<agent_lab_fqdn>/",
+  "auth_enabled": "True",
+  "auth_url": "https://<auth_fqdn>/",
+  "auth_realm": "<realm_name>",
+  "auth_client_id": "<client_id>",
+  "auth_client_secret": "<client_secret>",
+  "broker_url": "redis://redis-agent-lab.agent-lab.svc.cluster.local:6379/0",
+  "db_checkpoints": "postgresql://???:???@pg-agent-lab-checkpoints-cluster-rw.agent-lab.svc.cluster.local:5432/app",
+  "db_url": "postgresql://???:???@pg-agent-lab-cluster-rw.agent-lab.svc.cluster.local:5432/app",
+  "db_vectors": "postgresql://???:???@pg-agent-lab-vectors-cluster-rw.agent-lab.svc.cluster.local:5432/app",
   "tavily_api_key": "???"
 }
 ```
@@ -312,7 +431,7 @@ helm install elastic-operator elastic/eck-operator --namespace elastic-system --
 
 
 ```bash
-helm install agent-lab-elastic elastic/eck-stack --values - <<EOF
+helm --namespace agent-lab upgrade --install agent-lab-elastic elastic/eck-stack --values - <<EOF
 eck-elasticsearch:
   enabled: true
   fullnameOverride: elasticsearch
@@ -324,9 +443,10 @@ eck-elasticsearch:
         path: /
     tls:
       enabled: true
+      secretName: elasticsearch-tls
     annotations:
       kubernetes.io/ingress.class: nginx
-      kubernetes.io/tls-acme: "true"
+      cert-manager.io/cluster-issuer: letsencrypt-prod
       nginx.ingress.kubernetes.io/proxy-ssl-verify: "false"
       nginx.ingress.kubernetes.io/backend-protocol: HTTPS
 
@@ -347,9 +467,10 @@ eck-kibana:
         path: /
     tls:
       enabled: true
+      secretName: kibana-tls
     annotations:
       kubernetes.io/ingress.class: nginx
-      kubernetes.io/tls-acme: "true"
+      cert-manager.io/cluster-issuer: letsencrypt-prod
       nginx.ingress.kubernetes.io/proxy-ssl-verify: "false"
       nginx.ingress.kubernetes.io/backend-protocol: HTTPS
 
@@ -365,12 +486,12 @@ EOF
 Use the following command to obtain `elastic` user password:
 
 ```bash
-echo "$(kubectl get secret elasticsearch-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode)"
+echo "$(kubectl --namespace agent-lab get secret elasticsearch-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode)"
 ```
 
 Take note of APM Access Token, it is used in the next step to configure OpenTelemetry Collector.
 ```bash
-echo "$(kubectl get secret/agent-lab-elastic-eck-apm-server-apm-token \
+echo "$(kubectl --namespace agent-lab get secret/agent-lab-elastic-eck-apm-server-apm-token \
     -o go-template='{{index .data "secret-token" | base64decode}}')"
 ```
 
@@ -389,7 +510,7 @@ helm repo update
 
 
 ```bash
-helm install agent-lab-telemetry open-telemetry/opentelemetry-collector --values - <<EOF
+helm --namespace agent-lab install agent-lab-telemetry open-telemetry/opentelemetry-collector --values - <<EOF
 mode: deployment
 image:
   repository: otel/opentelemetry-collector-contrib
@@ -423,7 +544,7 @@ EOF
 
 ### Verify dependencies setup
 
-Use `kubectl get pods` to check if all dependencies were properly installed, proceed when Running status is 1/1:
+Use `kubectl --namespace agent-lab get pods` to check if all dependencies were properly installed, proceed when Running status is 1/1:
 
 <div align="center">
 
@@ -442,14 +563,14 @@ This Secret is used to access the Vault.
   - Replace ??? by vault `root_token` obtained in previous steps.
 
 ```bash
-kubectl apply -f - <<EOF
+kubectl --namespace agent-lab apply -f - <<EOF
 apiVersion: v1
 kind: Secret
 metadata:
   name: agent-lab-secret
 type: Opaque
 stringData:
-  VAULT_URL: "http://agent-lab-vault.default.svc.cluster.local:8200"
+  VAULT_URL: "http://agent-lab-vault.agent-lab.svc.cluster.local:8200"
   VAULT_TOKEN: "???"
 EOF
 ```
@@ -460,7 +581,7 @@ EOF
   - Replace `<agent_lab_fqdn>` by a valid domain name, example `agent-lab.my-domain.com`
 
 ```bash
-helm upgrade --install agent-lab agent-lab \
+helm --namespace agent-lab upgrade --install agent-lab agent-lab \
   --repo "https://bsantanna.github.io/agent-lab" \
   --version "1.1.1" --values - <<EOF
 config:
@@ -492,53 +613,6 @@ EOF
 
 ### Install Agent-Lab Managed TLS certificate
 
-#### Setup Certificate Manager
-
-To manage TLS certificates, we will use the [cert-manager](https://cert-manager.io/docs/). This tool automates the management and issuance of TLS certificates.
-
-**Note**: If the deployment does not require a valid HTTPS certificate, this step can be skipped.
-
-1. Add Jetstack's Helm repository:
-
-```bash
-helm repo add jetstack https://charts.jetstack.io
-helm repo update
-```
-
-2. Install cert-manager using Helm:
-
-```bash
-helm install cert-manager jetstack/cert-manager \
-  --namespace cert-manager \
-  --create-namespace \
-  --version v1.17.2 \
-  --set crds.enabled=true
-```
-
-3. Create a ClusterIssuer for Let's Encrypt staging environment:
-
-Next step is creating a ClusterIssuer resource that will be used to issue certificates from Let's Encrypt.
-Please replace `<your_email_address>` with your actual email address to receive notifications about certificate expiration and issues.
-
-```bash
-kubectl apply -f - <<EOF
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: letsencrypt-prod
-spec:
-  acme:
-    server: https://acme-v02.api.letsencrypt.org/directory
-    email: <your_email_address>
-    privateKeySecretRef:
-      name: letsencrypt-prod
-    solvers:
-    - http01:
-        ingress:
-          class: nginx
-EOF
-```
-
 #### Deploy helm chart with cert-manager cluster issuer.
 
   - Replace `<ollama_endpoint>` by a valid ollama endpoint in your LAN, example: `http://192.168.1.1:11434`
@@ -546,7 +620,7 @@ EOF
   - Make sure the nginx ingress controller is accessible on port 80 via public internet, Cert Manager challenges are validated via HTTP.
 
 ```bash
-helm upgrade --install agent-lab agent-lab \
+helm --namespace agent-lab upgrade --install agent-lab agent-lab \
   --repo "https://bsantanna.github.io/agent-lab" \
   --version "1.1.1" --values - <<EOF
 config:
@@ -577,4 +651,3 @@ EOF
 
 
 ---
-

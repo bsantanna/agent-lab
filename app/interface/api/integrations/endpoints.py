@@ -1,8 +1,11 @@
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Body, Depends, Response, status
+from fastapi.security import HTTPBearer
+from fastapi_keycloak_middleware import get_user
 from typing_extensions import List
 
 from app.core.container import Container
+from app.infrastructure.auth.schema import User
 from app.interface.api.integrations.schema import (
     IntegrationCreateRequest,
     Integration,
@@ -11,10 +14,12 @@ from app.interface.api.integrations.schema import (
 from app.services.integrations import IntegrationService
 
 router = APIRouter()
+bearer_scheme = HTTPBearer()
 
 
 @router.get(
     "/list",
+    dependencies=[Depends(bearer_scheme)],
     response_model=List[Integration],
     summary="List all integrations",
     description="""
@@ -68,22 +73,22 @@ async def get_list(
     integration_service: IntegrationService = Depends(
         Provide[Container.integration_service]
     ),
+    user: User = Depends(get_user),
 ):
     """
     Get all configured integrations.
 
-    Args:
-        integration_service: Injected integration service
-
     Returns:
         List[Integration]: All integrations in the system
     """
-    integrations = integration_service.get_integrations()
+    schema = user.id.replace("-", "_") if user is not None else "public"
+    integrations = integration_service.get_integrations(schema)
     return [Integration.model_validate(integration) for integration in integrations]
 
 
 @router.get(
     "/{integration_id}",
+    dependencies=[Depends(bearer_scheme)],
     response_model=Integration,
     summary="Get integration details",
     description="""
@@ -113,24 +118,23 @@ async def get_by_id(
     integration_service: IntegrationService = Depends(
         Provide[Container.integration_service]
     ),
+    user: User = Depends(get_user),
 ):
     """
     Get information about a specific integration.
-
-    Args:
-        integration_id: Unique identifier of the integration
-        integration_service: Injected integration service
 
     Returns:
         Integration: Complete integration details
 
     """
-    integration = integration_service.get_integration_by_id(integration_id)
+    schema = user.id.replace("-", "_") if user is not None else "public"
+    integration = integration_service.get_integration_by_id(integration_id, schema)
     return Integration.model_validate(integration)
 
 
 @router.post(
     "/create",
+    dependencies=[Depends(bearer_scheme)],
     status_code=status.HTTP_201_CREATED,
     response_model=Integration,
     summary="Create a new integration",
@@ -204,27 +208,27 @@ async def add(
     integration_service: IntegrationService = Depends(
         Provide[Container.integration_service]
     ),
+    user: User = Depends(get_user),
 ):
     """
     Create a new integration with external AI service.
 
-    Args:
-        integration_data: Integration creation request data
-        integration_service: Injected integration service
-
     Returns:
         Integration: Newly created integration
     """
+    schema = user.id.replace("-", "_") if user is not None else "public"
     integration = integration_service.create_integration(
         integration_type=integration_data.integration_type,
         api_endpoint=integration_data.api_endpoint,
         api_key=integration_data.api_key,
+        schema=schema,
     )
     return Integration.model_validate(integration)
 
 
 @router.delete(
     "/delete/{integration_id}",
+    dependencies=[Depends(bearer_scheme)],
     summary="Delete an integration",
     description="""
     Permanently delete an integration and all its associated configurations.
@@ -266,17 +270,15 @@ async def remove(
     integration_service: IntegrationService = Depends(
         Provide[Container.integration_service]
     ),
+    user: User = Depends(get_user),
 ):
     """
     Delete an integration by ID.
-
-    Args:
-        integration_id: Unique identifier of the integration to delete
-        integration_service: Injected integration service
 
     Returns:
         Response: 204 No Content on success
 
     """
-    integration_service.delete_integration_by_id(integration_id)
+    schema = user.id.replace("-", "_") if user is not None else "public"
+    integration_service.delete_integration_by_id(integration_id, schema)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

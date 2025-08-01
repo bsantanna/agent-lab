@@ -37,8 +37,10 @@ from app.services.tasks import TaskProgress
 
 CURRENT_TIME_PATTERN = "%a %b %d %Y %H:%M:%S %z"
 
+
 class AgentState(MessagesState):
     agent_id: str
+    schema: str
     attachment_id: str
     audio_format: str
     audio_language_model: str
@@ -82,7 +84,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
         workflow_builder.add_node("content_analyst", self.get_content_analyst)
         return workflow_builder
 
-    def create_default_settings(self, agent_id: str):
+    def create_default_settings(self, agent_id: str, schema: str):
         current_dir = Path(__file__).parent
 
         supervisor_prompt = self.read_file_content(
@@ -92,6 +94,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             agent_id=agent_id,
             setting_key="supervisor_system_prompt",
             setting_value=supervisor_prompt,
+            schema=schema,
         )
 
         coordinator_prompt = self.read_file_content(
@@ -101,6 +104,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             agent_id=agent_id,
             setting_key="coordinator_system_prompt",
             setting_value=coordinator_prompt,
+            schema=schema,
         )
 
         content_analyst_prompt = self.read_file_content(
@@ -110,6 +114,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             agent_id=agent_id,
             setting_key="content_analyst_system_prompt",
             setting_value=content_analyst_prompt,
+            schema=schema,
         )
 
         planner_prompt = self.read_file_content(
@@ -119,6 +124,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             agent_id=agent_id,
             setting_key="planner_system_prompt",
             setting_value=planner_prompt,
+            schema=schema,
         )
 
         reporter_prompt = self.read_file_content(
@@ -128,6 +134,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             agent_id=agent_id,
             setting_key="reporter_system_prompt",
             setting_value=reporter_prompt,
+            schema=schema,
         )
 
         audio_language_model = self.read_file_content(
@@ -137,17 +144,19 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             agent_id=agent_id,
             setting_key="audio_language_model",
             setting_value=audio_language_model,
+            schema=schema,
         )
 
         self.agent_setting_service.create_agent_setting(
             agent_id=agent_id,
             setting_key="audio_format",
             setting_value="mp3",
+            schema=schema,
         )
 
-    def get_input_params(self, message_request: MessageRequest) -> dict:
+    def get_input_params(self, message_request: MessageRequest, schema: str) -> dict:
         settings = self.agent_setting_service.get_agent_settings(
-            message_request.agent_id
+            message_request.agent_id, schema
         )
         settings_dict = {
             setting.setting_key: setting.setting_value for setting in settings
@@ -166,6 +175,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
 
         return {
             "agent_id": message_request.agent_id,
+            "schema": schema,
             "attachment_id": message_request.attachment_id,
             "audio_language_model": settings_dict.get("audio_language_model"),
             "audio_format": settings_dict.get("audio_format"),
@@ -196,6 +206,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
         self, state: AgentState
     ) -> Command[Literal["planner", "__end__"]]:
         agent_id = state["agent_id"]
+        schema = state["schema"]
         attachment_id = state["attachment_id"]
         query = state["query"]
         coordinator_system_prompt = state["coordinator_system_prompt"]
@@ -204,7 +215,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             self.logger.info(f"Agent[{agent_id}] -> Coordinator -> Query -> {query}")
 
             coordinator = create_react_agent(
-                model=self.get_chat_model(agent_id),
+                model=self.get_chat_model(agent_id, schema),
                 tools=self.get_coordinator_tools(),
                 prompt=coordinator_system_prompt,
             )
@@ -244,7 +255,9 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
                 )
             )
 
-            attachment = self.attachment_service.get_attachment_by_id(attachment_id)
+            attachment = self.attachment_service.get_attachment_by_id(
+                attachment_id, schema
+            )
             audio_base64 = base64.b64encode(attachment.raw_content).decode()
             messages = [
                 {"role": "system", "content": coordinator_system_prompt},
@@ -263,7 +276,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
                 },
             ]
 
-            openai_client = self.get_openai_client(agent_id)
+            openai_client = self.get_openai_client(agent_id, schema)
             completion = openai_client.chat.completions.create(
                 model=audio_language_model, modalities=["text"], messages=messages
             )
@@ -296,6 +309,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
 
     def get_planner(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
+        schema = state["schema"]
         query = state["query"]
         transcription = state["transcription"]
         planner_system_prompt = state["planner_system_prompt"]
@@ -312,7 +326,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
             f"Agent[{agent_id}] -> Planner -> Query -> {query} -> Transcription -> {transcription}"
         )
         chat_model = (
-            self.get_chat_model(agent_id)
+            self.get_chat_model(agent_id, schema)
             .bind_tools(self.get_planner_tools())
             .with_structured_output(SolutionPlan)
         )
@@ -348,10 +362,11 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
     ) -> Command[Literal[*SUPERVISED_AGENTS, "__end__"]]:
         messages = self.get_last_interaction_messages(state["messages"])
         agent_id = state["agent_id"]
+        schema = state["schema"]
         self.logger.info(f"Agent[{agent_id}] -> Supervisor -> Messages -> {messages}")
         supervisor_system_prompt = state["supervisor_system_prompt"]
         structured_report = state["structured_report"]
-        chat_model = self.get_chat_model(agent_id).bind_tools(
+        chat_model = self.get_chat_model(agent_id, schema).bind_tools(
             self.get_supervisor_tools()
         )
         chat_model_with_structured_output = chat_model.with_structured_output(
@@ -383,6 +398,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
 
     def get_reporter(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
+        schema = state["schema"]
         messages = state["messages"]
         self.logger.info(f"Agent[{agent_id}] -> Reporter")
         self.task_notification_service.publish_update(
@@ -394,7 +410,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
         )
         reporter_system_prompt = state["reporter_system_prompt"]
         response = self.get_reporter_chain(
-            llm=self.get_chat_model(agent_id),
+            llm=self.get_chat_model(agent_id, schema),
             reporter_system_prompt=reporter_system_prompt,
         ).invoke({"content_analysis": messages[-1].content})
         self.task_notification_service.publish_update(
@@ -415,6 +431,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
 
     def get_content_analyst(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
+        schema = state["schema"]
         self.logger.info(f"Agent[{agent_id}] -> Content Analyst")
         self.task_notification_service.publish_update(
             task_progress=TaskProgress(
@@ -425,7 +442,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
         )
         content_analyst_system_prompt = state["content_analyst_system_prompt"]
         content_analyst = create_react_agent(
-            model=self.get_chat_model(agent_id),
+            model=self.get_chat_model(agent_id, schema),
             tools=self.get_content_analyst_tools(),
             prompt=content_analyst_system_prompt,
         )
@@ -460,10 +477,10 @@ class AzureEntraIdVoiceMemosAgent(
             self.get_web_crawl_tool(),
         ]
 
-    def get_input_params(self, message_request: MessageRequest) -> dict:
-        input_params = super().get_input_params(message_request)
+    def get_input_params(self, message_request: MessageRequest, schema: str) -> dict:
+        input_params = super().get_input_params(message_request, schema)
         settings = self.agent_setting_service.get_agent_settings(
-            message_request.agent_id
+            message_request.agent_id, schema
         )
         settings_dict = {
             setting.setting_key: setting.setting_value for setting in settings
@@ -485,13 +502,12 @@ class AzureEntraIdVoiceMemosAgent(
 
 
 class FastVoiceMemosAgent(VoiceMemosAgent):
-
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
 
-    def get_input_params(self, message_request: MessageRequest) -> dict:
+    def get_input_params(self, message_request: MessageRequest, schema: str) -> dict:
         settings = self.agent_setting_service.get_agent_settings(
-            message_request.agent_id
+            message_request.agent_id, schema
         )
         settings_dict = {
             setting.setting_key: setting.setting_value for setting in settings
@@ -508,6 +524,7 @@ class FastVoiceMemosAgent(VoiceMemosAgent):
 
         return {
             "agent_id": message_request.agent_id,
+            "schema": schema,
             "attachment_id": message_request.attachment_id,
             "audio_language_model": settings_dict.get("audio_language_model"),
             "audio_format": settings_dict.get("audio_format"),
@@ -529,16 +546,19 @@ class FastVoiceMemosAgent(VoiceMemosAgent):
         workflow_builder.add_node("content_analyst", self.get_content_analyst)
         return workflow_builder
 
-    def get_coordinator(self, state: AgentState) -> Command[Literal["content_analyst", "__end__"]]:
+    def get_coordinator(
+        self, state: AgentState
+    ) -> Command[Literal["content_analyst", "__end__"]]:
         original_command = super().get_coordinator(state)
 
         return Command(
-            goto= "__end__" if original_command == "__end__" else "content_analyst",
+            goto="__end__" if original_command == "__end__" else "content_analyst",
             update=original_command.update,
         )
 
     def get_content_analyst(self, state: AgentState) -> Command[Literal["__end__"]]:
         agent_id = state["agent_id"]
+        schema = state["schema"]
         self.logger.info(f"Agent[{agent_id}] -> Content Analyst")
         self.task_notification_service.publish_update(
             task_progress=TaskProgress(
@@ -549,10 +569,10 @@ class FastVoiceMemosAgent(VoiceMemosAgent):
         )
         content_analyst_system_prompt = state["content_analyst_system_prompt"]
         content_analyst = create_react_agent(
-            model=self.get_chat_model(agent_id),
+            model=self.get_chat_model(agent_id, schema),
             tools=self.get_content_analyst_tools(),
             prompt=content_analyst_system_prompt,
-            response_format=AudioAnalysisReport
+            response_format=AudioAnalysisReport,
         )
         response = content_analyst.invoke(state)
 
@@ -569,8 +589,7 @@ class FastVoiceMemosAgent(VoiceMemosAgent):
         return Command(
             update={
                 "messages": response["messages"],
-                "structured_report": response["structured_response"]
+                "structured_report": response["structured_response"],
             },
             goto="__end__",
         )
-

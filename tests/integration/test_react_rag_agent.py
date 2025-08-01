@@ -17,6 +17,7 @@ class TestReactRagAgent:
         # create integration
         response = client.post(
             url="/integrations/create",
+            headers={"Authorization": "Bearer x"},
             json={
                 "api_endpoint": "https://api.x.ai/v1/",
                 "api_key": os.environ["XAI_API_KEY"],
@@ -28,6 +29,7 @@ class TestReactRagAgent:
         # create llm
         response_2 = client.post(
             url="/llms/create",
+            headers={"Authorization": "Bearer x"},
             json={
                 "integration_id": integration_id,
                 "language_model_tag": "grok-3-mini-beta",
@@ -38,6 +40,7 @@ class TestReactRagAgent:
         # create agent
         return client.post(
             url="/agents/create",
+            headers={"Authorization": "Bearer x"},
             json={
                 "language_model_id": language_model_id,
                 "agent_type": "react_rag",
@@ -51,6 +54,7 @@ class TestReactRagAgent:
 
         return client.post(
             "/messages/post",
+            headers={"Authorization": "Bearer x"},
             json={
                 "message_role": "human",
                 "message_content": message_content,

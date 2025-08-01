@@ -39,10 +39,10 @@ class AttachmentService:
         self.vault_client = vault_client
         self.markdown = markdown
 
-    def get_attachment_by_id(self, attachment_id: str) -> Attachment:
-        return self.attachment_repository.get_by_id(attachment_id)
+    def get_attachment_by_id(self, attachment_id: str, schema: str) -> Attachment:
+        return self.attachment_repository.get_by_id(attachment_id, schema)
 
-    async def create_attachment_with_file(self, file: File) -> Attachment:
+    async def create_attachment_with_file(self, file: File, schema: str) -> Attachment:
         temp_file_path = f"temp-{uuid4()}"
 
         async with await anyio.open_file(temp_file_path, "wb") as buffer:
@@ -64,6 +64,7 @@ class AttachmentService:
             file_name=file_name,
             raw_content=raw_content,
             parsed_content=parsed_content,
+            schema=schema,
         )
 
         os.remove(temp_file_path)
@@ -75,6 +76,7 @@ class AttachmentService:
         file_name: str,
         raw_content: bytes,
         parsed_content: str,
+        schema: str,
         attachment_id: str = None,
     ) -> Attachment:
         return self.attachment_repository.add(
@@ -82,26 +84,31 @@ class AttachmentService:
             raw_content=raw_content,
             parsed_content=parsed_content,
             attachment_id=attachment_id,
+            schema=schema,
         )
 
-    def delete_attachment_by_id(self, attachment_id: str) -> None:
-        return self.attachment_repository.delete_by_id(attachment_id)
+    def delete_attachment_by_id(self, attachment_id: str, schema: str) -> None:
+        return self.attachment_repository.delete_by_id(attachment_id, schema)
 
     async def create_embeddings(
-        self, attachment_id: str, language_model_id: str, collection_name: str
+        self,
+        attachment_id: str,
+        language_model_id: str,
+        collection_name: str,
+        schema: str,
     ) -> Attachment:
         language_model = self.language_model_service.get_language_model_by_id(
-            language_model_id
+            language_model_id, schema
         )
         lm_settings = self.language_model_setting_service.get_language_model_settings(
-            language_model.id
+            language_model.id, schema
         )
         lm_settings_dict = {
             setting.setting_key: setting.setting_value for setting in lm_settings
         }
 
         integration = self.integration_service.get_integration_by_id(
-            language_model.integration_id
+            language_model.integration_id, schema
         )
         secrets = self.vault_client.secrets.kv.read_secret_version(
             path=f"integration_{integration.id}", raise_on_deleted_version=False
@@ -126,7 +133,7 @@ class AttachmentService:
                 base_url=f"{os.getenv('OLLAMA_ENDPOINT')}",
             )
 
-        attachment = self.attachment_repository.get_by_id(attachment_id)
+        attachment = self.attachment_repository.get_by_id(attachment_id, schema)
         temp_file_path = f"temp-{uuid4()}"
         async with await anyio.open_file(temp_file_path, "wb") as buffer:
             await buffer.write(attachment.parsed_content.encode())
@@ -137,7 +144,7 @@ class AttachmentService:
         )
         self.document_repository.add(embeddings_model, collection_name, documents)
         updated_attachment = self.attachment_repository.update_attachment(
-            attachment_id, collection_name
+            attachment_id, collection_name, schema
         )
 
         os.remove(temp_file_path)
