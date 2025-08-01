@@ -62,7 +62,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
         }
         return workflow_state["messages"][-1].content, response_data
 
-    def create_default_settings(self, agent_id: str):
+    def create_default_settings(self, agent_id: str, schema: str):
         current_dir = Path(__file__).parent
 
         coordinator_prompt = self.read_file_content(
@@ -72,6 +72,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             agent_id=agent_id,
             setting_key="coordinator_system_prompt",
             setting_value=coordinator_prompt,
+            schema=schema,
         )
 
         planner_prompt = self.read_file_content(
@@ -81,6 +82,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             agent_id=agent_id,
             setting_key="planner_system_prompt",
             setting_value=planner_prompt,
+            schema=schema,
         )
 
         supervisor_prompt = self.read_file_content(
@@ -90,6 +92,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             agent_id=agent_id,
             setting_key="supervisor_system_prompt",
             setting_value=supervisor_prompt,
+            schema=schema,
         )
 
         researcher_prompt = self.read_file_content(
@@ -99,6 +102,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             agent_id=agent_id,
             setting_key="researcher_system_prompt",
             setting_value=researcher_prompt,
+            schema=schema,
         )
 
         coder_prompt = self.read_file_content(
@@ -108,6 +112,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             agent_id=agent_id,
             setting_key="coder_system_prompt",
             setting_value=coder_prompt,
+            schema=schema,
         )
 
         browser_prompt = self.read_file_content(
@@ -117,6 +122,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             agent_id=agent_id,
             setting_key="browser_system_prompt",
             setting_value=browser_prompt,
+            schema=schema,
         )
 
         reporter_prompt = self.read_file_content(
@@ -126,6 +132,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             agent_id=agent_id,
             setting_key="reporter_system_prompt",
             setting_value=reporter_prompt,
+            schema=schema,
         )
 
         collection_name = self.read_file_content(
@@ -135,12 +142,14 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             agent_id=agent_id,
             setting_key="collection_name",
             setting_value=collection_name,
+            schema=schema,
         )
 
         self.agent_setting_service.create_agent_setting(
             agent_id=agent_id,
             setting_key="deep_search_mode",
             setting_value="False",
+            schema=schema,
         )
 
     def get_workflow_builder(self, agent_id: str):
@@ -155,9 +164,9 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
         workflow_builder.add_node("reporter", self.get_reporter)
         return workflow_builder
 
-    def get_input_params(self, message_request: MessageRequest):
+    def get_input_params(self, message_request: MessageRequest, schema: str) -> dict:
         settings = self.agent_setting_service.get_agent_settings(
-            message_request.agent_id
+            message_request.agent_id, schema
         )
         settings_dict = {
             setting.setting_key: setting.setting_value for setting in settings
@@ -174,6 +183,7 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
 
         return {
             "agent_id": message_request.agent_id,
+            "schema": schema,
             "query": message_request.message_content,
             "collection_name": settings_dict["collection_name"],
             "deep_search_mode": deep_search_mode,
