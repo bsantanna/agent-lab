@@ -106,7 +106,7 @@ class Container(containers.DeclarativeContainer):
 
     integration_repository = providers.Factory(
         IntegrationRepository,
-        session_factory=db.provided.session,
+        db=db,
         vault_client=vault_client,
     )
 

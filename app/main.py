@@ -9,6 +9,7 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
 from app.core.container import Container
+from app.infrastructure.auth.user import map_user
 from app.infrastructure.metrics.logging_middleware import LoggingMiddleware
 from app.interface.api.agents.endpoints import router as agents_router
 from app.interface.api.attachments.endpoints import router as attachments_router
@@ -42,7 +43,6 @@ def create_app():
 
 
 def setup_auth(container, application):
-
     config = container.config()
     if config["auth"]["enabled"] == "True":
         keycloak_config = KeycloakConfiguration(
@@ -56,6 +56,7 @@ def setup_auth(container, application):
             application,
             keycloak_configuration=keycloak_config,
             exclude_patterns=["/docs", "/openapi.json", "/status/*"],
+            user_mapper=map_user,
         )
 
     else:

@@ -1,30 +1,29 @@
-from contextlib import AbstractContextManager
 from datetime import datetime
 from uuid import uuid4
 
 import hvac
-from sqlalchemy.orm import Session
-from typing_extensions import Callable, Iterator
+from typing_extensions import Iterator
 
 from app.domain.exceptions.base import NotFoundError
 from app.domain.models import Integration
+from app.infrastructure.database.sql import Database
 
 
 class IntegrationRepository:
     def __init__(
         self,
-        session_factory: Callable[..., AbstractContextManager[Session]],
+        db: Database,
         vault_client: hvac.Client,
     ) -> None:
-        self.session_factory = session_factory
+        self.db = db
         self.vault_client = vault_client
 
-    def get_all(self) -> Iterator[Integration]:
-        with self.session_factory() as session:
+    def get_all(self, schema: str) -> Iterator[Integration]:
+        with self.db.session(schema_name=schema) as session:
             return session.query(Integration).filter(Integration.is_active).all()
 
-    def get_by_id(self, integration_id: str) -> Integration:
-        with self.session_factory() as session:
+    def get_by_id(self, integration_id: str, schema: str) -> Integration:
+        with self.db.session(schema_name=schema) as session:
             integration = (
                 session.query(Integration)
                 .filter(Integration.id == integration_id, Integration.is_active)
@@ -35,7 +34,7 @@ class IntegrationRepository:
             return integration
 
     def add(
-        self, integration_type: str, api_endpoint: str, api_key: str
+        self, integration_type: str, api_endpoint: str, api_key: str, schema: str
     ) -> Integration:
         gen_id = uuid4()
         self.vault_client.secrets.kv.v2.create_or_update_secret(
@@ -43,7 +42,7 @@ class IntegrationRepository:
             secret={"api_endpoint": api_endpoint, "api_key": api_key},
         )
 
-        with self.session_factory() as session:
+        with self.db.session(schema_name=schema) as session:
             integration = Integration(
                 id=str(gen_id),
                 created_at=datetime.now(),
@@ -55,8 +54,8 @@ class IntegrationRepository:
             session.refresh(integration)
             return integration
 
-    def delete_by_id(self, integration_id: str) -> None:
-        with self.session_factory() as session:
+    def delete_by_id(self, integration_id: str, schema: str) -> None:
+        with self.db.session(schema_name=schema) as session:
             entity: Integration = (
                 session.query(Integration)
                 .filter(Integration.id == integration_id, Integration.is_active)
