@@ -137,8 +137,9 @@ class AdaptiveRagAgent(WebAgentBase):
         self, state: AgentState
     ) -> Literal["complete_answer", "incomplete_answer"]:
         agent_id = state["agent_id"]
+        schema = state["schema"]
         query = state["query"]
-        chat_model = self.get_chat_model(agent_id)
+        chat_model = self.get_chat_model(agent_id, schema)
         generation = state["generation"]
         remaining_steps = state["remaining_steps"]
         answer_grader_system_prompt = state["answer_grader_system_prompt"]
@@ -197,10 +198,11 @@ class AdaptiveRagAgent(WebAgentBase):
 
     def generate(self, state: AgentState):
         agent_id = state["agent_id"]
+        schema = state["schema"]
         query = state["query"]
         documents = state["documents"]
         execution_system_prompt = state["execution_system_prompt"]
-        chat_model = self.get_chat_model(agent_id)
+        chat_model = self.get_chat_model(agent_id, schema)
         previous_messages = state["messages"]
         context = "\n---\n".join(document.page_content for document in documents)
         if len(previous_messages) > 5:
@@ -262,9 +264,10 @@ class AdaptiveRagAgent(WebAgentBase):
 
     def grade_documents(self, state: AgentState):
         agent_id = state["agent_id"]
+        schema = state["schema"]
         query = state["query"]
         documents = state["documents"]
-        chat_model = self.get_chat_model(agent_id)
+        chat_model = self.get_chat_model(agent_id, schema)
         retrieval_grader_system_prompt = state["retrieval_grader_system_prompt"]
         filtered_docs = []
         self.logger.info(f"Agent[{agent_id}] -> Document Grader -> Query -> {query} ")
@@ -325,8 +328,9 @@ class AdaptiveRagAgent(WebAgentBase):
 
     def transform_query(self, state: AgentState):
         agent_id = state["agent_id"]
+        schema = state["schema"]
         query = state["query"]
-        chat_model = self.get_chat_model(agent_id)
+        chat_model = self.get_chat_model(agent_id, schema)
         query_rewriter_system_prompt = state["query_rewriter_system_prompt"]
         self.logger.info(f"Agent[{agent_id}] -> Transform query -> Query -> {query}")
         self.task_notification_service.publish_update(
