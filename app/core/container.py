@@ -121,7 +121,8 @@ class Container(containers.DeclarativeContainer):
     )
 
     language_model_setting_repository = providers.Factory(
-        LanguageModelSettingRepository, session_factory=db.provided.session
+        LanguageModelSettingRepository,
+        db=db,
     )
 
     language_model_setting_service = providers.Factory(
@@ -129,9 +130,7 @@ class Container(containers.DeclarativeContainer):
         language_model_setting_repository=language_model_setting_repository,
     )
 
-    language_model_repository = providers.Factory(
-        LanguageModelRepository, session_factory=db.provided.session
-    )
+    language_model_repository = providers.Factory(LanguageModelRepository, db=db)
 
     language_model_service = providers.Factory(
         LanguageModelService,
@@ -140,9 +139,7 @@ class Container(containers.DeclarativeContainer):
         integration_service=integration_service,
     )
 
-    attachment_repository = providers.Factory(
-        AttachmentRepository, session_factory=db.provided.session
-    )
+    attachment_repository = providers.Factory(AttachmentRepository, db=db)
 
     attachment_service = providers.Factory(
         AttachmentService,
@@ -155,18 +152,14 @@ class Container(containers.DeclarativeContainer):
         markdown=markdown,
     )
 
-    agent_setting_repository = providers.Factory(
-        AgentSettingRepository, session_factory=db.provided.session
-    )
+    agent_setting_repository = providers.Factory(AgentSettingRepository, db=db)
 
     agent_setting_service = providers.Factory(
         AgentSettingService,
         agent_setting_repository=agent_setting_repository,
     )
 
-    agent_repository = providers.Factory(
-        AgentRepository, session_factory=db.provided.session
-    )
+    agent_repository = providers.Factory(AgentRepository, db=db)
 
     agent_service = providers.Factory(
         AgentService,
@@ -175,9 +168,7 @@ class Container(containers.DeclarativeContainer):
         language_model_service=language_model_service,
     )
 
-    message_repository = providers.Factory(
-        MessageRepository, session_factory=db.provided.session
-    )
+    message_repository = providers.Factory(MessageRepository, db=db)
 
     message_service = providers.Factory(
         MessageService,

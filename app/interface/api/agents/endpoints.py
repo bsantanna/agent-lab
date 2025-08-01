@@ -10,10 +10,13 @@ from fastapi import (
     WebSocket,
     WebSocketDisconnect,
 )
+from fastapi.security import HTTPBearer
+from fastapi_keycloak_middleware import get_user
 from typing_extensions import List
 
 from app.core.container import Container
 from app.domain.models import Agent as DomainAgent
+from app.infrastructure.auth.schema import User
 from app.interface.api.agents.schema import (
     AgentCreateRequest,
     AgentExpanded,
@@ -30,10 +33,12 @@ from app.services.tasks import TaskNotificationService
 from app.interface.api.agents.schema import valid_agent_types
 
 router = APIRouter()
+bearer_scheme = HTTPBearer()
 
 
 @router.get(
     path="/list",
+    dependencies=[Depends(bearer_scheme)],
     response_model=List[Agent],
     operation_id="get_agent_list",
     summary="Get all agents",
@@ -86,13 +91,16 @@ router = APIRouter()
 @inject
 async def get_list(
     agent_service: AgentService = Depends(Provide[Container.agent_service]),
+    user: User = Depends(get_user),
 ):
-    agents = agent_service.get_agents()
+    schema = user.id.replace("-", "_") if user is not None else "public"
+    agents = agent_service.get_agents(schema)
     return [Agent.model_validate(agent) for agent in agents]
 
 
 @router.get(
     path="/{agent_id}",
+    dependencies=[Depends(bearer_scheme)],
     response_model=AgentExpanded,
     summary="Get agent by ID",
     description="Retrieve detailed information about a specific agent by its unique identifier.",
@@ -142,13 +150,16 @@ async def get_by_id(
     agent_setting_service: AgentSettingService = Depends(
         Provide[Container.agent_setting_service]
     ),
+    user: User = Depends(get_user),
 ):
-    agent = agent_service.get_agent_by_id(agent_id)
-    return _format_expanded_response(agent, agent_setting_service)
+    schema = user.id.replace("-", "_") if user is not None else "public"
+    agent = agent_service.get_agent_by_id(agent_id, schema)
+    return _format_expanded_response(agent, agent_setting_service, schema)
 
 
 @router.post(
     path="/create",
+    dependencies=[Depends(bearer_scheme)],
     status_code=status.HTTP_201_CREATED,
     response_model=Agent,
     summary="Create a new agent",
@@ -209,11 +220,14 @@ async def add(
     agent_data: AgentCreateRequest = Body(...),
     agent_service: AgentService = Depends(Provide[Container.agent_service]),
     agent_registry: AgentRegistry = Depends(Provide[Container.agent_registry]),
+    user: User = Depends(get_user),
 ):
+    schema = user.id.replace("-", "_") if user is not None else "public"
     agent = agent_service.create_agent(
         language_model_id=agent_data.language_model_id,
         agent_name=agent_data.agent_name,
         agent_type=agent_data.agent_type,
+        schema=schema,
     )
     agent_registry.get_agent(agent_data.agent_type).create_default_settings(
         agent_id=agent.id
@@ -223,6 +237,7 @@ async def add(
 
 @router.delete(
     path="/delete/{agent_id}",
+    dependencies=[Depends(bearer_scheme)],
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete an agent",
     description="This endpoint removes an agent from the system including",
@@ -243,12 +258,15 @@ async def add(
 async def remove(
     agent_id: str,
     agent_service: AgentService = Depends(Provide[Container.agent_service]),
+    user: User = Depends(get_user),
 ):
-    agent_service.delete_agent_by_id(agent_id)
+    schema = user.id.replace("-", "_") if user is not None else "public"
+    agent_service.delete_agent_by_id(agent_id, schema)
 
 
 @router.post(
     path="/update",
+    dependencies=[Depends(bearer_scheme)],
     response_model=Agent,
     summary="Update agent basic information",
     description="Update agent information such as name and configuration.",
@@ -290,18 +308,22 @@ async def remove(
 async def update(
     agent_data: AgentUpdateRequest = Body(...),
     agent_service: AgentService = Depends(Provide[Container.agent_service]),
+    user: User = Depends(get_user),
 ):
+    schema = user.id.replace("-", "_") if user is not None else "public"
     agent = agent_service.update_agent(
         agent_id=agent_data.agent_id,
         agent_name=agent_data.agent_name,
         language_model_id=agent_data.language_model_id,
         agent_summary=agent_data.agent_summary,
+        schema=schema,
     )
     return Agent.model_validate(agent)
 
 
 @router.post(
     path="/update_setting",
+    dependencies=[Depends(bearer_scheme)],
     response_model=AgentExpanded,
     summary="Update agent setting",
     description="""
@@ -374,15 +396,18 @@ async def update_setting(
     agent_setting_service: AgentSettingService = Depends(
         Provide[Container.agent_setting_service]
     ),
+    user: User = Depends(get_user),
 ):
+    schema = user.id.replace("-", "_") if user is not None else "public"
     agent_setting_service.update_by_key(
         agent_id=agent_data.agent_id,
         setting_key=agent_data.setting_key,
         setting_value=agent_data.setting_value,
+        schema=schema,
     )
 
-    agent = agent_service.get_agent_by_id(agent_id=agent_data.agent_id)
-    return _format_expanded_response(agent, agent_setting_service)
+    agent = agent_service.get_agent_by_id(agent_data.agent_id, schema)
+    return _format_expanded_response(agent, agent_setting_service, schema)
 
 
 @router.websocket("/ws/task_updates/{agent_id}")
@@ -426,9 +451,9 @@ async def task_updates_endpoint(
 
 
 def _format_expanded_response(
-    agent: DomainAgent, agent_setting_service: AgentSettingService
+    agent: DomainAgent, agent_setting_service: AgentSettingService, schema: str
 ) -> AgentExpanded:
-    settings = agent_setting_service.get_agent_settings(agent_id=agent.id)
+    settings = agent_setting_service.get_agent_settings(agent.id, schema)
     response = AgentExpanded.model_validate(agent)
     response.ag_settings = [
         AgentSetting.model_validate(setting) for setting in settings

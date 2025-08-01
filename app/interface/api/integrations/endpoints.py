@@ -6,7 +6,6 @@ from typing_extensions import List
 
 from app.core.container import Container
 from app.infrastructure.auth.schema import User
-from app.infrastructure.database.sql import Database
 from app.interface.api.integrations.schema import (
     IntegrationCreateRequest,
     Integration,
@@ -74,7 +73,6 @@ async def get_list(
     integration_service: IntegrationService = Depends(
         Provide[Container.integration_service]
     ),
-    db: Database = Depends(Provide[Container.db]),
     user: User = Depends(get_user),
 ):
     """
@@ -83,7 +81,7 @@ async def get_list(
     Returns:
         List[Integration]: All integrations in the system
     """
-    schema = db.sanitize_schema_name(user.id) if user is not None else "public"
+    schema = user.id.replace("-", "_") if user is not None else "public"
     integrations = integration_service.get_integrations(schema)
     return [Integration.model_validate(integration) for integration in integrations]
 
@@ -120,7 +118,6 @@ async def get_by_id(
     integration_service: IntegrationService = Depends(
         Provide[Container.integration_service]
     ),
-    db: Database = Depends(Provide[Container.db]),
     user: User = Depends(get_user),
 ):
     """
@@ -130,7 +127,7 @@ async def get_by_id(
         Integration: Complete integration details
 
     """
-    schema = db.sanitize_schema_name(user.id) if user is not None else "public"
+    schema = user.id.replace("-", "_") if user is not None else "public"
     integration = integration_service.get_integration_by_id(integration_id, schema)
     return Integration.model_validate(integration)
 
@@ -211,7 +208,6 @@ async def add(
     integration_service: IntegrationService = Depends(
         Provide[Container.integration_service]
     ),
-    db: Database = Depends(Provide[Container.db]),
     user: User = Depends(get_user),
 ):
     """
@@ -220,7 +216,7 @@ async def add(
     Returns:
         Integration: Newly created integration
     """
-    schema = db.sanitize_schema_name(user.id) if user is not None else "public"
+    schema = user.id.replace("-", "_") if user is not None else "public"
     integration = integration_service.create_integration(
         integration_type=integration_data.integration_type,
         api_endpoint=integration_data.api_endpoint,
@@ -274,7 +270,6 @@ async def remove(
     integration_service: IntegrationService = Depends(
         Provide[Container.integration_service]
     ),
-    db: Database = Depends(Provide[Container.db]),
     user: User = Depends(get_user),
 ):
     """
@@ -284,6 +279,6 @@ async def remove(
         Response: 204 No Content on success
 
     """
-    schema = db.sanitize_schema_name(user.id) if user is not None else "public"
+    schema = user.id.replace("-", "_") if user is not None else "public"
     integration_service.delete_integration_by_id(integration_id, schema)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

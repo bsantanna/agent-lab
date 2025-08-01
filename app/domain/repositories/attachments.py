@@ -1,22 +1,18 @@
-from contextlib import AbstractContextManager
 from datetime import datetime
 from uuid import uuid4
 
-from sqlalchemy.orm import Session
-from typing_extensions import Callable
 
 from app.domain.exceptions.base import NotFoundError
 from app.domain.models import Attachment
+from app.infrastructure.database.sql import Database
 
 
 class AttachmentRepository:
-    def __init__(
-        self, session_factory: Callable[..., AbstractContextManager[Session]]
-    ) -> None:
-        self.session_factory = session_factory
+    def __init__(self, db: Database) -> None:
+        self.db = db
 
-    def get_by_id(self, attachment_id: str) -> Attachment:
-        with self.session_factory() as session:
+    def get_by_id(self, attachment_id: str, schema: str) -> Attachment:
+        with self.db.session(schema_name=schema) as session:
             attachment = (
                 session.query(Attachment)
                 .filter(Attachment.id == attachment_id, Attachment.is_active)
@@ -31,12 +27,13 @@ class AttachmentRepository:
         file_name: str,
         raw_content: bytes,
         parsed_content: str,
+        schema: str,
         attachment_id: str = None,
     ) -> Attachment:
         if attachment_id is None:
             attachment_id = str(uuid4())
 
-        with self.session_factory() as session:
+        with self.db.session(schema_name=schema) as session:
             attachment = Attachment(
                 id=attachment_id,
                 is_active=True,
@@ -50,8 +47,8 @@ class AttachmentRepository:
             session.refresh(attachment)
             return attachment
 
-    def delete_by_id(self, attachment_id: str) -> None:
-        with self.session_factory() as session:
+    def delete_by_id(self, attachment_id: str, schema: str) -> None:
+        with self.db.session(schema_name=schema) as session:
             entity: Attachment = (
                 session.query(Attachment)
                 .filter(Attachment.id == attachment_id, Attachment.is_active)
@@ -63,9 +60,9 @@ class AttachmentRepository:
             session.commit()
 
     def update_attachment(
-        self, attachment_id: str, embeddings_collection: str
+        self, attachment_id: str, embeddings_collection: str, schema: str
     ) -> Attachment:
-        with self.session_factory() as session:
+        with self.db.session(schema_name=schema) as session:
             entity: Attachment = (
                 session.query(Attachment)
                 .filter(Attachment.id == attachment_id, Attachment.is_active)

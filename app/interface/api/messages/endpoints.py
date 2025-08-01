@@ -1,10 +1,13 @@
 from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends, Body, Response, status
+from fastapi.security import HTTPBearer
+from fastapi_keycloak_middleware import get_user
 from typing_extensions import List
 
 from app.core.container import Container
 from app.domain.exceptions.base import NotFoundError
 from app.domain.models import Message as DomainMessage
+from app.infrastructure.auth.schema import User
 from app.interface.api.attachments.schema import Attachment
 from app.interface.api.messages.schema import (
     MessageListRequest,
@@ -18,10 +21,12 @@ from app.services.attachments import AttachmentService
 from app.services.messages import MessageService
 
 router = APIRouter()
+bearer_scheme = HTTPBearer()
 
 
 @router.post(
     "/list",
+    dependencies=[Depends(bearer_scheme)],
     response_model=List[Message],
     operation_id="get_message_list",
     summary="Retrieve messages for an agent",
@@ -73,6 +78,7 @@ async def get_list(
         example={"agent_id": "agent_456"},
     ),
     message_service: MessageService = Depends(Provide[Container.message_service]),
+    user: User = Depends(get_user),
 ):
     """
     Get all messages for a specific agent.
@@ -81,15 +87,18 @@ async def get_list(
         message_data: Contains the agent_id to filter messages
         message_service: Injected message service dependency
 
+
     Returns:
         List[Message]: All messages associated with the agent
     """
-    messages = message_service.get_messages(message_data.agent_id)
+    schema = user.id.replace("-", "_") if user is not None else "public"
+    messages = message_service.get_messages(message_data.agent_id, schema)
     return [Message.model_validate(message) for message in messages]
 
 
 @router.post(
     "/post",
+    dependencies=[Depends(bearer_scheme)],
     response_model=Message,
     operation_id="post_message",
     summary="Send a message to an agent",
@@ -159,6 +168,7 @@ async def post_message(
     agent_service: AgentService = Depends(Provide[Container.agent_service]),
     agent_registry: AgentRegistry = Depends(Provide[Container.agent_registry]),
     message_service: MessageService = Depends(Provide[Container.message_service]),
+    user: User = Depends(get_user),
 ):
     """
     Process a new message through an AI agent.
@@ -172,7 +182,8 @@ async def post_message(
     Returns:
         Message: The assistant's response message
     """
-    agent = agent_service.get_agent_by_id(message_data.agent_id)
+    schema = user.id.replace("-", "_") if user is not None else "public"
+    agent = agent_service.get_agent_by_id(message_data.agent_id, schema)
     matching_agent = agent_registry.get_agent(agent.agent_type)
 
     # Store human message
@@ -181,6 +192,7 @@ async def post_message(
         message_content=message_data.message_content,
         agent_id=message_data.agent_id,
         attachment_id=message_data.attachment_id,
+        schema=schema,
     )
 
     # Process human message
@@ -193,6 +205,7 @@ async def post_message(
         response_data=processed_message.response_data,
         agent_id=processed_message.agent_id,
         replies_to=human_message,
+        schema=schema,
     )
 
     return Message.model_validate(assistant_message)
@@ -200,6 +213,7 @@ async def post_message(
 
 @router.get(
     "/{message_id}",
+    dependencies=[Depends(bearer_scheme)],
     response_model=MessageExpanded,
     summary="Get expanded message details",
     description="""
@@ -255,6 +269,7 @@ async def get_by_id(
     attachment_service: AttachmentService = Depends(
         Provide[Container.attachment_service]
     ),
+    user: User = Depends(get_user),
 ):
     """
     Get expanded details for a specific message.
@@ -267,8 +282,11 @@ async def get_by_id(
     Returns:
         MessageExpanded: Complete message details with context
     """
-    assistant_message = message_service.get_message_by_id(message_id)
-    human_message = message_service.get_message_by_id(assistant_message.replies_to)
+    schema = user.id.replace("-", "_") if user is not None else "public"
+    assistant_message = message_service.get_message_by_id(message_id, schema)
+    human_message = message_service.get_message_by_id(
+        assistant_message.replies_to, schema
+    )
 
     return _format_expanded_response(
         assistant_message, human_message, attachment_service
@@ -277,6 +295,7 @@ async def get_by_id(
 
 @router.delete(
     "/delete/{message_id}",
+    dependencies=[Depends(bearer_scheme)],
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a message",
     description="""
@@ -302,19 +321,17 @@ async def get_by_id(
 async def remove(
     message_id: str,
     message_service: MessageService = Depends(Provide[Container.message_service]),
+    user: User = Depends(get_user),
 ):
     """
     Delete a message by ID.
-
-    Args:
-        message_id: Unique identifier of the message to delete
-        message_service: Injected message service
 
     Returns:
         Response: 204 No Content on success
 
     """
-    message_service.delete_message_by_id(message_id)
+    schema = user.id.replace("-", "_") if user is not None else "public"
+    message_service.delete_message_by_id(message_id, schema)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

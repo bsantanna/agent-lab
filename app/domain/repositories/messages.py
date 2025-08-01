@@ -1,30 +1,27 @@
-from contextlib import AbstractContextManager
 from datetime import datetime
 from uuid import uuid4
 
-from sqlalchemy.orm import Session
-from typing_extensions import Callable, Iterator
+from typing_extensions import Iterator
 
 from app.domain.exceptions.base import NotFoundError
 from app.domain.models import Message
+from app.infrastructure.database.sql import Database
 
 
 class MessageRepository:
-    def __init__(
-        self, session_factory: Callable[..., AbstractContextManager[Session]]
-    ) -> None:
-        self.session_factory = session_factory
+    def __init__(self, db: Database) -> None:
+        self.db = db
 
-    def get_all(self, agent_id: str) -> Iterator[Message]:
-        with self.session_factory() as session:
+    def get_all(self, agent_id: str, schema: str) -> Iterator[Message]:
+        with self.db.session(schema_name=schema) as session:
             return (
                 session.query(Message)
                 .filter(Message.agent_id == agent_id, Message.is_active)
                 .all()
             )
 
-    def get_by_id(self, message_id: str) -> Message:
-        with self.session_factory() as session:
+    def get_by_id(self, message_id: str, schema: str) -> Message:
+        with self.db.session(schema_name=schema) as session:
             message = (
                 session.query(Message)
                 .filter(Message.id == message_id, Message.is_active)
@@ -39,12 +36,13 @@ class MessageRepository:
         message_content: str,
         message_role: str,
         agent_id: str,
+        schema: str,
         response_data: dict = None,
         attachment_id: str = None,
         replies_to: Message = None,
     ) -> Message:
         gen_id = uuid4()
-        with self.session_factory() as session:
+        with self.db.session(schema_name=schema) as session:
             message = Message(
                 id=str(gen_id),
                 is_active=True,
@@ -61,8 +59,8 @@ class MessageRepository:
             session.refresh(message)
             return message
 
-    def delete_by_id(self, message_id: str) -> None:
-        with self.session_factory() as session:
+    def delete_by_id(self, message_id: str, schema: str) -> None:
+        with self.db.session(schema_name=schema) as session:
             entity: Message = (
                 session.query(Message)
                 .filter(Message.id == message_id, Message.is_active)
