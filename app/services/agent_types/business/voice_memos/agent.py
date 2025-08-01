@@ -505,9 +505,9 @@ class FastVoiceMemosAgent(VoiceMemosAgent):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
 
-    def get_input_params(self, message_request: MessageRequest) -> dict:
+    def get_input_params(self, message_request: MessageRequest, schema: str) -> dict:
         settings = self.agent_setting_service.get_agent_settings(
-            message_request.agent_id
+            message_request.agent_id, schema
         )
         settings_dict = {
             setting.setting_key: setting.setting_value for setting in settings
@@ -524,6 +524,7 @@ class FastVoiceMemosAgent(VoiceMemosAgent):
 
         return {
             "agent_id": message_request.agent_id,
+            "schema": schema,
             "attachment_id": message_request.attachment_id,
             "audio_language_model": settings_dict.get("audio_language_model"),
             "audio_format": settings_dict.get("audio_format"),

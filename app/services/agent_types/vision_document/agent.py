@@ -71,16 +71,16 @@ class VisionDocumentAgent(WorkflowAgentBase):
 
         return workflow_builder
 
-    def get_input_params(self, message_request: MessageRequest):
+    def get_input_params(self, message_request: MessageRequest, schema: str):
         settings = self.agent_setting_service.get_agent_settings(
-            message_request.agent_id
+            message_request.agent_id, schema
         )
         settings_dict = {
             setting.setting_key: setting.setting_value for setting in settings
         }
 
         attachment = self.attachment_service.get_attachment_by_id(
-            message_request.attachment_id
+            message_request.attachment_id, schema
         )
 
         image_base64 = base64.b64encode(attachment.raw_content).decode("utf-8")
@@ -93,6 +93,7 @@ class VisionDocumentAgent(WorkflowAgentBase):
         return {
             "agent_id": message_request.agent_id,
             "query": message_request.message_content,
+            "schema": schema,
             "execution_system_prompt": self.parse_prompt_template(
                 settings_dict, "execution_system_prompt", template_vars
             ),
@@ -100,7 +101,7 @@ class VisionDocumentAgent(WorkflowAgentBase):
             "image_content_type": image_content_type,
         }
 
-    def create_default_settings(self, agent_id: str):
+    def create_default_settings(self, agent_id: str, schema: str):
         current_dir = Path(__file__).parent
 
         execution_prompt = self.read_file_content(
@@ -110,4 +111,5 @@ class VisionDocumentAgent(WorkflowAgentBase):
             agent_id=agent_id,
             setting_key="execution_system_prompt",
             setting_value=execution_prompt,
+            schema=schema,
         )
