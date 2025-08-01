@@ -2,6 +2,90 @@
 
 <!-- version list -->
 
+## v1.3.0 (2025-08-01)
+
+### Features
+
+- Adjusts tst database setup ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+- Documents keycloak installation with cert-manager
+  ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+- Dynamic schema change ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+- Dynamic schema change (10) ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+- Dynamic schema change (11) ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+- Dynamic schema change (12) ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+- Dynamic schema change (2) ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+- Dynamic schema change (3) ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+- Dynamic schema change (4) ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+- Dynamic schema change (5) ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+- Dynamic schema change (6) ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+- Dynamic schema change (7) ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+- Dynamic schema change (8) ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+- Dynamic schema change (9) ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+- Keycloak deployment doc (1) ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+- Keycloak middleware load (2) ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+- Keycloak middleware load (3) ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+- Prototypes keycloak middleware (1) ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+- Prototypes keycloak middleware (2) ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+- Simplifies user mapping ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+- Updates charset-normalizer compatible version
+  ([`d119643`](https://github.com/bsantanna/agent-lab/commit/d119643ebb76a908fac0a82628422201be2b4e32))
+
+- Updates charts doc with namaspace (1) ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+- Updates charts doc with namaspace (2) ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+- Updates charts properties ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+- Updates doc with keycloak initial setup ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+- Updates libs and dependencies ([#197](https://github.com/bsantanna/agent-lab/pull/197),
+  [`d4e8f96`](https://github.com/bsantanna/agent-lab/commit/d4e8f9629a3c42a4c74122321603c21ba69dcb01))
+
+
 ## v1.2.3 (2025-07-17)
 
 ### Bug Fixes
