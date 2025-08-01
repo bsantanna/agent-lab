@@ -289,7 +289,7 @@ async def get_by_id(
     )
 
     return _format_expanded_response(
-        assistant_message, human_message, attachment_service
+        assistant_message, human_message, attachment_service, schema
     )
 
 
@@ -339,6 +339,7 @@ def _format_expanded_response(
     agent_message: DomainMessage,
     human_message: DomainMessage,
     attachment_service: AttachmentService,
+    schema: str,
 ) -> MessageExpanded:
     """
     Format an expanded message response with full context.
@@ -356,7 +357,7 @@ def _format_expanded_response(
     if human_message.attachment_id is not None:
         try:
             attachment = attachment_service.get_attachment_by_id(
-                human_message.attachment_id
+                human_message.attachment_id, schema
             )
             attachment_response = Attachment.model_validate(attachment)
         except NotFoundError:

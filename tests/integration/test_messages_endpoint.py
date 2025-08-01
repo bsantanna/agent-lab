@@ -17,6 +17,7 @@ class TestMessagesEndpoints:
         # create integration
         response = client.post(
             url="/integrations/create",
+            headers={"Authorization": "Bearer x"},
             json={
                 "api_endpoint": "https://example.com",
                 "api_key": "an_invalid_key",
@@ -28,6 +29,7 @@ class TestMessagesEndpoints:
         # create llm
         response_2 = client.post(
             url="/llms/create",
+            headers={"Authorization": "Bearer x"},
             json={
                 "integration_id": integration_id,
                 "language_model_tag": "an_invalid_tag",
@@ -38,6 +40,7 @@ class TestMessagesEndpoints:
         # create agent
         return client.post(
             url="/agents/create",
+            headers={"Authorization": "Bearer x"},
             json={
                 "language_model_id": language_model_id,
                 "agent_type": "test_echo",
@@ -51,6 +54,7 @@ class TestMessagesEndpoints:
 
         return client.post(
             "/messages/post",
+            headers={"Authorization": "Bearer x"},
             json={
                 "message_role": "human",
                 "message_content": "a_message",
@@ -67,6 +71,7 @@ class TestMessagesEndpoints:
         with open(file_path, "rb") as file:
             upload_response = client.post(
                 url="/attachments/upload",
+                headers={"Authorization": "Bearer x"},
                 files={"file": (filename, file, content_type)},
             )
 
@@ -78,7 +83,11 @@ class TestMessagesEndpoints:
         agent_id = create_response.json()["id"]
 
         # when
-        response = client.post(url="/messages/list", json={"agent_id": agent_id})
+        response = client.post(
+            url="/messages/list",
+            headers={"Authorization": "Bearer x"},
+            json={"agent_id": agent_id},
+        )
 
         # then
         assert response.status_code == 200
@@ -89,7 +98,11 @@ class TestMessagesEndpoints:
         agent_id = "unknown"
 
         # when
-        response = client.post(url="/messages/list", json={"agent_id": agent_id})
+        response = client.post(
+            url="/messages/list",
+            headers={"Authorization": "Bearer x"},
+            json={"agent_id": agent_id},
+        )
 
         # then
         assert response.status_code == 404
@@ -111,6 +124,7 @@ class TestMessagesEndpoints:
         # when
         response = client.post(
             url="/messages/post",
+            headers={"Authorization": "Bearer x"},
             json={
                 "message_role": "human",
                 "message_content": "a_message",
@@ -128,6 +142,7 @@ class TestMessagesEndpoints:
         # when
         response = client.post(
             url="/messages/post",
+            headers={"Authorization": "Bearer x"},
             json={
                 "message_role": "vampire",
                 "message_content": "a_message",
@@ -143,6 +158,7 @@ class TestMessagesEndpoints:
         # when
         response = client.post(
             url="/messages/post",
+            headers={"Authorization": "Bearer x"},
             json={"foo": "bar"},
         )
         # then
@@ -164,7 +180,10 @@ class TestMessagesEndpoints:
         assert "assistant" == create_message_response.json()["message_role"]
 
         # also
-        get_message_response = client.get(f"/messages/{message_id}")
+        get_message_response = client.get(
+            f"/messages/{message_id}",
+            headers={"Authorization": "Bearer x"},
+        )
         message_response_json = get_message_response.json()
 
         # then
@@ -178,7 +197,10 @@ class TestMessagesEndpoints:
         message_id = "unknown"
 
         # when
-        response = client.get(f"/messages/{message_id}")
+        response = client.get(
+            f"/messages/{message_id}",
+            headers={"Authorization": "Bearer x"},
+        )
 
         # then
         assert response.status_code == 404
@@ -193,7 +215,10 @@ class TestMessagesEndpoints:
         message_id = create_message_response.json()["id"]
 
         # when
-        get_message_response = client.get(f"/messages/{message_id}")
+        get_message_response = client.get(
+            f"/messages/{message_id}",
+            headers={"Authorization": "Bearer x"},
+        )
 
         # then
         assert get_message_response.status_code == 200
@@ -208,7 +233,10 @@ class TestMessagesEndpoints:
         message_id = create_message_response.json()["id"]
 
         # when
-        delete_message_response = client.delete(f"/messages/delete/{message_id}")
+        delete_message_response = client.delete(
+            f"/messages/delete/{message_id}",
+            headers={"Authorization": "Bearer x"},
+        )
 
         # then
         assert delete_message_response.status_code == 204
@@ -219,7 +247,10 @@ class TestMessagesEndpoints:
         message_id = "unknown"
 
         # when
-        response = client.delete(f"/messages/delete/{message_id}")
+        response = client.delete(
+            f"/messages/delete/{message_id}",
+            headers={"Authorization": "Bearer x"},
+        )
 
         # then
         assert response.status_code == 404

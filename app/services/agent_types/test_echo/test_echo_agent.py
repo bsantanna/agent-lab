@@ -18,10 +18,10 @@ class TestEchoAgent(AgentBase):
             schema=schema,
         )
 
-    def get_input_params(self, message_request: MessageRequest) -> dict:
+    def get_input_params(self, message_request: MessageRequest, schema: str) -> dict:
         return message_request.to_dict()
 
-    def process_message(self, message_request: MessageRequest) -> Message:
+    def process_message(self, message_request: MessageRequest, schema: str) -> Message:
         message_content, response_data = self.format_response(
             MessagesState(
                 messages=[AIMessage(content=f"Echo: {message_request.message_content}")]
