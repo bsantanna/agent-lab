@@ -133,7 +133,7 @@ class AttachmentService:
                 base_url=f"{os.getenv('OLLAMA_ENDPOINT')}",
             )
 
-        attachment = self.attachment_repository.get_by_id(attachment_id)
+        attachment = self.attachment_repository.get_by_id(attachment_id, schema)
         temp_file_path = f"temp-{uuid4()}"
         async with await anyio.open_file(temp_file_path, "wb") as buffer:
             await buffer.write(attachment.parsed_content.encode())
