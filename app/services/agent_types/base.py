@@ -205,9 +205,9 @@ class AgentBase(ABC):
                 base_url=api_endpoint,
             )
 
-    def get_openai_client(self, agent_id: str) -> OpenAI:
-        agent = self.agent_service.get_agent_by_id(agent_id)
-        _, integration = self.get_language_model_integration(agent)
+    def get_openai_client(self, agent_id: str, schema: str) -> OpenAI:
+        agent = self.agent_service.get_agent_by_id(agent_id, schema)
+        _, integration = self.get_language_model_integration(agent, schema)
         api_endpoint, api_key = self.get_integration_credentials(integration)
 
         return OpenAI(
@@ -515,9 +515,10 @@ class WebAgentBase(WorkflowAgentBase, ABC):
     def get_web_browser_tool(
         self,
         agent_id: str,
+        schema: str,
         headless: bool = True,
     ) -> BaseTool:
-        chat_model = self.get_chat_model(agent_id)
+        chat_model = self.get_chat_model(agent_id, schema)
 
         @tool("browser_tool")
         def browser_tool_call(

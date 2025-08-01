@@ -13,6 +13,7 @@ from app.services.tasks import TaskProgress
 
 class AgentState(MessagesState):
     agent_id: str
+    schema: str
     query: str
     generation: dict
     image_base64: str
@@ -33,11 +34,12 @@ class VisionDocumentAgent(WorkflowAgentBase):
 
     def generate(self, state: AgentState):
         agent_id = state["agent_id"]
+        schema = state["schema"]
         query = state["query"]
         execution_system_prompt = state["execution_system_prompt"]
         image_base64 = state["image_base64"]
         image_content_type = state["image_content_type"]
-        chat_model = self.get_chat_model(agent_id)
+        chat_model = self.get_chat_model(agent_id, schema)
         self.task_notification_service.publish_update(
             task_progress=TaskProgress(
                 agent_id=agent_id,
