@@ -13,7 +13,7 @@ class ReactRagAgent(AgentBase):
         self.graph_persistence_factory = agent_utils.graph_persistence_factory
         self.document_repository = agent_utils.document_repository
 
-    def create_default_settings(self, agent_id: str):
+    def create_default_settings(self, agent_id: str, schema: str):
         current_dir = Path(__file__).parent
         prompt = self.read_file_content(
             f"{current_dir}/default_execution_system_prompt.txt"
@@ -22,6 +22,7 @@ class ReactRagAgent(AgentBase):
             agent_id=agent_id,
             setting_key="execution_system_prompt",
             setting_value=prompt,
+            schema=schema,
         )
         collection_name = self.read_file_content(
             f"{current_dir}/default_collection_name.txt"
@@ -30,11 +31,12 @@ class ReactRagAgent(AgentBase):
             agent_id=agent_id,
             setting_key="collection_name",
             setting_value=collection_name,
+            schema=schema,
         )
 
-    def get_workflow(self, agent_id: str):
-        chat_model = self.get_chat_model(agent_id)
-        settings = self.agent_setting_service.get_agent_settings(agent_id)
+    def get_workflow(self, agent_id: str, schema: str):
+        chat_model = self.get_chat_model(agent_id, schema)
+        settings = self.agent_setting_service.get_agent_settings(agent_id, schema)
         settings_dict = {
             setting.setting_key: setting.setting_value for setting in settings
         }
@@ -53,11 +55,11 @@ class ReactRagAgent(AgentBase):
             checkpointer=checkpointer,
         )
 
-    def get_input_params(self, message_request: MessageRequest) -> dict:
+    def get_input_params(self, message_request: MessageRequest, schema: str) -> dict:
         query = message_request.message_content
-        embeddings_model = self.get_embeddings_model(message_request.agent_id)
+        embeddings_model = self.get_embeddings_model(message_request.agent_id, schema)
         settings = self.agent_setting_service.get_agent_settings(
-            message_request.agent_id
+            message_request.agent_id, schema
         )
         settings_dict = {
             setting.setting_key: setting.setting_value for setting in settings
@@ -76,15 +78,15 @@ class ReactRagAgent(AgentBase):
             ],
         }
 
-    def process_message(self, message_request: MessageRequest) -> Message:
+    def process_message(self, message_request: MessageRequest, schema: str) -> Message:
         agent_id = message_request.agent_id
-        workflow = self.get_workflow(agent_id)
+        workflow = self.get_workflow(agent_id, schema)
         config = {
             "configurable": {
                 "thread_id": agent_id,
             }
         }
-        inputs = self.get_input_params(message_request)
+        inputs = self.get_input_params(message_request, schema)
         self.logger.info(f"Agent[{agent_id}] -> Input -> {inputs}")
 
         workflow_result = workflow.invoke(inputs, config)

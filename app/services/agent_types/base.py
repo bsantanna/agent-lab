@@ -103,15 +103,15 @@ class AgentBase(ABC):
         self.logger = logging.getLogger(__name__)
 
     @abstractmethod
-    def create_default_settings(self, agent_id: str):
+    def create_default_settings(self, agent_id: str, schema: str):
         pass
 
     @abstractmethod
-    def get_input_params(self, message_request: MessageRequest) -> dict:
+    def get_input_params(self, message_request: MessageRequest, schema: str) -> dict:
         pass
 
     @abstractmethod
-    def process_message(self, message_request: MessageRequest) -> Message:
+    def process_message(self, message_request: MessageRequest, schema: str) -> Message:
         pass
 
     def format_response(self, workflow_state: MessagesState) -> (str, dict):
@@ -124,13 +124,13 @@ class AgentBase(ABC):
         return response_data["messages"][-1]["content"], response_data
 
     def get_language_model_integration(
-        self, agent: Agent
+        self, agent: Agent, schema: str
     ) -> (LanguageModel, Integration):
         language_model = self.language_model_service.get_language_model_by_id(
-            agent.language_model_id
+            agent.language_model_id, schema
         )
         integration = self.integration_service.get_integration_by_id(
-            language_model.integration_id
+            language_model.integration_id, schema
         )
         return language_model, integration
 
@@ -142,13 +142,13 @@ class AgentBase(ABC):
         api_key = secrets["data"]["data"]["api_key"]
         return api_endpoint, api_key
 
-    def get_embeddings_model(self, agent_id) -> Embeddings:
-        agent = self.agent_service.get_agent_by_id(agent_id)
-        language_model, integration = self.get_language_model_integration(agent)
+    def get_embeddings_model(self, agent_id, schema: str) -> Embeddings:
+        agent = self.agent_service.get_agent_by_id(agent_id, schema)
+        language_model, integration = self.get_language_model_integration(agent, schema)
         api_endpoint, api_key = self.get_integration_credentials(integration)
 
         lm_settings = self.language_model_setting_service.get_language_model_settings(
-            language_model_id=language_model.id,
+            language_model.id, schema
         )
 
         lm_settings_dict = {
@@ -171,9 +171,11 @@ class AgentBase(ABC):
                 base_url=f"{os.getenv('OLLAMA_ENDPOINT')}",
             )
 
-    def get_chat_model(self, agent_id, language_model_tag: str = None) -> BaseChatModel:
-        agent = self.agent_service.get_agent_by_id(agent_id)
-        language_model, integration = self.get_language_model_integration(agent)
+    def get_chat_model(
+        self, agent_id, schema: str, language_model_tag: str = None
+    ) -> BaseChatModel:
+        agent = self.agent_service.get_agent_by_id(agent_id, schema)
+        language_model, integration = self.get_language_model_integration(agent, schema)
         api_endpoint, api_key = self.get_integration_credentials(integration)
 
         if language_model_tag is None:
@@ -280,7 +282,7 @@ class WorkflowAgentBase(AgentBase, ABC):
 
         return thought_chain
 
-    def process_message(self, message_request: MessageRequest) -> Message:
+    def process_message(self, message_request: MessageRequest, schema: str) -> Message:
         agent_id = message_request.agent_id
         checkpointer = self.graph_persistence_factory.build_checkpoint_saver()
         workflow = self.get_workflow_builder(agent_id).compile(
@@ -290,7 +292,7 @@ class WorkflowAgentBase(AgentBase, ABC):
         config = self.get_config(agent_id)
         self.logger.info(f"Agent[{agent_id}] -> Config -> {config}")
 
-        inputs = self.get_input_params(message_request)
+        inputs = self.get_input_params(message_request, schema)
         self.logger.info(f"Agent[{agent_id}] -> Input -> {inputs}")
 
         self.task_notification_service.publish_update(

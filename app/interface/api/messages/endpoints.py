@@ -196,7 +196,7 @@ async def post_message(
     )
 
     # Process human message
-    processed_message = matching_agent.process_message(message_data)
+    processed_message = matching_agent.process_message(message_data, schema)
 
     # Store assistant message
     assistant_message = message_service.create_message(

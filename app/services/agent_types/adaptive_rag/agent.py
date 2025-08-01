@@ -24,6 +24,7 @@ from app.services.tasks import TaskProgress
 
 class AgentState(MessagesState):
     agent_id: str
+    schema: str
     query: str
     collection_name: str
     generation: str
@@ -41,7 +42,7 @@ class AdaptiveRagAgent(WebAgentBase):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
 
-    def create_default_settings(self, agent_id: str):
+    def create_default_settings(self, agent_id: str, schema: str):
         current_dir = Path(__file__).parent
 
         execution_prompt = self.read_file_content(
@@ -51,6 +52,7 @@ class AdaptiveRagAgent(WebAgentBase):
             agent_id=agent_id,
             setting_key="execution_system_prompt",
             setting_value=execution_prompt,
+            schema=schema,
         )
 
         query_rewriter_prompt = self.read_file_content(
@@ -60,6 +62,7 @@ class AdaptiveRagAgent(WebAgentBase):
             agent_id=agent_id,
             setting_key="query_rewriter_system_prompt",
             setting_value=query_rewriter_prompt,
+            schema=schema,
         )
 
         answer_grader_prompt = self.read_file_content(
@@ -69,6 +72,7 @@ class AdaptiveRagAgent(WebAgentBase):
             agent_id=agent_id,
             setting_key="answer_grader_system_prompt",
             setting_value=answer_grader_prompt,
+            schema=schema,
         )
 
         retrieval_grader_prompt = self.read_file_content(
@@ -78,6 +82,7 @@ class AdaptiveRagAgent(WebAgentBase):
             agent_id=agent_id,
             setting_key="retrieval_grader_system_prompt",
             setting_value=retrieval_grader_prompt,
+            schema=schema,
         )
 
         collection_name = self.read_file_content(
@@ -87,6 +92,7 @@ class AdaptiveRagAgent(WebAgentBase):
             agent_id=agent_id,
             setting_key="collection_name",
             setting_value=collection_name,
+            schema=schema,
         )
 
     def format_response(self, workflow_state: AgentState) -> (str, dict):
@@ -294,9 +300,10 @@ class AdaptiveRagAgent(WebAgentBase):
 
     def retrieve(self, state: AgentState):
         agent_id = state["agent_id"]
+        schema = state["schema"]
         query = state["query"]
         collection_name = state["collection_name"]
-        embeddings = self.get_embeddings_model(agent_id)
+        embeddings = self.get_embeddings_model(agent_id, schema)
         self.logger.info(
             f"Agent[{agent_id}] -> Retrieve -> Query -> {query} -- Collection -> {collection_name}"
         )
@@ -349,9 +356,9 @@ class AdaptiveRagAgent(WebAgentBase):
         )
         return {"query": transformed_query, "messages": messages}
 
-    def get_input_params(self, message_request: MessageRequest):
+    def get_input_params(self, message_request: MessageRequest, schema: str) -> dict:
         settings = self.agent_setting_service.get_agent_settings(
-            message_request.agent_id
+            message_request.agent_id, schema
         )
         settings_dict = {
             setting.setting_key: setting.setting_value for setting in settings
@@ -363,6 +370,7 @@ class AdaptiveRagAgent(WebAgentBase):
 
         return {
             "agent_id": message_request.agent_id,
+            "schema": schema,
             "query": message_request.message_content,
             "collection_name": settings_dict["collection_name"],
             "execution_system_prompt": self.parse_prompt_template(

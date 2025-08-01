@@ -230,7 +230,7 @@ async def add(
         schema=schema,
     )
     agent_registry.get_agent(agent_data.agent_type).create_default_settings(
-        agent_id=agent.id
+        agent.id, schema
     )
     return Agent.model_validate(agent)
 
