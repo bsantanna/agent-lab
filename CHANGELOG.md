@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.4.0 (2025-08-02)
+
+### Features
+
+- Adds non numeric chars for schema / id ([#198](https://github.com/bsantanna/agent-lab/pull/198),
+  [`6b9ec24`](https://github.com/bsantanna/agent-lab/commit/6b9ec24bd49e6ca5cfa17955b9faf0d0bb1dc79b))
+
+
 ## v1.3.0 (2025-08-01)
 
 ### Features
