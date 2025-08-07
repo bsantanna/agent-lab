@@ -47,3 +47,8 @@ class FileProcessingError(HTTPException):
 class AudioOptimizationError(HTTPException):
     def __init__(self, reason):
         super().__init__(status_code=500, detail=f"Audio optimization failed: {reason}")
+
+
+class AuthenticationError(HTTPException):
+    def __init__(self, reason):
+        super().__init__(status_code=401, detail=f"Authentication failed: {reason}")

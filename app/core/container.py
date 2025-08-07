@@ -33,6 +33,7 @@ from app.services.agent_types.business.voice_memos.agent import (
 )
 from app.services.agents import AgentService
 from app.services.attachments import AttachmentService
+from app.services.auth import AuthService
 from app.services.integrations import IntegrationService
 from app.services.language_model_settings import LanguageModelSettingService
 from app.services.language_models import LanguageModelService
@@ -45,6 +46,7 @@ class Container(containers.DeclarativeContainer):
         modules=[
             "app.interface.api.agents.endpoints",
             "app.interface.api.attachments.endpoints",
+            "app.interface.api.auth.endpoints",
             "app.interface.api.integrations.endpoints",
             "app.interface.api.language_models.endpoints",
             "app.interface.api.messages.endpoints",
@@ -102,6 +104,15 @@ class Container(containers.DeclarativeContainer):
 
     document_repository = providers.Factory(
         DocumentRepository, db_url=config.db.vectors
+    )
+
+    auth_service = providers.Factory(
+        AuthService,
+        enabled=config.auth.enabled,
+        url=config.auth.url,
+        realm=config.auth.realm,
+        client_id=config.auth.client_id,
+        client_secret=config.auth.client_secret,
     )
 
     integration_repository = providers.Factory(
