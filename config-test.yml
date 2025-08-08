@@ -1,6 +1,10 @@
 api_base_url: "http://test"
 auth:
-  enabled: False
+  enabled: "True"
+  url: "http://localhost:18080"
+  realm: "test-realm"
+  client_id: "test-client"
+  client_secret: "test-secret"
 broker:
   url: "redis://localhost:16379/0"
 db:

@@ -60,7 +60,7 @@ class AttachmentService:
             file_name = file.filename.replace(file.filename.split(".")[-1], "mp3")
             parsed_content = ""
 
-        attachment = await self.create_attachment_with_content(
+        attachment = self.create_attachment_with_content(
             file_name=file_name,
             raw_content=raw_content,
             parsed_content=parsed_content,
@@ -71,7 +71,7 @@ class AttachmentService:
 
         return attachment
 
-    async def create_attachment_with_content(
+    def create_attachment_with_content(
         self,
         file_name: str,
         raw_content: bytes,

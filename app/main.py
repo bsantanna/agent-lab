@@ -2,9 +2,10 @@ import logging
 import os
 import re
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi.security import HTTPBearer
 from fastapi_keycloak_middleware import KeycloakConfiguration, setup_keycloak_middleware
-from fastapi_mcp import FastApiMCP
+from fastapi_mcp import FastApiMCP, AuthConfig
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
@@ -13,6 +14,7 @@ from app.infrastructure.auth.user import map_user
 from app.infrastructure.metrics.logging_middleware import LoggingMiddleware
 from app.interface.api.agents.endpoints import router as agents_router
 from app.interface.api.attachments.endpoints import router as attachments_router
+from app.interface.api.auth.endpoints import router as auth_router
 from app.interface.api.integrations.endpoints import router as integrations_router
 from app.interface.api.language_models.endpoints import router as language_models_router
 from app.interface.api.messages.endpoints import router as messages_router
@@ -20,6 +22,8 @@ from app.interface.api.status.endpoints import router as status_router
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+bearer_scheme = HTTPBearer()
 
 
 def create_app():
@@ -34,10 +38,10 @@ def create_app():
 
     setup_tracing(container, application)
     setup_auth(container, application)
+    setup_routers(container, application)
+    setup_mcp(container, application)
     setup_exception_handlers(application)
     setup_middleware(application)
-    setup_routers(application)
-    setup_mcp(application)
 
     return application
 
@@ -55,7 +59,13 @@ def setup_auth(container, application):
         setup_keycloak_middleware(
             application,
             keycloak_configuration=keycloak_config,
-            exclude_patterns=["/docs", "/openapi.json", "/status/*"],
+            exclude_patterns=[
+                "/auth",
+                "/docs",
+                "/openapi.json",
+                "/status/*",
+                ".well-known/*",
+            ],
             user_mapper=map_user,
         )
 
@@ -63,18 +73,37 @@ def setup_auth(container, application):
         logger.warning("Authentication disabled")
 
 
-def setup_mcp(application: FastAPI):
-    mcp = FastApiMCP(
-        application,
-        include_operations=["get_agent_list", "get_message_list", "post_message"],
-        describe_all_responses=True,
-        describe_full_response_schema=True,
-    )
+def setup_mcp(container: Container, application: FastAPI):
+    config = container.config()
+    if config["auth"]["enabled"] == "True":
+        mcp = FastApiMCP(
+            application,
+            name=os.getenv("SERVICE_NAME", "Agent-Lab"),
+            include_operations=["get_agent_list", "get_message_list", "post_message"],
+            describe_all_responses=True,
+            describe_full_response_schema=True,
+            auth_config=AuthConfig(
+                dependencies=[Depends(bearer_scheme)],
+            ),
+        )
+    else:
+        mcp = FastApiMCP(
+            application,
+            name=os.getenv("SERVICE_NAME", "Agent-Lab"),
+            include_operations=["get_agent_list", "get_message_list", "post_message"],
+            describe_all_responses=True,
+            describe_full_response_schema=True,
+        )
+
     mcp.mount_http()
     mcp.mount_sse()
 
 
-def setup_routers(application: FastAPI):
+def setup_routers(container: Container, application: FastAPI):
+    config = container.config()
+    if config["auth"]["enabled"] == "True":
+        application.include_router(auth_router, prefix="/auth", tags=["auth"])
+
     application.include_router(agents_router, prefix="/agents", tags=["agents"])
     application.include_router(
         attachments_router, prefix="/attachments", tags=["attachments"]
