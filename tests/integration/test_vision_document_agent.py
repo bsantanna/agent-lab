@@ -18,7 +18,7 @@ class TestVisionDocumentAgent:
         # create integration
         response = client.post(
             url="/integrations/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "api_endpoint": "https://api.x.ai/v1/",
                 "api_key": os.environ["XAI_API_KEY"],
@@ -30,7 +30,7 @@ class TestVisionDocumentAgent:
         # create llm
         response_2 = client.post(
             url="/llms/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "integration_id": integration_id,
                 "language_model_tag": "grok-2-vision",
@@ -41,7 +41,7 @@ class TestVisionDocumentAgent:
         # create agent
         return client.post(
             url="/agents/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "language_model_id": language_model_id,
                 "agent_type": "vision_document",
@@ -55,7 +55,7 @@ class TestVisionDocumentAgent:
 
         return client.post(
             "/messages/post",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "message_role": "human",
                 "message_content": message_content,
@@ -72,7 +72,7 @@ class TestVisionDocumentAgent:
         with open(file_path, "rb") as file:
             upload_response = client.post(
                 url="/attachments/upload",
-                headers={"Authorization": "Bearer z"},
+                headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
                 files={"file": (filename, file, content_type)},
             )
 

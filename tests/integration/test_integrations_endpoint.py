@@ -13,7 +13,7 @@ class TestIntegrationsEndpoints:
     @pytest.mark.asyncio
     async def test_get_list(self, client):
         # when
-        response = client.get("/integrations/list", headers={"Authorization": "Bearer x"},)
+        response = client.get("/integrations/list", headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},)
 
         # then
         assert response.status_code == 200
@@ -24,7 +24,7 @@ class TestIntegrationsEndpoints:
         # given
         response = client.post(
             url="/integrations/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "api_endpoint": "https://example.com",
                 "api_key": "an_invalid_key",
@@ -34,7 +34,7 @@ class TestIntegrationsEndpoints:
         integration_id = response.json()["id"]
 
         # when
-        response_2 = client.get(f"/integrations/{integration_id}", headers={"Authorization": "Bearer x"},)
+        response_2 = client.get(f"/integrations/{integration_id}", headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},)
 
         # then
         assert response_2.status_code == 200
@@ -46,7 +46,7 @@ class TestIntegrationsEndpoints:
         integration_id = "not_existing_id"
 
         # when
-        response = client.get(f"/integrations/{integration_id}", headers={"Authorization": "Bearer x"},)
+        response = client.get(f"/integrations/{integration_id}", headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},)
 
         # then
         assert response.status_code == 404
@@ -56,7 +56,7 @@ class TestIntegrationsEndpoints:
         # given
         response = client.post(
             url="/integrations/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "api_endpoint": "https://example.com",
                 "api_key": "an_invalid_key",
@@ -66,7 +66,7 @@ class TestIntegrationsEndpoints:
         integration_id = response.json()["id"]
 
         # when
-        response_2 = client.delete(f"/integrations/delete/{integration_id}", headers={"Authorization": "Bearer x"},)
+        response_2 = client.delete(f"/integrations/delete/{integration_id}", headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},)
 
         # then
         assert response_2.status_code == 204
@@ -77,7 +77,7 @@ class TestIntegrationsEndpoints:
         integration_id = "not_existing_id"
 
         # when
-        response = client.delete(f"/integrations/delete/{integration_id}", headers={"Authorization": "Bearer x"},)
+        response = client.delete(f"/integrations/delete/{integration_id}", headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},)
 
         # then
         assert response.status_code == 404
@@ -87,7 +87,7 @@ class TestIntegrationsEndpoints:
         # when
         response = client.post(
             url="/integrations/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "api_endpoint": "an_invalid_endpoint",
                 "api_key": "an_invalid_key",
@@ -103,7 +103,7 @@ class TestIntegrationsEndpoints:
         # when
         response = client.post(
             url="/integrations/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "api_endpoint": "https://example.com",
                 "api_key": "an_invalid_key",
@@ -118,7 +118,7 @@ class TestIntegrationsEndpoints:
     async def test_create_invalid_integration_type_bad_request(self, client):
         response = client.post(
             url="/integrations/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "api_endpoint": "https://example.com",
                 "api_key": "an_valid_key",
@@ -131,7 +131,7 @@ class TestIntegrationsEndpoints:
     async def test_create_unprocessable_entity(self, client):
         response = client.post(
             url="/integrations/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "api_endpoint": 1,
                 "api_key": "raise_value_error",

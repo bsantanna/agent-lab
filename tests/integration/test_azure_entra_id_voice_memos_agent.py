@@ -18,7 +18,7 @@ class TestAzureEntraIdVoiceMemosAgent:
         # create integration
         response = client.post(
             url="/integrations/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "api_endpoint": "https://api.openai.com/v1/",
                 "api_key": os.environ["OPENAI_API_KEY"],
@@ -30,7 +30,7 @@ class TestAzureEntraIdVoiceMemosAgent:
         # create llm
         response_2 = client.post(
             url="/llms/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "integration_id": integration_id,
                 "language_model_tag": "o3-mini",
@@ -41,7 +41,7 @@ class TestAzureEntraIdVoiceMemosAgent:
         # create agent
         return client.post(
             url="/agents/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "language_model_id": language_model_id,
                 "agent_type": "azure_entra_id_voice_memos",
@@ -58,7 +58,7 @@ class TestAzureEntraIdVoiceMemosAgent:
 
         return client.post(
             "/messages/post",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "message_role": "human",
                 "message_content": message_content,
@@ -75,7 +75,7 @@ class TestAzureEntraIdVoiceMemosAgent:
         with open(file_path, "rb") as file:
             upload_response = client.post(
                 url="/attachments/upload",
-                headers={"Authorization": "Bearer y"},
+                headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
                 files={"file": (filename, file, content_type)},
             )
 

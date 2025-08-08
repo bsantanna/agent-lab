@@ -17,7 +17,7 @@ class TestMessagesEndpoints:
         # create integration
         response = client.post(
             url="/integrations/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "api_endpoint": "https://example.com",
                 "api_key": "an_invalid_key",
@@ -29,7 +29,7 @@ class TestMessagesEndpoints:
         # create llm
         response_2 = client.post(
             url="/llms/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "integration_id": integration_id,
                 "language_model_tag": "an_invalid_tag",
@@ -40,7 +40,7 @@ class TestMessagesEndpoints:
         # create agent
         return client.post(
             url="/agents/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "language_model_id": language_model_id,
                 "agent_type": "test_echo",
@@ -54,7 +54,7 @@ class TestMessagesEndpoints:
 
         return client.post(
             "/messages/post",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "message_role": "human",
                 "message_content": "a_message",
@@ -71,7 +71,7 @@ class TestMessagesEndpoints:
         with open(file_path, "rb") as file:
             upload_response = client.post(
                 url="/attachments/upload",
-                headers={"Authorization": "Bearer x"},
+                headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
                 files={"file": (filename, file, content_type)},
             )
 
@@ -85,7 +85,7 @@ class TestMessagesEndpoints:
         # when
         response = client.post(
             url="/messages/list",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={"agent_id": agent_id},
         )
 
@@ -100,7 +100,7 @@ class TestMessagesEndpoints:
         # when
         response = client.post(
             url="/messages/list",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={"agent_id": agent_id},
         )
 
@@ -124,7 +124,7 @@ class TestMessagesEndpoints:
         # when
         response = client.post(
             url="/messages/post",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "message_role": "human",
                 "message_content": "a_message",
@@ -142,7 +142,7 @@ class TestMessagesEndpoints:
         # when
         response = client.post(
             url="/messages/post",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "message_role": "vampire",
                 "message_content": "a_message",
@@ -158,7 +158,7 @@ class TestMessagesEndpoints:
         # when
         response = client.post(
             url="/messages/post",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={"foo": "bar"},
         )
         # then
@@ -182,7 +182,7 @@ class TestMessagesEndpoints:
         # also
         get_message_response = client.get(
             f"/messages/{message_id}",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         )
         message_response_json = get_message_response.json()
 
@@ -199,7 +199,7 @@ class TestMessagesEndpoints:
         # when
         response = client.get(
             f"/messages/{message_id}",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         )
 
         # then
@@ -217,7 +217,7 @@ class TestMessagesEndpoints:
         # when
         get_message_response = client.get(
             f"/messages/{message_id}",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         )
 
         # then
@@ -235,7 +235,7 @@ class TestMessagesEndpoints:
         # when
         delete_message_response = client.delete(
             f"/messages/delete/{message_id}",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         )
 
         # then
@@ -249,7 +249,7 @@ class TestMessagesEndpoints:
         # when
         response = client.delete(
             f"/messages/delete/{message_id}",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         )
 
         # then
