@@ -46,7 +46,7 @@ async def login(
     login_data: LoginRequest = Body(...),
     auth_service: AuthService = Depends(Provide[Container.auth_service]),
 ):
-    return await auth_service.login(
+    return auth_service.login(
         username=login_data.username, password=login_data.password
     )
 
@@ -84,4 +84,4 @@ async def renew(
     renew_request: RenewRequest = Body(...),
     auth_service: AuthService = Depends(Provide[Container.auth_service]),
 ):
-    return await auth_service.renew(renew_request.refresh_token)
+    return auth_service.renew(renew_request.refresh_token)

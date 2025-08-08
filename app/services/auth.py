@@ -20,7 +20,7 @@ class AuthService:
         self.client_secret = client_secret
         self.token_url = f"{self.url}/realms/{self.realm}/protocol/openid-connect/token"
 
-    async def login(self, username: str, password: str) -> AuthResponse:
+    def login(self, username: str, password: str) -> AuthResponse:
         try:
             response = requests.post(
                 url=self.token_url,
@@ -45,7 +45,7 @@ class AuthService:
         except requests.exceptions.RequestException as exc:
             raise AuthenticationError(str(exc))
 
-    async def renew(self, refresh_token: str) -> AuthResponse:
+    def renew(self, refresh_token: str) -> AuthResponse:
         try:
             response = requests.post(
                 url=self.token_url,

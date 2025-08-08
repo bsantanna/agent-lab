@@ -1,5 +1,5 @@
 import logging
-from contextlib import AbstractContextManager, contextmanager
+from contextlib import contextmanager
 
 from sqlalchemy import create_engine, orm
 from sqlalchemy.orm import Session, declarative_base
@@ -35,7 +35,7 @@ class Database:
             Base.metadata.create_all(bind=conn)
 
     @contextmanager
-    def session(self, schema_name: str = "public") -> AbstractContextManager[Session]:
+    def session(self, schema_name: str = "public"):
         sanitized_schema = self.sanitize_schema_name(schema_name)
         self.create_database(schema_name=sanitized_schema)
         session: Session = self.session_factory()
