@@ -169,6 +169,13 @@ def setup_keycloak():
     )
     response.raise_for_status()
 
+    user_credentials = {"username": "foo", "password": "bar"}
+    response = requests.post(
+        "/auth/login",
+        data=json.dumps(user_credentials),
+    )
+    os.environ["ACCESS_TOKEN"] = response.json()["access_token"]
+
 
 @pytest.fixture(scope="session", autouse=True)
 def test_config(request):

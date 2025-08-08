@@ -16,7 +16,7 @@ class TestAdaptiveRagAgent:
     def _create_agent(self, client):
         # create integration
         response = client.post(
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             url="/integrations/create",
             json={
                 "api_endpoint": "https://api.x.ai/v1/",
@@ -29,7 +29,7 @@ class TestAdaptiveRagAgent:
         # create llm
         response_2 = client.post(
             url="/llms/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "integration_id": integration_id,
                 "language_model_tag": "grok-3-mini-beta",
@@ -39,7 +39,7 @@ class TestAdaptiveRagAgent:
 
         # create agent
         return client.post(
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             url="/agents/create",
             json={
                 "language_model_id": language_model_id,
@@ -54,7 +54,7 @@ class TestAdaptiveRagAgent:
 
         return client.post(
             "/messages/post",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "message_role": "human",
                 "message_content": message_content,
