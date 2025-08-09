@@ -2,6 +2,33 @@
 
 <!-- version list -->
 
+## v1.4.1 (2025-08-09)
+
+### Bug Fixes
+
+- Adds non numeric chars for schema / id ([#204](https://github.com/bsantanna/agent-lab/pull/204),
+  [`82d0e5a`](https://github.com/bsantanna/agent-lab/commit/82d0e5a9a3a615e58bcb6d6917a7a9dc6d991715))
+
+- Adjusts sonar issues ([#204](https://github.com/bsantanna/agent-lab/pull/204),
+  [`82d0e5a`](https://github.com/bsantanna/agent-lab/commit/82d0e5a9a3a615e58bcb6d6917a7a9dc6d991715))
+
+- Authenticated integration tests ([#204](https://github.com/bsantanna/agent-lab/pull/204),
+  [`82d0e5a`](https://github.com/bsantanna/agent-lab/commit/82d0e5a9a3a615e58bcb6d6917a7a9dc6d991715))
+
+- Integration tests with auth support (1) ([#204](https://github.com/bsantanna/agent-lab/pull/204),
+  [`82d0e5a`](https://github.com/bsantanna/agent-lab/commit/82d0e5a9a3a615e58bcb6d6917a7a9dc6d991715))
+
+- Introduces /auth/login /auth/renew endpoints, mcp security
+  ([#204](https://github.com/bsantanna/agent-lab/pull/204),
+  [`82d0e5a`](https://github.com/bsantanna/agent-lab/commit/82d0e5a9a3a615e58bcb6d6917a7a9dc6d991715))
+
+- Unit tests auth endpoints (1) ([#204](https://github.com/bsantanna/agent-lab/pull/204),
+  [`82d0e5a`](https://github.com/bsantanna/agent-lab/commit/82d0e5a9a3a615e58bcb6d6917a7a9dc6d991715))
+
+- Upgrades dependencies ([#204](https://github.com/bsantanna/agent-lab/pull/204),
+  [`82d0e5a`](https://github.com/bsantanna/agent-lab/commit/82d0e5a9a3a615e58bcb6d6917a7a9dc6d991715))
+
+
 ## v1.4.0 (2025-08-02)
 
 ### Features
