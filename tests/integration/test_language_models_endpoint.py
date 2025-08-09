@@ -1,3 +1,4 @@
+import os
 import pytest
 from fastapi.testclient import TestClient
 
@@ -14,7 +15,7 @@ class TestLanguageModelsEndpoint:
         # create integration
         return client.post(
             url="/integrations/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "api_endpoint": "https://example.com",
                 "api_key": "an_invalid_key",
@@ -29,7 +30,7 @@ class TestLanguageModelsEndpoint:
 
         return client.post(
             url="/llms/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "integration_id": integration_id,
                 "language_model_tag": language_model_tag,
@@ -41,7 +42,7 @@ class TestLanguageModelsEndpoint:
         # when
         response = client.get(
             "/llms/list",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         )
 
         # then
@@ -57,7 +58,7 @@ class TestLanguageModelsEndpoint:
         # when
         response = client.post(
             url="/llms/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "integration_id": integration_id,
                 "language_model_tag": "invalid tag with spaces",
@@ -70,7 +71,7 @@ class TestLanguageModelsEndpoint:
         # when
         response = client.post(
             url="/llms/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "integration_id": integration_id,
                 "language_model_tag": "mistral-small3.1:24b",
@@ -92,7 +93,7 @@ class TestLanguageModelsEndpoint:
         entity_id = create_response.json()["id"]
         read_response = client.get(
             f"/llms/{entity_id}",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         )
 
         # then
@@ -108,7 +109,7 @@ class TestLanguageModelsEndpoint:
         # when
         response = client.get(
             f"/llms/{integration_id}",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         )
 
         # then
@@ -123,7 +124,7 @@ class TestLanguageModelsEndpoint:
         language_model_id = create_response.json()["id"]
         delete_response = client.delete(
             f"/llms/delete/{language_model_id}",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         )
 
         # then
@@ -137,7 +138,7 @@ class TestLanguageModelsEndpoint:
         # when
         response = client.delete(
             f"/llms/delete/{language_model_id}",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         )
 
         # then
@@ -148,7 +149,7 @@ class TestLanguageModelsEndpoint:
         # given
         response = client.post(
             url="/llms/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "integration_id": "an_invalid_integration_id",
                 "language_model_tag": "an_invalid_tag",
@@ -167,7 +168,7 @@ class TestLanguageModelsEndpoint:
         # when
         response = client.post(
             url="/llms/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "integration_id": integration_id,
                 "language_model_tag": "invalid tag with spaces",
@@ -186,7 +187,7 @@ class TestLanguageModelsEndpoint:
         # when
         response = client.post(
             url="/llms/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "integration_id": integration_id,
                 "language_model_tag": 1,
@@ -205,7 +206,7 @@ class TestLanguageModelsEndpoint:
         # when
         response = client.post(
             url="/llms/update",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "language_model_id": language_model_id,
                 "language_model_tag": "any_tag",
@@ -226,7 +227,7 @@ class TestLanguageModelsEndpoint:
         # when
         response = client.post(
             url="/llms/update",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "language_model_id": language_model_id,
                 "language_model_tag": "any_tag",
@@ -246,7 +247,7 @@ class TestLanguageModelsEndpoint:
         # when
         response = client.post(
             url="/llms/update",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "language_model_id": language_model_id,
                 "language_model_tag": "any_tag",
@@ -262,7 +263,7 @@ class TestLanguageModelsEndpoint:
         # when
         response = client.post(
             url="/llms/update",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={"foo": "bar"},
         )
 
@@ -279,7 +280,7 @@ class TestLanguageModelsEndpoint:
         # when
         update_response = client.post(
             url="/llms/update",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "language_model_id": language_model_id,
                 "language_model_tag": "another_tag",
@@ -295,7 +296,7 @@ class TestLanguageModelsEndpoint:
         # when
         update_response = client.post(
             url="/llms/update",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "language_model_id": language_model_id,
                 "language_model_tag": "mistral-small3.1:24b",
@@ -314,7 +315,7 @@ class TestLanguageModelsEndpoint:
         # when
         response = client.post(
             url="/llms/update_setting",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "language_model_id": language_model_id,
                 "setting_key": "a_key",
@@ -334,7 +335,7 @@ class TestLanguageModelsEndpoint:
         # when
         update_response = client.post(
             url="/llms/update_setting",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "language_model_id": language_model_id,
                 "setting_key": "a_key",
@@ -354,7 +355,7 @@ class TestLanguageModelsEndpoint:
         # when
         update_response = client.post(
             url="/llms/update_setting",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "language_model_id": language_model_id,
                 "setting_key": "temperature",
@@ -374,7 +375,7 @@ class TestLanguageModelsEndpoint:
         # when
         update_response = client.post(
             url="/llms/update_setting",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "language_model_id": language_model_id,
                 "setting_key": "temperature321",
@@ -394,7 +395,7 @@ class TestLanguageModelsEndpoint:
         # when
         update_response = client.post(
             url="/llms/update_setting",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "language_model_id": language_model_id,
                 "setting_key": "temperature",
@@ -414,7 +415,7 @@ class TestLanguageModelsEndpoint:
         # when
         update_response = client.post(
             url="/llms/update_setting",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "language_model_id": language_model_id,
                 "setting_key": "embeddings",

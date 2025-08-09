@@ -1,3 +1,4 @@
+import os
 from uuid import uuid4
 
 import pytest
@@ -25,7 +26,7 @@ class TestAgentsEndpoints:
         # create integration
         return client.post(
             url="/integrations/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "api_endpoint": "https://example.com",
                 "api_key": "an_invalid_key",
@@ -37,7 +38,7 @@ class TestAgentsEndpoints:
         # create llm
         return client.post(
             url="/llms/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "integration_id": integration_id,
                 "language_model_tag": "an_invalid_tag",
@@ -56,7 +57,7 @@ class TestAgentsEndpoints:
         # create agent
         return client.post(
             url="/agents/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "language_model_id": language_model_id,
                 "agent_type": "test_echo",
@@ -69,7 +70,7 @@ class TestAgentsEndpoints:
         # when
         response = client.get(
             "/agents/list",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         )
 
         # then
@@ -85,7 +86,7 @@ class TestAgentsEndpoints:
         # when
         read_agent_response = client.get(
             f"/agents/{agent_id}",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         )
 
         # then
@@ -102,7 +103,7 @@ class TestAgentsEndpoints:
         # when
         response = client.get(
             f"/agents/{agent_id}",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         )
 
         # then
@@ -117,7 +118,7 @@ class TestAgentsEndpoints:
         # when
         delete_agent_response = client.delete(
             f"/agents/delete/{agent_id}",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         )
 
         # then
@@ -131,7 +132,7 @@ class TestAgentsEndpoints:
         # when
         response = client.delete(
             f"/agents/delete/{agent_id}",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         )
 
         # then
@@ -146,7 +147,7 @@ class TestAgentsEndpoints:
         # when
         error_response = client.post(
             url="/agents/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "language_model_id": language_model_id,
                 "agent_type": "an_invalid_agent_type",
@@ -165,7 +166,7 @@ class TestAgentsEndpoints:
         # when
         error_response = client.post(
             url="/agents/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "language_model_id": language_model_id,
                 "agent_type": "test_echo",
@@ -181,7 +182,7 @@ class TestAgentsEndpoints:
         # when
         error_response = client.post(
             url="/agents/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={"foo": "bar"},
         )
 
@@ -193,7 +194,7 @@ class TestAgentsEndpoints:
         # when
         error_response = client.post(
             url="/agents/update",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={"foo": "bar"},
         )
 
@@ -213,7 +214,7 @@ class TestAgentsEndpoints:
         # when
         response = client.post(
             url="/agents/update",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "agent_id": agent_id,
                 "agent_name": "a_name",
@@ -233,7 +234,7 @@ class TestAgentsEndpoints:
         # when
         update_response = client.post(
             url="/agents/update",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "agent_id": agent_id,
                 "agent_name": "a_modified_name",
@@ -254,7 +255,7 @@ class TestAgentsEndpoints:
         # when
         update_response = client.post(
             url="/agents/update",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "agent_id": agent_id,
                 "agent_name": "a modified_name",
@@ -275,7 +276,7 @@ class TestAgentsEndpoints:
         # when
         update_response = client.post(
             url="/agents/update",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "agent_id": agent_id,
                 "agent_name": "a_modified_name",
@@ -296,7 +297,7 @@ class TestAgentsEndpoints:
         # when
         response = client.post(
             url="/agents/update_setting",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "agent_id": agent_id,
                 "setting_key": "a_key",
@@ -316,7 +317,7 @@ class TestAgentsEndpoints:
         # when
         update_response = client.post(
             url="/agents/update_setting",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "agent_id": agent_id,
                 "setting_key": "a_key",
@@ -336,7 +337,7 @@ class TestAgentsEndpoints:
         # when
         update_response = client.post(
             url="/agents/update_setting",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "agent_id": agent_id,
                 "setting_key": "dummy_setting",
@@ -361,7 +362,11 @@ class TestAgentsEndpoints:
         test_agent_id = "test_agent"
         ws_url = f"/agents/ws/task_updates/{test_agent_id}"
 
-        with client.websocket_connect(ws_url, timeout=10) as websocket:
+        with client.websocket_connect(
+            ws_url,
+            timeout=10,
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
+        ) as websocket:
             task_notification_service = container.task_notification_service()
             task_notification_service.subscribe()
             test_update = TaskProgress(

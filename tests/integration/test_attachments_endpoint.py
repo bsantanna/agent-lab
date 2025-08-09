@@ -19,7 +19,7 @@ class TestAttachmentsEndpoint:
     ):
         return client.post(
             url="/attachments/embeddings",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "attachment_id": attachment_id,
                 "language_model_id": language_model_id,
@@ -31,7 +31,7 @@ class TestAttachmentsEndpoint:
         # create integration
         response = client.post(
             url="/integrations/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "integration_type": "ollama_api_v1",
                 "api_endpoint": os.getenv("OLLAMA_ENDPOINT"),
@@ -43,7 +43,7 @@ class TestAttachmentsEndpoint:
         # create llm
         return client.post(
             url="/llms/create",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "integration_id": integration_id,
                 "language_model_tag": "phi3",
@@ -57,7 +57,7 @@ class TestAttachmentsEndpoint:
         with open(file_path, "rb") as file:
             upload_response = client.post(
                 url="/attachments/upload",
-                headers={"Authorization": "Bearer x"},
+                headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
                 files={"file": (filename, file, content_type)},
             )
 
@@ -66,14 +66,14 @@ class TestAttachmentsEndpoint:
     def _download_file(self, client, attachment_id):
         return client.get(
             url=f"/attachments/download/{attachment_id}",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         )
 
     @pytest.mark.asyncio
     async def test_upload_no_file_validation_error(self, client):
         response = client.post(
             "/attachments/upload",
-            headers={"Authorization": "Bearer x"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         )
         assert response.status_code == 422
 
@@ -88,7 +88,7 @@ class TestAttachmentsEndpoint:
             with open(temp_file.name, "rb") as file:
                 response = client.post(
                     url="/attachments/upload",
-                    headers={"Authorization": "Bearer x"},
+                    headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
                     files={
                         "file": (
                             os.path.basename(temp_file.name),
@@ -164,7 +164,7 @@ class TestAttachmentsEndpoint:
             with open(temp_file.name, "rb") as file:
                 response = client.post(
                     url="/attachments/upload",
-                    headers={"Authorization": "Bearer y"},
+                    headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
                     files={
                         "file": (
                             os.path.basename(temp_file.name),

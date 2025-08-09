@@ -1,8 +1,11 @@
+import json
 import os
 from pathlib import Path
 
 import pytest
+import requests
 from testcontainers.core.waiting_utils import wait_for_logs
+from testcontainers.keycloak import KeycloakContainer
 from testcontainers.ollama import OllamaContainer
 from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
@@ -12,6 +15,10 @@ os.environ["TESTING"] = "1"
 os.environ["OLLAMA_ENDPOINT"] = "http://localhost:21434"
 
 llm_tag = "bge-m3"
+
+keycloak = KeycloakContainer(username="admin", password="admin").with_bind_ports(
+    container=8080, host=18080
+)
 
 ollama = OllamaContainer(
     ollama_home=f"{Path.home()}/.ollama", image="ollama/ollama:latest"
@@ -35,27 +42,7 @@ vault = (
 )
 
 
-@pytest.fixture(scope="session", autouse=True)
-def test_config(request):
-    ollama.start()
-    postgres.start()
-    redis.start()
-    vault.start()
-
-    def remove_container():
-        ollama.stop()
-        postgres.stop()
-        redis.stop()
-        vault.stop()
-
-    request.addfinalizer(remove_container)
-    wait_for_logs(ollama, "Listening on")
-    wait_for_logs(postgres, "database system is ready to accept connections")
-    wait_for_logs(redis, "Ready to accept connections")
-    wait_for_logs(
-        vault, "Development mode should NOT be used in production installations!"
-    )
-
+def setup_postgres():
     # setup databases
     psql_command = "PGPASSWORD='postgres' psql --username postgres --host 127.0.0.1"
     create_database_command = f"{psql_command} -c 'create database ?;'"
@@ -74,18 +61,155 @@ def test_config(request):
             "sh",
             "-c",
             f"""
-            {main_db_command} &&
-            {checkpoints_db_command} &&
-            {vectors_db_command} &&
-            {copy_dump_command} &&
-            {restore_dump_command}
-            """,
+                {main_db_command} &&
+                {checkpoints_db_command} &&
+                {vectors_db_command} &&
+                {copy_dump_command} &&
+                {restore_dump_command}
+                """,
         ]
     )
 
+
+def setup_ollama():
     # pull llm from registry
     if llm_tag not in [e["name"] for e in ollama.list_models()]:
         print(f"Pulling {llm_tag} model")
         ollama.pull_model(llm_tag)
+
+
+def setup_keycloak():
+    keycloak.exec(
+        [
+            "/opt/keycloak/bin/kcadm.sh",
+            "update",
+            "realms/master",
+            "-s",
+            "sslRequired=NONE",
+            "--server",
+            "http://localhost:8080",
+            "--realm",
+            "master",
+            "--user",
+            "admin",
+            "--password",
+            "admin",
+        ]
+    )
+
+    data = {
+        "client_id": "admin-cli",
+        "username": "admin",
+        "password": "admin",
+        "grant_type": "password",
+    }
+    response = requests.post(
+        "http://localhost:18080/realms/master/protocol/openid-connect/token", data=data
+    )
+    response.raise_for_status()
+    token = response.json()["access_token"]
+
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    requests.delete("http://localhost:18080/admin/realms/test-realm", headers=headers)
+
+    realm_data = {"realm": "test-realm", "enabled": True}
+    response = requests.post(
+        "http://localhost:18080/admin/realms",
+        headers=headers,
+        data=json.dumps(realm_data),
+    )
+    response.raise_for_status()
+
+    keycloak.exec(
+        [
+            "/opt/keycloak/bin/kcadm.sh",
+            "update",
+            "realms/test-realm",
+            "-s",
+            "sslRequired=NONE",
+            "--server",
+            "http://localhost:8080",
+            "--realm",
+            "master",
+            "--user",
+            "admin",
+            "--password",
+            "admin",
+        ]
+    )
+
+    client_data = {
+        "clientId": "test-client",
+        "enabled": True,
+        "protocol": "openid-connect",
+        "standardFlowEnabled": True,
+        "clientAuthenticatorType": "client-secret",
+        "publicClient": False,
+        "secret": "test-secret",
+    }
+    response = requests.post(
+        "http://localhost:18080/admin/realms/test-realm/clients",
+        headers=headers,
+        data=json.dumps(client_data),
+    )
+    response.raise_for_status()
+
+    user_data = {
+        "username": "foo",
+        "enabled": True,
+        "email": "foo@bar.com",
+        "firstName": "Test",
+        "lastName": "User",
+        "credentials": [{"type": "password", "value": "bar", "temporary": False}],
+    }
+    response = requests.post(
+        "http://localhost:18080/admin/realms/test-realm/users",
+        headers=headers,
+        data=json.dumps(user_data),
+    )
+    response.raise_for_status()
+
+    user_credentials = {
+        "client_id": "test-client",
+        "client_secret": "test-secret",
+        "grant_type": "password",
+        "username": "foo",
+        "password": "bar",
+    }
+    response = requests.post(
+        "http://localhost:18080/realms/test-realm/protocol/openid-connect/token",
+        data=user_credentials,
+    )
+    response.raise_for_status()
+    os.environ["ACCESS_TOKEN"] = response.json()["access_token"]
+
+
+@pytest.fixture(scope="session", autouse=True)
+def test_config(request):
+    keycloak.start()
+    ollama.start()
+    postgres.start()
+    redis.start()
+    vault.start()
+
+    def remove_container():
+        keycloak.stop()
+        ollama.stop()
+        postgres.stop()
+        redis.stop()
+        vault.stop()
+
+    request.addfinalizer(remove_container)
+    wait_for_logs(keycloak, "Listening on")
+    wait_for_logs(ollama, "Listening on")
+    wait_for_logs(postgres, "database system is ready to accept connections")
+    wait_for_logs(redis, "Ready to accept connections")
+    wait_for_logs(
+        vault, "Development mode should NOT be used in production installations!"
+    )
+
+    setup_keycloak()
+    setup_ollama()
+    setup_postgres()
 
     yield
