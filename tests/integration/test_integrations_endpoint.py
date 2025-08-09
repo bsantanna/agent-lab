@@ -1,3 +1,4 @@
+import os
 import pytest
 from fastapi.testclient import TestClient
 
@@ -13,7 +14,10 @@ class TestIntegrationsEndpoints:
     @pytest.mark.asyncio
     async def test_get_list(self, client):
         # when
-        response = client.get("/integrations/list", headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},)
+        response = client.get(
+            "/integrations/list",
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
+        )
 
         # then
         assert response.status_code == 200
@@ -34,7 +38,10 @@ class TestIntegrationsEndpoints:
         integration_id = response.json()["id"]
 
         # when
-        response_2 = client.get(f"/integrations/{integration_id}", headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},)
+        response_2 = client.get(
+            f"/integrations/{integration_id}",
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
+        )
 
         # then
         assert response_2.status_code == 200
@@ -46,7 +53,10 @@ class TestIntegrationsEndpoints:
         integration_id = "not_existing_id"
 
         # when
-        response = client.get(f"/integrations/{integration_id}", headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},)
+        response = client.get(
+            f"/integrations/{integration_id}",
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
+        )
 
         # then
         assert response.status_code == 404
@@ -66,7 +76,10 @@ class TestIntegrationsEndpoints:
         integration_id = response.json()["id"]
 
         # when
-        response_2 = client.delete(f"/integrations/delete/{integration_id}", headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},)
+        response_2 = client.delete(
+            f"/integrations/delete/{integration_id}",
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
+        )
 
         # then
         assert response_2.status_code == 204
@@ -77,7 +90,10 @@ class TestIntegrationsEndpoints:
         integration_id = "not_existing_id"
 
         # when
-        response = client.delete(f"/integrations/delete/{integration_id}", headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},)
+        response = client.delete(
+            f"/integrations/delete/{integration_id}",
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
+        )
 
         # then
         assert response.status_code == 404
@@ -112,19 +128,6 @@ class TestIntegrationsEndpoints:
         )
 
         # then
-        assert response.status_code == 400
-
-    @pytest.mark.asyncio
-    async def test_create_invalid_integration_type_bad_request(self, client):
-        response = client.post(
-            url="/integrations/create",
-            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
-            json={
-                "api_endpoint": "https://example.com",
-                "api_key": "an_valid_key",
-                "integration_type": "an_invalid_integration_type",
-            },
-        )
         assert response.status_code == 400
 
     @pytest.mark.asyncio

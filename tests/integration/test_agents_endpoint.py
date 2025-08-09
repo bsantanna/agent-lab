@@ -1,3 +1,4 @@
+import os
 from uuid import uuid4
 
 import pytest
@@ -361,7 +362,11 @@ class TestAgentsEndpoints:
         test_agent_id = "test_agent"
         ws_url = f"/agents/ws/task_updates/{test_agent_id}"
 
-        with client.websocket_connect(ws_url, timeout=10) as websocket:
+        with client.websocket_connect(
+            ws_url,
+            timeout=10,
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
+        ) as websocket:
             task_notification_service = container.task_notification_service()
             task_notification_service.subscribe()
             test_update = TaskProgress(

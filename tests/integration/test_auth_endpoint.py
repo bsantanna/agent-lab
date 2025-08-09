@@ -42,3 +42,35 @@ class TestAuthEndpoints:
         response_json = response.json()
         assert "access_token" in response_json
         assert "refresh_token" in response_json
+
+    @pytest.mark.asyncio
+    async def test_renew_unauthorized(self, client):
+        # when
+        response = client.post(
+            "/auth/renew",
+            json={"refresh_token": "invalid_refresh_token"},
+        )
+
+        # then
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_renew_success(self, client):
+        # given
+        response = client.post(
+            "/auth/login",
+            json={"username": "foo", "password": "bar"},
+        )
+        valid_refresh_token = response.json()["refresh_token"]
+
+        # when
+        response = client.post(
+            "/auth/renew",
+            json={"refresh_token": valid_refresh_token},
+        )
+
+        # then
+        assert response.status_code == 201
+        response_json = response.json()
+        assert "access_token" in response_json
+        assert "refresh_token" in response_json

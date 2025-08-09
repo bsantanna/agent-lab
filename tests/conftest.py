@@ -169,11 +169,18 @@ def setup_keycloak():
     )
     response.raise_for_status()
 
-    user_credentials = {"username": "foo", "password": "bar"}
+    user_credentials = {
+        "client_id": "test-client",
+        "client_secret": "test-secret",
+        "grant_type": "password",
+        "username": "foo",
+        "password": "bar",
+    }
     response = requests.post(
-        "/auth/login",
-        data=json.dumps(user_credentials),
+        "http://localhost:18080/realms/test-realm/protocol/openid-connect/token",
+        data=user_credentials,
     )
+    response.raise_for_status()
     os.environ["ACCESS_TOKEN"] = response.json()["access_token"]
 
 
