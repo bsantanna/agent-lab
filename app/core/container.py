@@ -19,6 +19,11 @@ from app.infrastructure.metrics.tracer import Tracer
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.adaptive_rag.agent import AdaptiveRagAgent
 from app.services.agent_types.base import AgentUtils
+from app.services.agent_types.business.voice_memos.agent import (
+    VoiceMemosAgent,
+    AzureEntraIdVoiceMemosAgent,
+    FastVoiceMemosAgent,
+)
 from app.services.agent_types.coordinator_planner_supervisor.agent import (
     CoordinatorPlannerSupervisorAgent,
 )
@@ -26,11 +31,6 @@ from app.services.agent_types.react_rag.agent import ReactRagAgent
 from app.services.agent_types.registry import AgentRegistry
 from app.services.agent_types.test_echo.test_echo_agent import TestEchoAgent
 from app.services.agent_types.vision_document.agent import VisionDocumentAgent
-from app.services.agent_types.business.voice_memos.agent import (
-    VoiceMemosAgent,
-    AzureEntraIdVoiceMemosAgent,
-    FastVoiceMemosAgent,
-)
 from app.services.agents import AgentService
 from app.services.attachments import AttachmentService
 from app.services.auth import AuthService
@@ -88,6 +88,12 @@ class Container(containers.DeclarativeContainer):
         config.set("db.checkpoints", app_secrets["data"]["data"]["db_checkpoints"])
 
         # dependencies environment variables
+        os.environ["LANGWATCH_API_KEY"] = app_secrets["data"]["data"][
+            "langwatch_api_key"
+        ]
+        os.environ["LANGWATCH_ENDPOINT"] = app_secrets["data"]["data"][
+            "langwatch_endpoint"
+        ]
         os.environ["TAVILY_API_KEY"] = app_secrets["data"]["data"]["tavily_api_key"]
 
     db = providers.Singleton(Database, db_url=config.db.url)

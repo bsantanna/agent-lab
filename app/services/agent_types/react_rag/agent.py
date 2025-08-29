@@ -1,6 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 
+import langwatch
 from langgraph.prebuilt import create_react_agent
 
 from app.interface.api.messages.schema import MessageRequest, Message
@@ -78,6 +79,7 @@ class ReactRagAgent(AgentBase):
             ],
         }
 
+    @langwatch.trace()
     def process_message(self, message_request: MessageRequest, schema: str) -> Message:
         agent_id = message_request.agent_id
         workflow = self.get_workflow(agent_id, schema)
@@ -91,10 +93,22 @@ class ReactRagAgent(AgentBase):
 
         workflow_result = workflow.invoke(inputs, config)
         self.logger.info(f"Agent[{agent_id}] -> Result -> {workflow_result}")
-        message_content, response_data = self.format_response(workflow_result)
+        response_content, response_data = self.format_response(workflow_result)
+
+        # Langwatch output formatting
+        langwatch.get_current_trace().update(
+            input=message_request.message_content,
+            output=response_content,
+            metadata={
+                "agent_id": agent_id,
+                "agent_class": self.__class__.__name__,
+                "schema": schema,
+            },
+        )
+
         return Message(
             message_role="assistant",
-            message_content=message_content,
+            message_content=response_content,
             response_data=response_data,
             agent_id=message_request.agent_id,
         )

@@ -9,6 +9,7 @@ from datetime import timedelta, datetime, timezone
 
 import hvac
 import icalendar
+import langwatch
 from browser_use import Agent as BrowserAgent
 from browser_use.agent.views import AgentHistoryList
 from browser_use.browser.browser import BrowserConfig, Browser
@@ -282,6 +283,7 @@ class WorkflowAgentBase(AgentBase, ABC):
 
         return thought_chain
 
+    @langwatch.trace()
     def process_message(self, message_request: MessageRequest, schema: str) -> Message:
         agent_id = message_request.agent_id
         checkpointer = self.graph_persistence_factory.build_checkpoint_saver()
@@ -305,20 +307,31 @@ class WorkflowAgentBase(AgentBase, ABC):
 
         workflow_result = workflow.invoke(inputs, config)
         self.logger.info(f"Agent[{agent_id}] -> Result -> {workflow_result}")
-        message_content, response_data = self.format_response(workflow_result)
+        response_content, response_data = self.format_response(workflow_result)
 
         self.task_notification_service.publish_update(
             task_progress=TaskProgress(
                 agent_id=agent_id,
                 status="completed",
-                message_content=message_content,
+                message_content=response_content,
                 response_data=response_data,
             )
         )
 
+        # Langwatch output formatting
+        langwatch.get_current_trace().update(
+            input=message_request.message_content,
+            output=response_content,
+            metadata={
+                "agent_id": agent_id,
+                "agent_class": self.__class__.__name__,
+                "schema": schema,
+            },
+        )
+
         return Message(
             message_role="assistant",
-            message_content=message_content,
+            message_content=response_content,
             response_data=response_data,
             agent_id=agent_id,
         )

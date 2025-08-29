@@ -319,6 +319,60 @@ EOF
 
 Please refer to [Keycloak guide](KEYCLOAK.md) for detailed steps how setting up OIDC connection.
 
+
+### Setup LangWatch
+
+[LangWatch](https://langwatch.ai/) is used by Agent-Lab for observability of LLM usage.
+
+- Please determine a <langwatch_fqdn> for accessing LangWatch web UI, example: `langwatch.my-domain.com`
+
+
+```bash
+helm repo add langwatch https://langwatch.github.io/langwatch/
+helm repo update
+```
+
+```bash
+export NEXTAUTH_SECRET=$(openssl rand -base64 32)
+export API_TOKEN_JWT_SECRET=$(openssl rand -base64 32)
+export CRON_API_KEY=$(openssl rand -base64 32)
+echo "export NEXTAUTH_SECRET=${NEXTAUTH_SECRET}" >> langwatch_env.sh
+echo "export API_TOKEN_JWT_SECRET=${API_TOKEN_JWT_SECRET}" >> langwatch_env.sh
+echo "export CRON_API_KEY=${CRON_API_KEY}" >> langwatch_env.sh
+```
+
+```bash
+helm --namespace agent-lab upgrade --install agent-lab-langwatch langwatch/langwatch-helm --values - <<EOF
+app:
+  env:
+    NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+    API_TOKEN_JWT_SECRET: ${API_TOKEN_JWT_SECRET}
+    BASE_HOST: https://<langwatch_fqdn>
+    NEXTAUTH_URL: https://<langwatch_fqdn>
+    CRON_API_KEY: ${CRON_API_KEY}
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: <langwatch_fqdn>
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: "agent-lab-langwatch-app"
+              port:
+                number: 5560
+  tls:
+    - secretName: langwatch-tls
+      hosts:
+        - <langwatch_fqdn>
+
+EOF
+```
+
 ### Setup Vault
 
 [Vault](https://developer.hashicorp.com/vault/docs) is used by Agent-Lab to manage secrets and sensitive data.
@@ -400,6 +454,8 @@ For the *Path* value, use `secret`
   "db_checkpoints": "postgresql://???:???@pg-agent-lab-checkpoints-cluster-rw.agent-lab.svc.cluster.local:5432/app",
   "db_url": "postgresql://???:???@pg-agent-lab-cluster-rw.agent-lab.svc.cluster.local:5432/app",
   "db_vectors": "postgresql://???:???@pg-agent-lab-vectors-cluster-rw.agent-lab.svc.cluster.local:5432/app",
+  "langwatch_endpoint": "<langwatch_fqdn>",
+  "langwatch_api_key": "???",
   "tavily_api_key": "???"
 }
 ```
