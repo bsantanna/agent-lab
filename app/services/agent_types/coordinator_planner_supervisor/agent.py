@@ -331,9 +331,10 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
                 str: Documents retrieved from knowledge base separated by line breaks.
             """
             agent_id = state["agent_id"]
+            schema = state["schema"]
             collection_name = state["collection_name"]
             execution_plan = state["execution_plan"]
-            embeddings_model = self.get_embeddings_model(agent_id)
+            embeddings_model = self.get_embeddings_model(agent_id, schema)
             thought_docs = self.document_repository.search(
                 embeddings_model=embeddings_model,
                 collection_name=collection_name,
