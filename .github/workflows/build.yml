@@ -26,12 +26,11 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 pytest browser-use==${BROWSER_USE_VERSION} browser-use[memory]==${BROWSER_USE_VERSION}
-          playwright install chromium --with-deps --no-shell
+          pip install flake8 pytest browser-use==${BROWSER_USE_VERSION}
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           sudo apt install -yq ffmpeg
         env:
-          BROWSER_USE_VERSION: 0.2.6
+          BROWSER_USE_VERSION: 0.7.0
       - name: Lint
         run: |
           # stop the build if there are Python syntax errors or undefined names
@@ -48,6 +47,8 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+          LANGWATCH_API_KEY: ${{ secrets.LANGWATCH_API_KEY }}
+          LANGWATCH_ENDPOINT: ${{ secrets.LANGWATCH_ENDPOINT }}
           BUILD_WORKFLOW: "True"
       - name: SonarQube
         uses: SonarSource/sonarqube-scan-action@v4

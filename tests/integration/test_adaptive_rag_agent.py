@@ -32,7 +32,7 @@ class TestAdaptiveRagAgent:
             headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "integration_id": integration_id,
-                "language_model_tag": "grok-3-mini-beta",
+                "language_model_tag": "grok-code-fast",
             },
         )
         language_model_id = response_2.json()["id"]

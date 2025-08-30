@@ -7,7 +7,6 @@ ENV PYTHONUNBUFFERED=1
 ENV HOST=0.0.0.0
 ENV PORT=8000
 ENV WORKERS=1
-ENV PLAYWRIGHT_BROWSERS_PATH=/agent-lab/.cache
 
 WORKDIR /agent-lab
 
@@ -15,7 +14,6 @@ COPY requirements.txt /agent-lab/
 RUN apt update -q && apt install -yq ffmpeg \
     && pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt \
-    && playwright install chromium --no-shell \
     && apt clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
     && groupadd -r agent-lab \

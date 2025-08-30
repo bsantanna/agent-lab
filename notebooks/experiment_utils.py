@@ -1,3 +1,4 @@
+import os
 from uuid import uuid4
 from IPython.display import Image, display
 import requests
@@ -20,7 +21,9 @@ def create_llm_with_integration(
     agent_lab_endpoint: str = "http://localhost:18000",
 ):
     integration_response = requests.post(
-        f"{agent_lab_endpoint}/integrations/create", json=integration_params
+        f"{agent_lab_endpoint}/integrations/create",
+        json=integration_params,
+        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
     )
     integration_response.raise_for_status()
     integration_result = integration_response.json()
@@ -30,7 +33,11 @@ def create_llm_with_integration(
         "language_model_tag": llm_tag,
     }
 
-    llm_response = requests.post(f"{agent_lab_endpoint}/llms/create", json=llm_params)
+    llm_response = requests.post(
+        f"{agent_lab_endpoint}/llms/create",
+        json=llm_params,
+        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
+    )
     llm_response.raise_for_status()
     return llm_response.json()
 
@@ -54,7 +61,9 @@ def create_agent_with_integration(
     }
 
     agent_response = requests.post(
-        f"{agent_lab_endpoint}/agents/create", json=agent_params
+        f"{agent_lab_endpoint}/agents/create",
+        json=agent_params,
+        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
     )
     agent_response.raise_for_status()
     agent_result = agent_response.json()
@@ -131,6 +140,7 @@ def create_attachment(
         attachment_response = requests.post(
             f"{agent_lab_endpoint}/attachments/upload",
             files={"file": (file_path, file, content_type)},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         )
         return attachment_response.json()["id"]
 
@@ -148,6 +158,7 @@ def create_embeddings(
             "language_model_id": language_model_id,
             "collection_name": collection_name,
         },
+        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
     )
     return embeddings_response.json()
 
@@ -165,5 +176,6 @@ def update_agent_setting(
             "setting_key": setting_key,
             "setting_value": setting_value,
         },
+        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
     )
     return update_setting_response.json()
