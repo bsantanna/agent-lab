@@ -32,7 +32,7 @@ class TestCoordinatorPlannerSupervisorAgent:
             headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "integration_id": integration_id,
-                "language_model_tag": "grok-4",
+                "language_model_tag": "grok-code-fast",
             },
         )
         language_model_id = response_2.json()["id"]
