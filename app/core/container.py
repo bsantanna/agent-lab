@@ -2,7 +2,6 @@ import os
 
 import hvac
 from dependency_injector import containers, providers
-from markitdown import MarkItDown
 
 from app.domain.repositories.agents import AgentRepository, AgentSettingRepository
 from app.domain.repositories.attachments import AttachmentRepository
@@ -102,8 +101,6 @@ class Container(containers.DeclarativeContainer):
         GraphPersistenceFactory, db_checkpoints=config.db.checkpoints
     )
 
-    markdown = providers.Singleton(MarkItDown)
-
     vault_client = providers.Singleton(
         hvac.Client, url=config.vault.url, token=config.vault.token, verify=False
     )
@@ -166,7 +163,6 @@ class Container(containers.DeclarativeContainer):
         language_model_setting_service=language_model_setting_service,
         integration_service=integration_service,
         vault_client=vault_client,
-        markdown=markdown,
     )
 
     agent_setting_repository = providers.Factory(AgentSettingRepository, db=db)

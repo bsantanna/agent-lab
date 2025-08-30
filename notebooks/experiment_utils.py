@@ -68,6 +68,22 @@ def create_agent_with_integration(
     agent_response.raise_for_status()
     agent_result = agent_response.json()
 
+    if integration_params["integration_type"] == "openai_api_v1":
+        # Update the agent setting to enable function calling for OpenAI agents
+        update_agent_setting(
+            agent_id=agent_result["id"],
+            setting_key="collection_name",
+            setting_value="static_document_data_openai_embeddings",
+            agent_lab_endpoint=agent_lab_endpoint,
+        )
+    else:
+        update_agent_setting(
+            agent_id=agent_result["id"],
+            setting_key="collection_name",
+            setting_value="static_document_data_ollama_embeddings",
+            agent_lab_endpoint=agent_lab_endpoint,
+        )
+
     return agent_result
 
 
@@ -120,6 +136,26 @@ def create_xai_agent(
     integration_params = {
         "integration_type": "xai_api_v1",
         "api_endpoint": "https://api.x.ai/v1/",
+        "api_key": api_key,
+    }
+
+    return create_agent_with_integration(
+        llm_tag,
+        agent_type,
+        integration_params,
+        agent_lab_endpoint,
+    )
+
+
+def create_anthropic_agent(
+    llm_tag: str = "claude-3-5-haiku-latest",
+    agent_type: str = "test_echo",
+    agent_lab_endpoint: str = "http://localhost:18000",
+    api_key: str = "",
+) -> str:
+    integration_params = {
+        "integration_type": "anthropic_api_v1",
+        "api_endpoint": "https://api.anthropic.com",
         "api_key": api_key,
     }
 

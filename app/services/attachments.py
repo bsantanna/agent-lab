@@ -29,7 +29,6 @@ class AttachmentService:
         language_model_setting_service: LanguageModelSettingService,
         integration_service: IntegrationService,
         vault_client: hvac.Client,
-        markdown: MarkItDown,
     ) -> None:
         self.attachment_repository = attachment_repository
         self.document_repository = document_repository
@@ -37,7 +36,7 @@ class AttachmentService:
         self.language_model_setting_service = language_model_setting_service
         self.integration_service = integration_service
         self.vault_client = vault_client
-        self.markdown = markdown
+        self.markdown = MarkItDown()
 
     def get_attachment_by_id(self, attachment_id: str, schema: str) -> Attachment:
         return self.attachment_repository.get_by_id(attachment_id, schema)
