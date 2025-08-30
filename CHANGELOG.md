@@ -2,6 +2,31 @@
 
 <!-- version list -->
 
+## v1.4.2 (2025-08-30)
+
+### Bug Fixes
+
+- Adjusts build script ([#213](https://github.com/bsantanna/agent-lab/pull/213),
+  [`b4810db`](https://github.com/bsantanna/agent-lab/commit/b4810db0265c1760d86d035e7d1420f1f903be23))
+
+- Adjusts build script (2) ([#213](https://github.com/bsantanna/agent-lab/pull/213),
+  [`b4810db`](https://github.com/bsantanna/agent-lab/commit/b4810db0265c1760d86d035e7d1420f1f903be23))
+
+- Adjusts models ([#213](https://github.com/bsantanna/agent-lab/pull/213),
+  [`b4810db`](https://github.com/bsantanna/agent-lab/commit/b4810db0265c1760d86d035e7d1420f1f903be23))
+
+- Adjusts models and build script ([#213](https://github.com/bsantanna/agent-lab/pull/213),
+  [`b4810db`](https://github.com/bsantanna/agent-lab/commit/b4810db0265c1760d86d035e7d1420f1f903be23))
+
+- Adjusts researcher knowledge base tool call
+  ([#213](https://github.com/bsantanna/agent-lab/pull/213),
+  [`b4810db`](https://github.com/bsantanna/agent-lab/commit/b4810db0265c1760d86d035e7d1420f1f903be23))
+
+- Couple of improvements for traces collection
+  ([#213](https://github.com/bsantanna/agent-lab/pull/213),
+  [`b4810db`](https://github.com/bsantanna/agent-lab/commit/b4810db0265c1760d86d035e7d1420f1f903be23))
+
+
 ## v1.4.1 (2025-08-09)
 
 ### Bug Fixes
