@@ -110,12 +110,12 @@ class TestCoordinatorPlannerSupervisorAgent:
         assert "assistant" == response_dict["message_role"]
 
     @pytest.mark.asyncio
-    @pytest.mark.skip("This test is flaky, often fails on GitHub Actions pipeline")
     async def test_browser(self, client):
         # given
         message_content = (
-            "With the browser, go to https://en.wikipedia.org/wiki/Mathematical_finance "
-            "and summarize the article."
+            "Visit https://agent-lab.btech.software/docs and list all http methods, "
+            "endpoints and description as a markdown table, print the markdown table "
+            "(do not generate files)."
         )
 
         # when
