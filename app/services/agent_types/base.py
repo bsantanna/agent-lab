@@ -529,7 +529,7 @@ class ContactSupportAgentBase(WorkflowAgentBase, ABC):
 
 class WebAgentBase(WorkflowAgentBase, ABC):
     def __init__(self, agent_utils: AgentUtils):
-        self.cdp_url = agent_utils.config.cdp_url
+        self.cdp_url = agent_utils.config["cdp_url"]
         super().__init__(agent_utils)
 
     def get_browser_chat_model(
