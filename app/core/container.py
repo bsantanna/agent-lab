@@ -79,6 +79,7 @@ class Container(containers.DeclarativeContainer):
         config.set(
             "auth.client_secret", app_secrets["data"]["data"]["auth_client_secret"]
         )
+        config.set("cdp_url", app_secrets["data"]["data"]["cdp_url"])
         config.set("vault.url", vault_url)
         config.set("vault.token", vault_token)
         config.set("broker.url", app_secrets["data"]["data"]["broker_url"])

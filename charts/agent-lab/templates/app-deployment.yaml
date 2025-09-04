@@ -55,23 +55,6 @@ spec:
           volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- if .Values.headless_shell.enabled }}
-        - name: {{ .Chart.Name }}-headless-shell
-          securityContext:
-          {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.headless_shell.image }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports:
-            - name: headless_shell
-              containerPort: {{ .Values.headless_shell.port }}
-              protocol: TCP
-          livenessProbe:
-          {{- toYaml .Values.headless_shell.livenessProbe | nindent 12 }}
-          readinessProbe:
-          {{- toYaml .Values.headless_shell.readinessProbe | nindent 12 }}
-          resources:
-          {{- toYaml .Values.headless_shell.resources | nindent 12 }}
-      {{- end }}
       {{- with .Values.volumes }}
       volumes:
         {{- toYaml . | nindent 8 }}

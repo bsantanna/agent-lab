@@ -1,4 +1,5 @@
 api_base_url: "http://localhost:18000"
+cdp_url: "http://headless-shell:9222"
 auth:
   enabled: False
 broker:
