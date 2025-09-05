@@ -1,1 +1,1 @@
-gpt-audio
+gpt-4o-mini-audio-preview
