@@ -18,7 +18,7 @@ The application integrates with [FastAPI-MCP](https://github.com/tadata-org/fast
 Start [MCP Inspector](https://github.com/modelcontextprotocol/inspector)
 
 ```bash
-npx @modelcontextprotocol/inspector@0.14.3
+npx @modelcontextprotocol/inspector
 ```
 
 Access Web console (use link with proxy given in the console).
