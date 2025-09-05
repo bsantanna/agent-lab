@@ -1,1 +1,1 @@
-gpt-4o-mini-transcribe
+gpt-audio
