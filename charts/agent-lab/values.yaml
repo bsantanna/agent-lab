@@ -79,7 +79,7 @@ tolerations: []
 
 affinity: {}
 
-headless_shell:
+cdp:
   enabled: true
   image: chromedp/headless-shell:latest
   port: 9222
