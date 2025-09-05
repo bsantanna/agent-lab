@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from uuid import uuid4
 
 import pytest
@@ -12,8 +13,8 @@ def client():
     yield TestClient(app)
 
 
-class TestCoordinatorPlannerSupervisorAgent:
-    def _create_agent(self, client):
+class TestVoiceMemosAgent:
+    def _create_agent(self, client, agent_type="voice_memos"):
         # create integration
         response = client.post(
             url="/integrations/create",
@@ -32,7 +33,7 @@ class TestCoordinatorPlannerSupervisorAgent:
             headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "integration_id": integration_id,
-                "language_model_tag": "grok-code-fast",
+                "language_model_tag": "gpt-5-nano",
             },
         )
         language_model_id = response_2.json()["id"]
@@ -43,12 +44,14 @@ class TestCoordinatorPlannerSupervisorAgent:
             headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "language_model_id": language_model_id,
-                "agent_type": "coordinator_planner_supervisor",
+                "agent_type": agent_type,
                 "agent_name": f"agent-{uuid4()}",
             },
         )
 
-    def _create_message(self, client, message_content, agent_id=None):
+    def _create_message(
+        self, client, message_content, agent_id=None, attachment_id=None
+    ):
         if agent_id is None:
             create_agent_response = self._create_agent(client)
             agent_id = create_agent_response.json()["id"]
@@ -60,43 +63,47 @@ class TestCoordinatorPlannerSupervisorAgent:
                 "message_role": "human",
                 "message_content": message_content,
                 "agent_id": agent_id,
+                "attachment_id": attachment_id,
             },
         )
 
-    @pytest.mark.asyncio
-    async def test_researcher(self, client):
-        # given
-        message_content = "According to Sun Tzu, what is the pinnacle of excellence?"
+    def _upload_file(self, client, filename: str, content_type: str):
+        current_dir = Path(__file__).parent
+        file_path = f"{current_dir}/{filename}"
 
         # when
-        create_message_response = self._create_message(client, message_content)
+        with open(file_path, "rb") as file:
+            upload_response = client.post(
+                url="/attachments/upload",
+                headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
+                files={"file": (filename, file, content_type)},
+            )
 
-        # then
-        assert create_message_response.status_code == 200
-        response_dict = create_message_response.json()
-        assert "id" in response_dict
-        assert "assistant" == response_dict["message_role"]
+        return upload_response
 
     @pytest.mark.asyncio
-    async def test_coder(self, client):
+    async def test_post_message(self, client):
         # given
-        message_content = (
-            "Please create a hello world in Python that accepts a name parameter."
+        upload_filename = "voice_memos_01_pt_BR.mp3"
+        upload_response = self._upload_file(client, upload_filename, "audio/mp3")
+        attachment_id = upload_response.json()["id"]
+        message_content = "Analyse the given audio."
+
+        # when
+        create_message_response = self._create_message(
+            client, message_content, attachment_id=attachment_id
         )
 
-        # when
-        create_message_response = self._create_message(client, message_content)
-
         # then
         assert create_message_response.status_code == 200
         response_dict = create_message_response.json()
         assert "id" in response_dict
         assert "assistant" == response_dict["message_role"]
 
-        # convert previous code response to bash
-        # when
+        # test coordinator react flow (no attachment => react flow)
+        # given
         agent_id = response_dict["agent_id"]
-        follow_up_message_content = "Please convert previous code to bash."
+        follow_up_message_content = "Who participated the meeting?"
 
         # when
         create_follow_up_message_response = self._create_message(
@@ -108,21 +115,37 @@ class TestCoordinatorPlannerSupervisorAgent:
         response_dict = create_follow_up_message_response.json()
         assert "id" in response_dict
         assert "assistant" == response_dict["message_role"]
+        assert "Aline" in response_dict["message_content"]
 
+
+class TestFastVoiceMemosAgent(TestVoiceMemosAgent):
     @pytest.mark.asyncio
-    async def test_browser(self, client):
+    async def test_post_message(self, client):
         # given
-        message_content = (
-            "Visit https://agent-lab.btech.software/docs and list all http methods, "
-            "endpoints and description as a markdown table, print the markdown table "
-            "(do not generate files)."
+        create_agent_response = self._create_agent(
+            client, agent_type="fast_voice_memos"
         )
+        agent_id = create_agent_response.json()["id"]
+        upload_filename = "voice_memos_01_pt_BR.mp3"
+        upload_response = self._upload_file(client, upload_filename, "audio/mp3")
+        attachment_id = upload_response.json()["id"]
+        message_content = "Analyse the given audio."
 
         # when
-        create_message_response = self._create_message(client, message_content)
+        create_message_response = self._create_message(
+            client, message_content, attachment_id=attachment_id, agent_id=agent_id
+        )
 
         # then
         assert create_message_response.status_code == 200
         response_dict = create_message_response.json()
         assert "id" in response_dict
         assert "assistant" == response_dict["message_role"]
+        response_data = response_dict["response_data"]
+        assert response_data["structured_report"] is not None
+        assert response_data["structured_report"]["main_topic"] is not None
+        assert response_data["structured_report"]["discussed_points"] is not None
+        assert response_data["structured_report"]["decisions_taken"] is not None
+        assert response_data["structured_report"]["next_steps"] is not None
+        assert response_data["structured_report"]["action_points"] is not None
+        assert response_data["structured_report"]["named_entities"] is not None

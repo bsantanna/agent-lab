@@ -547,7 +547,8 @@ class WebAgentBase(WorkflowAgentBase, ABC):
                 model=language_model_tag,
                 base_url=api_endpoint,
                 api_key=api_key,
-                temperature=1
+                temperature=1,
+                frequency_penalty=None,
             )
         elif integration.integration_type == "anthropic_api_v1":
             return BrowserChatAnthropic(

@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 from uuid import uuid4
 
 import pytest
@@ -13,7 +12,7 @@ def client():
     yield TestClient(app)
 
 
-class TestAzureEntraIdVoiceMemosAgent:
+class TestCoordinatorPlannerSupervisorAgent:
     def _create_agent(self, client):
         # create integration
         response = client.post(
@@ -33,7 +32,7 @@ class TestAzureEntraIdVoiceMemosAgent:
             headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "integration_id": integration_id,
-                "language_model_tag": "o3-mini",
+                "language_model_tag": "gpt-5-nano",
             },
         )
         language_model_id = response_2.json()["id"]
@@ -44,14 +43,12 @@ class TestAzureEntraIdVoiceMemosAgent:
             headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "language_model_id": language_model_id,
-                "agent_type": "azure_entra_id_voice_memos",
+                "agent_type": "coordinator_planner_supervisor",
                 "agent_name": f"agent-{uuid4()}",
             },
         )
 
-    def _create_message(
-        self, client, message_content, agent_id=None, attachment_id=None
-    ):
+    def _create_message(self, client, message_content, agent_id=None):
         if agent_id is None:
             create_agent_response = self._create_agent(client)
             agent_id = create_agent_response.json()["id"]
@@ -63,56 +60,65 @@ class TestAzureEntraIdVoiceMemosAgent:
                 "message_role": "human",
                 "message_content": message_content,
                 "agent_id": agent_id,
-                "attachment_id": attachment_id,
             },
         )
 
-    def _upload_file(self, client, filename: str, content_type: str):
-        current_dir = Path(__file__).parent
-        file_path = f"{current_dir}/{filename}"
-
-        # when
-        with open(file_path, "rb") as file:
-            upload_response = client.post(
-                url="/attachments/upload",
-                headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
-                files={"file": (filename, file, content_type)},
-            )
-
-        return upload_response
-
     @pytest.mark.asyncio
-    async def test_post_message(self, client):
+    async def test_researcher(self, client):
         # given
-        upload_filename = "voice_memos_01_pt_BR.mp3"
-        upload_response = self._upload_file(client, upload_filename, "audio/mp3")
-        attachment_id = upload_response.json()["id"]
-        message_content = "Analyse the given audio."
+        message_content = "According to Sun Tzu, what is the pinnacle of excellence?"
 
         # when
-        create_message_response = self._create_message(
-            client, message_content, attachment_id=attachment_id
-        )
+        create_message_response = self._create_message(client, message_content)
 
         # then
         assert create_message_response.status_code == 200
         response_dict = create_message_response.json()
         assert "id" in response_dict
         assert "assistant" == response_dict["message_role"]
-        assert "Aline" in response_dict["message_content"]
 
-        # test coordinator react flow generate appointment ics attachment
+    @pytest.mark.asyncio
+    async def test_coder(self, client):
         # given
-        #agent_id = response_dict["agent_id"]
-        #follow_up_message_content = "Please generate a new appointment for follow up meeting next week same date."
+        message_content = (
+            "Please create a hello world in Python that accepts a name parameter."
+        )
 
         # when
-        #create_follow_up_message_response = self._create_message(
-        #    client, follow_up_message_content, agent_id=agent_id
-        #)
+        create_message_response = self._create_message(client, message_content)
 
         # then
-        #assert create_follow_up_message_response.status_code == 200
-        #response_dict = create_follow_up_message_response.json()
-        #assert "id" in response_dict
-        #assert "assistant" == response_dict["message_role"]
+        assert create_message_response.status_code == 200
+        response_dict = create_message_response.json()
+        assert "id" in response_dict
+        assert "assistant" == response_dict["message_role"]
+
+        # convert previous code response to bash
+        # when
+        agent_id = response_dict["agent_id"]
+        follow_up_message_content = "Please convert previous code to bash."
+
+        # when
+        create_follow_up_message_response = self._create_message(
+            client, follow_up_message_content, agent_id=agent_id
+        )
+
+        # then
+        assert create_follow_up_message_response.status_code == 200
+        response_dict = create_follow_up_message_response.json()
+        assert "id" in response_dict
+        assert "assistant" == response_dict["message_role"]
+
+    @pytest.mark.asyncio
+    async def test_browser(self, client):
+        # given
+        message_content = "Visit https://en.wikipedia.org/wiki/Mathematical_finance and recover the first paragraph."
+
+        # when
+        create_message_response = self._create_message(client, message_content)
+
+        # then
+        assert create_message_response.status_code == 200
+        response_dict = create_message_response.json()
+        assert "id" in response_dict
+        assert "assistant" == response_dict["message_role"]

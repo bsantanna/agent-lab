@@ -182,6 +182,7 @@ docker-volumes/vault/file/
 
 # tmp dir
 tmp/
+temp-*
 
 # Compiled output
 out-tsc/
