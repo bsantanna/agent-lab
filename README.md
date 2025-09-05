@@ -60,7 +60,7 @@ Agent-Lab is a robust toolkit engineered for the development and thorough testin
 
 Agent-Lab features a MCP Server that allows agent discovery (`get_agent_list` tool), dialog history (`get_message_list` tool) and agent-to-agent communication (`post_message` tool).
 
-The following example shows MCP Server discovering and obtaining dialog history of a [supervised coder agent](/notebooks/coordinator_planner_supervisor_agent.ipynb) instance:
+The following example shows MCP Server discovering and obtaining dialog history of a [supervised coder agent](/notebooks/05_test_agent_type-multiagent-coder.ipynb) instance:
 
 <div align="center">
 
@@ -71,7 +71,7 @@ The following example shows MCP Server discovering and obtaining dialog history 
 Please refer to [MCP guide](doc/MCP.md) for more details.
 
 
-**Note**: Claude Desktop is used only for demonstration purposes. This project is not affiliated with Anthropic AI. 
+**Note**: Claude Desktop is used only for demonstration purposes. This project is not affiliated with Anthropic AI.
 
 ---
 

@@ -22,7 +22,7 @@ The following entities are defined in the domain model:
 - **Messages**: Stores conversation messages, including roles, content, and response data.
 - **Attachments**: Handles file attachments with raw content, parsed content, and embeddings collection references.
 
-Here an example of agent settings containing prompts and custom values for an agent [example implementation](/notebooks/voice_memos_agent.ipynb):
+Here an example of agent settings containing prompts and custom values for an agent [example implementation](/08_test_agent_type-multiagent_voice_memos.ipynb):
 
 <div align="center">
 
