@@ -49,6 +49,6 @@ jobs:
           LANGWATCH_ENDPOINT: ${{ secrets.LANGWATCH_ENDPOINT }}
           BUILD_WORKFLOW: "True"
       - name: SonarQube
-        uses: SonarSource/sonarqube-scan-action@v4
+        uses: SonarSource/sonarqube-scan-action@v5.3.1
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
