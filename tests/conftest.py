@@ -174,6 +174,8 @@ def setup_keycloak():
     )
     response.raise_for_status()
 
+@pytest.fixture(scope="function", autouse=True)
+def set_access_token():
     user_credentials = {
         "client_id": "test-client",
         "client_secret": "test-secret",
