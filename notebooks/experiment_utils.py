@@ -215,3 +215,29 @@ def update_agent_setting(
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
     )
     return update_setting_response.json()
+
+
+def openai_responses_api_mcp_tool_request(
+    query:str,
+    mcp_server:dict,
+    model:str = "gpt-5-nano",
+    reasoning:dict = {
+        "effort": "low",
+        "summary": "auto"
+    }
+) -> dict:
+    response = requests.post(
+        url="https://api.openai.com/v1/responses",
+        headers={
+            "Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}",
+            "Content-Type": "application/json"
+        },
+        json={
+            "model": model,
+            "tools": [mcp_server],
+            "reasoning": reasoning,
+            "input": query
+        }
+    )
+    
+    return response.json()
