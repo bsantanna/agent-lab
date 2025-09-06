@@ -1,0 +1,19 @@
+{{- if .Values.cdp.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: cdp-{{ include "agent-lab.fullname" . }}
+  labels:
+    {{- include "agent-lab.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.cdp.port }}
+      targetPort: {{ .Values.cdp.port }}
+      protocol: TCP
+      name: cdp
+  selector:
+    {{- include "agent-lab.selectorLabels" . | nindent 4 }}
+{{- else }}
+# cdp service disabled
+{{- end }}

@@ -78,3 +78,31 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+cdp:
+  enabled: true
+  image: chromedp/headless-shell:latest
+  port: 9222
+  livenessProbe:
+    httpGet:
+      path: /json/version
+      port: 9222
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /json/version
+      port: 9222
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi

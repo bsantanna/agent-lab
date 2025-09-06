@@ -451,11 +451,10 @@ For the *Path* value, use `secret`
   "auth_client_id": "<client_id>",
   "auth_client_secret": "<client_secret>",
   "broker_url": "redis://redis-agent-lab.agent-lab.svc.cluster.local:6379/0",
+  "cdp_url": "http://cdp-agent-lab.agent-lab.svc.cluster.local:9222",
   "db_checkpoints": "postgresql://???:???@pg-agent-lab-checkpoints-cluster-rw.agent-lab.svc.cluster.local:5432/app",
   "db_url": "postgresql://???:???@pg-agent-lab-cluster-rw.agent-lab.svc.cluster.local:5432/app",
   "db_vectors": "postgresql://???:???@pg-agent-lab-vectors-cluster-rw.agent-lab.svc.cluster.local:5432/app",
-  "langwatch_endpoint": "<langwatch_fqdn>",
-  "langwatch_api_key": "???",
   "tavily_api_key": "???"
 }
 ```
@@ -628,6 +627,8 @@ type: Opaque
 stringData:
   VAULT_URL: "http://agent-lab-vault.agent-lab.svc.cluster.local:8200"
   VAULT_TOKEN: "???"
+  LANGWATCH_ENDPOINT": "http://agent-lab-langwatch-app.agent-lab.svc.cluster.local:5560",
+  LANGWATCH_API_KEY: "???",
 EOF
 ```
 

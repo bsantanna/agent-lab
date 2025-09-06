@@ -19,9 +19,9 @@ class TestCoordinatorPlannerSupervisorAgent:
             url="/integrations/create",
             headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
-                "api_endpoint": "https://api.x.ai/v1/",
-                "api_key": os.environ["XAI_API_KEY"],
-                "integration_type": "xai_api_v1",
+                "api_endpoint": "https://api.openai.com/v1/",
+                "api_key": os.environ["OPENAI_API_KEY"],
+                "integration_type": "openai_api_v1",
             },
         )
         integration_id = response.json()["id"]
@@ -32,7 +32,7 @@ class TestCoordinatorPlannerSupervisorAgent:
             headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "integration_id": integration_id,
-                "language_model_tag": "grok-code-fast",
+                "language_model_tag": "gpt-5-nano",
             },
         )
         language_model_id = response_2.json()["id"]
@@ -110,13 +110,9 @@ class TestCoordinatorPlannerSupervisorAgent:
         assert "assistant" == response_dict["message_role"]
 
     @pytest.mark.asyncio
-    @pytest.mark.skip("This test is flaky, often fails on GitHub Actions pipeline")
     async def test_browser(self, client):
         # given
-        message_content = (
-            "With the browser, go to https://en.wikipedia.org/wiki/Mathematical_finance "
-            "and summarize the article."
-        )
+        message_content = "Visit https://en.wikipedia.org/wiki/Mathematical_finance and recover the first paragraph."
 
         # when
         create_message_response = self._create_message(client, message_content)

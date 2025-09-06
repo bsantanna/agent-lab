@@ -24,6 +24,13 @@ services:
       redis:
         condition: service_healthy
 
+  headless-shell:
+    image: chromedp/headless-shell:latest
+    networks:
+      - agent-lab
+    ports:
+      - "9222:9222"
+
   data-prepper:
     image: opensearchproject/data-prepper:latest
     #image: opensearch-data-prepper:2.11.0-SNAPSHOT # https://github.com/opensearch-project/data-prepper/blob/main/docs/developer_guide.md#building-the-docker-image

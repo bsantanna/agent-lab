@@ -33,7 +33,7 @@ class TestVoiceMemosAgent:
             headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "integration_id": integration_id,
-                "language_model_tag": "o3-mini",
+                "language_model_tag": "gpt-5-nano",
             },
         )
         language_model_id = response_2.json()["id"]

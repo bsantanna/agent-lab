@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 import requests
+from testcontainers.core.container import DockerContainer
 from testcontainers.core.waiting_utils import wait_for_logs
 from testcontainers.keycloak import KeycloakContainer
 from testcontainers.ollama import OllamaContainer
@@ -39,6 +40,10 @@ vault = (
     .with_bind_ports(container=8200, host=18200)
     .with_env("VAULT_DEV_ROOT_TOKEN_ID", "dev-only-token")
     .with_env("VAULT_DEV_LISTEN_ADDRESS", "0.0.0.0:8200")
+)
+
+cdp = DockerContainer("chromedp/headless-shell:latest").with_bind_ports(
+    container=9222, host=19222
 )
 
 
@@ -169,6 +174,8 @@ def setup_keycloak():
     )
     response.raise_for_status()
 
+@pytest.fixture(scope="function", autouse=True)
+def set_access_token():
     user_credentials = {
         "client_id": "test-client",
         "client_secret": "test-secret",
@@ -191,6 +198,7 @@ def test_config(request):
     postgres.start()
     redis.start()
     vault.start()
+    cdp.start()
 
     def remove_container():
         keycloak.stop()
@@ -198,6 +206,7 @@ def test_config(request):
         postgres.stop()
         redis.stop()
         vault.stop()
+        cdp.stop()
 
     request.addfinalizer(remove_container)
     wait_for_logs(keycloak, "Listening on")
@@ -207,6 +216,7 @@ def test_config(request):
     wait_for_logs(
         vault, "Development mode should NOT be used in production installations!"
     )
+    wait_for_logs(cdp, "DevTools listening on")
 
     setup_keycloak()
     setup_ollama()

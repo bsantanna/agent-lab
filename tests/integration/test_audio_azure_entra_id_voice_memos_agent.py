@@ -33,7 +33,7 @@ class TestAzureEntraIdVoiceMemosAgent:
             headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
                 "integration_id": integration_id,
-                "language_model_tag": "o3-mini",
+                "language_model_tag": "gpt-5-nano",
             },
         )
         language_model_id = response_2.json()["id"]
@@ -103,16 +103,16 @@ class TestAzureEntraIdVoiceMemosAgent:
 
         # test coordinator react flow generate appointment ics attachment
         # given
-        #agent_id = response_dict["agent_id"]
-        #follow_up_message_content = "Please generate a new appointment for follow up meeting next week same date."
+        # agent_id = response_dict["agent_id"]
+        # follow_up_message_content = "Please generate a new appointment for follow up meeting next week same date."
 
         # when
-        #create_follow_up_message_response = self._create_message(
+        # create_follow_up_message_response = self._create_message(
         #    client, follow_up_message_content, agent_id=agent_id
-        #)
+        # )
 
         # then
-        #assert create_follow_up_message_response.status_code == 200
-        #response_dict = create_follow_up_message_response.json()
-        #assert "id" in response_dict
-        #assert "assistant" == response_dict["message_role"]
+        # assert create_follow_up_message_response.status_code == 200
+        # response_dict = create_follow_up_message_response.json()
+        # assert "id" in response_dict
+        # assert "assistant" == response_dict["message_role"]

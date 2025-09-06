@@ -10,9 +10,15 @@ from datetime import timedelta, datetime, timezone
 import hvac
 import icalendar
 import langwatch
-from browser_use import Agent as BrowserAgent
+from browser_use import (
+    llm as browser_use_llm,
+    Agent as BrowserAgent,
+    Browser,
+    ChatOpenAI as BrowserChatOpenAI,
+    ChatAnthropic as BrowserChatAnthropic,
+    ChatOllama as BrowserChatOllama,
+)
 from browser_use.agent.views import AgentHistoryList
-from browser_use.browser.browser import BrowserConfig, Browser
 from dependency_injector.providers import Configuration
 from jinja2 import Environment, DictLoader, select_autoescape
 from langchain_anthropic import ChatAnthropic
@@ -523,15 +529,41 @@ class ContactSupportAgentBase(WorkflowAgentBase, ABC):
 
 class WebAgentBase(WorkflowAgentBase, ABC):
     def __init__(self, agent_utils: AgentUtils):
+        self.cdp_url = agent_utils.config["cdp_url"]
         super().__init__(agent_utils)
 
-    def get_web_browser_tool(
-        self,
-        agent_id: str,
-        schema: str,
-        headless: bool = True,
-    ) -> BaseTool:
-        chat_model = self.get_chat_model(agent_id, schema)
+    def get_browser_chat_model(
+        self, agent_id, schema: str, language_model_tag: str = None
+    ) -> browser_use_llm.base.BaseChatModel:
+        agent = self.agent_service.get_agent_by_id(agent_id, schema)
+        language_model, integration = self.get_language_model_integration(agent, schema)
+        api_endpoint, api_key = self.get_integration_credentials(integration)
+
+        if language_model_tag is None:
+            language_model_tag = language_model.language_model_tag
+
+        if integration.integration_type == "openai_api_v1":
+            return BrowserChatOpenAI(
+                model=language_model_tag,
+                base_url=api_endpoint,
+                api_key=api_key,
+                temperature=1,
+                frequency_penalty=None,
+            )
+        elif integration.integration_type == "anthropic_api_v1":
+            return BrowserChatAnthropic(
+                model=language_model_tag,
+                base_url=api_endpoint,
+                api_key=api_key,
+            )
+        else:
+            return BrowserChatOllama(
+                model=language_model_tag,
+                host=api_endpoint,
+            )
+
+    def get_web_browser_tool(self, agent_id: str, schema: str) -> BaseTool:
+        chat_model = self.get_browser_chat_model(agent_id, schema)
 
         @tool("browser_tool")
         def browser_tool_call(
@@ -551,9 +583,7 @@ class WebAgentBase(WorkflowAgentBase, ABC):
                 )
             )
 
-            browser_config = BrowserConfig(headless=headless)
-
-            browser = Browser(config=browser_config)
+            browser = Browser(cdp_url=self.cdp_url)
 
             browser_agent = BrowserAgent(
                 task=instruction, llm=chat_model, browser=browser
