@@ -2,6 +2,105 @@
 
 <!-- version list -->
 
+## v1.4.3 (2025-09-07)
+
+### Bug Fixes
+
+- Access token per test ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Adjust broken link ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Adjust builder method for chat_openai / browseruse
+  ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Adjust unit test for a supported model ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Adjusts audio language model ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Adjusts audio language model, compatible with chat completions api
+  ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Adjusts audio language model, compatible with chat completions api and cost effective
+  ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Adjusts broken link (2) ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Adjusts browser tool call ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Adjusts first batch of notebooks ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Adjusts react rag notebook ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Adjusts react rag notebook (2) ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Adjusts vision document notebook ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Audio assistant notebooks ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Audio assistant notebooks (2) ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Audio assistant notebooks (3) ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Browser notebook execution ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Cdp setup unit test ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Cdp setup unit test (2) ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Cdp setup unit test removed skip decorator
+  ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Headless-shell container as cdp (1) ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Introduces headless-shell container ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Introduces new cdp service in kubernetes ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Mcp client openai notebook ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Skips flacky test ([#216](https://github.com/bsantanna/agent-lab/pull/216),
+  [`eb1b958`](https://github.com/bsantanna/agent-lab/commit/eb1b958c6c17ab230058279d2218322eb86ded2a))
+
+- Splits coder and researcher notebooks ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Updates documentation ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Updates MCP documentation ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Updates sonar scanner version ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+- Voice assistant notebook ([#215](https://github.com/bsantanna/agent-lab/pull/215),
+  [`cc64447`](https://github.com/bsantanna/agent-lab/commit/cc64447a3a9ae2ba11364f904ce98edc1f4cc527))
+
+
 ## v1.4.2 (2025-08-30)
 
 ### Bug Fixes
