@@ -108,18 +108,3 @@ class TestCoordinatorPlannerSupervisorAgent:
         response_dict = create_follow_up_message_response.json()
         assert "id" in response_dict
         assert "assistant" == response_dict["message_role"]
-
-    @pytest.mark.asyncio
-    @pytest.mark.skip("This test is flaky, often fails on GitHub Actions pipeline")
-    async def test_browser(self, client):
-        # given
-        message_content = "Visit https://en.wikipedia.org/wiki/Mathematical_finance and recover the first paragraph."
-
-        # when
-        create_message_response = self._create_message(client, message_content)
-
-        # then
-        assert create_message_response.status_code == 200
-        response_dict = create_message_response.json()
-        assert "id" in response_dict
-        assert "assistant" == response_dict["message_role"]
