@@ -11,7 +11,7 @@ ENV WORKERS=1
 WORKDIR /agent-lab
 
 COPY requirements.txt /agent-lab/
-RUN apt update -q && apt install -yq ffmpeg \
+RUN apt update -q && apt install -yq ffmpeg build-essential \
     && pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt \
     && apt clean \

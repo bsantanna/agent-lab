@@ -453,13 +453,6 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             update={"messages": response["messages"]},
             goto="supervisor",
         )
-        self.task_notification_service.publish_update(
-            task_progress=TaskProgress(
-                agent_id=agent_id,
-                status="in_progress",
-                message_content=response["messages"][-1].content,
-            )
-        )
         return command
 
     def get_reporter(self, state: AgentState) -> Command[Literal["supervisor"]]:

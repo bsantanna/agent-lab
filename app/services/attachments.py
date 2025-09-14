@@ -36,7 +36,7 @@ class AttachmentService:
         self.language_model_setting_service = language_model_setting_service
         self.integration_service = integration_service
         self.vault_client = vault_client
-        self.markdown = MarkItDown()
+
 
     def get_attachment_by_id(self, attachment_id: str, schema: str) -> Attachment:
         return self.attachment_repository.get_by_id(attachment_id, schema)
@@ -51,7 +51,8 @@ class AttachmentService:
         if not file.content_type.startswith("audio/"):
             file_name = file.filename
             try:
-                parsed_content = self.markdown.convert(temp_file_path).text_content
+                markdown = MarkItDown()
+                parsed_content = markdown.convert(temp_file_path).text_content
             except Exception as e:
                 raise FileProcessingError(file_name=file_name, reason=str(e))
         else:
