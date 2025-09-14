@@ -88,12 +88,6 @@ class Container(containers.DeclarativeContainer):
         config.set("db.checkpoints", app_secrets["data"]["data"]["db_checkpoints"])
 
         # dependencies environment variables
-        os.environ["LANGWATCH_API_KEY"] = app_secrets["data"]["data"][
-            "langwatch_api_key"
-        ]
-        os.environ["LANGWATCH_ENDPOINT"] = app_secrets["data"]["data"][
-            "langwatch_endpoint"
-        ]
         os.environ["TAVILY_API_KEY"] = app_secrets["data"]["data"]["tavily_api_key"]
 
     db = providers.Singleton(Database, db_url=config.db.url)

@@ -548,6 +548,7 @@ class WebAgentBase(WorkflowAgentBase, ABC):
                 base_url=api_endpoint,
                 api_key=api_key,
                 temperature=1,
+                reasoning_effort="medium",
                 frequency_penalty=None,
             )
         elif integration.integration_type == "anthropic_api_v1":
@@ -593,25 +594,8 @@ class WebAgentBase(WorkflowAgentBase, ABC):
             try:
                 asyncio.set_event_loop(loop)
                 result = loop.run_until_complete(browser_agent.run())
-                if isinstance(result, AgentHistoryList):
-                    for i in range(len(result.action_names())):
-                        self.task_notification_service.publish_update(
-                            task_progress=TaskProgress(
-                                agent_id=agent_id,
-                                status="in_progress",
-                                message_content=(
-                                    f"Step {i + 1}:\n\t"
-                                    f"Action: {result.action_names()[i]}\n\t"
-                                    f"Thought: {result.model_thoughts()[i]}\n\t"
-                                    f"URL: {result.urls()[i]}"
-                                ),
-                            )
-                        )
-                    json_result = json.dumps({"result_content": result.final_result()})
-                else:
-                    json_result = json.dumps({"result_content": result})
+                json_result = json.dumps({"result_content": result.final_result()})
 
-                loop.run_until_complete(browser_agent.browser.close())
             finally:
                 loop.close()
 
