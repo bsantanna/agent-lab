@@ -2,6 +2,23 @@
 
 <!-- version list -->
 
+## v1.4.4 (2025-09-14)
+
+### Bug Fixes
+
+- Introduces scenario testing ([#223](https://github.com/bsantanna/agent-lab/pull/223),
+  [`61f82b7`](https://github.com/bsantanna/agent-lab/commit/61f82b79427758c8b8d771236d01dee8f5034b9b))
+
+- Introduces scenario testing (2) ([#223](https://github.com/bsantanna/agent-lab/pull/223),
+  [`61f82b7`](https://github.com/bsantanna/agent-lab/commit/61f82b79427758c8b8d771236d01dee8f5034b9b))
+
+- Introduces scenario testing (3) ([#223](https://github.com/bsantanna/agent-lab/pull/223),
+  [`61f82b7`](https://github.com/bsantanna/agent-lab/commit/61f82b79427758c8b8d771236d01dee8f5034b9b))
+
+- Upgrades dependencies and doc ([#223](https://github.com/bsantanna/agent-lab/pull/223),
+  [`61f82b7`](https://github.com/bsantanna/agent-lab/commit/61f82b79427758c8b8d771236d01dee8f5034b9b))
+
+
 ## v1.4.3 (2025-09-07)
 
 ### Bug Fixes
