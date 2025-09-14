@@ -12,12 +12,12 @@ from app.main import app
 def client():
     yield TestClient(app)
 
-# Configure the default model for simulations
+# Configure the default model for simulation
 scenario.configure(default_model="anthropic/claude-sonnet-4-20250514")
 
 @pytest.mark.agent_test
 @pytest.mark.asyncio
-async def test_scenario_browser_automation(client):
+async def test_browser_automation_agent(client):
 
     class BrowserAgent(scenario.AgentAdapter):
         async def call(self, input: scenario.AgentInput) -> scenario.AgentReturnTypes:
@@ -25,7 +25,7 @@ async def test_scenario_browser_automation(client):
             return web_browser_agent(client, user_message)
 
     result = await scenario.run(
-        name="Prompt regression test: web browser automation request summarize wikipedia article",
+        name="Simulation: web browser automation request to summarize wikipedia article",
         description="""
             User wants that you to summarize a wikipedia article using web browser.
         """,
