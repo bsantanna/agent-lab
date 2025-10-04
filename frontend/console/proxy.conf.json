@@ -1,8 +1,0 @@
-{
-  "/(agents|attachments|integrations|llms|messages)/*": {
-    "target": "http://neptune.btech.software:18000/",
-    "secure": false,
-    "changeOrigin": true,
-    "logLevel": "debug"
-  }
-}
