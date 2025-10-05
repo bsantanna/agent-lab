@@ -2,6 +2,23 @@
 
 <!-- version list -->
 
+## v1.4.5 (2025-10-05)
+
+### Bug Fixes
+
+- Documentation MCP notebook reference ([#233](https://github.com/bsantanna/agent-lab/pull/233),
+  [`2c286e7`](https://github.com/bsantanna/agent-lab/commit/2c286e7f1f655b55e4e510a5fe43944f141ddc3c))
+
+- Removes frontend code ([#233](https://github.com/bsantanna/agent-lab/pull/233),
+  [`2c286e7`](https://github.com/bsantanna/agent-lab/commit/2c286e7f1f655b55e4e510a5fe43944f141ddc3c))
+
+- Researcher guide documentation ([#233](https://github.com/bsantanna/agent-lab/pull/233),
+  [`2c286e7`](https://github.com/bsantanna/agent-lab/commit/2c286e7f1f655b55e4e510a5fe43944f141ddc3c))
+
+- Update test_audio_azure_entra_id_voice_memos_agent.py
+  ([`4236771`](https://github.com/bsantanna/agent-lab/commit/42367710274eed9ac6f93799bee67831a0bd5ca4))
+
+
 ## v1.4.4 (2025-09-14)
 
 ### Bug Fixes
