@@ -81,6 +81,7 @@ class TestAzureEntraIdVoiceMemosAgent:
 
         return upload_response
 
+    @pytest.mark.skip(reason="Functionality covered with voice_memos_agent")
     @pytest.mark.asyncio
     async def test_post_message(self, client):
         # given
