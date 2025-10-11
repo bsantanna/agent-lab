@@ -103,8 +103,6 @@ class Tracer:
         FastAPIInstrumentor.instrument_app(app)
         HTTPXClientInstrumentor().instrument()
         LangchainInstrumentor().instrument()
-        # PsycopgInstrumentor().instrument()
-        # Psycopg2Instrumentor().instrument()
         SQLAlchemyInstrumentor().instrument()
 
         langwatch_endpoint = os.getenv("LANGWATCH_ENDPOINT")
