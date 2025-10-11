@@ -4,6 +4,7 @@ from pathlib import Path
 
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.tools import tool, BaseTool
+from langchain_experimental.utilities import PythonREPL
 from langgraph.constants import START, END
 from langgraph.graph import StateGraph, MessagesState
 from langgraph.managed import RemainingSteps
@@ -389,6 +390,45 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             update={"messages": response["messages"]},
             goto="supervisor",
         )
+
+    def get_python_tool(self) -> BaseTool:
+        @tool("python_tool")
+        def python_tool_call(
+            code: Annotated[
+                str, "The python code to execute to do further analysis or calculation."
+            ],
+        ):
+            """Use this to execute python3 code and do data analysis or calculation. If you want to see the output of a value,
+            you should print it out with `print(...)`. This is visible to the user."""
+
+            repl = PythonREPL()
+
+            if not isinstance(code, str):
+                error_msg = f"Invalid input: code must be a string, got {type(code)}"
+                self.logger.error(error_msg)
+                return (
+                    f"Error executing code:\n```python\n{code}\n```\nError: {error_msg}"
+                )
+
+            self.logger.info("Executing Python code")
+            try:
+                result = repl.run(code)
+                if isinstance(result, str) and (
+                    "Error" in result or "Exception" in result
+                ):
+                    raise ValueError(result)
+                self.logger.info("Code execution successful")
+                return (
+                    f"Successfully executed:\n```python\n{code}\n```\nStdout: {result}"
+                )
+            except ValueError as e:
+                error_msg = repr(e)
+                self.logger.error(error_msg)
+                return (
+                    f"Error executing code:\n```python\n{code}\n```\nError: {error_msg}"
+                )
+
+        return python_tool_call
 
     def get_coder(self, state: AgentState) -> Command[Literal["supervisor"]]:
         agent_id = state["agent_id"]
