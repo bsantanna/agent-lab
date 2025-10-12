@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from uuid import uuid4
 
 import scenario
@@ -19,62 +20,33 @@ scenario.configure(default_model="anthropic/claude-sonnet-4-20250514")
 
 @pytest.mark.agent_test
 @pytest.mark.asyncio
-async def test_supervised_coder_agent(client):
-    class SupervisedCoderAgent(scenario.AgentAdapter):
+async def test_audio_voice_memos_agent(client):
+    class AudioVoiceMemosAgent(scenario.AgentAdapter):
         async def call(self, input: scenario.AgentInput) -> scenario.AgentReturnTypes:
             user_message = input.last_new_user_message_str()
-            return supervised_agent(client, user_message)
+            return audio_voice_memos_agent(client, user_message)
 
     result = await scenario.run(
-        name="Simulation: Python coder agent",
-        description="Generate Python code",
+        name="Simulation: analyse and answer questions about given audio document",
+        description="Answer questions about given audio document.",
         agents=[
-            SupervisedCoderAgent(),
+            AudioVoiceMemosAgent(),
             scenario.UserSimulatorAgent(),
             scenario.JudgeAgent(
                 criteria=[
-                    "Agent should not ask follow-up questions.",
-                    "Agent should generate a report containing code implementation example in Python."
-                    "Report should match the given criteria in the query.",
+                    "Agent should not ask further questions.",
+                    "Agent should answer user question about given audio document. ",
+                    "Agent answer format is a detailed report with remarks of the audio and follow up actions."
+                    "Audio document contains a first person voice memo about a meeting and a fictional character responsible for marketing team. "
+                    "Audio document is recorded in portuguese. "
+                    "The fictional character is concerned about delivery date of project, agent should mention this in report.",
                 ]
             ),
         ],
         script=[
             scenario.user(
-                "Generate a hello world using FastAPI, it should accept 'name' as a query parameter."
+                "Can you describe the voice memo recording? Please identify stakeholders involved."
             ),
-            scenario.agent(),
-            scenario.judge(),
-        ],
-    )
-
-    assert result.success
-
-
-@pytest.mark.agent_test
-@pytest.mark.asyncio
-async def test_supervised_researcher_agent(client):
-    class SupervisedResearcherAgent(scenario.AgentAdapter):
-        async def call(self, input: scenario.AgentInput) -> scenario.AgentReturnTypes:
-            user_message = input.last_new_user_message_str()
-            return supervised_agent(client, user_message)
-
-    result = await scenario.run(
-        name="Simulation: knowledge base researcher agent",
-        description="Answer questions using knowledge base researcher",
-        agents=[
-            SupervisedResearcherAgent(),
-            scenario.UserSimulatorAgent(),
-            scenario.JudgeAgent(
-                criteria=[
-                    "Agent should not ask follow-up questions.",
-                    "Agent should generate a comprehensive report containing answer to given question."
-                    "Test dataset contains the book 'Sun-Tzu: Art of War', answer must contain be in this context. ",
-                ]
-            ),
-        ],
-        script=[
-            scenario.user("According to Sun-Tzu, what is the pinnacle of excellence?"),
             scenario.agent(),
             scenario.judge(),
         ],
@@ -84,7 +56,9 @@ async def test_supervised_researcher_agent(client):
 
 
 @scenario.cache()
-def supervised_agent(client, message_content) -> scenario.AgentReturnTypes:
+def audio_voice_memos_agent(
+    client, message_content, agent_type="fast_voice_memos"
+) -> scenario.AgentReturnTypes:
     # create integration
     response = client.post(
         url="/integrations/create",
@@ -114,21 +88,37 @@ def supervised_agent(client, message_content) -> scenario.AgentReturnTypes:
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         json={
             "language_model_id": language_model_id,
-            "agent_type": "coordinator_planner_supervisor",
+            "agent_type": agent_type,
             "agent_name": f"agent-{uuid4()}",
         },
     )
     agent_id = response_3.json()["id"]
 
+    filename = "voice_memos_01_pt_BR.mp3"
+    content_type = "audio/mp3"
+    tests_dir = Path(__file__).parent.parent.parent
+    file_path = f"{tests_dir}/integration/{filename}"
+
+    # create attachment
+    response_4 = None
+    with open(file_path, "rb") as file:
+        response_4 = client.post(
+            url="/attachments/upload",
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
+            files={"file": (filename, file, content_type)},
+        )
+    attachment_id = response_4.json()["id"]
+
     # post message
-    response_4 = client.post(
+    response_5 = client.post(
         "/messages/post",
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         json={
             "message_role": "human",
             "message_content": message_content,
             "agent_id": agent_id,
+            "attachment_id": attachment_id,
         },
     )
 
-    return response_4.json()["message_content"]
+    return response_5.json()["message_content"]
