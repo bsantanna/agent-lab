@@ -398,45 +398,6 @@ class WorkflowAgentBase(AgentBase, ABC):
 
         return bash_tool_call
 
-    def get_python_tool(self) -> BaseTool:
-        @tool("python_tool")
-        def python_tool_call(
-            code: Annotated[
-                str, "The python code to execute to do further analysis or calculation."
-            ],
-        ):
-            """Use this to execute python3 code and do data analysis or calculation. If you want to see the output of a value,
-            you should print it out with `print(...)`. This is visible to the user."""
-
-            repl = PythonREPL()
-
-            if not isinstance(code, str):
-                error_msg = f"Invalid input: code must be a string, got {type(code)}"
-                self.logger.error(error_msg)
-                return (
-                    f"Error executing code:\n```python\n{code}\n```\nError: {error_msg}"
-                )
-
-            self.logger.info("Executing Python code")
-            try:
-                result = repl.run(code)
-                if isinstance(result, str) and (
-                    "Error" in result or "Exception" in result
-                ):
-                    raise ValueError(result)
-                self.logger.info("Code execution successful")
-                return (
-                    f"Successfully executed:\n```python\n{code}\n```\nStdout: {result}"
-                )
-            except ValueError as e:
-                error_msg = repr(e)
-                self.logger.error(error_msg)
-                return (
-                    f"Error executing code:\n```python\n{code}\n```\nError: {error_msg}"
-                )
-
-        return python_tool_call
-
     def get_last_interaction_messages(self, messages):
         subarray = []
         found_human_message = False

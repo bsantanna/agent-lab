@@ -17,51 +17,49 @@ scenario.configure(default_model="anthropic/claude-sonnet-4-20250514")
 
 @pytest.mark.agent_test
 @pytest.mark.asyncio
-async def test_browser_automation_agent(client):
+async def test_adaptive_rag_agent(client):
 
-    class BrowserAgent(scenario.AgentAdapter):
+    class AdaptiveRagAgent(scenario.AgentAdapter):
         async def call(self, input: scenario.AgentInput) -> scenario.AgentReturnTypes:
             user_message = input.last_new_user_message_str()
-            return web_browser_agent(client, user_message)
+            return adaptive_rag_agent(client, user_message)
 
     result = await scenario.run(
-        name="Simulation: web browser automation request to summarize wikipedia article",
-        description="""
-            User wants that you to summarize a wikipedia article using web browser.
-        """,
+        name="Simulation: adaptive rag question / answer",
+        description="Answer user question using adaptive rag pattern.",
         agents=[
-            BrowserAgent(),
+            AdaptiveRagAgent(),
             scenario.UserSimulatorAgent(),
             scenario.JudgeAgent(criteria=[
-                "Agent should not ask follow-up questions",
-                "Agent should generate a report",
-                "Report should match the given criteria in the query."
+                "Agent should answer user question",
+                "Answer should meet given criteria in the query"
             ])
         ],
         script=[
             scenario.user(
-                "Using the web browser, explain the first paragraph of "
-                "https://en.wikipedia.org/wiki/Mathematical_finance. "
-                "Acceptance criteria: a 12 year old would understand."
+                "You have access to this book 'The Art of War - Sun Tzu' "
+                "available at static_document_data, "
+                "I want to ask you to summarize in one sentence "
+                "what is the pinnacle of excellence."
             ),
             scenario.agent(),
             scenario.judge(),
         ],
     )
 
-    # 3. Assert the result
     assert result.success
 
+
 @scenario.cache()
-def web_browser_agent(client, message_content) -> scenario.AgentReturnTypes:
+def adaptive_rag_agent(client, message_content) -> scenario.AgentReturnTypes:
     # create integration
     response = client.post(
-        url="/integrations/create",
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
+        url="/integrations/create",
         json={
-            "api_endpoint": "https://api.anthropic.com",
-            "api_key": os.environ["ANTHROPIC_API_KEY"],
-            "integration_type": "anthropic_api_v1",
+            "api_endpoint": "https://api.x.ai/v1/",
+            "api_key": os.environ["XAI_API_KEY"],
+            "integration_type": "xai_api_v1",
         },
     )
     integration_id = response.json()["id"]
@@ -72,23 +70,24 @@ def web_browser_agent(client, message_content) -> scenario.AgentReturnTypes:
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         json={
             "integration_id": integration_id,
-            "language_model_tag": "claude-sonnet-4-0",
+            "language_model_tag": "grok-code-fast",
         },
     )
     language_model_id = response_2.json()["id"]
 
     # create agent
     response_3 = client.post(
-        url="/agents/create",
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
+        url="/agents/create",
         json={
             "language_model_id": language_model_id,
-            "agent_type": "coordinator_planner_supervisor",
+            "agent_type": "adaptive_rag",
             "agent_name": f"agent-{uuid4()}",
         },
     )
-
     agent_id = response_3.json()["id"]
+
+    # post message
     response_4 = client.post(
         "/messages/post",
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
@@ -100,3 +99,5 @@ def web_browser_agent(client, message_content) -> scenario.AgentReturnTypes:
     )
 
     return response_4.json()["message_content"]
+
+
