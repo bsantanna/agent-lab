@@ -25,10 +25,8 @@ async def test_browser_automation_agent(client):
             return web_browser_agent(client, user_message)
 
     result = await scenario.run(
-        name="Simulation: web browser automation request to summarize wikipedia article",
-        description="""
-            User wants that you to summarize a wikipedia article using web browser.
-        """,
+        name="Simulation: web browser automation",
+        description="Summarize a wikipedia article using web browser.",
         agents=[
             BrowserAgent(),
             scenario.UserSimulatorAgent(),
@@ -49,7 +47,6 @@ async def test_browser_automation_agent(client):
         ],
     )
 
-    # 3. Assert the result
     assert result.success
 
 @scenario.cache()
@@ -87,8 +84,9 @@ def web_browser_agent(client, message_content) -> scenario.AgentReturnTypes:
             "agent_name": f"agent-{uuid4()}",
         },
     )
-
     agent_id = response_3.json()["id"]
+
+    # post message
     response_4 = client.post(
         "/messages/post",
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
