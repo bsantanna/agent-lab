@@ -2,6 +2,38 @@
 
 <!-- version list -->
 
+## v1.5.0 (2025-10-12)
+
+### Features
+
+- Agent testing refactoring (1) ([#239](https://github.com/bsantanna/agent-lab/pull/239),
+  [`139e42e`](https://github.com/bsantanna/agent-lab/commit/139e42e8dca96c02a654c77d91d0cc63d1806ce2))
+
+- Agent testing refactoring (2) ([#239](https://github.com/bsantanna/agent-lab/pull/239),
+  [`139e42e`](https://github.com/bsantanna/agent-lab/commit/139e42e8dca96c02a654c77d91d0cc63d1806ce2))
+
+- Agent testing refactoring (3) ([#239](https://github.com/bsantanna/agent-lab/pull/239),
+  [`139e42e`](https://github.com/bsantanna/agent-lab/commit/139e42e8dca96c02a654c77d91d0cc63d1806ce2))
+
+- Agent testing refactoring (4) ([#239](https://github.com/bsantanna/agent-lab/pull/239),
+  [`139e42e`](https://github.com/bsantanna/agent-lab/commit/139e42e8dca96c02a654c77d91d0cc63d1806ce2))
+
+- Sonar issues (1) ([#239](https://github.com/bsantanna/agent-lab/pull/239),
+  [`139e42e`](https://github.com/bsantanna/agent-lab/commit/139e42e8dca96c02a654c77d91d0cc63d1806ce2))
+
+- Sonar issues (2) ([#239](https://github.com/bsantanna/agent-lab/pull/239),
+  [`139e42e`](https://github.com/bsantanna/agent-lab/commit/139e42e8dca96c02a654c77d91d0cc63d1806ce2))
+
+- Updates dependencies (1) ([#239](https://github.com/bsantanna/agent-lab/pull/239),
+  [`139e42e`](https://github.com/bsantanna/agent-lab/commit/139e42e8dca96c02a654c77d91d0cc63d1806ce2))
+
+- Updates documentation ([#239](https://github.com/bsantanna/agent-lab/pull/239),
+  [`139e42e`](https://github.com/bsantanna/agent-lab/commit/139e42e8dca96c02a654c77d91d0cc63d1806ce2))
+
+- Updates documentation (2) ([#239](https://github.com/bsantanna/agent-lab/pull/239),
+  [`139e42e`](https://github.com/bsantanna/agent-lab/commit/139e42e8dca96c02a654c77d91d0cc63d1806ce2))
+
+
 ## v1.4.5 (2025-10-05)
 
 ### Bug Fixes
