@@ -224,3 +224,8 @@ Thumbs.db
 
 # Docker compose default file name
 [Dd]ocker-compose.yml
+
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl

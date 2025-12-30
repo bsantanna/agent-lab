@@ -81,12 +81,12 @@ After the domain names are determined, modify system hosts file to include domai
 
 </div>
 
-#### Install Nginx Ingress with Helm Chart
+#### Install Traefik Ingress with Helm Chart
 
 ```bash
-helm upgrade --install ingress-nginx ingress-nginx \
-  --repo https://kubernetes.github.io/ingress-nginx \
-  --namespace ingress-nginx --create-namespace
+cd terraform/01_traefik/
+terraform init
+terraform apply
 ```
 
 #### Setup Networking
@@ -98,59 +98,14 @@ Modify system hosts file to include domains assigned to localhost address:
 
 ```
 
-### Create agent-lab namespace
-
-In this guide we are going to use `agent-lab` namespace to deploy dependencies and application.
-
-```bash
-kubectl create namespace agent-lab
-```
-
-### (Optional) Setup Certificate Manager
+### Setup Cert Manager
 
 To manage TLS certificates, we will use the [cert-manager](https://cert-manager.io/docs/). This tool automates the management and issuance of TLS certificates.
 
-**Note**: If the deployment does not require a valid HTTPS certificate, this step can be skipped.
-
-1. Add Jetstack's Helm repository:
-
 ```bash
-helm repo add jetstack https://charts.jetstack.io
-helm repo update
-```
-
-2. Install cert-manager using Helm:
-
-```bash
-helm install cert-manager jetstack/cert-manager \
-  --namespace cert-manager \
-  --create-namespace \
-  --version v1.17.4 \
-  --set crds.enabled=true
-```
-
-3. Create a ClusterIssuer for Let's Encrypt prod environment:
-
-Next step is creating a ClusterIssuer resource that will be used to issue certificates from Let's Encrypt.
-Please replace `<your_email_address>` with your actual email address to receive notifications about certificate expiration and issues.
-
-```bash
-kubectl apply -f - <<EOF
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: letsencrypt-prod
-spec:
-  acme:
-    server: https://acme-v02.api.letsencrypt.org/directory
-    email: <your_email_address>
-    privateKeySecretRef:
-      name: letsencrypt-prod
-    solvers:
-    - http01:
-        ingress:
-          class: nginx
-EOF
+cd terraform/02_cert-manager/
+terraform init
+terraform apply
 ```
 
 ---
@@ -727,8 +682,8 @@ type: Opaque
 stringData:
   VAULT_URL: "http://agent-lab-vault.agent-lab.svc.cluster.local:8200"
   VAULT_TOKEN: "???"
-  LANGWATCH_ENDPOINT": "http://agent-lab-langwatch-app.agent-lab.svc.cluster.local:5560",
-  LANGWATCH_API_KEY: "???",
+  LANGWATCH_ENDPOINT: "http://agent-lab-langwatch-app.agent-lab.svc.cluster.local:5560"
+  LANGWATCH_API_KEY: "???"
 EOF
 ```
 
