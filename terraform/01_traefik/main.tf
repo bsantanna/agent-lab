@@ -32,7 +32,6 @@ resource "helm_release" "traefik" {
   repository = "https://traefik.github.io/charts"
   chart      = "traefik"
   namespace  = kubernetes_namespace_v1.traefik.metadata[0].name
-  version    = "38.0.1"
 
   values = [
     yamlencode({

@@ -31,10 +31,7 @@ resource "helm_release" "cert_manager" {
   name       = "cert-manager"
   repository = "oci://quay.io/jetstack/charts"
   chart      = "cert-manager"
-  version    = "v1.19.2"
   namespace  = kubernetes_namespace_v1.cert_manager.metadata[0].name
-
-
 
   set = [
     {
