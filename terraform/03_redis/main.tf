@@ -29,13 +29,6 @@ resource "kubernetes_namespace_v1" "ot_operators" {
   }
 }
 
-
-resource "kubernetes_namespace_v1" "agent-lab" {
-  metadata {
-    name = var.agent_lab_namespace
-  }
-}
-
 resource "helm_release" "redis_operator" {
   name       = "redis-operator"
   repository = "https://ot-container-kit.github.io/helm-charts/"
@@ -49,20 +42,4 @@ resource "helm_release" "redis_operator" {
   }]
 
   depends_on = [kubernetes_namespace_v1.ot_operators]
-}
-
-
-resource "helm_release" "redis_agent_lab" {
-  name       = "redis-agent-lab"
-  repository = "https://ot-container-kit.github.io/helm-charts/"
-  chart      = "redis"
-  namespace  = var.agent_lab_namespace
-
-
-  set = [{
-    name  = "featureGates.GenerateConfigInInitContainer"
-    value = "true"
-  }]
-
-  depends_on = [kubernetes_namespace_v1.agent-lab, helm_release.redis_operator]
 }

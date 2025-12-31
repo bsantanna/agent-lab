@@ -116,29 +116,26 @@ terraform apply
 
 Redis is used by Agent-Lab for pub/sub status updates for long operations.
 
-1. Add ot-helm's repository:
-
 ```bash
-helm repo add ot-helm https://ot-container-kit.github.io/helm-charts/
-helm repo update
+cd terraform/03_redis/
+terraform init
+terraform apply
 ```
 
-2. Install Redis Operator using Helm:
-
-```bash
-helm install redis-operator ot-helm/redis-operator --namespace ot-operators --create-namespace
-```
-
-3. Create a Redis cluster:
-
-```bash
-helm install --namespace agent-lab redis-agent-lab ot-helm/redis
-```
 
 ### Setup PostgreSQL
 
 PostgreSQL is used by Agent-Lab to store relational data, vector search and dialog memory (checkpointer).
 Please refer to [Entity Domain Model](DOMAIN.md) for more details about the data model.
+
+```bash
+cd terraform/04_postgres/
+terraform init
+terraform apply
+```
+
+===== WIP =====
+
 
 1. Add the CPNG helm repository:
 
