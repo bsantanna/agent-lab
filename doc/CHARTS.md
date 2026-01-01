@@ -108,6 +108,15 @@ terraform init
 terraform apply
 ```
 
+And Create a ClusterIssuer for Let's Encrypt production:
+
+```bash
+```bash
+cd terraform/03_cert-cluster-issuer/
+terraform init
+terraform apply
+```
+
 ---
 
 ## Setup Dependencies
@@ -117,7 +126,7 @@ terraform apply
 Redis is used by Agent-Lab for pub/sub status updates for long operations.
 
 ```bash
-cd terraform/03_redis/
+cd terraform/04_redis/
 terraform init
 terraform apply
 ```
@@ -129,7 +138,7 @@ PostgreSQL is used by Agent-Lab to store relational data, vector search and dial
 Please refer to [Entity Domain Model](DOMAIN.md) for more details about the data model.
 
 ```bash
-cd terraform/04_postgres/
+cd terraform/05_postgres/
 terraform init
 terraform apply
 ```
