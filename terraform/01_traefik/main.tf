@@ -37,19 +37,17 @@ resource "helm_release" "traefik" {
     yamlencode({
       ports = {
         web = {
-          port       = 80
-          hostPort   = 80
-          nodePort   = 30080
-          protocol   = "TCP"
+          port     = 8000 # High internal; change back to 80 if preferred
+          nodePort = 30080
+          protocol = "TCP"
         }
         websecure = {
-          port     = 443
-          hostPort = 443
+          port     = 8443 # High internal
           nodePort = 30443
           protocol = "TCP"
         }
         traefik = {
-          port     = 9000
+          port = 9000
         }
       }
 
@@ -58,36 +56,33 @@ resource "helm_release" "traefik" {
         type    = "NodePort"
       }
 
-
+      # Optional: tighter security (works with low container ports if you keep them)
       securityContext = {
         capabilities = {
           drop = ["ALL"]
           add  = ["NET_BIND_SERVICE"]
         }
         readOnlyRootFilesystem = true
-        runAsNonRoot           = false
+        runAsNonRoot           = true # Try this; should work with the cap
       }
 
       ingressRoute = {
         dashboard = {
-          enabled = true
-          matchRule = "Host(`traefik.localhost`)"
+          enabled = false # Disable public exposure for now; use port-forward
+          # If enabling later:
+          # enabled   = true
+          # matchRule = "Host(`traefik.localhost`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))"
+          # entryPoints = ["websecure"]
         }
       }
 
       providers = {
-        kubernetesCRD = {
-          enabled = true
-        }
-        kubernetesIngress = {
-          enabled = true
-        }
+        kubernetesCRD     = { enabled = true }
+        kubernetesIngress = { enabled = true }
       }
 
       logs = {
-        general = {
-          level = "INFO"
-        }
+        general = { level = "INFO" }
       }
 
       persistence = {
