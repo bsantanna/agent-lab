@@ -31,7 +31,7 @@ resource "kubernetes_namespace_v1" "langwatch" {
   }
 }
 
-# Dedicated CloudNativePG cluster for LangWatch
+
 resource "helm_release" "pg_langwatch" {
   name       = "pg-langwatch"
   repository = "https://cloudnative-pg.github.io/charts"
@@ -44,7 +44,7 @@ resource "helm_release" "pg_langwatch" {
         instances = 1
         imageName = var.pg_image
         storage = {
-          size = "5Gi"  # Adjustable for local
+          size = "5Gi"
         }
       }
     })
@@ -113,7 +113,6 @@ resource "kubernetes_secret_v1" "redis_conn" {
   type = "Opaque"
 }
 
-# Main LangWatch deployment
 resource "helm_release" "langwatch" {
   name       = "langwatch"
   repository = "https://langwatch.github.io/langwatch/"
@@ -127,7 +126,7 @@ resource "helm_release" "langwatch" {
       }
 
       autogen = {
-        enabled = true  # Enabled to auto-generate required secrets and avoid validation errors (ideal for local/testing)
+        enabled = true
       }
 
       app = {
@@ -138,41 +137,7 @@ resource "helm_release" "langwatch" {
       }
 
       ingress = {
-        enabled = true
-        className = "traefik"
-
-        annotations = {
-          # "cert-manager.io/cluster-issuer"                   = "letsencrypt-prod"
-          "traefik.ingress.kubernetes.io/router.entrypoints" = "websecure"
-          "traefik.ingress.kubernetes.io/router.tls"         = "true"
-        }
-
-        hosts = [
-          {
-            host = var.langwatch_fqdn
-            paths = [
-              {
-                path     = "/"
-                pathType = "Prefix"
-                backend = {
-                  service = {
-                    name = "langwatch-app"
-                    port = {
-                      number = 5560
-                    }
-                  }
-                }
-              }
-            ]
-          }
-        ]
-
-        tls = [
-          {
-            secretName = "langwatch-tls"
-            hosts      = [var.langwatch_fqdn]
-          }
-        ]
+        enabled = false
       }
 
       postgresql = {
@@ -204,7 +169,7 @@ resource "helm_release" "langwatch" {
         replicas     = 1
         persistence = {
           enabled = true
-          size    = "10Gi"  # Suitable for local; increase if needed
+          size    = "10Gi"
         }
       }
 
@@ -215,8 +180,52 @@ resource "helm_release" "langwatch" {
   ]
 
   depends_on = [
-    data.kubernetes_secret_v1.pg_app_secret,
     kubernetes_secret_v1.pg_conn,
     kubernetes_secret_v1.redis_conn
   ]
+}
+
+
+resource "kubernetes_ingress_v1" "langwatch" {
+  metadata {
+    name      = "langwatch"
+    namespace = kubernetes_namespace_v1.langwatch.metadata[0].name
+
+    annotations = {
+      "cert-manager.io/cluster-issuer"                   = "letsencrypt-prod"
+      "traefik.ingress.kubernetes.io/router.entrypoints" = "websecure"
+      "traefik.ingress.kubernetes.io/router.tls"         = "true"
+    }
+  }
+
+  spec {
+    ingress_class_name = "traefik"
+
+    tls {
+      hosts       = [var.langwatch_fqdn]
+      secret_name = "langwatch-tls"
+    }
+
+    rule {
+      host = var.langwatch_fqdn
+
+      http {
+        path {
+          path      = "/"
+          path_type = "Prefix"
+
+          backend {
+            service {
+              name = "langwatch-app"
+              port {
+                number = 5560
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  depends_on = [helm_release.langwatch]
 }
