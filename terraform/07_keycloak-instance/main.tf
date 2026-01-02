@@ -111,7 +111,7 @@ resource "kubernetes_ingress_v1" "keycloak" {
     namespace = "keycloak"
 
     annotations = {
-      # "cert-manager.io/cluster-issuer"                   = "letsencrypt-prod"
+      "cert-manager.io/cluster-issuer"                   = "letsencrypt-prod"
       "traefik.ingress.kubernetes.io/router.entrypoints" = "websecure"
       "traefik.ingress.kubernetes.io/router.tls"         = "true"
     }

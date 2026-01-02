@@ -37,16 +37,16 @@ resource "null_resource" "keycloak_crds" {
 
   provisioner "local-exec" {
     command = <<-EOT
-      kubectl apply -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/${var.keycloak_version}/kubernetes/keycloaks.keycloak.org.cr.yaml
-      kubectl apply -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/${var.keycloak_version}/kubernetes/keycloakrealmimports.keycloak.org.cr.yaml
+      kubectl apply -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/${var.keycloak_version}/kubernetes/keycloaks.k8s.keycloak.org-v1.yml
+      kubectl apply -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/${var.keycloak_version}/kubernetes/keycloakrealmimports.k8s.keycloak.org-v1.yml
     EOT
   }
 
   provisioner "local-exec" {
     when = destroy
     command = <<-EOT
-      kubectl delete -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/${self.triggers.version}/kubernetes/keycloaks.keycloak.org.cr.yaml --ignore-not-found=true
-      kubectl delete -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/${self.triggers.version}/kubernetes/keycloakrealmimports.keycloak.org.cr.yaml --ignore-not-found=true
+      kubectl delete -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/${self.triggers.version}/kubernetes/keycloaks.k8s.keycloak.org-v1.yml --ignore-not-found=true
+      kubectl delete -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/${self.triggers.version}/kubernetes/keycloakrealmimports.k8s.keycloak.org-v1.yml --ignore-not-found=true
     EOT
   }
 }
@@ -57,7 +57,7 @@ resource "null_resource" "wait_for_keycloak_crd" {
   }
 
   provisioner "local-exec" {
-    command = "kubectl wait --for=condition=Established crd/keycloaks.keycloak.org --timeout=300s"
+    command = "kubectl wait --for=condition=Established crd/keycloaks.k8s.keycloak.org --timeout=300s"
   }
 
   depends_on = [null_resource.keycloak_crds]
