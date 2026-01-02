@@ -121,181 +121,42 @@ terraform apply
 
 ## Setup Dependencies
 
-### Setup Redis
+### Setup Redis Operator
 
 Redis is used by Agent-Lab for pub/sub status updates for long operations.
 
 ```bash
-cd terraform/04_redis/
+cd terraform/04_redis-operator/
 terraform init
 terraform apply
 ```
 
 
-### Setup PostgreSQL
+### Setup PostgreSQL Operator
 
 PostgreSQL is used by Agent-Lab to store relational data, vector search and dialog memory (checkpointer).
 Please refer to [Entity Domain Model](DOMAIN.md) for more details about the data model.
 
 ```bash
-cd terraform/05_postgres/
+cd terraform/05_postgres-operator/
 terraform init
 terraform apply
-```
-
-===== WIP =====
-
-
-1. Add the CPNG helm repository:
-
-```bash
-helm repo add cnpg https://cloudnative-pg.github.io/charts
-helm repo update
-```
-
-2. Install CNPG Operator:
-
-```bash
-helm upgrade --install cnpg --namespace cnpg-system --create-namespace cnpg/cloudnative-pg
-```
-
-3. Install PostgresSQL clusters using Helm:
-
-**Note**: The `bsantanna/cloudnative-pg-vector:17.4` image is used for deployment, it is a custom image that includes the [pgvector](https://github.com/pgvector/pgvector) extension for vector search capabilities, source can be found at [this repository](https://github.com/bsantanna/docker-images/blob/main/images/servers/cloudnative-pg-vector/Dockerfile)
-
-Few instances of PostgreSQL should be created:
-
-- a db instance for the Agent-Lab application
-- a db instance for the vector search
-- a db instance for the dialog memory (checkpointer)
-- a db instance for authentication (Keycloak)
-- a db instance for metrics (LangWatch)
-
-This database deployment is used for application [domain entities](DOMAIN.md):
-
-```bash
-helm upgrade --install --namespace agent-lab pg-agent-lab cnpg/cluster --values - <<EOF
-cluster:
-  imageName: bsantanna/cloudnative-pg-vector:17.4
-  instances: 1
-  storage:
-    size: 1Gi
-EOF
-```
-
-This database deployment is used for Vector search and RAG:
-
-```bash
-helm upgrade --install --namespace agent-lab pg-agent-lab-vectors cnpg/cluster --values - <<EOF
-cluster:
-  imageName: bsantanna/cloudnative-pg-vector:17.4
-  instances: 1
-  storage:
-    size: 1Gi
-EOF
-```
-
-This database deployment is used for checkpoints and storing dialog memory:
-
-```bash
-helm upgrade --install --namespace agent-lab pg-agent-lab-checkpoints cnpg/cluster --values - <<EOF
-cluster:
-  imageName: bsantanna/cloudnative-pg-vector:17.4
-  instances: 1
-  storage:
-    size: 1Gi
-EOF
-```
-
-This database deployment is used for authentication with Keycloak:
-
-```bash
-helm upgrade --install --namespace agent-lab pg-agent-lab-auth cnpg/cluster --values - <<EOF
-cluster:
-  imageName: bsantanna/cloudnative-pg-vector:17.4
-  instances: 1
-  storage:
-    size: 1Gi
-EOF
-```
-
-This database deployment is used for metrics with LangWatch:
-
-```bash
-helm upgrade --install --namespace agent-lab pg-agent-lab-langwatch cnpg/cluster --values - <<EOF
-cluster:
-  imageName: bsantanna/cloudnative-pg-vector:17.4
-  instances: 1
-  storage:
-    size: 1Gi
-EOF
-```
-
-The connection URL for the PostgreSQL instances can be obtained using the following command:
-
-```bash
-echo "$(kubectl --namespace agent-lab get secret <deployment_name>-cluster-app -o jsonpath='{.data.uri}' | base64 -d)"
-```
-
-Example:
-
-```bash
-echo "$(kubectl --namespace agent-lab get secret pg-agent-lab-cluster-app -o jsonpath='{.data.uri}' | base64 -d)"
-```
-
-To access SQL console for the PostgreSQL instance, you can use the following command:
-
-```bash
-kubectl --namespace agent-lab exec -it <deployment_name>-cluster-1 -- psql -U postgres
-```
-
-Example:
-
-```bash
-kubectl --namespace agent-lab exec -it pg-agent-lab-vectors-cluster-1 -- psql -U postgres
-```
-
-```postgresql
-CREATE EXTENSION IF NOT EXISTS vector;
 ```
 
 ### Setup Keycloak
 
 [Keycloak](https://www.keycloak.org/operator/installation#_installing_by_using_kubectl_without_operator_lifecycle_manager) is used by Agent-Lab to manage user authentication.
 
-- Replace `<auth_fqdn>` with the fully qualified domain name (FQDN) you want to use for accessing Keycloak, example `auth.my-domain.com`.
-- Replace database connection settings by the values obtained using connection url command mentioned above.
-- Replace `<admin_user>` and `<admin_password>` by proper values.
+```bash
+cd terraform/06_keycloak-operator/
+terraform init
+terraform apply
+```
 
 ```bash
-helm install --namespace agent-lab kc-agent-lab oci://registry-1.docker.io/bitnamicharts/keycloak --values - <<EOF
-image:
-  registry: docker.io
-  repository: bitnamilegacy/keycloak
-ingress:
-  enabled: true
-  hostname: <auth_fqdn>
-  ingressClassName: nginx
-  path: /
-  pathType: Prefix
-  tls: true
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    kubernetes.io/ingress.class: nginx
-tls:
-  enabled: true
-postgresql:
-  enabled: false
-externalDatabase:
-  host: <db_host>
-  user: <db_user>
-  password: <db_password>
-  database: <db_database>
-  port: <db_port>
-auth:
-  adminUser: <admin_user>
-  adminPassword: <admin_password>
-EOF
+cd terraform/07_keycloak-instance/
+terraform init
+terraform apply
 ```
 
 Please refer to [Keycloak guide](KEYCLOAK.md) for detailed steps how setting up OIDC connection.
