@@ -8,6 +8,10 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = ">= 2.0.0"
     }
+    time = {
+      source  = "hashicorp/time"
+      version = ">= 0.9.0"
+    }
   }
 }
 
@@ -49,13 +53,19 @@ resource "helm_release" "pg_langwatch" {
   depends_on = [kubernetes_namespace_v1.langwatch]
 }
 
+resource "time_sleep" "wait_for_pg_secret" {
+  create_duration = "15s"
+
+  depends_on = [helm_release.pg_langwatch]
+}
+
 data "kubernetes_secret_v1" "pg_app_secret" {
   metadata {
     name      = "${helm_release.pg_langwatch.name}-cluster-app"
     namespace = kubernetes_namespace_v1.langwatch.metadata[0].name
   }
 
-  depends_on = [helm_release.pg_langwatch]
+  depends_on = [time_sleep.wait_for_pg_secret]
 }
 
 resource "kubernetes_secret_v1" "pg_conn" {
