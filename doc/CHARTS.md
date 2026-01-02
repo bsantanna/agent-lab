@@ -299,45 +299,22 @@ EOF
 
 [Vault](https://developer.hashicorp.com/vault/docs) is used by Agent-Lab to manage secrets and sensitive data.
 
-1. Add the HashiCorp Helm repository:
-
 ```bash
-helm repo add hashicorp https://helm.releases.hashicorp.com
-helm repo update
+cd terraform/08_vault-instance/
+terraform init
+terraform apply
 ```
 
-2. Install Vault using Helm:
-
-Please replace `<vault_fqdn>` with the fully qualified domain name (FQDN) you want to use for accessing Vault, example `vault.my-domain.com`.
+1. Initialize Vault cluster:
 
 ```bash
-helm --namespace agent-lab install agent-lab-vault hashicorp/vault --values - <<EOF
-server:
-  affinity: ""
-  ingress:
-    enabled: true
-    ingressClassName: nginx
-    hosts:
-      - host: "<vault_fqdn>"
-        paths:
-          - "/"
-    tls:
-      - secretName: "vault-tls-secret"
-        hosts:
-          - "<vault_fqdn>"
-EOF
-```
-
-3. Initialize Vault cluster:
-
-```bash
-kubectl --namespace agent-lab exec agent-lab-vault-0 -- vault operator init \
+kubectl --namespace vault exec vault-0 -- vault operator init \
     -key-shares=1 \
     -key-threshold=1 \
     -format=json > cluster-keys.json
 ```
 
-4. Unseal Vault cluster:
+2. Unseal Vault cluster:
 
 ```bash
 export VAULT_UNSEAL_KEY=$(jq -r ".unseal_keys_b64[]" cluster-keys.json)
@@ -346,7 +323,7 @@ kubectl --namespace agent-lab exec agent-lab-vault-0 -- vault operator unseal $V
 
 Copy the root_token from cluster_keys.json file to a safe place, this token is used in the next step for logging in:
 
-5. Access the `<vault_fqdn>` using web browser, assuming the same domain used in the example: [https://vault.my-domain.com](https://vault.my-domain.com)
+3. Access the `<vault_fqdn>` using web browser, assuming the same domain used in the example: [https://vault.my-domain.com](https://vault.my-domain.com)
 
 <div align="center">
 
@@ -354,7 +331,7 @@ Copy the root_token from cluster_keys.json file to a safe place, this token is u
 
 </div>
 
-6. Create a engine:
+4. Create a engine:
 
 ```txt
 Secrets Engine > Enable new engine + > KV
@@ -362,7 +339,7 @@ Secrets Engine > Enable new engine + > KV
 For the *Path* value, use `secret`
 ```
 
-7. Inside engine `secret` create a secret with path `app_secrets` and following content (replace ??? by valid values):
+5. Inside engine `secret` create a secret with path `app_secrets` and following content (replace ??? by valid values):
 
 ```json
 {

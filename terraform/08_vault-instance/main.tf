@@ -26,3 +26,51 @@ resource "kubernetes_namespace_v1" "vault" {
     name = "vault"
   }
 }
+
+resource "helm_release" "vault" {
+  name       = "vault"
+  repository = "https://helm.releases.hashicorp.com"
+  chart      = "vault"
+  namespace  = kubernetes_namespace_v1.vault.metadata[0].name
+  # version    = "0.31.0"
+
+  values = [
+    yamlencode({
+      server = {
+        # dev = {
+        #   enabled = true  # Essential for simple local testing (in-memory, auto-init/unseal)
+        # }
+
+        # affinity = ""
+
+        ingress = {
+          enabled = true
+
+          ingressClassName = "traefik"
+
+          annotations = {
+            "cert-manager.io/cluster-issuer"                   = "letsencrypt-prod"
+            "traefik.ingress.kubernetes.io/router.entrypoints" = "websecure"
+            "traefik.ingress.kubernetes.io/router.tls"         = "true"
+          }
+
+          hosts = [
+            {
+              host  = var.vault_fqdn
+              paths = ["/"]
+            }
+          ]
+
+          tls = [
+            {
+              secretName = "vault-tls-secret"
+              hosts      = [var.vault_fqdn]
+            }
+          ]
+        }
+      }
+    })
+  ]
+
+  depends_on = [kubernetes_namespace_v1.vault]
+}
