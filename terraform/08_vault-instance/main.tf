@@ -56,7 +56,7 @@ resource "helm_release" "vault" {
 
           hosts = [
             {
-              host  = var.vault_fqdn
+              host  = var.vault_hostname
               paths = ["/"]
             }
           ]
@@ -64,7 +64,7 @@ resource "helm_release" "vault" {
           tls = [
             {
               secretName = "vault-tls-secret"
-              hosts      = [var.vault_fqdn]
+              hosts      = [var.vault_hostname]
             }
           ]
         }

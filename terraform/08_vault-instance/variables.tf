@@ -1,4 +1,4 @@
-variable "vault_fqdn" {
+variable "vault_hostname" {
   type        = string
-  description = "The fqdn for the Vault instance (e.g., vault.example.com)"
+  description = "The hostname for the Vault instance (e.g., vault.example.com)"
 }
