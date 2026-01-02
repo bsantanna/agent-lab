@@ -37,12 +37,6 @@ resource "helm_release" "vault" {
   values = [
     yamlencode({
       server = {
-        # dev = {
-        #   enabled = true  # Essential for simple local testing (in-memory, auto-init/unseal)
-        # }
-
-        # affinity = ""
-
         ingress = {
           enabled = true
 
