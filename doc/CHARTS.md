@@ -153,7 +153,7 @@ terraform apply
 ```
 
 ```bash
-cd terraform/07_keycloak-instance/
+cd terraform/10_keycloak-instance/
 terraform init
 terraform apply
 ```
@@ -225,6 +225,19 @@ For the *Path* value, use `secret`
 
 **Note**: This is a reference implementation, in a real scenario you should use a production-ready Vault cluster, please refer to [Vault section](VAULT.md) for more details.
 
+### Setup LangWatch
+
+[LangWatch](https://langwatch.ai) is used by Agent-Lab for observability of LLM usage and simulation testing.
+
+Please determine a <langwatch_fqdn> for accessing LangWatch web UI, example: langwatch.my-domain.com
+Helm deployment Reference documentation
+
+```bash
+cd terraform/09_langwatch-instance/
+terraform init
+terraform apply
+```
+
 ### Setup Elastic Kubernetes Cluster (ECK) for Observability
 
 This section describes how to setup an Elastic Kubernetes Cluster (ECK) for observability purposes, including logging and monitoring, while it is not strictly necessary for running Agent-Lab, it is highly recommended to have a proper observability stack in place.
@@ -232,75 +245,11 @@ This section describes how to setup an Elastic Kubernetes Cluster (ECK) for obse
 1. Add the Elastic Helm repository:
 
 ```bash
-helm repo add elastic https://helm.elastic.co
-helm repo update
+cd terraform/07_eck-operator/
+terraform init
+terraform apply
 ```
 
-2. Install the ECK operator:
-
-```bash
-helm install elastic-operator elastic/eck-operator --namespace elastic-system --create-namespace
-```
-
-3. Create the ElasticSearch cluster:
-
-  - Replace `<elasticsearch_fqdn>` with the fully qualified domain name (FQDN) you want to use for accessing ElasticSearch, example `elasticsearch.my-domain.com`.
-
-  - Replace `<kibana_fqdn>` with the fully qualified domain name (FQDN) you want to use for accessing Kibana, example `kibana.my-domain.com`.
-
-
-```bash
-helm --namespace agent-lab upgrade --install agent-lab-elastic elastic/eck-stack --values - <<EOF
-eck-elasticsearch:
-  enabled: true
-  fullnameOverride: elasticsearch
-  ingress:
-    enabled: true
-    className: nginx
-    hosts:
-      - host: <elasticsearch_fqdn>
-        path: /
-    tls:
-      enabled: true
-      secretName: elasticsearch-tls
-    annotations:
-      kubernetes.io/ingress.class: nginx
-      cert-manager.io/cluster-issuer: letsencrypt-prod
-      nginx.ingress.kubernetes.io/proxy-ssl-verify: "false"
-      nginx.ingress.kubernetes.io/backend-protocol: HTTPS
-
-eck-kibana:
-  enabled: true
-  fullnameOverride: kibana
-  config:
-    xpack:
-      fleet:
-        packages:
-          - name: apm
-            version: latest
-  ingress:
-    enabled: true
-    className: nginx
-    hosts:
-      - host: <kibana_fqdn>
-        path: /
-    tls:
-      enabled: true
-      secretName: kibana-tls
-    annotations:
-      kubernetes.io/ingress.class: nginx
-      cert-manager.io/cluster-issuer: letsencrypt-prod
-      nginx.ingress.kubernetes.io/proxy-ssl-verify: "false"
-      nginx.ingress.kubernetes.io/backend-protocol: HTTPS
-
-eck-apm-server:
-  enabled: true
-  elasticsearchRef:
-    name: elasticsearch
-  kibanaRef:
-    name: kibana
-EOF
-```
 
 Use the following command to obtain `elastic` user password:
 
