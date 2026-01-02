@@ -14,3 +14,9 @@ variable "keycloak_image" {
   type        = string
   default     = "bsantanna/keycloak:26.0.0"
 }
+
+variable "pg_vector_image" {
+  description = "Custom optimized Postgres image with pgvector extension"
+  type        = string
+  default     = "bsantanna/cloudnative-pg-vector:17.4"
+}

@@ -30,7 +30,7 @@ resource "helm_release" "pg_keycloak" {
   values = [
     yamlencode({
       cluster = {
-        imageName = "bsantanna/cloudnative-pg-vector:17.4"
+        imageName = var.pg_vector_image
         instances = 1
         storage = {
           size = "1Gi"
