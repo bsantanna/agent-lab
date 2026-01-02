@@ -3,8 +3,3 @@ variable "keycloak_version" {
   type        = string
   default     = "26.0.0"
 }
-
-variable "keycloak_hostname" {
-  description = "Full hostname for Keycloak (e.g., keycloak.example.com). This will be used for the ingress and frontend URL."
-  type        = string
-}
