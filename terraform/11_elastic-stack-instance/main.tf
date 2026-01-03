@@ -8,6 +8,10 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = ">= 2.0.0"
     }
+    time = {
+      source  = "hashicorp/time"
+      version = ">= 0.9.0"
+    }
   }
 }
 
@@ -27,33 +31,13 @@ resource "kubernetes_namespace_v1" "elastic" {
   }
 }
 
-# ServersTransport for Elasticsearch backend (HTTPS with skip verify)
-resource "kubernetes_manifest" "es_servers_transport" {
+resource "kubernetes_manifest" "elastic_servers_transport" {
   manifest = {
     apiVersion = "traefik.io/v1alpha1"
     kind       = "ServersTransport"
 
     metadata = {
-      name      = "es-backend-tls"
-      namespace = kubernetes_namespace_v1.elastic.metadata[0].name
-    }
-
-    spec = {
-      insecureSkipVerify = true
-    }
-  }
-
-  depends_on = [kubernetes_namespace_v1.elastic]
-}
-
-# ServersTransport for Kibana backend (HTTPS with skip verify)
-resource "kubernetes_manifest" "kb_servers_transport" {
-  manifest = {
-    apiVersion = "traefik.io/v1alpha1"
-    kind       = "ServersTransport"
-
-    metadata = {
-      name      = "kb-backend-tls"
+      name      = "elastic-backend-tls"
       namespace = kubernetes_namespace_v1.elastic.metadata[0].name
     }
 
@@ -81,6 +65,14 @@ resource "helm_release" "elastic" {
           tls = {
             selfSignedCertificate = {
               disabled = false
+            }
+          }
+          service = {
+            metadata = {
+              annotations = {
+                "traefik.ingress.kubernetes.io/service.serversscheme"    = "https"
+                "traefik.ingress.kubernetes.io/service.serverstransport" = "${kubernetes_namespace_v1.elastic.metadata[0].name}-elastic-backend-tls@kubernetescrd"
+              }
             }
           }
         }
@@ -113,6 +105,14 @@ resource "helm_release" "elastic" {
               disabled = false
             }
           }
+          service = {
+            metadata = {
+              annotations = {
+                "traefik.ingress.kubernetes.io/service.serversscheme"    = "https"
+                "traefik.ingress.kubernetes.io/service.serverstransport" = "${kubernetes_namespace_v1.elastic.metadata[0].name}-elastic-backend-tls@kubernetescrd"
+              }
+            }
+          }
         }
 
         ingress = {
@@ -136,9 +136,15 @@ resource "helm_release" "elastic" {
 
   depends_on = [
     kubernetes_namespace_v1.elastic,
-    kubernetes_manifest.es_servers_transport,
-    kubernetes_manifest.kb_servers_transport
+    kubernetes_manifest.elastic_servers_transport
   ]
+}
+
+
+resource "time_sleep" "wait_for_elastic" {
+  create_duration = "15s"
+
+  depends_on = [helm_release.elastic]
 }
 
 # Custom Traefik Ingress for Elasticsearch
@@ -151,8 +157,6 @@ resource "kubernetes_ingress_v1" "elasticsearch" {
       "cert-manager.io/cluster-issuer"                          = "letsencrypt-prod"
       "traefik.ingress.kubernetes.io/router.entrypoints"        = "websecure"
       "traefik.ingress.kubernetes.io/router.tls"                = "true"
-      "traefik.ingress.kubernetes.io/service.serversscheme"     = "https"
-      "traefik.ingress.kubernetes.io/service.serverstransport"  = kubernetes_manifest.es_servers_transport.manifest.metadata.name
     }
   }
 
@@ -185,7 +189,7 @@ resource "kubernetes_ingress_v1" "elasticsearch" {
     }
   }
 
-  depends_on = [helm_release.elastic]
+  depends_on = [time_sleep.wait_for_elastic, kubernetes_manifest.elastic_servers_transport]
 }
 
 # Custom Traefik Ingress for Kibana
@@ -198,8 +202,6 @@ resource "kubernetes_ingress_v1" "kibana" {
       "cert-manager.io/cluster-issuer"                          = "letsencrypt-prod"
       "traefik.ingress.kubernetes.io/router.entrypoints"        = "websecure"
       "traefik.ingress.kubernetes.io/router.tls"                = "true"
-      "traefik.ingress.kubernetes.io/service.serversscheme"     = "https"
-      "traefik.ingress.kubernetes.io/service.serverstransport"  = kubernetes_manifest.kb_servers_transport.manifest.metadata.name
     }
   }
 
@@ -232,5 +234,5 @@ resource "kubernetes_ingress_v1" "kibana" {
     }
   }
 
-  depends_on = [helm_release.elastic]
+  depends_on = [time_sleep.wait_for_elastic, kubernetes_manifest.elastic_servers_transport]
 }
