@@ -8,26 +8,15 @@
 - [Introduction](#introduction)
 - [Setup Kubernetes Cluster](#setup-kubernetes-cluster)
 - [Setup Dependencies](#setup-dependencies)
-- [Agent-Lab with Helm](#deploying-agent-lab-with-helm)
+- [Deploy Agent-Lab](#deploy-agent-lab)
 
 ---
 
 ## Introduction
 
-Agent-Lab provides a Helm chart to deploy the application on Kubernetes clusters. This chart is designed to be flexible and customizable, allowing users to configure various aspects of the deployment.
+Agent-Lab provides Terraform scripts to deploy the application and its dependencies on Kubernetes clusters.
 
-In this document, we will cover a example deployment of Agent-Lab by on Kubernetes using the provided Helm chart.
-
-### Preparation / Determine FQDNs
-
-A few services in this guide are accessible via Web Browser UI, it is required to determine FQDN in advance:
-
-- `<agent_lab_fqdn>`: a fqdn to access Agent-Lab via nginx ingress, example: *agent-lab.my-domain.com*
-- `<elasticsearch_fqdn>`: a fqdn to access elasticsearch cluster via nginx ingress, example: *elasticsearch.my-domain.com*
-- `<kibana_fqdn>`: a fqdn to access kibana via nginx ingress, example: *kibana.my-domain.com*
-- `<vault_fqdn>`: a fqdn to access Vault via nginx ingress, example: *vault.my-domain.com*
-- `<auth_fqdn>`: a fqdn to access Keycloak via nginx ingress, example: *auth.my-domain.com*
-
+In this document, we will cover a example deployment of Agent-Lab by on Kubernetes using the provided Terraform scripts.
 
 ---
 
@@ -41,16 +30,10 @@ A few services in this guide are accessible via Web Browser UI, it is required t
 
 This section describes how to setup a Kubernetes cluster with the necessary resources for running Agent-Lab and its dependencies.
 
-1. Minikube cluster with sufficient resources. The following command allocates 6GB of memory and 4 CPUs to the Minikube VM:
+1. Minikube cluster with sufficient resources. The following command allocates 20GB of memory and 4 CPUs to the Minikube VM:
 
 ```bash
-minikube start --memory=6g --cpus=4
-```
-
-2. Enable the Ingress addon to allow external access to the services:
-
-```bash
-minikube addons enable ingress
+minikube start --memory=20g --cpus=4
 ```
 
 #### Setup Networking
@@ -80,6 +63,11 @@ After the domain names are determined, modify system hosts file to include domai
 ![Enable Kubernetes](docker_desktop_kubernetes.png)
 
 </div>
+
+---
+
+## Setup Dependencies
+
 
 #### Install Traefik Ingress with Helm Chart
 
@@ -116,10 +104,6 @@ cd terraform/03_cert-cluster-issuer/
 terraform init
 terraform apply
 ```
-
----
-
-## Setup Dependencies
 
 ### Setup Redis Operator
 
@@ -242,87 +226,41 @@ terraform apply
 
 This section describes how to setup an Elastic Kubernetes Cluster (ECK) for observability purposes, including logging and monitoring, while it is not strictly necessary for running Agent-Lab, it is highly recommended to have a proper observability stack in place.
 
-1. Add the Elastic Helm repository:
-
 ```bash
-cd terraform/07_eck-operator/
+cd terraform/07_elastic-operator/
 terraform init
 terraform apply
 ```
 
+```bash
+cd terraform/11_elastic-instance/
+terraform init
+terraform apply
+```
 
 Use the following command to obtain `elastic` user password:
 
 ```bash
-echo "$(kubectl --namespace agent-lab get secret elasticsearch-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode)"
+echo "$(kubectl --namespace elastic get secret elasticsearch-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode)"
 ```
 
 Take note of APM Access Token, it is used in the next step to configure OpenTelemetry Collector.
 ```bash
-echo "$(kubectl --namespace agent-lab get secret/agent-lab-elastic-eck-apm-server-apm-token \
+echo "$(kubectl --namespace elastic get secret/elastic-eck-apm-server-apm-token \
     -o go-template='{{index .data "secret-token" | base64decode}}')"
 ```
 
 ### Setup OpenTelemetry Collector
 
-1. Add OpenTelemetry Helm repository:
-
 ```bash
-helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
-helm repo update
+cd terraform/12_otel-instance/
+terraform init
+terraform apply
 ```
-
-2. Install Otel Collector using Helm Chart:
-
-  - Replace `<ELASTIC_APM_SECRET_TOKEN>` by the APM Access Token obtained in the last step.
-
-
-```bash
-helm --namespace agent-lab install agent-lab-telemetry open-telemetry/opentelemetry-collector --values - <<EOF
-mode: deployment
-image:
-  repository: otel/opentelemetry-collector-contrib
-  tag: latest
-config:
-  receivers:
-    otlp:
-      protocols:
-        http:
-          endpoint: "0.0.0.0:4318"
-  exporters:
-    otlphttp:
-      endpoint: "https://agent-lab-elastic-eck-apm-server-apm-http:8200"
-      headers:
-        Authorization: "Bearer <ELASTIC_APM_SECRET_TOKEN>"
-      tls:
-        insecure_skip_verify: true
-  service:
-    pipelines:
-      traces:
-        receivers: ["otlp"]
-        exporters: ["otlphttp"]
-      metrics:
-        receivers: ["otlp"]
-        exporters: ["otlphttp"]
-      logs:
-        receivers: ["otlp"]
-        exporters: ["otlphttp"]
-EOF
-```
-
-### Verify dependencies setup
-
-Use `kubectl --namespace agent-lab get pods` to check if all dependencies were properly installed, proceed when Running status is 1/1:
-
-<div align="center">
-
-![Pods for dependencies](kubectl_get_pods_dependencies.png)
-
-</div>
 
 ---
 
-## Deploying Agent-Lab with Helm
+## Deploy Agent-Lab
 
 ### Create App Secret
 

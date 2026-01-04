@@ -1,5 +1,10 @@
-variable "instance_type" {
-  type        = string                     # The type of the variable, in this case a string
-  default     = "t2.micro"                 # Default value for the variable
-  description = "The type of EC2 instance" # Description of what this variable represents
+variable "otlp_http_endpoint" {
+  type        = string
+  default     = "https://elastic-eck-apm-server-apm-http:8200"
+  description = "Endpoint for OTLP HTTP exporter"
+}
+
+variable "otlp_http_auth_token" {
+  type        = string
+  description = "Authentication token for OTLP HTTP exporter"
 }
