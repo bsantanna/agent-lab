@@ -147,7 +147,7 @@ resource "helm_release" "redis_agent_lab" {
   depends_on = [kubernetes_namespace_v1.agent_lab]
 }
 
-resource "time_sleep" "wait_for_redis_secret" {
+resource "time_sleep" "wait_for_redis" {
   create_duration = "15s"
 
   depends_on = [
@@ -155,14 +155,18 @@ resource "time_sleep" "wait_for_redis_secret" {
   ]
 }
 
-resource "kubernetes_secret_v1" "redis_conn" {
+resource "kubernetes_secret_v1" "agent_lab_secret" {
   metadata {
-    name      = "redis-conn"
+    name      = "agent-lab-secret"
     namespace = kubernetes_namespace_v1.agent_lab.metadata[0].name
   }
 
+  # APP BOOT dependencies
   data = {
-    url = "redis://redis-agent-lab.${kubernetes_namespace_v1.agent_lab.metadata[0].name}.svc.cluster.local:6379/0"
+    VAULT_ENDPOINT = var.vault_endpoint
+    # VAULT_API_KEY = var.vault_api_key
+    LANGWATCH_ENDPOINT = var.langwatch_endpoint
+    # LANGWATCH_API_KEY = var.langwatch_api_key
   }
 
   type = "Opaque"
