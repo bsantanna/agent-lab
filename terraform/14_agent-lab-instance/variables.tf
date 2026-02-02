@@ -44,13 +44,12 @@ variable "vault_secret_value_cdp_url" {
 variable "langwatch_endpoint" {
   description = "Endpoint URL of Langwatch instance"
   type        = string
-  default     = "http://langwatch-app.langwatch.svc.cluster.local:5560"
 }
 
-# variable "langwatch_api_key" {
-#   description = "API KEY token of Vault instance"
-#   type        = string
-# }
+variable "langwatch_api_key" {
+  description = "API KEY token of Vault instance"
+  type        = string
+}
 
 variable "pg_image" {
   type        = string
