@@ -4,10 +4,9 @@ variable "agent_lab_namespace" {
   default     = "agent-lab"
 }
 
-variable "vault_endpoint" {
-  description = "Endpoint URL of Vault instance"
+variable "vault_url" {
+  description = "URL of Vault instance"
   type        = string
-  default     = "http://vault.vault.svc.cluster.local:8200"
 }
 
 variable "vault_engine_path" {
