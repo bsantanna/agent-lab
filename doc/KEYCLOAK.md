@@ -52,7 +52,7 @@ export CLIENT_SECRET=$(curl -X GET "https://<auth_fqdn>/admin/realms/<realm_name
   -H "Authorization: Bearer ${ADMIN_TOKEN}" | jq -r '.value')
 ```
 
-### Create user
+### Create service account user
 
 ```bash
 curl -X POST https://<auth_fqdn>/admin/realms/<realm_name>/users \
