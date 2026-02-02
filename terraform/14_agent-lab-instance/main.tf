@@ -173,7 +173,7 @@ resource "kubernetes_secret_v1" "agent_lab_secret" {
     VAULT_ENDPOINT = var.vault_url
     VAULT_API_KEY = var.vault_api_key
     LANGWATCH_ENDPOINT = var.langwatch_endpoint
-    # LANGWATCH_API_KEY = var.langwatch_api_key
+    LANGWATCH_API_KEY = var.langwatch_api_key
   }
 
   type = "Opaque"
