@@ -164,7 +164,7 @@ resource "kubernetes_secret_v1" "agent_lab_secret" {
   # APP BOOT dependencies
   data = {
     VAULT_ENDPOINT = var.vault_endpoint
-    # VAULT_API_KEY = var.vault_api_key
+    VAULT_API_KEY = var.vault_api_key
     LANGWATCH_ENDPOINT = var.langwatch_endpoint
     # LANGWATCH_API_KEY = var.langwatch_api_key
   }
