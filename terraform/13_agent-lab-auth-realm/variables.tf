@@ -1,5 +1,22 @@
-variable "instance_type" {
-  type        = string                     # The type of the variable, in this case a string
-  default     = "t2.micro"                 # Default value for the variable
-  description = "The type of EC2 instance" # Description of what this variable represents
+variable "auth_url" {
+  type        = string
+  description = "Auth Host URL"
+}
+
+variable "auth_realm" {
+  type        = string
+  description = "Auth Realm"
+  default     = "agent-lab"
+}
+
+variable "auth_admin_username" {
+  type        = string
+  description = "Auth Admin Username"
+  sensitive   = true
+}
+
+variable "auth_admin_secret" {
+  type        = string
+  description = "Auth Admin Secret"
+  sensitive   = true
 }

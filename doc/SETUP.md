@@ -1,5 +1,5 @@
 <h2 align="center"><a href="https://github.com/bsantanna/agent-lab">Agent-Lab | 🤖🧪</a></h2>
-<h3 align="center">Helm Charts</h3>
+<h3 align="center">Setup</h3>
 
 ---
 
@@ -192,7 +192,6 @@ For the *Path* value, use `secret`
 
 ```json
 {
-  "api_base_url": "https://<agent_lab_fqdn>/",
   "auth_enabled": "True",
   "auth_url": "https://<auth_fqdn>/",
   "auth_realm": "<realm_name>",

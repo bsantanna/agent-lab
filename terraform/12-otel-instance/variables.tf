@@ -7,4 +7,5 @@ variable "otlp_http_endpoint" {
 variable "otlp_http_auth_token" {
   type        = string
   description = "Authentication token for OTLP HTTP exporter"
+  sensitive   = true
 }
