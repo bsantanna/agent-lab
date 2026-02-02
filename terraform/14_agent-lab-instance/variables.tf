@@ -28,30 +28,6 @@ variable "vault_api_key" {
   sensitive   = true
 }
 
-variable "vault_secret_value_auth_url" {
-  description = "Auth Host URL"
-  type        = string
-  sensitive   = true
-}
-
-variable "vault_secret_value_auth_realm" {
-  description = "Auth Realm"
-  type        = string
-  sensitive   = true
-}
-
-variable "vault_secret_value_auth_client_id" {
-  description = "Auth Client ID"
-  type        = string
-  sensitive   = true
-}
-
-variable "vault_secret_value_auth_client_secret" {
-  description = "Auth Client Secret"
-  type        = string
-  sensitive   = true
-}
-
 variable "vault_secret_value_broker_url" {
   description = "Redis Broker URL"
   type        = string

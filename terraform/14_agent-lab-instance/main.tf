@@ -95,6 +95,13 @@ resource "helm_release" "pg_agent-lab-checkpoints" {
   depends_on = [kubernetes_namespace_v1.agent_lab]
 }
 
+data "kubernetes_secret_v1" "auth_secrets" {
+  metadata {
+    name      = "agent-lab-auth"
+    namespace = kubernetes_namespace_v1.agent_lab.metadata[0].name
+  }
+}
+
 resource "time_sleep" "wait_for_pg_secrets" {
   create_duration = "15s"
 
