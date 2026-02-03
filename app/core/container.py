@@ -76,9 +76,7 @@ class Container(containers.DeclarativeContainer):
         config.set("auth.url", app_secrets["data"]["data"]["auth_url"])
         config.set("auth.realm", app_secrets["data"]["data"]["auth_realm"])
         config.set("auth.client_id", app_secrets["data"]["data"]["auth_client_id"])
-        config.set(
-            "auth.client_secret", app_secrets["data"]["data"]["auth_client_secret"]
-        )
+        config.set("auth.client_secret", app_secrets["data"]["data"]["auth_client_secret"])
         config.set("cdp_url", app_secrets["data"]["data"]["cdp_url"])
         config.set("vault.url", vault_url)
         config.set("vault.token", vault_token)
