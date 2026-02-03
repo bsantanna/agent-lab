@@ -170,44 +170,6 @@ export VAULT_UNSEAL_KEY=$(jq -r ".unseal_keys_b64[]" cluster-keys.json)
 kubectl --namespace agent-lab exec agent-lab-vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY
 ```
 
-Copy the root_token from cluster_keys.json file to a safe place, this token is used in the next step for logging in:
-
-3. Access the `<vault_fqdn>` using web browser, assuming the same domain used in the example: [https://vault.my-domain.com](https://vault.my-domain.com)
-
-<div align="center">
-
-![Vault Login](vault_login.png)
-
-</div>
-
-4. Create a engine:
-
-```txt
-Secrets Engine > Enable new engine + > KV
-
-For the *Path* value, use `secret`
-```
-
-5. Inside engine `secret` create a secret with path `app_secrets` and following content (replace ??? by valid values):
-
-```json
-{
-  "auth_enabled": "True",
-  "auth_url": "https://<auth_fqdn>/",
-  "auth_realm": "<realm_name>",
-  "auth_client_id": "<client_id>",
-  "auth_client_secret": "<client_secret>",
-  "broker_url": "redis://redis-agent-lab.agent-lab.svc.cluster.local:6379/0",
-  "cdp_url": "http://cdp-agent-lab.agent-lab.svc.cluster.local:9222",
-  "db_checkpoints": "postgresql://???:???@pg-agent-lab-checkpoints-cluster-rw.agent-lab.svc.cluster.local:5432/app",
-  "db_url": "postgresql://???:???@pg-agent-lab-cluster-rw.agent-lab.svc.cluster.local:5432/app",
-  "db_vectors": "postgresql://???:???@pg-agent-lab-vectors-cluster-rw.agent-lab.svc.cluster.local:5432/app",
-  "tavily_api_key": "???"
-}
-```
-
-**Note**: This is a reference implementation, in a real scenario you should use a production-ready Vault cluster, please refer to [Vault section](VAULT.md) for more details.
-
 ### Setup LangWatch
 
 [LangWatch](https://langwatch.ai) is used by Agent-Lab for observability of LLM usage and simulation testing.
@@ -261,56 +223,28 @@ terraform apply
 
 ## Deploy Agent-Lab
 
-### Create App Secret
-
-This Secret is used to access the Vault.
-
-  - Replace ??? by vault `root_token` obtained in previous steps.
+### Setup Auth Realm
 
 ```bash
-kubectl --namespace agent-lab apply -f - <<EOF
-apiVersion: v1
-kind: Secret
-metadata:
-  name: agent-lab-secret
-type: Opaque
-stringData:
-  VAULT_URL: "http://agent-lab-vault.agent-lab.svc.cluster.local:8200"
-  VAULT_TOKEN: "???"
-  LANGWATCH_ENDPOINT: "http://agent-lab-langwatch-app.agent-lab.svc.cluster.local:5560"
-  LANGWATCH_API_KEY: "???"
-EOF
+cd terraform/13_agent-lab-auth-realm/
+terraform init
+terraform apply
 ```
 
-### Install Agent-Lab with self-signed TLS certificate
-
-  - Replace `<ollama_endpoint>` by a valid ollama endpoint in your LAN, example: `http://192.168.1.1:11434`
-  - Replace `<agent_lab_fqdn>` by a valid domain name, example `agent-lab.my-domain.com`
+### Setup runtime dependencies
 
 ```bash
-helm --namespace agent-lab upgrade --install agent-lab agent-lab \
-  --repo "https://bsantanna.github.io/agent-lab" \
-  --version "1.1.1" --values - <<EOF
-config:
-  ollama_endpoint: "<ollama_endpoint>"
-  telemetry_endpoint: "http://agent-lab-telemetry-opentelemetry-collector.default.svc.cluster.local:4318"
-ingress:
-  enabled: true
-  hosts:
-    - host: "<agent_lab_fqdn>"
-      paths:
-        - path: "/"
-          pathType: "Prefix"
-  annotations:
-    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
-    nginx.ingress.kubernetes.io/limit-rps: "5"
-livenessProbe:
-  timeoutSeconds: 60
-readinessProbe:
-  timeoutSeconds: 60
-image:
-  tag: "v1.1.1"
-EOF
+cd terraform/14_agent-lab-dependencies/
+terraform init
+terraform apply
+```
+
+### Deploy Agent-Lab Instance
+
+```bash
+cd terraform/15_agent-lab-instance/
+terraform init
+terraform apply
 ```
 
 <div align="center">
@@ -318,45 +252,6 @@ EOF
 ![Deployment example](agent_lab_deployment_example.png)
 
 </div>
-
-### Install Agent-Lab Managed TLS certificate
-
-#### Deploy helm chart with cert-manager cluster issuer.
-
-  - Replace `<ollama_endpoint>` by a valid ollama endpoint in your LAN, example: `http://192.168.1.1:11434`
-  - Replace `<agent_lab_fqdn>` by a valid domain name, example `agent-lab.my-domain.com`
-  - Make sure the nginx ingress controller is accessible on port 80 via public internet, Cert Manager challenges are validated via HTTP.
-
-```bash
-helm --namespace agent-lab upgrade --install agent-lab agent-lab \
-  --repo "https://bsantanna.github.io/agent-lab" \
-  --version "1.1.1" --values - <<EOF
-config:
-  ollama_endpoint: "<ollama_endpoint>"
-  telemetry_endpoint: "http://agent-lab-telemetry-opentelemetry-collector.default.svc.cluster.local:4318"
-ingress:
-  enabled: true
-  hosts:
-    - host: "<agent_lab_fqdn>"
-      paths:
-        - path: "/"
-          pathType: "Prefix"
-  tls:
-    - hosts:
-        - "<agent_lab_fqdn>"
-      secretName: "agent-lab"
-  annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
-    nginx.ingress.kubernetes.io/limit-rps: "5"
-livenessProbe:
-  timeoutSeconds: 60
-readinessProbe:
-  timeoutSeconds: 60
-image:
-  tag: "v1.1.1"
-EOF
-```
 
 
 ---

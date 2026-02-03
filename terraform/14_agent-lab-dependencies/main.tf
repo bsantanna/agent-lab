@@ -35,7 +35,6 @@ provider "vault" {
   token   = var.vault_api_key
 }
 
-
 resource "helm_release" "pg_agent-lab-app" {
   name       = "pg-agent-lab-app"
   repository = "https://cloudnative-pg.github.io/charts"
@@ -170,10 +169,12 @@ resource "kubernetes_secret_v1" "agent_lab_secret" {
 
   # APP BOOT dependencies
   data = {
-    VAULT_ENDPOINT = var.vault_url
-    VAULT_API_KEY = var.vault_api_key
+    VAULT_URL          = var.vault_url
+    VAULT_TOKEN        = var.vault_api_key
+    VAULT_ENGINE_PATH  = var.vault_engine_path
+    VAULT_SECRET_PATH  = var.vault_secret_path
     LANGWATCH_ENDPOINT = var.langwatch_endpoint
-    LANGWATCH_API_KEY = var.langwatch_api_key
+    LANGWATCH_API_KEY  = var.langwatch_api_key
   }
 
   type = "Opaque"
@@ -194,6 +195,8 @@ resource "vault_kv_secret_v2" "app_secrets" {
   name  = var.vault_secret_path
 
   data_json = jsonencode({
+    api_base_url = var.agent_lab_fqdn
+
     # Auth secrets
     auth_enabled       = true
     auth_url           = data.kubernetes_secret_v1.auth_secrets.data["AUTH_URL"]
@@ -202,19 +205,22 @@ resource "vault_kv_secret_v2" "app_secrets" {
     auth_client_secret = data.kubernetes_secret_v1.auth_secrets.data["AUTH_CLIENT_SECRET"]
 
     # PostgreSQL App database
-    db_url           = "postgresql://${data.kubernetes_secret_v1.pg_agent-lab-app-secret.data["username"]}:${data.kubernetes_secret_v1.pg_agent-lab-app-secret.data["password"]}@${helm_release.pg_agent-lab-app.name}-cluster-rw.${var.agent_lab_namespace}.svc.cluster.local:5432/app"
+    db_url = "postgresql://${data.kubernetes_secret_v1.pg_agent-lab-app-secret.data["username"]}:${data.kubernetes_secret_v1.pg_agent-lab-app-secret.data["password"]}@${helm_release.pg_agent-lab-app.name}-cluster-rw.${var.agent_lab_namespace}.svc.cluster.local:5432/app"
 
     # PostgreSQL Vectors database
-    db_vectors       = "postgresql://${data.kubernetes_secret_v1.pg_agent-lab-vectors-secret.data["username"]}:${data.kubernetes_secret_v1.pg_agent-lab-vectors-secret.data["password"]}@${helm_release.pg_agent-lab-vectors.name}-cluster-rw.${var.agent_lab_namespace}.svc.cluster.local:5432/app"
+    db_vectors = "postgresql://${data.kubernetes_secret_v1.pg_agent-lab-vectors-secret.data["username"]}:${data.kubernetes_secret_v1.pg_agent-lab-vectors-secret.data["password"]}@${helm_release.pg_agent-lab-vectors.name}-cluster-rw.${var.agent_lab_namespace}.svc.cluster.local:5432/app"
 
     # PostgreSQL Checkpoints database
-    db_checkpoints    = "postgresql://${data.kubernetes_secret_v1.pg_agent-lab-checkpoints-secret.data["username"]}:${data.kubernetes_secret_v1.pg_agent-lab-checkpoints-secret.data["password"]}@${helm_release.pg_agent-lab-checkpoints.name}-cluster-rw.${var.agent_lab_namespace}.svc.cluster.local:5432/app"
+    db_checkpoints = "postgresql://${data.kubernetes_secret_v1.pg_agent-lab-checkpoints-secret.data["username"]}:${data.kubernetes_secret_v1.pg_agent-lab-checkpoints-secret.data["password"]}@${helm_release.pg_agent-lab-checkpoints.name}-cluster-rw.${var.agent_lab_namespace}.svc.cluster.local:5432/app"
 
     # Redis broker
     broker_url = var.vault_secret_value_broker_url
 
     # Chrome DevTools Protocol
     cdp_url = var.vault_secret_value_cdp_url
+
+    # Tavily API KEY
+    tavily_api_key = var.vault_secret_value_tavily_api_key
   })
 
   depends_on = [
@@ -224,4 +230,5 @@ resource "vault_kv_secret_v2" "app_secrets" {
     data.kubernetes_secret_v1.pg_agent-lab-vectors-secret,
     data.kubernetes_secret_v1.pg_agent-lab-checkpoints-secret
   ]
+
 }

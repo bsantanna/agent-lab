@@ -4,6 +4,11 @@ variable "agent_lab_namespace" {
   default     = "agent-lab"
 }
 
+variable "agent_lab_fqdn" {
+  description = "Fully qualified domain name for agent-lab ingress"
+  type        = string
+}
+
 variable "vault_url" {
   description = "URL of Vault instance"
   type        = string
@@ -39,6 +44,12 @@ variable "vault_secret_value_cdp_url" {
   type        = string
   sensitive   = true
   default     = "http://cdp-agent-lab.agent-lab.svc.cluster.local:9222"
+}
+
+variable "vault_secret_value_tavily_api_key" {
+  description = "Tavily API KEY"
+  type        = string
+  sensitive   = true
 }
 
 variable "langwatch_endpoint" {
