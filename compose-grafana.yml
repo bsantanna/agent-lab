@@ -63,7 +63,7 @@ services:
       - "3100:3100"
 
   tempo:
-    image: grafana/tempo:latest
+    image: grafana/tempo:2.4.2
     networks:
       - agent-lab
     ports:
