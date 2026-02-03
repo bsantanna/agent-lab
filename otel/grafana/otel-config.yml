@@ -13,12 +13,12 @@ exporters:
     endpoint: "http://prometheus:9090/api/v1/write"
     tls:
       insecure: true
-  loki:
-    endpoint: "http://loki:3100/loki/api/v1/push"
-    tls:
-      insecure: true
   otlp:
     endpoint: "tempo:4317"
+    tls:
+      insecure: true
+  otlphttp/loki:
+    endpoint: "http://loki:3100/otlp"
     tls:
       insecure: true
 
@@ -32,4 +32,4 @@ service:
       exporters: [prometheusremotewrite]
     logs:
       receivers: [otlp]
-      exporters: [loki]
+      exporters: [otlphttp/loki]

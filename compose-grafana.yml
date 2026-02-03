@@ -5,13 +5,11 @@ services:
       - agent-lab
     ports:
       - "18000:8000"
+    env_file:
+      - .env
     environment:
       DOCKER: 1
-      LANGWATCH_API_KEY: ${LANGWATCH_API_KEY}
-      LANGWATCH_ENDPOINT: ${LANGWATCH_ENDPOINT}
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
-      OLLAMA_ENDPOINT: ${OLLAMA_ENDPOINT}
-      TAVILY_API_KEY: ${TAVILY_API_KEY}
     depends_on:
       otel-collector:
         condition: service_started
