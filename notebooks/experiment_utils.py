@@ -23,7 +23,7 @@ def create_llm_with_integration(
     integration_response = requests.post(
         f"{agent_lab_endpoint}/integrations/create",
         json=integration_params,
-        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
+        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN', 'x')}"},
     )
     integration_response.raise_for_status()
     integration_result = integration_response.json()
@@ -36,7 +36,7 @@ def create_llm_with_integration(
     llm_response = requests.post(
         f"{agent_lab_endpoint}/llms/create",
         json=llm_params,
-        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
+        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN', 'x')}"},
     )
     llm_response.raise_for_status()
     return llm_response.json()
@@ -63,7 +63,7 @@ def create_agent_with_integration(
     agent_response = requests.post(
         f"{agent_lab_endpoint}/agents/create",
         json=agent_params,
-        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
+        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN', 'x')}"},
     )
     agent_response.raise_for_status()
     agent_result = agent_response.json()
@@ -176,7 +176,7 @@ def create_attachment(
         attachment_response = requests.post(
             f"{agent_lab_endpoint}/attachments/upload",
             files={"file": (file_path, file, content_type)},
-            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN', 'x')}"},
         )
         return attachment_response.json()["id"]
 
@@ -194,7 +194,7 @@ def create_embeddings(
             "language_model_id": language_model_id,
             "collection_name": collection_name,
         },
-        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
+        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN', 'x')}"},
     )
     return embeddings_response.json()
 
@@ -212,7 +212,7 @@ def update_agent_setting(
             "setting_key": setting_key,
             "setting_value": setting_value,
         },
-        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
+        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN', 'x')}"},
     )
     return update_setting_response.json()
 
@@ -239,5 +239,5 @@ def openai_responses_api_mcp_tool_request(
             "input": query
         }
     )
-    
+
     return response.json()
