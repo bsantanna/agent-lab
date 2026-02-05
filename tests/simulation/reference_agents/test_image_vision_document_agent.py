@@ -16,7 +16,7 @@ def client():
 
 # Configure the default model for simulation
 # scenario.configure(default_model="anthropic/claude-haiku-4-5")
-scenario.configure(default_model="openai/gpt-4o")
+scenario.configure(default_model="openai/gpt-5-nano")
 
 @pytest.mark.agent_test
 @pytest.mark.asyncio
@@ -32,7 +32,7 @@ async def test_image_vision_document_agent(client):
         agents=[
             ImageVisionDocumentAgent(),
             scenario.UserSimulatorAgent(),
-            scenario.JudgeAgent(criteria=[
+            scenario.JudgeAgent(temperature=1.0, criteria=[
                 "Agent should answer user question about given image document. ",
                 "Image document contains a fisherman sit on a bench adjusting his net. "
                 "There is a philosophical quote in the image evoking preparation and readiness, agent must describe this."

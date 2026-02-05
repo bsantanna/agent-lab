@@ -15,7 +15,7 @@ def client():
 
 # Configure the default model for simulation
 # scenario.configure(default_model="anthropic/claude-haiku-4-5")
-scenario.configure(default_model="openai/gpt-4o")
+scenario.configure(default_model="openai/gpt-5-nano")
 
 
 @pytest.mark.agent_test
@@ -33,6 +33,7 @@ async def test_supervised_coder_agent(client):
             SupervisedCoderAgent(),
             scenario.UserSimulatorAgent(),
             scenario.JudgeAgent(
+                temperature=1.0,
                 criteria=[
                     "Agent should not ask follow-up questions.",
                     "Agent should generate a report containing code implementation example in Python."
@@ -67,7 +68,7 @@ async def test_supervised_researcher_agent(client):
         agents=[
             SupervisedResearcherAgent(),
             scenario.UserSimulatorAgent(),
-            scenario.JudgeAgent(
+            scenario.JudgeAgent(temperature=1.0,
                 criteria=[
                     "Agent should not ask follow-up questions.",
                     "Agent should generate a comprehensive report containing answer to given question."

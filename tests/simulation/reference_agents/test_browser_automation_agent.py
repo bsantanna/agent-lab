@@ -14,7 +14,7 @@ def client():
 
 # Configure the default model for simulation
 # scenario.configure(default_model="anthropic/claude-sonnet-4-5") # Required for improved evaluation of output.
-scenario.configure(default_model="openai/gpt-4o")
+scenario.configure(default_model="openai/gpt-5-nano")
 
 @pytest.mark.agent_test
 @pytest.mark.asyncio
@@ -31,7 +31,7 @@ async def test_browser_automation_agent(client):
         agents=[
             BrowserAgent(),
             scenario.UserSimulatorAgent(),
-            scenario.JudgeAgent(criteria=[
+            scenario.JudgeAgent(temperature=1.0, criteria=[
                 "Agent should not ask follow-up questions",
                 "Agent should generate a report",
                 "Report should match the given criteria in the query."

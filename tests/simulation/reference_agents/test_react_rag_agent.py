@@ -15,7 +15,7 @@ def client():
 
 # Configure the default model for simulation
 # scenario.configure(default_model="anthropic/claude-sonnet-4-5")
-scenario.configure(default_model="openai/gpt-4o")
+scenario.configure(default_model="openai/gpt-5-nano")
 
 @pytest.mark.agent_test
 @pytest.mark.asyncio
@@ -31,12 +31,12 @@ async def test_react_rag_agent(client):
         agents=[
             ReactRagAgent(),
             scenario.UserSimulatorAgent(),
-            scenario.JudgeAgent(criteria=[
+            scenario.JudgeAgent(temperature=1.0, criteria=[
                 "Agent should answer user question. ",
                 "Documents containing excerpts of a book is available for agent as knowledge base, "
                 "agent must use knowledge base to answer the question."
-                "Answer must contain <thinking>...</thinking> with reasoning."
-                "Answer must contain <response>...</response> with conclusions."
+                "Answer must contain a thinking block delimited by <thinking>...</thinking> with reasoning, disregard line breaks."
+                "Answer must contain a response block delimited by <response>...</response> with conclusions, disregard line breaks."
             ])
         ],
         script=[
