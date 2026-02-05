@@ -47,7 +47,7 @@ Agent-Lab is a robust toolkit engineered for the development and thorough testin
 - **MCP Server**: Utilize the [Model Control Protocol (MCP) server](doc/MCP.md) for agent discovery, dialog history, and agent-to-agent communication.
 - **Observability**: Obtain detailed insights through logs, metrics, and traces powered by [OpenTelemetry](doc/OTEL.md).
   - Includes reference implementations for [Grafana](doc/otel/GRAFANA.md) and [OpenSearch Dashboards](doc/otel/OPENSEARCH.md).
-- **Cloud-Native**: Optimized for cloud environments with Docker, Kubernetes, and [Helm charts](doc/SETUP.md) for streamlined deployment.
+- **Cloud-Native**: Optimized for cloud environments with Docker, Kubernetes, and [Terraform scripts](doc/SETUP.md) for streamlined deployment.
 - **Relational Persistence**: Store data reliably using PostgreSQL to support the [entity domain model](doc/DOMAIN.md) for prompts, agent-specific settings, conversations, and more.
 - **Secrets Management**: Securely store and retrieve secrets with [Vault](doc/VAULT.md).
 - **Vector Storage and Search**: Efficiently manage vector data using PgVector for similarity search and retrieval.

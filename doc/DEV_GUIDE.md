@@ -87,13 +87,13 @@ The dependency injection container is defined in `app/core/container.py`. Please
 
 ### Application configuration for development and testing
 
-The application configuration is managed using [Dependency Injector](https://python-dependency-injector.ets-labs.org/). Configuration is defined in YAML files located at projet root difectory.
+The application configuration is managed using [Dependency Injector](https://python-dependency-injector.ets-labs.org/). Configuration is defined in YAML files located at project root directory.
 
 - `config-dev.yaml`: Configuration file used for development environment, activated when environment variable `DEVELOPING` is defined, intended to be used with IDE execution for debugging.
 - `config-test.yaml`: Configuration file used for testing environment, activated when environment variable `TESTING` is defined, it is used with integration test setup.
 - `config-docker.yaml`: Configuration file used with docker compose environment, activated when environment variable `DOCKER` is defined, intended to be used with docker compose execution.
 
-These configuration files define various settings such as database connections, API keys, and other application-specific settings, however they are meant to be used only for development and testing purposes. In production, it is recommended to use [Vault](VAULT.md) to configure the application, please refer to the [Helm charts documentation](SETUP.md) for more details on how to deploy the application in production.
+These configuration files define various settings such as database connections, API keys, and other application-specific settings, however they are meant to be used only for development and testing purposes. In production, it is recommended to use [Vault](VAULT.md) to configure the application, please refer to the [Setup documentation](SETUP.md) for more details on how to deploy the application in production.
 
 
 ### Entity Domain Model
@@ -223,4 +223,4 @@ Thank you for your contributions and support!
 
 ## Production deployment
 
-Please refer to the [Helm charts documentation](SETUP.md) for more details on how to deploy the application in production using Helm charts.
+Please refer to the [Setup documentation](SETUP.md) for more details on how to deploy the application in production using Terraform scripts.

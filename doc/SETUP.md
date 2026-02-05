@@ -6,6 +6,7 @@
 #### Table of Contents
 
 - [Introduction](#introduction)
+- [Prerequisites](#prerequisites)
 - [Setup Kubernetes Cluster](#setup-kubernetes-cluster)
 - [Setup Dependencies](#setup-dependencies)
 - [Deploy Agent-Lab](#deploy-agent-lab)
@@ -16,7 +17,17 @@
 
 Agent-Lab provides Terraform scripts to deploy the application and its dependencies on Kubernetes clusters.
 
-In this document, we will cover a example deployment of Agent-Lab by on Kubernetes using the provided Terraform scripts.
+In this document, we will cover an example deployment of Agent-Lab on Kubernetes using the provided Terraform scripts.
+
+---
+
+## Prerequisites
+
+The following tools must be installed on your machine:
+
+- [Terraform](https://developer.hashicorp.com/terraform/install) — used to deploy all components
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) — used to interact with the Kubernetes cluster
+- [jq](https://jqlang.github.io/jq/download/) — used in some post-deployment commands
 
 ---
 
@@ -69,7 +80,7 @@ After the domain names are determined, modify system hosts file to include domai
 ## Setup Dependencies
 
 
-#### Install Traefik Ingress with Helm Chart
+#### Install Traefik Ingress Controller
 
 ```bash
 cd terraform/01_traefik/
@@ -98,7 +109,6 @@ terraform apply
 
 And Create a ClusterIssuer for Let's Encrypt production:
 
-```bash
 ```bash
 cd terraform/03_cert-cluster-issuer/
 terraform init
@@ -167,7 +177,7 @@ kubectl --namespace vault exec vault-0 -- vault operator init \
 
 ```bash
 export VAULT_UNSEAL_KEY=$(jq -r ".unseal_keys_b64[]" cluster-keys.json)
-kubectl --namespace agent-lab exec agent-lab-vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY
+kubectl --namespace vault exec vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY
 ```
 
 ### Setup LangWatch
@@ -175,7 +185,6 @@ kubectl --namespace agent-lab exec agent-lab-vault-0 -- vault operator unseal $V
 [LangWatch](https://langwatch.ai) is used by Agent-Lab for observability of LLM usage and simulation testing.
 
 Please determine a <langwatch_fqdn> for accessing LangWatch web UI, example: langwatch.my-domain.com
-Helm deployment Reference documentation
 
 ```bash
 cd terraform/09_langwatch-instance/
@@ -214,7 +223,7 @@ echo "$(kubectl --namespace elastic get secret/elastic-eck-apm-server-apm-token 
 ### Setup OpenTelemetry Collector
 
 ```bash
-cd terraform/12_otel-instance/
+cd terraform/12-otel-instance/
 terraform init
 terraform apply
 ```
