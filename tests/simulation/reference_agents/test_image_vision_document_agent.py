@@ -34,7 +34,7 @@ async def test_image_vision_document_agent(client):
             scenario.UserSimulatorAgent(),
             scenario.JudgeAgent(temperature=1.0, criteria=[
                 "Agent should answer user question about given image document. ",
-                "Image document contains a fisherman sit on a bench adjusting his net. "
+                "Image document contains a fisherman sit and adjusting his net. "
                 "There is a philosophical quote in the image evoking preparation and readiness, agent must describe this."
             ])
         ],

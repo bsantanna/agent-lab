@@ -34,7 +34,7 @@ async def test_react_rag_agent(client):
             scenario.JudgeAgent(temperature=1.0, criteria=[
                 "Agent should answer user question. ",
                 "Agent must use knowledge base to answer the question, comprised of documents containing excerpts of a book."
-                "Reasoning process should be described in <thinking> section, answer should be in <response> section. "
+                "Reasoning process should be described in <thinking> section, answer should be in <response> section. No strict references needed just overall thinking process and response. "
             ])
         ],
         script=[
