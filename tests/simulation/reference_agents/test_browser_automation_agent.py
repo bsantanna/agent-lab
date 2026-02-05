@@ -32,8 +32,8 @@ async def test_browser_automation_agent(client):
             BrowserAgent(),
             scenario.UserSimulatorAgent(),
             scenario.JudgeAgent(temperature=1.0, criteria=[
-                "Agent should not ask follow-up questions",
-                "Agent should generate a report",
+                "Agent should not ask follow-up questions. ",
+                "Agent should generate response as a simple report. ",
                 "Report should match the given criteria in the query."
             ])
         ],
