@@ -13,7 +13,7 @@ def client():
     yield TestClient(app)
 
 # Configure the default model for simulation
-scenario.configure(default_model="anthropic/claude-haiku-4-5")
+# scenario.configure(default_model="anthropic/claude-haiku-4-5")
 
 @pytest.mark.agent_test
 @pytest.mark.asyncio

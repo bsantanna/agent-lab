@@ -15,7 +15,7 @@ def client():
 
 
 # Configure the default model for simulation
-scenario.configure(default_model="anthropic/claude-sonnet-4-5") # Rate limit error with claude-haiku-4-5
+# scenario.configure(default_model="anthropic/claude-haiku-4-5")
 
 
 @pytest.mark.agent_test
