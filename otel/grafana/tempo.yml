@@ -8,6 +8,7 @@ distributor:
         grpc:
           endpoint: "0.0.0.0:4317"
         http:
+          endpoint: "0.0.0.0:4318"
 
 ingester:
   max_block_duration: 5m
@@ -20,5 +21,7 @@ compactor:
 storage:
   trace:
     backend: local
+    wal:
+      path: /var/tempo/wal
     local:
-      path: /tmp/tempo
+      path: /var/tempo/blocks

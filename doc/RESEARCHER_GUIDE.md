@@ -58,15 +58,16 @@ Notes:
 High level folders to know as a researcher:
 
 - `notebooks/` — Collection of interactive examples that demonstrate agent types, evaluation, and integrations. This is the best place to start.
-- `app/` — Application entrypoints, lightweight runners.
-- `core/` — Core runtime components (container, shared abstractions).
-- `domain/` — Domain models and repository interfaces used by agents.
-- `infrastructure/` — Implementations for storage, auth, metrics, and other infra concerns.
-- `interface/api/` — HTTP API definitions and adapters (if the project exposes agents as a service).
+- `app/` — Application package containing all source code, organized as follows:
+  - `app/core/` — Core runtime components (container, shared abstractions).
+  - `app/domain/` — Domain models and repository interfaces used by agents.
+  - `app/services/` — Agent implementations and business logic.
+  - `app/infrastructure/` — Implementations for storage, auth, metrics, and other infra concerns.
+  - `app/interface/api/` — HTTP API definitions and adapters.
 - `tests/` — Unit and integration tests. See `tests/integration` for heavier examples.
 - `doc/` — Project documentation and guides (this file lives here).
 
-Understanding these layers helps you pick where to change behavior: examples live in `notebooks`, core logic in `core` and `domain`, and infra adapters in `infrastructure`.
+Understanding these layers helps you pick where to change behavior: examples live in `notebooks`, core logic in `app/core` and `app/domain`, and infra adapters in `app/infrastructure`.
 
 ---
 

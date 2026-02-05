@@ -15,8 +15,8 @@ def client():
 
 
 # Configure the default model for simulation
-scenario.configure(default_model="anthropic/claude-sonnet-4-20250514")
-
+# scenario.configure(default_model="anthropic/claude-haiku-4-5")
+scenario.configure(default_model="openai/gpt-5-nano")
 
 @pytest.mark.agent_test
 @pytest.mark.asyncio
@@ -33,6 +33,7 @@ async def test_audio_voice_memos_agent(client):
             AudioVoiceMemosAgent(),
             scenario.UserSimulatorAgent(),
             scenario.JudgeAgent(
+                temperature=1.0,
                 criteria=[
                     "Agent should not ask further questions.",
                     "Agent should answer user question about given audio document. ",

@@ -16,7 +16,7 @@
 | attachments | POST | /attachments/upload | Upload a file attachment |
 | attachments | GET | /attachments/download/{attachment_id} | Download an attachment by ID |
 | attachments | POST | /attachments/embeddings | Generate embeddings for an attachment |
-| integrations | GET | / Integrations/list | List all integrations |
+| integrations | GET | /integrations/list | List all integrations |
 | integrations | GET | /integrations/{integration_id} | Get integration details |
 | integrations | POST | /integrations/create | Create a new integration |
 | integrations | DELETE | /integrations/delete/{integration_id} | Delete an integration |

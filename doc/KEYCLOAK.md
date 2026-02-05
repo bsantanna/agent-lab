@@ -2,6 +2,11 @@
 <h3 align="center">Keycloak</h3>
 
 ---
+
+[Keycloak](https://www.keycloak.org/) is used by Agent-Lab to manage user authentication and authorization via OpenID Connect (OIDC). The following steps describe how to configure a Keycloak realm, client, and service account for use with Agent-Lab.
+
+---
+
 ### Get Admin JWT
 
 ```bash
@@ -52,7 +57,7 @@ export CLIENT_SECRET=$(curl -X GET "https://<auth_fqdn>/admin/realms/<realm_name
   -H "Authorization: Bearer ${ADMIN_TOKEN}" | jq -r '.value')
 ```
 
-### Create user
+### Create service account user
 
 ```bash
 curl -X POST https://<auth_fqdn>/admin/realms/<realm_name>/users \

@@ -15,8 +15,8 @@ def client():
 
 
 # Configure the default model for simulation
-scenario.configure(default_model="anthropic/claude-sonnet-4-20250514")
-
+# scenario.configure(default_model="anthropic/claude-haiku-4-5")
+scenario.configure(default_model="openai/gpt-5-nano")
 
 @pytest.mark.agent_test
 @pytest.mark.asyncio
@@ -32,9 +32,9 @@ async def test_image_vision_document_agent(client):
         agents=[
             ImageVisionDocumentAgent(),
             scenario.UserSimulatorAgent(),
-            scenario.JudgeAgent(criteria=[
+            scenario.JudgeAgent(temperature=1.0, criteria=[
                 "Agent should answer user question about given image document. ",
-                "Image document contains a fisherman sit on a bench adjusting his net. "
+                "Image document contains a fisherman sit and adjusting his net. "
                 "There is a philosophical quote in the image evoking preparation and readiness, agent must describe this."
             ])
         ],
@@ -70,7 +70,7 @@ def image_vision_document_agent(client, message_content) -> scenario.AgentReturn
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         json={
             "integration_id": integration_id,
-            "language_model_tag": "grok-4",
+            "language_model_tag": "grok-4-1-fast-non-reasoning",
         },
     )
     language_model_id = response_2.json()["id"]

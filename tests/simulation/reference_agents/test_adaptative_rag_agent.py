@@ -13,7 +13,8 @@ def client():
     yield TestClient(app)
 
 # Configure the default model for simulation
-scenario.configure(default_model="anthropic/claude-sonnet-4-20250514")
+# scenario.configure(default_model="anthropic/claude-haiku-4-5")
+scenario.configure(default_model="openai/gpt-5-nano")
 
 @pytest.mark.agent_test
 @pytest.mark.asyncio
@@ -30,7 +31,7 @@ async def test_adaptive_rag_agent(client):
         agents=[
             AdaptiveRagAgent(),
             scenario.UserSimulatorAgent(),
-            scenario.JudgeAgent(criteria=[
+            scenario.JudgeAgent(temperature=1.0, criteria=[
                 "Agent should answer user question",
                 "Answer should meet given criteria in the query"
             ])
