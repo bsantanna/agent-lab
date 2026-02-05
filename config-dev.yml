@@ -1,7 +1,7 @@
 api_base_url: "http://localhost:8000"
 cdp_url: "http://localhost:9222"
 auth:
-  enabled: False
+  enabled: false
 broker:
   url: "redis://localhost:6379/0"
 db:

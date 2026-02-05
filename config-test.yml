@@ -1,7 +1,7 @@
 api_base_url: "http://test"
 cdp_url: "http://localhost:19222"
 auth:
-  enabled: "True"
+  enabled: true
   url: "http://localhost:18080"
   realm: "test-realm"
   client_id: "test-client"

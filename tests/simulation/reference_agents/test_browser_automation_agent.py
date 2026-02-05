@@ -13,7 +13,7 @@ def client():
     yield TestClient(app)
 
 # Configure the default model for simulation
-scenario.configure(default_model="anthropic/claude-sonnet-4-20250514")
+scenario.configure(default_model="anthropic/claude-haiku-4-5")
 
 @pytest.mark.agent_test
 @pytest.mark.asyncio
@@ -69,7 +69,7 @@ def web_browser_agent(client, message_content) -> scenario.AgentReturnTypes:
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         json={
             "integration_id": integration_id,
-            "language_model_tag": "claude-sonnet-4-0",
+            "language_model_tag": "claude-sonnet-4-5",
         },
     )
     language_model_id = response_2.json()["id"]

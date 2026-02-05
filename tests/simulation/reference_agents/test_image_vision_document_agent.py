@@ -15,7 +15,7 @@ def client():
 
 
 # Configure the default model for simulation
-scenario.configure(default_model="anthropic/claude-sonnet-4-20250514")
+scenario.configure(default_model="anthropic/claude-haiku-4-5")
 
 
 @pytest.mark.agent_test
@@ -70,7 +70,7 @@ def image_vision_document_agent(client, message_content) -> scenario.AgentReturn
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         json={
             "integration_id": integration_id,
-            "language_model_tag": "grok-4",
+            "language_model_tag": "grok-4-1-fast-non-reasoning",
         },
     )
     language_model_id = response_2.json()["id"]
