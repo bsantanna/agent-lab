@@ -15,7 +15,7 @@ def client():
 
 # Configure the default model for simulation
 # scenario.configure(default_model="anthropic/claude-sonnet-4-5")
-scenario.configure(default_model="openai/o3")
+scenario.configure(default_model="openai/gpt-4o")
 
 @pytest.mark.agent_test
 @pytest.mark.asyncio
