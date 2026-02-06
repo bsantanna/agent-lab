@@ -18,7 +18,6 @@ from browser_use import (
     ChatAnthropic as BrowserChatAnthropic,
     ChatOllama as BrowserChatOllama,
 )
-from browser_use.agent.views import AgentHistoryList
 from dependency_injector.providers import Configuration
 from jinja2 import Environment, DictLoader, select_autoescape
 from langchain_anthropic import ChatAnthropic
@@ -27,7 +26,6 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool, BaseTool
-from langchain_experimental.utilities import PythonREPL
 from langchain_xai import ChatXAI
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings

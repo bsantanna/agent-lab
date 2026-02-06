@@ -36,8 +36,8 @@ async def test_supervised_coder_agent(client):
                 temperature=1.0,
                 criteria=[
                     "Agent should not ask follow-up questions.",
-                    "Agent should generate a report containing code implementation example in Python."
-                    "Report should match the given criteria in the query.",
+                    "Agent should generate a solution containing code implementation example in Python."
+                    "Solution should match the given criteria in the query.",
                 ]
             ),
         ],
@@ -68,7 +68,8 @@ async def test_supervised_researcher_agent(client):
         agents=[
             SupervisedResearcherAgent(),
             scenario.UserSimulatorAgent(),
-            scenario.JudgeAgent(temperature=1.0,
+            scenario.JudgeAgent(
+                temperature=1.0,
                 criteria=[
                     "Agent should not ask follow-up questions.",
                     "Agent should generate a comprehensive report containing answer to given question."

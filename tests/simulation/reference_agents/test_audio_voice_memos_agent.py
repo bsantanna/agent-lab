@@ -18,6 +18,7 @@ def client():
 # scenario.configure(default_model="anthropic/claude-haiku-4-5")
 scenario.configure(default_model="openai/gpt-5-nano")
 
+
 @pytest.mark.agent_test
 @pytest.mark.asyncio
 async def test_audio_voice_memos_agent(client):

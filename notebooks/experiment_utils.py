@@ -218,10 +218,10 @@ def update_agent_setting(
 
 
 def openai_responses_api_mcp_tool_request(
-    query:str,
-    mcp_server:dict,
-    model:str = "gpt-5-nano",
-    reasoning:dict = {
+    query: str,
+    mcp_server: dict,
+    model: str = "gpt-5-nano",
+    reasoning: dict = {
         "effort": "low",
         "summary": "auto"
     }

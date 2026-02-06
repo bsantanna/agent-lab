@@ -37,7 +37,6 @@ class AttachmentService:
         self.integration_service = integration_service
         self.vault_client = vault_client
 
-
     def get_attachment_by_id(self, attachment_id: str, schema: str) -> Attachment:
         return self.attachment_repository.get_by_id(attachment_id, schema)
 

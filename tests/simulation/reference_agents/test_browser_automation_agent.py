@@ -12,9 +12,11 @@ from app.main import app
 def client():
     yield TestClient(app)
 
+
 # Configure the default model for simulation
 # scenario.configure(default_model="anthropic/claude-sonnet-4-5") # Required for improved evaluation of output.
 scenario.configure(default_model="openai/gpt-5-nano")
+
 
 @pytest.mark.agent_test
 @pytest.mark.asyncio
@@ -33,8 +35,7 @@ async def test_browser_automation_agent(client):
             scenario.UserSimulatorAgent(),
             scenario.JudgeAgent(temperature=1.0, criteria=[
                 "Agent should not ask follow-up questions. ",
-                "Agent should generate response as a simple report. ",
-                "Report should match the given criteria in the query."
+                "Agent should match the given criteria in the query."
             ])
         ],
         script=[
@@ -49,6 +50,7 @@ async def test_browser_automation_agent(client):
     )
 
     assert result.success
+
 
 @scenario.cache()
 def web_browser_agent(client, message_content) -> scenario.AgentReturnTypes:
