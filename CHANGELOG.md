@@ -2,6 +2,197 @@
 
 <!-- version list -->
 
+## v1.5.1 (2026-02-06)
+
+### Bug Fixes
+
+- Claude adjusts 1 ([#250](https://github.com/bsantanna/agent-lab/pull/250),
+  [`65fcca9`](https://github.com/bsantanna/agent-lab/commit/65fcca994bffec57f553cbb75cffbe285ecd8c1b))
+
+- Claude adjusts 2 ([#250](https://github.com/bsantanna/agent-lab/pull/250),
+  [`65fcca9`](https://github.com/bsantanna/agent-lab/commit/65fcca994bffec57f553cbb75cffbe285ecd8c1b))
+
+- Claude adjusts 3: swagger docs adjusts ([#250](https://github.com/bsantanna/agent-lab/pull/250),
+  [`65fcca9`](https://github.com/bsantanna/agent-lab/commit/65fcca994bffec57f553cbb75cffbe285ecd8c1b))
+
+- Claude adjusts 4: notebooks adjusts ([#250](https://github.com/bsantanna/agent-lab/pull/250),
+  [`65fcca9`](https://github.com/bsantanna/agent-lab/commit/65fcca994bffec57f553cbb75cffbe285ecd8c1b))
+
+- Documentation updates ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Libs upgrade 1 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Notebooks testing ([#250](https://github.com/bsantanna/agent-lab/pull/250),
+  [`65fcca9`](https://github.com/bsantanna/agent-lab/commit/65fcca994bffec57f553cbb75cffbe285ecd8c1b))
+
+- Runtime adjusts 1 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Runtime adjusts 10 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Runtime adjusts 11 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Runtime adjusts 12 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Runtime adjusts 2 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Runtime adjusts 3 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Runtime adjusts 4 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Runtime adjusts 5 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Runtime adjusts 6 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Runtime adjusts 7 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Runtime adjusts 8 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Runtime adjusts 9 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 01 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 02 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 03 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 04 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 05 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 06 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 07 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 08 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 09 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 10 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 11 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 12 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 13 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 14 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 15 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 16 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 17 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 18 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 19 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 20 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 21 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 22 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 23 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 24 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 25 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 26 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 27 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 28 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 29 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Terraform setup scripts 30 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Tests adjusts 1 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Tests adjusts 10 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Tests adjusts 11 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Tests adjusts 12 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Tests adjusts 13 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Tests adjusts 2 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Tests adjusts 3 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Tests adjusts 4 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Tests adjusts 5 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Tests adjusts 6 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Tests adjusts 7 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Tests adjusts 8 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+- Tests adjusts 9 ([#249](https://github.com/bsantanna/agent-lab/pull/249),
+  [`b3d16f3`](https://github.com/bsantanna/agent-lab/commit/b3d16f345ee57d0e6b79ef3b93d94e7a12da30de))
+
+
 ## v1.5.0 (2025-10-12)
 
 ### Features
