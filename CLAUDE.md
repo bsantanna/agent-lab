@@ -124,4 +124,5 @@ Jupyter notebooks for prototyping agents and workflows are in the `notebooks/` d
 
 1. Run `make reset` to reset development environment
 2. Run `make run` to start services using docker compose
-3. Test changes using `curl` requests to app running on `http://localhost:18000`
+3. When a new feature is introduced, a new integration test should be added to `tests/integration/` that tests the new feature end-to-end using the FastAPI TestClient and testcontainers environment. For agent behavior testing, a new simulation test should be added to `tests/simulation/` using `langwatch-scenario`.
+4. A developer manually tests changes using `curl` pointing to `http://localhost:18000`, curl queries examples are handy and should be given as example.
