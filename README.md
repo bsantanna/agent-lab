@@ -16,6 +16,7 @@
 
 ### Table of Contents
 - [What is Agent-Lab?](#what-is-agent-lab)
+- [Overview](#overview)
 - [Project Principles](#project-principles)
 - [Key Features](#key-features)
 - [MCP Server](#mcp-server)
@@ -27,17 +28,42 @@
 
 ## What is Agent-Lab?
 
-Agent-Lab is a robust toolkit engineered for the development and thorough testing of Large Language Model (LLM) agents. It offers key features designed to streamline the process, including a REST API for managing interactions, relational persistence with PostgreSQL for data storage, and secure secrets management using Vault. In addition, Agent-Lab emphasizes observability through OpenTelemetry for detailed insights and leverages PgVector for effective vector storage and search, ultimately providing a comprehensive platform for building and evaluating LLM-powered agents.
+Agent-Lab is a cloud-native toolkit for building, testing, and deploying LLM-powered autonomous agents. Think of it as a platform where you wire up different AI agent types (RAG, browser automation, voice memos, vision, multi-agent supervisors) and interact with them via a REST API.
+
+It features relational persistence with PostgreSQL, secure secrets management using Vault, observability through OpenTelemetry, and PgVector for vector storage and similarity search.
+
+---
+
+## Overview
+
+**Tech stack:** Python 3.12, FastAPI, LangChain/LangGraph, PostgreSQL (3 databases: relational, vectors via pgvector, LangGraph checkpoints), Redis for pub/sub, Keycloak for auth, Docker Compose for orchestration.
+
+**Architecture** — Clean Architecture with Dependency Injection:
+- **Interface** — FastAPI routers + MCP server
+- **Services** — Business logic, agent implementations
+- **Domain** — SQLAlchemy models, repository interfaces
+- **Infrastructure** — DB, auth, metrics (OpenTelemetry)
+
+All wiring lives in `app/core/container.py` via `dependency-injector`.
+
+**Agent system** — Agents extend `WorkflowAgentBase` (which uses LangGraph state graphs). Each agent type lives under `app/services/agent_types/` and is registered in a registry. The hierarchy goes from simple (echo, adaptive RAG) to complex (coordinator-planner-supervisor multi-agent). Agents process messages, have configurable settings (Jinja2-templated prompts), and persist state in the checkpoints database.
+
+**Testing** — Two layers:
+- **Integration tests** spin up real infrastructure via testcontainers (Postgres, Redis, Keycloak, Ollama, headless Chrome).
+- **Simulation tests** use `langwatch-scenario` with LLM judges to evaluate agent behavior end-to-end.
+
+**Deployment** — Ships with Helm charts (`charts/`) for Kubernetes and Terraform scripts (`terraform/`) for provisioning cloud infrastructure including databases, auth realms, and secrets. See [Setup guide](doc/SETUP.md) for details.
 
 ---
 
 ## Project Principles
 
-- Support researchers and developers with a comprehensive toolkit for developing, testing, and experimenting with LLM agents, including example implementations.
-- Provide an MCP server interface for agent discovery, dialog history, and agent-to-agent communication.
-- Offer integration testing support to ensure quality assurance.
-- Deliver observability for responsible AI explainability and agent evaluation.
-- Leverage a cloud-native architecture for seamless deployment and scalability.
+- Give researchers and developers everything they need to build, test, and experiment with LLM agents, with ready-to-use reference implementations.
+- Expose an MCP server for agent discovery, conversation history, and agent-to-agent communication.
+- Ship with integration and simulation test suites so every agent change is validated automatically.
+- Provide full observability through logs, metrics, and traces for explainability and evaluation.
+- Make it easy to create new custom agents by extending base classes and registering them in the agent registry.
+- Run anywhere with a cloud-native architecture built for containerized deployment and horizontal scaling.
 
 ---
 

@@ -1,6 +1,7 @@
 from typing_extensions import Callable
 from fastapi import Depends, Response
 
+
 def cache_control(max_age: int = 86400) -> Callable:
     """
     Returns a FastAPI dependency that sets Cache-Control headers on the Response.

@@ -41,23 +41,14 @@ bearer_scheme = HTTPBearer()
     dependencies=[Depends(bearer_scheme)],
     response_model=List[Agent],
     operation_id="get_agent_list",
-    summary="Get all agents",
+    summary="List all agents",
     description="""
-    Retrieve a list of all agents in the platform.
+    Returns all agents registered in the platform.
 
-    This endpoint returns all agents with information including:
-    - Agent ID and name
-    - Agent type
-    - Creation timestamps
-    - Agent summary
-
-    **Use cases:**
-    - Get information about all agents and corresponding capabilities
-    - View agent types and their configurations
-    - Retrieve agent summaries for quick reference
-    - Identify potential agents for specific tasks
+    Each agent entry includes its ID, name, type, summary, linked language model, and creation timestamp.
+    Use this to discover available agents and their capabilities.
     """,
-    response_description="List of all agents in the platform",
+    response_description="List of all agents",
     responses={
         200: {
             "description": "Successfully retrieved agents list",
@@ -66,21 +57,21 @@ bearer_scheme = HTTPBearer()
                     "example": [
                         {
                             "id": "agent_123456789",
-                            "agent_name": "Image Analyzer",
+                            "is_active": True,
+                            "created_at": "2024-01-15T10:30:00Z",
+                            "agent_name": "image-analyzer",
                             "agent_type": "vision_document",
                             "agent_summary": "Analyzes images and extracts information",
-                            "language_model_id": "adeadeakdnekn",
-                            "created_at": "2024-01-15T10:30:00Z",
-                            "is_active": True,
+                            "language_model_id": "lm_abc123",
                         },
                         {
                             "id": "agent_987654321",
-                            "agent_name": "Customer Support Bot",
-                            "agent_type": "agreement_planner",
-                            "agent_summary": "Handles customer inquiries and support requests",
-                            "language_model_id": "deafejfiejafje",
-                            "created_at": "2024-01-14T15:20:00Z",
                             "is_active": True,
+                            "created_at": "2024-01-14T15:20:00Z",
+                            "agent_name": "support-bot",
+                            "agent_type": "react_rag",
+                            "agent_summary": "Handles customer inquiries using RAG",
+                            "language_model_id": "lm_def456",
                         },
                     ]
                 }
@@ -103,8 +94,13 @@ async def get_list(
     dependencies=[Depends(bearer_scheme)],
     response_model=AgentExpanded,
     summary="Get agent by ID",
-    description="Retrieve detailed information about a specific agent by its unique identifier.",
-    response_description="Detailed agent information with settings",
+    description="""
+    Returns detailed information about a specific agent, including all its configuration settings.
+
+    Parameters:
+    - `agent_id` (path): The unique identifier of the agent.
+    """,
+    response_description="Agent details with settings",
     responses={
         200: {
             "description": "Successfully retrieved agent details",
@@ -112,21 +108,20 @@ async def get_list(
                 "application/json": {
                     "example": {
                         "id": "agent_123456789",
-                        "agent_name": "Content Analyzer",
-                        "agent_type": "analyzer",
-                        "language_model_id": "gpt-4",
-                        "created_at": "2024-01-15T10:30:00Z",
                         "is_active": True,
+                        "created_at": "2024-01-15T10:30:00Z",
+                        "agent_name": "content-analyzer",
+                        "agent_type": "vision_document",
+                        "agent_summary": "Analyzes documents and images",
+                        "language_model_id": "lm_abc123",
                         "ag_settings": [
                             {
-                                "id": "setting_001",
-                                "setting_key": "max_tokens",
-                                "setting_value": "2048",
-                            },
-                            {
-                                "id": "setting_002",
                                 "setting_key": "temperature",
                                 "setting_value": "0.7",
+                            },
+                            {
+                                "setting_key": "max_tokens",
+                                "setting_value": "2048",
                             },
                         ],
                     }
@@ -164,20 +159,22 @@ async def get_by_id(
     response_model=Agent,
     summary="Create a new agent",
     description=f"""
-    Create a new agent with specified configuration.
+    Creates a new agent linked to a language model. Initializes default settings based on the agent type.
 
-    This endpoint creates a new agent instance with the provided settings and
-    automatically initializes default configuration based on the agent type.
+    Available agent types: {valid_agent_types}
 
-    Agent Types Available: {valid_agent_types}
+    Typical workflow:
+    1. Create an integration (API provider connection).
+    2. Create a language model linked to the integration.
+    3. Create an agent with this endpoint, specifying the language model and agent type.
+    4. Send messages to the agent using `post_message`.
 
-    **Process:**
-    1. Create and integration
-    2. Create a language model linked to the integration
-    3. Create an agent with the specified language model and agent type
-    4. Call the agent using `post_message` operation
+    Parameters (JSON body):
+    - `agent_name`: Alphanumeric name with hyphens or underscores.
+    - `agent_type`: One of the available agent types listed above.
+    - `language_model_id`: ID of an existing language model.
     """,
-    response_description="Successfully created agent information",
+    response_description="The newly created agent",
     responses={
         201: {
             "description": "Agent successfully created",
@@ -185,33 +182,32 @@ async def get_by_id(
                 "application/json": {
                     "example": {
                         "id": "agent_123456789",
-                        "agent_name": "Content Analyzer",
-                        "agent_type": "analyzer",
-                        "language_model_id": "shdehfuehfuef",
-                        "created_at": "2024-01-15T10:30:00Z",
                         "is_active": True,
+                        "created_at": "2024-01-15T10:30:00Z",
+                        "agent_name": "content-analyzer",
+                        "agent_type": "vision_document",
+                        "agent_summary": "",
+                        "language_model_id": "lm_abc123",
                     }
                 }
             },
         },
         400: {
-            "description": "Bad request - Invalid agent configuration",
+            "description": "Invalid agent configuration",
             "content": {
-                "application/json": {"example": {"detail": "Invalid agent type"}}
+                "application/json": {"example": {"detail": "Field agent_type is invalid, reason: not supported"}}
             },
         },
         404: {
             "description": "Language model not found",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Language model with ID 'lm_123456789' not found"
-                    }
+                    "example": {"detail": "Language model with ID 'lm_abc123' not found"}
                 }
             },
         },
         422: {
-            "description": "Invalid data unprocessable entity",
+            "description": "Validation error",
         },
     },
 )
@@ -240,7 +236,12 @@ async def add(
     dependencies=[Depends(bearer_scheme)],
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete an agent",
-    description="This endpoint removes an agent from the system including",
+    description="""
+    Permanently removes an agent and its associated settings from the system.
+
+    Parameters:
+    - `agent_id` (path): The unique identifier of the agent to delete.
+    """,
     response_description="Agent successfully deleted",
     responses={
         204: {"description": "Agent successfully deleted"},
@@ -268,9 +269,17 @@ async def remove(
     path="/update",
     dependencies=[Depends(bearer_scheme)],
     response_model=Agent,
-    summary="Update agent basic information",
-    description="Update agent information such as name and configuration.",
-    response_description="Updated agent information",
+    summary="Update an agent",
+    description="""
+    Updates an agent's name, linked language model, or summary.
+
+    Parameters (JSON body):
+    - `agent_id`: The unique identifier of the agent to update.
+    - `agent_name`: New alphanumeric name with hyphens or underscores.
+    - `language_model_id`: ID of the new language model to link.
+    - `agent_summary` (optional): Updated description of the agent.
+    """,
+    response_description="Updated agent",
     responses={
         200: {
             "description": "Agent successfully updated",
@@ -278,11 +287,12 @@ async def remove(
                 "application/json": {
                     "example": {
                         "id": "agent_123456789",
-                        "agent_name": "Updated Content Analyzer",
-                        "agent_type": "vision_document",
-                        "language_model_id": "23232323",
-                        "created_at": "2024-01-15T10:30:00Z",
                         "is_active": True,
+                        "created_at": "2024-01-15T10:30:00Z",
+                        "agent_name": "updated-analyzer",
+                        "agent_type": "vision_document",
+                        "agent_summary": "Updated document analyzer",
+                        "language_model_id": "lm_def456",
                     }
                 }
             },
@@ -296,9 +306,9 @@ async def remove(
             },
         },
         400: {
-            "description": "Bad request - Invalid agent name",
+            "description": "Invalid agent name",
             "content": {
-                "application/json": {"example": {"detail": "Invalid agent name"}}
+                "application/json": {"example": {"detail": "Field agent_name is invalid, reason: contains invalid characters"}}
             },
         },
         422: {"description": "Validation error"},
@@ -325,14 +335,17 @@ async def update(
     path="/update_setting",
     dependencies=[Depends(bearer_scheme)],
     response_model=AgentExpanded,
-    summary="Update agent setting",
+    summary="Update an agent setting",
     description="""
-    Update a specific agent setting by key.
+    Updates a single configuration setting for an agent by key.
+    Returns the full agent with all current settings after the update.
 
-    This endpoint allows fine-grained control over agent behavior by modifying
-    individual configuration settings.
+    Parameters (JSON body):
+    - `agent_id`: The unique identifier of the agent.
+    - `setting_key`: The setting key to update (e.g. "temperature", "max_tokens").
+    - `setting_value`: The new value for the setting.
     """,
-    response_description="Updated agent with all current settings",
+    response_description="Updated agent with all settings",
     responses={
         200: {
             "description": "Setting successfully updated",
@@ -340,21 +353,20 @@ async def update(
                 "application/json": {
                     "example": {
                         "id": "agent_123456789",
-                        "agent_name": "Content Analyzer",
-                        "agent_type": "vision_document",
-                        "language_model_id": "dedeafefaeaf",
-                        "created_at": "2024-01-15T10:30:00Z",
                         "is_active": True,
+                        "created_at": "2024-01-15T10:30:00Z",
+                        "agent_name": "content-analyzer",
+                        "agent_type": "vision_document",
+                        "agent_summary": "Analyzes documents and images",
+                        "language_model_id": "lm_abc123",
                         "ag_settings": [
                             {
-                                "id": "setting_001",
-                                "setting_key": "max_tokens",
-                                "setting_value": "4096",
-                            },
-                            {
-                                "id": "setting_002",
                                 "setting_key": "temperature",
                                 "setting_value": "0.5",
+                            },
+                            {
+                                "setting_key": "max_tokens",
+                                "setting_value": "4096",
                             },
                         ],
                     }
@@ -370,23 +382,14 @@ async def update(
             },
         },
         400: {
-            "description": "Bad request - Invalid setting key or value",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Invalid value for setting xyz"}
-                }
-            },
-        },
-        422: {
             "description": "Invalid setting key or value",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Setting 'temperature' must be between 0.0 and 2.0"
-                    }
+                    "example": {"detail": "Field setting_value is invalid, reason: contains invalid characters"}
                 }
             },
         },
+        422: {"description": "Validation error"},
     },
 )
 @inject

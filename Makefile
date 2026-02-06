@@ -1,9 +1,16 @@
+cleanup:
+	rm agent_lab.db || true
+	rm temp* || true
+
+reset:
+	docker compose -f compose-grafana.yml stop
+	docker compose -f compose-grafana.yml rm -f
+
 run:
-	python -m app
+	docker compose -f compose-grafana.yml up --build -d
 
 test:
-	rm agent_lab.db || true
-	pytest --cov=app --cov-report=xml
+	pytest --cov=app --cov-report=xml; $(MAKE) cleanup
 
 lint:
 	python -m flake8 .

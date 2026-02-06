@@ -1,0 +1,3 @@
+[flake8]
+exclude = .venv, notebooks/.ipynb_checkpoints
+ignore = E203, E501, W201, W503

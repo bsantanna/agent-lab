@@ -68,19 +68,16 @@ def create_agent_with_integration(
     agent_response.raise_for_status()
     agent_result = agent_response.json()
 
-    if integration_params["integration_type"] == "openai_api_v1":
-        # Update the agent setting to enable function calling for OpenAI agents
+    rag_agent_types = ["adaptive_rag", "react_rag", "coordinator_planner_supervisor"]
+    if agent_type in rag_agent_types:
+        if integration_params["integration_type"] == "openai_api_v1":
+            collection = "static_document_data_openai_embeddings"
+        else:
+            collection = "static_document_data_ollama_embeddings"
         update_agent_setting(
             agent_id=agent_result["id"],
             setting_key="collection_name",
-            setting_value="static_document_data_openai_embeddings",
-            agent_lab_endpoint=agent_lab_endpoint,
-        )
-    else:
-        update_agent_setting(
-            agent_id=agent_result["id"],
-            setting_key="collection_name",
-            setting_value="static_document_data_ollama_embeddings",
+            setting_value=collection,
             agent_lab_endpoint=agent_lab_endpoint,
         )
 
@@ -218,10 +215,10 @@ def update_agent_setting(
 
 
 def openai_responses_api_mcp_tool_request(
-    query:str,
-    mcp_server:dict,
-    model:str = "gpt-5-nano",
-    reasoning:dict = {
+    query: str,
+    mcp_server: dict,
+    model: str = "gpt-5-nano",
+    reasoning: dict = {
         "effort": "low",
         "summary": "auto"
     }

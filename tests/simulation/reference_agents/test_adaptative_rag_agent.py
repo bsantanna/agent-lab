@@ -12,9 +12,11 @@ from app.main import app
 def client():
     yield TestClient(app)
 
+
 # Configure the default model for simulation
 # scenario.configure(default_model="anthropic/claude-haiku-4-5")
 scenario.configure(default_model="openai/gpt-5-nano")
+
 
 @pytest.mark.agent_test
 @pytest.mark.asyncio
@@ -100,5 +102,3 @@ def adaptive_rag_agent(client, message_content) -> scenario.AgentReturnTypes:
     )
 
     return response_4.json()["message_content"]
-
-
