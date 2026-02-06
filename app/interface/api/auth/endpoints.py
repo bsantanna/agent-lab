@@ -12,16 +12,25 @@ router = APIRouter()
     path="/login",
     status_code=status.HTTP_201_CREATED,
     response_model=AuthResponse,
-    summary="Create a new bearer token",
-    description="Create a new bearer token for the user. This endpoint is used to authenticate users and provide them with a token that can be used for subsequent requests.",
-    response_description="Successfully created bearer token",
+    summary="Authenticate and obtain a bearer token",
+    description="""
+    Authenticates a user with username and password, and returns an access token
+    and a refresh token. Use the access token in the `Authorization: Bearer <token>`
+    header for subsequent authenticated requests.
+
+    Parameters (JSON body):
+    - `username`: The user's login name.
+    - `password`: The user's password.
+    """,
+    response_description="Access and refresh tokens",
     responses={
         201: {
             "description": "Token successfully created",
             "content": {
                 "application/json": {
                     "example": {
-                        "access_token": "a_valid_token_string",
+                        "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+                        "refresh_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
                     }
                 }
             },
@@ -30,14 +39,12 @@ router = APIRouter()
             "description": "Invalid credentials",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Invalid credentials provided. Please check your username and password."
-                    }
+                    "example": {"detail": "Invalid credentials provided. Please check your username and password."}
                 }
             },
         },
         422: {
-            "description": "Invalid data unprocessable entity",
+            "description": "Validation error",
         },
     },
 )
@@ -55,22 +62,29 @@ async def login(
     path="/renew",
     status_code=status.HTTP_201_CREATED,
     response_model=AuthResponse,
-    summary="Renew an existing bearer token",
-    description="Renew an existing bearer token using a refresh token. This endpoint is used to obtain a new access token without requiring the user to log in again.",
-    response_description="Successfully renewed bearer token",
+    summary="Renew a bearer token",
+    description="""
+    Obtains a new access token using an existing refresh token, without requiring
+    the user to log in again.
+
+    Parameters (JSON body):
+    - `refresh_token`: A valid refresh token obtained from the login endpoint.
+    """,
+    response_description="New access and refresh tokens",
     responses={
         201: {
-            "description": "Token successfully created",
+            "description": "Token successfully renewed",
             "content": {
                 "application/json": {
                     "example": {
-                        "access_token": "a_valid_token_string",
+                        "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+                        "refresh_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
                     }
                 }
             },
         },
         401: {
-            "description": "Invalid credentials",
+            "description": "Invalid or expired refresh token",
             "content": {
                 "application/json": {
                     "example": {"detail": "Invalid credentials provided."}

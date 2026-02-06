@@ -29,26 +29,17 @@ bearer_scheme = HTTPBearer()
     dependencies=[Depends(bearer_scheme)],
     response_model=List[Message],
     operation_id="get_message_list",
-    summary="Retrieve messages for an agent",
+    summary="List messages for an agent",
     description="""
-    Retrieve a list of messages associated with a specific agent.
+    Returns all messages (human and assistant) associated with a specific agent.
 
-    This endpoint returns all messages (both human and assistant) for the given agent ID.
-    Messages include content, role, timestamps, and relationships.
+    Use this to retrieve conversation history, reconstruct dialog threads,
+    or provide context for follow-up interactions.
 
-    **Use cases:**
-    - Display conversation history
-    - Load previous messages for context
-    - Message thread reconstruction
-    - Memory and history of dialogues
-    - Chain-of-thought reasoning
-
-    **Recommended Practices:**
-    - Use structured information for details and chain-of-thought reasoning
-    - When displaying messages use the format -role: content
-
+    Parameters (JSON body):
+    - `agent_id`: The unique identifier of the agent whose messages to retrieve.
     """,
-    response_description="List of messages associated with the agent",
+    response_description="List of messages for the agent",
     responses={
         200: {
             "description": "Successfully retrieved messages",
@@ -57,17 +48,36 @@ bearer_scheme = HTTPBearer()
                     "example": [
                         {
                             "id": "msg_123",
+                            "is_active": True,
+                            "created_at": "2024-01-15T10:30:00Z",
                             "message_role": "human",
                             "message_content": "Hello, how can you help?",
                             "agent_id": "agent_456",
-                            "created_at": "2024-01-15T10:30:00Z",
+                            "response_data": None,
+                            "replies_to": None,
+                        },
+                        {
+                            "id": "msg_124",
                             "is_active": True,
-                        }
+                            "created_at": "2024-01-15T10:31:00Z",
+                            "message_role": "assistant",
+                            "message_content": "I can help you with document analysis.",
+                            "agent_id": "agent_456",
+                            "response_data": None,
+                            "replies_to": "msg_123",
+                        },
                     ]
                 }
             },
         },
-        404: {"description": "Agent not found"},
+        404: {
+            "description": "Agent not found",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Agent with ID 'agent_456' not found"}
+                }
+            },
+        },
     },
 )
 @inject
@@ -80,17 +90,6 @@ async def get_list(
     message_service: MessageService = Depends(Provide[Container.message_service]),
     user: User = Depends(get_user),
 ):
-    """
-    Get all messages for a specific agent.
-
-    Args:
-        message_data: Contains the agent_id to filter messages
-        message_service: Injected message service dependency
-
-
-    Returns:
-        List[Message]: All messages associated with the agent
-    """
     schema = user.id.replace("-", "_") if user is not None else "public"
     messages = message_service.get_messages(message_data.agent_id, schema)
     return [Message.model_validate(message) for message in messages]
@@ -103,54 +102,53 @@ async def get_list(
     operation_id="post_message",
     summary="Send a message to an agent",
     description="""
-    Send a new message to an AI agent and receive a response.
+    Sends a human message to an agent and returns the assistant's response.
 
-    This endpoint processes human messages through the appropriate agent type,
-    stores both the human message and generated response, and returns the
-    assistant's reply.
+    The message is routed to the appropriate agent processor based on agent type.
+    Both the human message and the generated response are stored in the conversation history.
 
-    **Message Processing Flow:**
-    1. Validates the target agent exists
-    2. Stores the incoming human message
-    3. Routes message to appropriate agent processor
-    4. Generates and stores assistant response
-    5. Returns the assistant message
-
-    **Use cases:**
-    - Agent-to-agent interactions
-    - Conversational AI applications
-    - Task scheduling and automation through agents
-    - Request of assistance from available agents
-    - Question answering and information retrieval
-
-    **Recommended Practices:**
-    - Maintain a fluid conversation flow
-    - Use structured information for details and chain-of-thought reasoning
-    - When displaying messages, always present the agent message response to the user
-
-
+    Parameters (JSON body):
+    - `agent_id`: The unique identifier of the target agent.
+    - `message_role`: Must be "human".
+    - `message_content`: The text content of the message.
+    - `attachment_id` (optional): ID of a previously uploaded attachment to include.
     """,
     response_description="The assistant's response message",
     responses={
         200: {
-            "description": "Message successfully processed and response generated",
+            "description": "Message processed and response generated",
             "content": {
                 "application/json": {
                     "example": {
                         "id": "msg_789",
+                        "is_active": True,
+                        "created_at": "2024-01-15T10:31:00Z",
                         "message_role": "assistant",
                         "message_content": "I'd be happy to help you with that!",
                         "agent_id": "agent_456",
-                        "created_at": "2024-01-15T10:31:00Z",
-                        "is_active": True,
+                        "response_data": None,
                         "replies_to": "msg_123",
                     }
                 }
             },
         },
-        400: {"description": "Invalid request data fields"},
-        404: {"description": "Agent not found"},
-        422: {"description": "Invalid request data unprocessable entity"},
+        400: {
+            "description": "Invalid request data",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Field message_role is invalid, reason: not supported"}
+                }
+            },
+        },
+        404: {
+            "description": "Agent not found",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Agent with ID 'agent_456' not found"}
+                }
+            },
+        },
+        422: {"description": "Validation error"},
     },
 )
 @inject
@@ -170,18 +168,6 @@ async def post_message(
     message_service: MessageService = Depends(Provide[Container.message_service]),
     user: User = Depends(get_user),
 ):
-    """
-    Process a new message through an AI agent.
-
-    Args:
-        message_data: The message request containing content and agent info
-        agent_service: Service for agent management
-        agent_registry: Registry of available agent types
-        message_service: Service for message persistence
-
-    Returns:
-        Message: The assistant's response message
-    """
     schema = user.id.replace("-", "_") if user is not None else "public"
     agent = agent_service.get_agent_by_id(message_data.agent_id, schema)
     matching_agent = agent_registry.get_agent(agent.agent_type)
@@ -215,51 +201,58 @@ async def post_message(
     "/{message_id}",
     dependencies=[Depends(bearer_scheme)],
     response_model=MessageExpanded,
-    summary="Get expanded message details",
+    summary="Get message details",
     description="""
-    Retrieve detailed information about a specific message and its context.
+    Returns an expanded view of an assistant message, including the original human
+    message it replies to and any attachment from the human message.
 
-    This endpoint returns an expanded view of an assistant message that includes:
-    - The assistant message details
-    - The original human message it replies to
-    - Any attachments from the human message
-    - Full conversation context
-
-    **Use cases:**
-    - Display complete message thread
-    - Show message with attachments
-    - Debug conversation flow
-    - Export conversation data
+    Parameters:
+    - `message_id` (path): The unique identifier of the assistant message.
     """,
-    response_description="Expanded message with full context and attachments",
+    response_description="Expanded message with conversation context",
     responses={
         200: {
-            "description": "Message details retrieved successfully",
+            "description": "Successfully retrieved message details",
             "content": {
                 "application/json": {
                     "example": {
                         "id": "msg_789",
+                        "is_active": True,
+                        "created_at": "2024-01-15T10:31:00Z",
                         "message_role": "assistant",
                         "message_content": "Here's the Python function you requested...",
                         "agent_id": "agent_456",
-                        "created_at": "2024-01-15T10:31:00Z",
-                        "is_active": True,
+                        "response_data": None,
                         "replies_to": {
                             "id": "msg_123",
+                            "is_active": True,
+                            "created_at": "2024-01-15T10:30:00Z",
                             "message_role": "human",
                             "message_content": "Can you help me write a Python function?",
-                            "created_at": "2024-01-15T10:30:00Z",
+                            "agent_id": "agent_456",
+                            "response_data": None,
+                            "replies_to": None,
                         },
                         "attachment": {
                             "id": "att_456",
-                            "filename": "requirements.txt",
-                            "content_type": "text/plain",
+                            "is_active": True,
+                            "created_at": "2024-01-15T10:29:00Z",
+                            "file_name": "requirements.txt",
+                            "parsed_content": "fastapi==0.100.0\nlangchain==0.1.0",
+                            "embeddings_collection": None,
                         },
                     }
                 }
             },
         },
-        404: {"description": "Message not found"},
+        404: {
+            "description": "Message not found",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Message with ID 'msg_789' not found"}
+                }
+            },
+        },
     },
 )
 @inject
@@ -271,17 +264,6 @@ async def get_by_id(
     ),
     user: User = Depends(get_user),
 ):
-    """
-    Get expanded details for a specific message.
-
-    Args:
-        message_id: Unique identifier of the message
-        message_service: Injected message service
-        attachment_service: Injected attachment service
-
-    Returns:
-        MessageExpanded: Complete message details with context
-    """
     schema = user.id.replace("-", "_") if user is not None else "public"
     assistant_message = message_service.get_message_by_id(message_id, schema)
     human_message = message_service.get_message_by_id(
@@ -299,22 +281,25 @@ async def get_by_id(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a message",
     description="""
-    Permanently delete a message from the system.
+    Permanently removes a message from the system.
 
-    **Warning:** This action cannot be undone. Deleting a message will:
-    - Remove the message from all conversations
-    - Break reply chains if other messages reference it
-    - Not affect related attachments (they remain for other references)
+    Deleting a message may break reply chains if other messages reference it.
+    Related attachments are not affected.
 
-    **Best Practices:**
-    - Consider soft deletion (marking as inactive) instead
-    - Ensure no critical conversation flow depends on this message
-    - Back up important conversations before deletion
+    Parameters:
+    - `message_id` (path): The unique identifier of the message to delete.
     """,
-    response_description="Message successfully deleted (no content returned)",
+    response_description="Message successfully deleted",
     responses={
         204: {"description": "Message successfully deleted"},
-        404: {"description": "Message not found"},
+        404: {
+            "description": "Message not found",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Message with ID 'msg_789' not found"}
+                }
+            },
+        },
     },
 )
 @inject
@@ -323,13 +308,6 @@ async def remove(
     message_service: MessageService = Depends(Provide[Container.message_service]),
     user: User = Depends(get_user),
 ):
-    """
-    Delete a message by ID.
-
-    Returns:
-        Response: 204 No Content on success
-
-    """
     schema = user.id.replace("-", "_") if user is not None else "public"
     message_service.delete_message_by_id(message_id, schema)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -341,17 +319,6 @@ def _format_expanded_response(
     attachment_service: AttachmentService,
     schema: str,
 ) -> MessageExpanded:
-    """
-    Format an expanded message response with full context.
-
-    Args:
-        agent_message: The assistant message
-        human_message: The original human message
-        attachment_service: Service to retrieve attachment details
-
-    Returns:
-        MessageExpanded: Formatted response with all related data
-    """
     attachment_response = None
 
     if human_message.attachment_id is not None:

@@ -7,7 +7,7 @@ reset:
 	docker compose -f compose-grafana.yml rm -f
 
 run:
-	docker compose -f compose-grafana.yml up --build
+	docker compose -f compose-grafana.yml up --build -d
 
 test:
 	pytest --cov=app --cov-report=xml; $(MAKE) cleanup
