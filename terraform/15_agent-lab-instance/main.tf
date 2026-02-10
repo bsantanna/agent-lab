@@ -14,6 +14,10 @@ provider "helm" {
   }
 }
 
+locals {
+  agent_lab_image_tag = "v${var.agent_lab_chart_version}"
+}
+
 resource "helm_release" "agent_lab" {
   name       = "agent-lab"
   repository = "https://bsantanna.github.io/agent-lab"
@@ -55,7 +59,7 @@ resource "helm_release" "agent_lab" {
       }
 
       image = {
-        tag = var.agent_lab_image_tag
+        tag = local.agent_lab_image_tag
       }
     })
   ]

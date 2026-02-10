@@ -42,12 +42,12 @@ resource "keycloak_realm" "agent_lab" {
 
   access_code_lifespan = "1h"
 
-  access_token_lifespan              = "168h"
-  sso_session_idle_timeout           = "168h"
-  sso_session_max_lifespan           = "168h"
-  offline_session_idle_timeout       = "168h"
-  offline_session_max_lifespan       = "168h"
-  refresh_token_max_reuse            = 0
+  access_token_lifespan        = "168h"
+  sso_session_idle_timeout     = "168h"
+  sso_session_max_lifespan     = "168h"
+  offline_session_idle_timeout = "168h"
+  offline_session_max_lifespan = "168h"
+  refresh_token_max_reuse      = 0
 
   ssl_required    = "external"
   password_policy = "upperCase(1) and length(8) and forceExpiredPasswordChange(365) and notUsername"
@@ -85,10 +85,10 @@ resource "keycloak_openid_client" "agent_lab_client" {
   name      = var.auth_client_id
   enabled   = true
 
-  access_type              = "CONFIDENTIAL"
-  standard_flow_enabled    = true
+  access_type                  = "CONFIDENTIAL"
+  standard_flow_enabled        = true
   direct_access_grants_enabled = true
-  service_accounts_enabled = true
+  service_accounts_enabled     = true
 
   valid_redirect_uris = var.auth_client_redirect_uris
 
@@ -96,9 +96,11 @@ resource "keycloak_openid_client" "agent_lab_client" {
 }
 
 resource "keycloak_user" "service_account" {
-  realm_id = keycloak_realm.agent_lab.id
-  username = var.auth_service_account_username
-  enabled  = true
+  realm_id   = keycloak_realm.agent_lab.id
+  username   = var.auth_service_account_username
+  enabled    = true
+  first_name = "Service"
+  last_name  = "Account"
 
   email          = "${var.auth_service_account_username}@agent-lab.local"
   email_verified = true
@@ -116,10 +118,10 @@ resource "kubernetes_secret_v1" "agent_lab_auth" {
   }
 
   data = {
-    AUTH_URL                      = var.auth_url
-    AUTH_REALM                    = keycloak_realm.agent_lab.realm
-    AUTH_CLIENT_ID                = keycloak_openid_client.agent_lab_client.client_id
-    AUTH_CLIENT_SECRET            = keycloak_openid_client.agent_lab_client.client_secret
+    AUTH_URL           = var.auth_url
+    AUTH_REALM         = keycloak_realm.agent_lab.realm
+    AUTH_CLIENT_ID     = keycloak_openid_client.agent_lab_client.client_id
+    AUTH_CLIENT_SECRET = keycloak_openid_client.agent_lab_client.client_secret
   }
 
   type = "Opaque"
