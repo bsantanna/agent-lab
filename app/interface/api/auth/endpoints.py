@@ -1,5 +1,6 @@
 from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, status, Body, Depends
+from typing_extensions import Annotated
 
 from app.core.container import Container
 from app.interface.api.auth.schema import AuthResponse, LoginRequest, RenewRequest
@@ -39,7 +40,9 @@ router = APIRouter()
             "description": "Invalid credentials",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Invalid credentials provided. Please check your username and password."}
+                    "example": {
+                        "detail": "Invalid credentials provided. Please check your username and password."
+                    }
                 }
             },
         },
@@ -50,8 +53,8 @@ router = APIRouter()
 )
 @inject
 async def login(
-    login_data: LoginRequest = Body(...),
-    auth_service: AuthService = Depends(Provide[Container.auth_service]),
+    login_data: Annotated[LoginRequest, Body(...)],
+    auth_service: Annotated[AuthService, Depends(Provide[Container.auth_service])],
 ):
     return auth_service.login(
         username=login_data.username, password=login_data.password
@@ -95,7 +98,7 @@ async def login(
 )
 @inject
 async def renew(
-    renew_request: RenewRequest = Body(...),
-    auth_service: AuthService = Depends(Provide[Container.auth_service]),
+    renew_request: Annotated[RenewRequest, Body(...)],
+    auth_service: Annotated[AuthService, Depends(Provide[Container.auth_service])],
 ):
     return auth_service.renew(renew_request.refresh_token)

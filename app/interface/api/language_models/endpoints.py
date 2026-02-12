@@ -2,7 +2,7 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Body, Depends, Response, status
 from fastapi.security import HTTPBearer
 from fastapi_keycloak_middleware import get_user
-from typing_extensions import List
+from typing_extensions import Annotated, List
 
 from app.core.container import Container
 from app.domain.models import LanguageModel as DomainLanguageModel
@@ -62,10 +62,10 @@ bearer_scheme = HTTPBearer()
 )
 @inject
 async def get_list(
-    language_model_service: LanguageModelService = Depends(
-        Provide[Container.language_model_service]
-    ),
-    user: User = Depends(get_user),
+    language_model_service: Annotated[
+        LanguageModelService, Depends(Provide[Container.language_model_service])
+    ],
+    user: Annotated[User, Depends(get_user)],
 ):
     schema = user.id.replace("-", "_") if user is not None else "public"
     language_models = language_model_service.get_language_models(schema)
@@ -111,7 +111,9 @@ async def get_list(
             "description": "Invalid model tag",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Field language_model_tag is invalid, reason: contains invalid characters"}
+                    "example": {
+                        "detail": "Field language_model_tag is invalid, reason: contains invalid characters"
+                    }
                 }
             },
         },
@@ -119,7 +121,9 @@ async def get_list(
             "description": "Integration not found",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Integration with ID 'int_openai_456' not found"}
+                    "example": {
+                        "detail": "Integration with ID 'int_openai_456' not found"
+                    }
                 }
             },
         },
@@ -128,15 +132,18 @@ async def get_list(
 )
 @inject
 async def add(
-    language_model_data: LanguageModelCreateRequest = Body(
-        ...,
-        description="Language model creation data",
-        example={"integration_id": "int_openai_456", "language_model_tag": "gpt-4"},
-    ),
-    language_model_service: LanguageModelService = Depends(
-        Provide[Container.language_model_service]
-    ),
-    user: User = Depends(get_user),
+    language_model_data: Annotated[
+        LanguageModelCreateRequest,
+        Body(
+            ...,
+            description="Language model creation data",
+            example={"integration_id": "int_openai_456", "language_model_tag": "gpt-4"},
+        ),
+    ],
+    language_model_service: Annotated[
+        LanguageModelService, Depends(Provide[Container.language_model_service])
+    ],
+    user: Annotated[User, Depends(get_user)],
 ):
     schema = user.id.replace("-", "_") if user is not None else "public"
     language_model = language_model_service.create_language_model(
@@ -198,13 +205,14 @@ async def add(
 @inject
 async def get_by_id(
     language_model_id: str,
-    language_model_service: LanguageModelService = Depends(
-        Provide[Container.language_model_service]
-    ),
-    language_model_setting_service: LanguageModelSettingService = Depends(
-        Provide[Container.language_model_setting_service]
-    ),
-    user: User = Depends(get_user),
+    language_model_service: Annotated[
+        LanguageModelService, Depends(Provide[Container.language_model_service])
+    ],
+    language_model_setting_service: Annotated[
+        LanguageModelSettingService,
+        Depends(Provide[Container.language_model_setting_service]),
+    ],
+    user: Annotated[User, Depends(get_user)],
 ):
     schema = user.id.replace("-", "_") if user is not None else "public"
     language_model = language_model_service.get_language_model_by_id(
@@ -245,10 +253,10 @@ async def get_by_id(
 @inject
 async def remove(
     language_model_id: str,
-    language_model_service: LanguageModelService = Depends(
-        Provide[Container.language_model_service]
-    ),
-    user: User = Depends(get_user),
+    language_model_service: Annotated[
+        LanguageModelService, Depends(Provide[Container.language_model_service])
+    ],
+    user: Annotated[User, Depends(get_user)],
 ):
     schema = user.id.replace("-", "_") if user is not None else "public"
     language_model_service.delete_language_model_by_id(language_model_id, schema)
@@ -292,7 +300,9 @@ async def remove(
             "description": "Invalid model tag",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Field language_model_tag is invalid, reason: contains invalid characters"}
+                    "example": {
+                        "detail": "Field language_model_tag is invalid, reason: contains invalid characters"
+                    }
                 }
             },
         },
@@ -309,15 +319,22 @@ async def remove(
 )
 @inject
 async def update(
-    language_model_data: LanguageModelUpdateRequest = Body(
-        ...,
-        description="Language model update data",
-        example={"language_model_id": "lm_123", "language_model_tag": "gpt-4-turbo", "integration_id": "int_openai_456"},
-    ),
-    language_model_service: LanguageModelService = Depends(
-        Provide[Container.language_model_service]
-    ),
-    user: User = Depends(get_user),
+    language_model_data: Annotated[
+        LanguageModelUpdateRequest,
+        Body(
+            ...,
+            description="Language model update data",
+            example={
+                "language_model_id": "lm_123",
+                "language_model_tag": "gpt-4-turbo",
+                "integration_id": "int_openai_456",
+            },
+        ),
+    ],
+    language_model_service: Annotated[
+        LanguageModelService, Depends(Provide[Container.language_model_service])
+    ],
+    user: Annotated[User, Depends(get_user)],
 ):
     schema = user.id.replace("-", "_") if user is not None else "public"
     language_model = language_model_service.update_language_model(
@@ -373,7 +390,9 @@ async def update(
             "description": "Invalid setting key or value",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Field setting_value is invalid, reason: contains invalid characters"}
+                    "example": {
+                        "detail": "Field setting_value is invalid, reason: contains invalid characters"
+                    }
                 }
             },
         },
@@ -390,22 +409,26 @@ async def update(
 )
 @inject
 async def update_setting(
-    language_model_data: LanguageModelSettingUpdateRequest = Body(
-        ...,
-        description="Language model setting update data",
-        example={
-            "language_model_id": "lm_123",
-            "setting_key": "temperature",
-            "setting_value": "0.9",
-        },
-    ),
-    language_model_service: LanguageModelService = Depends(
-        Provide[Container.language_model_service]
-    ),
-    language_model_setting_service: LanguageModelSettingService = Depends(
-        Provide[Container.language_model_setting_service]
-    ),
-    user: User = Depends(get_user),
+    language_model_data: Annotated[
+        LanguageModelSettingUpdateRequest,
+        Body(
+            ...,
+            description="Language model setting update data",
+            example={
+                "language_model_id": "lm_123",
+                "setting_key": "temperature",
+                "setting_value": "0.9",
+            },
+        ),
+    ],
+    language_model_service: Annotated[
+        LanguageModelService, Depends(Provide[Container.language_model_service])
+    ],
+    language_model_setting_service: Annotated[
+        LanguageModelSettingService,
+        Depends(Provide[Container.language_model_setting_service]),
+    ],
+    user: Annotated[User, Depends(get_user)],
 ):
     schema = user.id.replace("-", "_") if user is not None else "public"
     language_model_setting_service.update_by_key(

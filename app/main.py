@@ -140,14 +140,14 @@ def setup_tracing(container: Container, application: FastAPI):
 
 def setup_middleware(application: FastAPI):
     application.add_middleware(
+        LoggingMiddleware,
+    )
+    application.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
-    )
-    application.add_middleware(
-        LoggingMiddleware,
     )
 
 
