@@ -2,7 +2,7 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Body, Depends, Response, status
 from fastapi.security import HTTPBearer
 from fastapi_keycloak_middleware import get_user
-from typing_extensions import List
+from typing_extensions import Annotated, List
 
 from app.core.container import Container
 from app.infrastructure.auth.schema import User
@@ -55,10 +55,10 @@ bearer_scheme = HTTPBearer()
 )
 @inject
 async def get_list(
-    integration_service: IntegrationService = Depends(
-        Provide[Container.integration_service]
-    ),
-    user: User = Depends(get_user),
+    integration_service: Annotated[
+        IntegrationService, Depends(Provide[Container.integration_service])
+    ],
+    user: Annotated[User, Depends(get_user)],
 ):
     schema = user.id.replace("-", "_") if user is not None else "public"
     integrations = integration_service.get_integrations(schema)
@@ -95,7 +95,9 @@ async def get_list(
             "description": "Integration not found",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Integration with ID 'int_openai_123' not found"}
+                    "example": {
+                        "detail": "Integration with ID 'int_openai_123' not found"
+                    }
                 }
             },
         },
@@ -104,10 +106,10 @@ async def get_list(
 @inject
 async def get_by_id(
     integration_id: str,
-    integration_service: IntegrationService = Depends(
-        Provide[Container.integration_service]
-    ),
-    user: User = Depends(get_user),
+    integration_service: Annotated[
+        IntegrationService, Depends(Provide[Container.integration_service])
+    ],
+    user: Annotated[User, Depends(get_user)],
 ):
     schema = user.id.replace("-", "_") if user is not None else "public"
     integration = integration_service.get_integration_by_id(integration_id, schema)
@@ -160,7 +162,9 @@ async def get_by_id(
             "description": "Validation error",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Field api_endpoint is invalid, reason: invalid url format"}
+                    "example": {
+                        "detail": "Field api_endpoint is invalid, reason: invalid url format"
+                    }
                 }
             },
         },
@@ -168,19 +172,22 @@ async def get_by_id(
 )
 @inject
 async def add(
-    integration_data: IntegrationCreateRequest = Body(
-        ...,
-        description="Integration configuration data",
-        example={
-            "integration_type": "openai_api_v1",
-            "api_endpoint": "https://api.openai.com/v1",
-            "api_key": "an_api_key",
-        },
-    ),
-    integration_service: IntegrationService = Depends(
-        Provide[Container.integration_service]
-    ),
-    user: User = Depends(get_user),
+    integration_data: Annotated[
+        IntegrationCreateRequest,
+        Body(
+            ...,
+            description="Integration configuration data",
+            example={
+                "integration_type": "openai_api_v1",
+                "api_endpoint": "https://api.openai.com/v1",
+                "api_key": "an_api_key",
+            },
+        ),
+    ],
+    integration_service: Annotated[
+        IntegrationService, Depends(Provide[Container.integration_service])
+    ],
+    user: Annotated[User, Depends(get_user)],
 ):
     schema = user.id.replace("-", "_") if user is not None else "public"
     integration = integration_service.create_integration(
@@ -212,7 +219,9 @@ async def add(
             "description": "Integration not found",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Integration with ID 'int_openai_123' not found"}
+                    "example": {
+                        "detail": "Integration with ID 'int_openai_123' not found"
+                    }
                 }
             },
         },
@@ -221,10 +230,10 @@ async def add(
 @inject
 async def remove(
     integration_id: str,
-    integration_service: IntegrationService = Depends(
-        Provide[Container.integration_service]
-    ),
-    user: User = Depends(get_user),
+    integration_service: Annotated[
+        IntegrationService, Depends(Provide[Container.integration_service])
+    ],
+    user: Annotated[User, Depends(get_user)],
 ):
     schema = user.id.replace("-", "_") if user is not None else "public"
     integration_service.delete_integration_by_id(integration_id, schema)

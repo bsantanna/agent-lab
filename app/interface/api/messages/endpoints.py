@@ -2,7 +2,7 @@ from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends, Body, Response, status
 from fastapi.security import HTTPBearer
 from fastapi_keycloak_middleware import get_user
-from typing_extensions import List
+from typing_extensions import Annotated, List
 
 from app.core.container import Container
 from app.domain.exceptions.base import NotFoundError
@@ -82,13 +82,18 @@ bearer_scheme = HTTPBearer()
 )
 @inject
 async def get_list(
-    message_data: MessageListRequest = Body(
-        ...,
-        description="Request containing the agent ID to retrieve messages for",
-        example={"agent_id": "agent_456"},
-    ),
-    message_service: MessageService = Depends(Provide[Container.message_service]),
-    user: User = Depends(get_user),
+    message_data: Annotated[
+        MessageListRequest,
+        Body(
+            ...,
+            description="Request containing the agent ID to retrieve messages for",
+            example={"agent_id": "agent_456"},
+        ),
+    ],
+    message_service: Annotated[
+        MessageService, Depends(Provide[Container.message_service])
+    ],
+    user: Annotated[User, Depends(get_user)],
 ):
     schema = user.id.replace("-", "_") if user is not None else "public"
     messages = message_service.get_messages(message_data.agent_id, schema)
@@ -136,7 +141,9 @@ async def get_list(
             "description": "Invalid request data",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Field message_role is invalid, reason: not supported"}
+                    "example": {
+                        "detail": "Field message_role is invalid, reason: not supported"
+                    }
                 }
             },
         },
@@ -153,20 +160,27 @@ async def get_list(
 )
 @inject
 async def post_message(
-    message_data: MessageRequest = Body(
-        ...,
-        description="The message to send to the agent",
-        example={
-            "agent_id": "agent_456",
-            "message_role": "human",
-            "message_content": "Can you help me write a Python function?",
-            "attachment_id": None,
-        },
-    ),
-    agent_service: AgentService = Depends(Provide[Container.agent_service]),
-    agent_registry: AgentRegistry = Depends(Provide[Container.agent_registry]),
-    message_service: MessageService = Depends(Provide[Container.message_service]),
-    user: User = Depends(get_user),
+    message_data: Annotated[
+        MessageRequest,
+        Body(
+            ...,
+            description="The message to send to the agent",
+            example={
+                "agent_id": "agent_456",
+                "message_role": "human",
+                "message_content": "Can you help me write a Python function?",
+                "attachment_id": None,
+            },
+        ),
+    ],
+    agent_service: Annotated[AgentService, Depends(Provide[Container.agent_service])],
+    agent_registry: Annotated[
+        AgentRegistry, Depends(Provide[Container.agent_registry])
+    ],
+    message_service: Annotated[
+        MessageService, Depends(Provide[Container.message_service])
+    ],
+    user: Annotated[User, Depends(get_user)],
 ):
     schema = user.id.replace("-", "_") if user is not None else "public"
     agent = agent_service.get_agent_by_id(message_data.agent_id, schema)
@@ -258,11 +272,13 @@ async def post_message(
 @inject
 async def get_by_id(
     message_id: str,
-    message_service: MessageService = Depends(Provide[Container.message_service]),
-    attachment_service: AttachmentService = Depends(
-        Provide[Container.attachment_service]
-    ),
-    user: User = Depends(get_user),
+    message_service: Annotated[
+        MessageService, Depends(Provide[Container.message_service])
+    ],
+    attachment_service: Annotated[
+        AttachmentService, Depends(Provide[Container.attachment_service])
+    ],
+    user: Annotated[User, Depends(get_user)],
 ):
     schema = user.id.replace("-", "_") if user is not None else "public"
     assistant_message = message_service.get_message_by_id(message_id, schema)
@@ -305,8 +321,10 @@ async def get_by_id(
 @inject
 async def remove(
     message_id: str,
-    message_service: MessageService = Depends(Provide[Container.message_service]),
-    user: User = Depends(get_user),
+    message_service: Annotated[
+        MessageService, Depends(Provide[Container.message_service])
+    ],
+    user: Annotated[User, Depends(get_user)],
 ):
     schema = user.id.replace("-", "_") if user is not None else "public"
     message_service.delete_message_by_id(message_id, schema)

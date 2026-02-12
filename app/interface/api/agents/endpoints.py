@@ -12,7 +12,7 @@ from fastapi import (
 )
 from fastapi.security import HTTPBearer
 from fastapi_keycloak_middleware import get_user
-from typing_extensions import List
+from typing_extensions import List, Annotated
 
 from app.core.container import Container
 from app.domain.models import Agent as DomainAgent
@@ -81,8 +81,8 @@ bearer_scheme = HTTPBearer()
 )
 @inject
 async def get_list(
-    agent_service: AgentService = Depends(Provide[Container.agent_service]),
-    user: User = Depends(get_user),
+    agent_service: Annotated[AgentService, Depends(Provide[Container.agent_service])],
+    user: Annotated[User, Depends(get_user)],
 ):
     schema = user.id.replace("-", "_") if user is not None else "public"
     agents = agent_service.get_agents(schema)
@@ -141,11 +141,11 @@ async def get_list(
 @inject
 async def get_by_id(
     agent_id: str,
-    agent_service: AgentService = Depends(Provide[Container.agent_service]),
-    agent_setting_service: AgentSettingService = Depends(
-        Provide[Container.agent_setting_service]
-    ),
-    user: User = Depends(get_user),
+    agent_service: Annotated[AgentService, Depends(Provide[Container.agent_service])],
+    agent_setting_service: Annotated[
+        AgentSettingService, Depends(Provide[Container.agent_setting_service])
+    ],
+    user: Annotated[User, Depends(get_user)],
 ):
     schema = user.id.replace("-", "_") if user is not None else "public"
     agent = agent_service.get_agent_by_id(agent_id, schema)
@@ -195,14 +195,20 @@ async def get_by_id(
         400: {
             "description": "Invalid agent configuration",
             "content": {
-                "application/json": {"example": {"detail": "Field agent_type is invalid, reason: not supported"}}
+                "application/json": {
+                    "example": {
+                        "detail": "Field agent_type is invalid, reason: not supported"
+                    }
+                }
             },
         },
         404: {
             "description": "Language model not found",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Language model with ID 'lm_abc123' not found"}
+                    "example": {
+                        "detail": "Language model with ID 'lm_abc123' not found"
+                    }
                 }
             },
         },
@@ -213,10 +219,12 @@ async def get_by_id(
 )
 @inject
 async def add(
-    agent_data: AgentCreateRequest = Body(...),
-    agent_service: AgentService = Depends(Provide[Container.agent_service]),
-    agent_registry: AgentRegistry = Depends(Provide[Container.agent_registry]),
-    user: User = Depends(get_user),
+    agent_data: Annotated[AgentCreateRequest, Body(...)],
+    agent_service: Annotated[AgentService, Depends(Provide[Container.agent_service])],
+    agent_registry: Annotated[
+        AgentRegistry, Depends(Provide[Container.agent_registry])
+    ],
+    user: Annotated[User, Depends(get_user)],
 ):
     schema = user.id.replace("-", "_") if user is not None else "public"
     agent = agent_service.create_agent(
@@ -258,8 +266,8 @@ async def add(
 @inject
 async def remove(
     agent_id: str,
-    agent_service: AgentService = Depends(Provide[Container.agent_service]),
-    user: User = Depends(get_user),
+    agent_service: Annotated[AgentService, Depends(Provide[Container.agent_service])],
+    user: Annotated[User, Depends(get_user)],
 ):
     schema = user.id.replace("-", "_") if user is not None else "public"
     agent_service.delete_agent_by_id(agent_id, schema)
@@ -308,7 +316,11 @@ async def remove(
         400: {
             "description": "Invalid agent name",
             "content": {
-                "application/json": {"example": {"detail": "Field agent_name is invalid, reason: contains invalid characters"}}
+                "application/json": {
+                    "example": {
+                        "detail": "Field agent_name is invalid, reason: contains invalid characters"
+                    }
+                }
             },
         },
         422: {"description": "Validation error"},
@@ -316,9 +328,9 @@ async def remove(
 )
 @inject
 async def update(
-    agent_data: AgentUpdateRequest = Body(...),
-    agent_service: AgentService = Depends(Provide[Container.agent_service]),
-    user: User = Depends(get_user),
+    agent_data: Annotated[AgentUpdateRequest, Body(...)],
+    agent_service: Annotated[AgentService, Depends(Provide[Container.agent_service])],
+    user: Annotated[User, Depends(get_user)],
 ):
     schema = user.id.replace("-", "_") if user is not None else "public"
     agent = agent_service.update_agent(
@@ -385,7 +397,9 @@ async def update(
             "description": "Invalid setting key or value",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Field setting_value is invalid, reason: contains invalid characters"}
+                    "example": {
+                        "detail": "Field setting_value is invalid, reason: contains invalid characters"
+                    }
                 }
             },
         },
@@ -394,12 +408,12 @@ async def update(
 )
 @inject
 async def update_setting(
-    agent_data: AgentSettingUpdateRequest = Body(...),
-    agent_service: AgentService = Depends(Provide[Container.agent_service]),
-    agent_setting_service: AgentSettingService = Depends(
-        Provide[Container.agent_setting_service]
-    ),
-    user: User = Depends(get_user),
+    agent_data: Annotated[AgentSettingUpdateRequest, Body(...)],
+    agent_service: Annotated[AgentService, Depends(Provide[Container.agent_service])],
+    agent_setting_service: Annotated[
+        AgentSettingService, Depends(Provide[Container.agent_setting_service])
+    ],
+    user: Annotated[User, Depends(get_user)],
 ):
     schema = user.id.replace("-", "_") if user is not None else "public"
     agent_setting_service.update_by_key(
@@ -418,9 +432,9 @@ async def update_setting(
 async def task_updates_endpoint(
     websocket: WebSocket,
     agent_id: str,
-    task_notification_service: TaskNotificationService = Depends(
-        Provide[Container.task_notification_service]
-    ),
+    task_notification_service: Annotated[
+        TaskNotificationService, Depends(Provide[Container.task_notification_service])
+    ],
 ):
     await websocket.accept()
     task_notification_service.subscribe()

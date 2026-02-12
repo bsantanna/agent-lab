@@ -1,10 +1,11 @@
 from io import BytesIO
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, File, Depends, Body, Path
+from fastapi import APIRouter, File, Depends, Body, Path, UploadFile
 from fastapi.security import HTTPBearer
 from fastapi_keycloak_middleware import get_user
 from starlette import status
+from typing_extensions import Annotated
 from starlette.responses import StreamingResponse
 
 from app.core.container import Container
@@ -56,7 +57,9 @@ bearer_scheme = HTTPBearer()
             "description": "File too large",
             "content": {
                 "application/json": {
-                    "example": {"detail": "File size 15728640 exceeds the maximum allowed size of 10485760 bytes"}
+                    "example": {
+                        "detail": "File size 15728640 exceeds the maximum allowed size of 10485760 bytes"
+                    }
                 }
             },
         },
@@ -70,11 +73,13 @@ bearer_scheme = HTTPBearer()
 )
 @inject
 async def upload_attachment(
-    file=File(..., description="The file to upload.", example="document.pdf"),
-    attachment_service: AttachmentService = Depends(
-        Provide[Container.attachment_service]
-    ),
-    user: User = Depends(get_user),
+    file: Annotated[
+        UploadFile, File(..., description="The file to upload.", example="document.pdf")
+    ],
+    attachment_service: Annotated[
+        AttachmentService, Depends(Provide[Container.attachment_service])
+    ],
+    user: Annotated[User, Depends(get_user)],
 ):
     schema = user.id.replace("-", "_") if user is not None else "public"
     # validate file size
@@ -125,7 +130,9 @@ async def upload_attachment(
             "description": "Attachment not found",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Attachment with ID 'att_123456789' not found"}
+                    "example": {
+                        "detail": "Attachment with ID 'att_123456789' not found"
+                    }
                 }
             },
         },
@@ -133,17 +140,20 @@ async def upload_attachment(
 )
 @inject
 async def download_attachment(
-    attachment_id: str = Path(
-        ...,
-        description="Unique identifier of the attachment to download",
-        example="att_123456789",
-        min_length=1,
-        max_length=50,
-    ),
-    attachment_service: AttachmentService = Depends(
-        Provide[Container.attachment_service]
-    ),
-    user: User = Depends(get_user),
+    attachment_id: Annotated[
+        str,
+        Path(
+            ...,
+            description="Unique identifier of the attachment to download",
+            example="att_123456789",
+            min_length=1,
+            max_length=50,
+        ),
+    ],
+    attachment_service: Annotated[
+        AttachmentService, Depends(Provide[Container.attachment_service])
+    ],
+    user: Annotated[User, Depends(get_user)],
 ):
     schema = user.id.replace("-", "_") if user is not None else "public"
     attachment = attachment_service.get_attachment_by_id(attachment_id, schema)
@@ -195,7 +205,9 @@ async def download_attachment(
             "description": "Attachment or language model not found",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Attachment with ID 'att_123456789' not found"}
+                    "example": {
+                        "detail": "Attachment with ID 'att_123456789' not found"
+                    }
                 }
             },
         },
@@ -203,7 +215,9 @@ async def download_attachment(
             "description": "Validation error",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Invalid language model ID or collection name"}
+                    "example": {
+                        "detail": "Invalid language model ID or collection name"
+                    }
                 }
             },
         },
@@ -211,19 +225,22 @@ async def download_attachment(
 )
 @inject
 async def create_embeddings(
-    embeddings: EmbeddingsRequest = Body(
-        ...,
-        description="Configuration for embedding generation",
-        example={
-            "attachment_id": "att_123456789",
-            "language_model_id": "lm_abc123",
-            "collection_name": "my_documents",
-        },
-    ),
-    attachment_service: AttachmentService = Depends(
-        Provide[Container.attachment_service]
-    ),
-    user: User = Depends(get_user),
+    embeddings: Annotated[
+        EmbeddingsRequest,
+        Body(
+            ...,
+            description="Configuration for embedding generation",
+            example={
+                "attachment_id": "att_123456789",
+                "language_model_id": "lm_abc123",
+                "collection_name": "my_documents",
+            },
+        ),
+    ],
+    attachment_service: Annotated[
+        AttachmentService, Depends(Provide[Container.attachment_service])
+    ],
+    user: Annotated[User, Depends(get_user)],
 ):
     schema = user.id.replace("-", "_") if user is not None else "public"
     attachment = await attachment_service.create_embeddings(
