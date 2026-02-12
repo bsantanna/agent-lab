@@ -20,9 +20,9 @@ scenario.configure(default_model="openai/gpt-5-nano")
 
 @pytest.mark.agent_test
 @pytest.mark.asyncio
-@pytest.mark.skipif(
-    condition=os.getenv("BUILD_WORKFLOW") == "True", reason="Skip Github CI."
-)
+# @pytest.mark.skipif(
+#     condition=os.getenv("BUILD_WORKFLOW") == "True", reason="Skip Github CI."
+# )
 async def test_supervised_coder_agent_python_specialist(client):
     class SupervisedCoderAgent(scenario.AgentAdapter):
         async def call(self, input: scenario.AgentInput) -> scenario.AgentReturnTypes:
@@ -94,9 +94,9 @@ async def test_supervised_researcher_agent(client):
 
 @pytest.mark.agent_test
 @pytest.mark.asyncio
-@pytest.mark.skipif(
-    condition=os.getenv("BUILD_WORKFLOW") == "True", reason="Skip Github CI."
-)
+# @pytest.mark.skipif(
+#     condition=os.getenv("BUILD_WORKFLOW") == "True", reason="Skip Github CI."
+# )
 async def test_supervised_coder_agent_bash_specialist(client):
     class SupervisedCoderAgent(scenario.AgentAdapter):
         async def call(self, input: scenario.AgentInput) -> scenario.AgentReturnTypes:

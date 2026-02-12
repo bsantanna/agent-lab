@@ -364,51 +364,70 @@ class WorkflowAgentBase(AgentBase, ABC):
         )
         return generate_prompt | llm
 
+    _REDIRECT_OPS = {"<", ">", ">>", "<<", "2>", "2>>", "&>", "&>>"}
+
+    @staticmethod
+    def _classify_shell_token(token, redirect_ops):
+        if token == "|":
+            return "pipe"
+        if token in (";", "&&", "||"):
+            return "separator"
+        if token in redirect_ops:
+            return "redirection"
+        if "=" in token and not token.startswith("-"):
+            parts = token.split("=", 1)
+            if parts[0].isidentifier():
+                return "variable"
+        if token.startswith("$(") or token.startswith("`"):
+            return "subshell"
+        return "command"
+
     @staticmethod
     def _analyze_shell(script):
-        collectors = {
-            "commands": [],
-            "pipes": 0,
-            "redirections": [],
-            "variables": [],
-            "subshells": 0,
-        }
-        redirect_ops = {"<", ">", ">>", "<<", "2>", "2>>", "&>", "&>>"}
+        commands = []
         current_cmd = []
+        pipes = 0
+        redirections = []
+        variables = []
+        subshells = 0
 
         try:
             tokens = shlex.split(script)
         except ValueError as e:
             return None, str(e)
 
+        classify = WorkflowAgentBase._classify_shell_token
+        ops = WorkflowAgentBase._REDIRECT_OPS
+
         for token in tokens:
-            if token == "|":
-                collectors["pipes"] += 1
-                if current_cmd:
-                    collectors["commands"].append(" ".join(current_cmd))
-                    current_cmd = []
-            elif token in (";", "&&", "||"):
-                if current_cmd:
-                    collectors["commands"].append(" ".join(current_cmd))
-                    current_cmd = []
-            elif token in redirect_ops:
-                collectors["redirections"].append(token)
-            elif "=" in token and not token.startswith("-"):
-                parts = token.split("=", 1)
-                if parts[0].isidentifier():
-                    collectors["variables"].append(parts[0])
-                else:
-                    current_cmd.append(token)
-            elif token.startswith("$(") or token.startswith("`"):
-                collectors["subshells"] += 1
+            kind = classify(token, ops)
+
+            if kind in ("pipe", "separator") and current_cmd:
+                commands.append(" ".join(current_cmd))
+                current_cmd = []
+
+            if kind == "pipe":
+                pipes += 1
+            elif kind == "redirection":
+                redirections.append(token)
+            elif kind == "variable":
+                variables.append(token.split("=", 1)[0])
+            elif kind == "subshell":
+                subshells += 1
                 current_cmd.append(token)
-            else:
+            elif kind == "command":
                 current_cmd.append(token)
 
         if current_cmd:
-            collectors["commands"].append(" ".join(current_cmd))
+            commands.append(" ".join(current_cmd))
 
-        return collectors, None
+        return {
+            "commands": commands,
+            "pipes": pipes,
+            "redirections": redirections,
+            "variables": variables,
+            "subshells": subshells,
+        }, None
 
     def get_bash_tool(self) -> BaseTool:
         @tool("bash_tool")
