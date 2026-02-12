@@ -23,7 +23,7 @@ scenario.configure(default_model="openai/gpt-5-nano")
 @pytest.mark.skipif(
     condition=os.getenv("BUILD_WORKFLOW") == "True", reason="Skip Github CI."
 )
-async def test_supervised_coder_agent(client):
+async def test_supervised_coder_agent_python_specialist(client):
     class SupervisedCoderAgent(scenario.AgentAdapter):
         async def call(self, input: scenario.AgentInput) -> scenario.AgentReturnTypes:
             user_message = input.last_new_user_message_str()
@@ -84,6 +84,45 @@ async def test_supervised_researcher_agent(client):
         ],
         script=[
             scenario.user("According to Sun-Tzu, what is the pinnacle of excellence?"),
+            scenario.agent(),
+            scenario.judge(),
+        ],
+    )
+
+    assert result.success
+
+
+@pytest.mark.agent_test
+@pytest.mark.asyncio
+@pytest.mark.skipif(
+    condition=os.getenv("BUILD_WORKFLOW") == "True", reason="Skip Github CI."
+)
+async def test_supervised_coder_agent_bash_specialist(client):
+    class SupervisedCoderAgent(scenario.AgentAdapter):
+        async def call(self, input: scenario.AgentInput) -> scenario.AgentReturnTypes:
+            user_message = input.last_new_user_message_str()
+            return supervised_agent(client, user_message)
+
+    result = await scenario.run(
+        name="Simulation: Bash coder agent",
+        description="Generate Bash script",
+        agents=[
+            SupervisedCoderAgent(),
+            scenario.UserSimulatorAgent(),
+            scenario.JudgeAgent(
+                temperature=1.0,
+                criteria=[
+                    "Agent should not ask follow-up questions.",
+                    "Agent should generate a solution containing a bash script implementation."
+                    "Solution should match the given criteria in the query.",
+                ],
+            ),
+        ],
+        script=[
+            scenario.user(
+                "Generate a bash script that backs up a directory to a tar.gz archive, "
+                "accepting source and destination paths as arguments."
+            ),
             scenario.agent(),
             scenario.judge(),
         ],

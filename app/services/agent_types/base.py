@@ -2,7 +2,7 @@ import asyncio
 import json
 import logging
 import os
-import subprocess
+import shlex
 import uuid
 from abc import ABC, abstractmethod
 from datetime import timedelta, datetime, timezone
@@ -364,35 +364,92 @@ class WorkflowAgentBase(AgentBase, ABC):
         )
         return generate_prompt | llm
 
+    @staticmethod
+    def _analyze_shell(script):
+        collectors = {
+            "commands": [],
+            "pipes": 0,
+            "redirections": [],
+            "variables": [],
+            "subshells": 0,
+        }
+        redirect_ops = {"<", ">", ">>", "<<", "2>", "2>>", "&>", "&>>"}
+        current_cmd = []
+
+        try:
+            tokens = shlex.split(script)
+        except ValueError as e:
+            return None, str(e)
+
+        for token in tokens:
+            if token == "|":
+                collectors["pipes"] += 1
+                if current_cmd:
+                    collectors["commands"].append(" ".join(current_cmd))
+                    current_cmd = []
+            elif token in (";", "&&", "||"):
+                if current_cmd:
+                    collectors["commands"].append(" ".join(current_cmd))
+                    current_cmd = []
+            elif token in redirect_ops:
+                collectors["redirections"].append(token)
+            elif "=" in token and not token.startswith("-"):
+                parts = token.split("=", 1)
+                if parts[0].isidentifier():
+                    collectors["variables"].append(parts[0])
+                else:
+                    current_cmd.append(token)
+            elif token.startswith("$(") or token.startswith("`"):
+                collectors["subshells"] += 1
+                current_cmd.append(token)
+            else:
+                current_cmd.append(token)
+
+        if current_cmd:
+            collectors["commands"].append(" ".join(current_cmd))
+
+        return collectors, None
+
     def get_bash_tool(self) -> BaseTool:
         @tool("bash_tool")
         def bash_tool_call(
-            cmd: Annotated[str, "The bash command to be executed."],
-            timeout: Annotated[
-                int, "Maximum time in seconds for the command to complete."
-            ] = 120,
+            cmd: Annotated[str, "The bash script to analyze."],
         ):
-            """Use this to execute bash command and do necessary operations."""
-            self.logger.info(f"Executing Bash Command: {cmd} with timeout {timeout}s")
-            try:
-                result = subprocess.run(
-                    cmd,
-                    shell=True,
-                    check=True,
-                    text=True,
-                    capture_output=True,
-                    timeout=timeout,
-                )
-                return result.stdout
-            except subprocess.CalledProcessError as e:
-                error_message = f"Command failed with exit code {e.returncode}.\nStdout: {e.stdout}\nStderr: {e.stderr}"
-            except subprocess.TimeoutExpired:
-                error_message = f"Command '{cmd}' timed out after {timeout}s."
-            except Exception as e:
-                error_message = f"Error executing command: {str(e)}"
+            """Use this to analyze bash script structure and validate syntax.
+            This tool parses the script and returns its structure (commands, pipes,
+            redirections, variables) without executing it. Use it to verify script
+            correctness and understand its components."""
 
-            self.logger.error(error_message)
-            return error_message
+            if not isinstance(cmd, str):
+                error_msg = f"Invalid input: cmd must be a string, got {type(cmd)}"
+                self.logger.error(error_msg)
+                return f"Error analyzing script: {error_msg}"
+
+            self.logger.info("Analyzing Bash script")
+            result, error = self._analyze_shell(cmd)
+
+            if error:
+                self.logger.error(f"Shell parse error: {error}")
+                return f"Parse error in script:\n```bash\n{cmd}\n```\nError: {error}"
+
+            summary = [
+                "Syntax: valid",
+                f"Lines: {len(cmd.splitlines())}",
+            ]
+            if result["commands"]:
+                summary.append(f"Commands: {'; '.join(result['commands'])}")
+            if result["pipes"]:
+                summary.append(f"Pipes: {result['pipes']}")
+            if result["redirections"]:
+                summary.append(f"Redirections: {', '.join(result['redirections'])}")
+            if result["variables"]:
+                summary.append(f"Variables: {', '.join(result['variables'])}")
+            if result["subshells"]:
+                summary.append(f"Subshells: {result['subshells']}")
+
+            analysis = "\n".join(summary)
+            self.logger.info("Script analysis successful")
+            return f"Analysis of:\n```bash\n{cmd}\n```\n{analysis}"
 
         return bash_tool_call
 
