@@ -20,6 +20,7 @@ scenario.configure(default_model="openai/gpt-5-nano")
 
 @pytest.mark.agent_test
 @pytest.mark.asyncio
+@pytest.mark.skipif(condition=os.getenv("BUILD_WORKFLOW") == "True", reason="Skip during CI.")
 async def test_browser_automation_agent(client):
 
     class BrowserAgent(scenario.AgentAdapter):
