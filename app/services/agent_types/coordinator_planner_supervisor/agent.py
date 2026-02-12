@@ -1,10 +1,10 @@
+import ast
 import json
 from datetime import datetime
 from pathlib import Path
 
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.tools import tool, BaseTool
-from langchain_experimental.utilities import PythonREPL
 from langgraph.constants import START, END
 from langgraph.graph import StateGraph, MessagesState
 from langgraph.managed import RemainingSteps
@@ -391,42 +391,58 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             goto="supervisor",
         )
 
+    @staticmethod
+    def _analyze_ast(tree):
+        collectors = {
+            "imports": [],
+            "functions": [],
+            "classes": [],
+        }
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                module = getattr(node, "module", None) or ""
+                names = ", ".join(alias.name for alias in node.names)
+                collectors["imports"].append(f"{module}: {names}" if module else names)
+            elif isinstance(node, ast.FunctionDef):
+                args = ", ".join(arg.arg for arg in node.args.args)
+                collectors["functions"].append(f"{node.name}({args})")
+            elif isinstance(node, ast.ClassDef):
+                bases = ", ".join(
+                    getattr(b, "id", getattr(b, "attr", "?")) for b in node.bases
+                )
+                collectors["classes"].append(
+                    f"{node.name}({bases})" if bases else node.name
+                )
+        return collectors
+
     def get_python_tool(self) -> BaseTool:
         @tool("python_tool")
         def python_tool_call(
-            code: Annotated[
-                str, "The python code to execute to do further analysis or calculation."
-            ],
+            code: Annotated[str, "The python3 code to analyze."],
         ):
-            """Use this to execute python3 code and do data analysis or calculation. If you want to see the output of a value,
-            you should print it out with `print(...)`. This is visible to the user."""
-
-            repl = PythonREPL()
+            """Use this to analyze python3 code structure and validate syntax.
+            This tool parses the code and returns its structure (imports, functions, classes)
+            without executing it. Use it to verify code correctness and understand its components."""
 
             if not isinstance(code, str):
                 error_msg = f"Invalid input: code must be a string, got {type(code)}"
                 self.logger.error(error_msg)
-                return (
-                    f"Error executing code:\n```python\n{code}\n```\nError: {error_msg}"
-                )
+                return f"Error analyzing code: {error_msg}"
 
-            self.logger.info("Executing Python code")
+            self.logger.info("Analyzing Python code")
             try:
-                result = repl.run(code)
-                if isinstance(result, str) and (
-                    "Error" in result or "Exception" in result
-                ):
-                    raise ValueError(result)
-                self.logger.info("Code execution successful")
-                return (
-                    f"Successfully executed:\n```python\n{code}\n```\nStdout: {result}"
-                )
-            except ValueError as e:
-                error_msg = repr(e)
-                self.logger.error(error_msg)
-                return (
-                    f"Error executing code:\n```python\n{code}\n```\nError: {error_msg}"
-                )
+                tree = ast.parse(code)
+                result = self._analyze_ast(tree)
+                summary = ["Syntax: valid", f"Lines: {len(code.splitlines())}"]
+                for label, items in result.items():
+                    if items:
+                        summary.append(f"{label.capitalize()}: {'; '.join(items)}")
+                analysis = "\n".join(summary)
+                self.logger.info("Code analysis successful")
+                return f"Analysis of:\n```python\n{code}\n```\n{analysis}"
+            except SyntaxError as e:
+                self.logger.error(f"Syntax error: {e}")
+                return f"Syntax error in code:\n```python\n{code}\n```\nError at line {e.lineno}: {e.msg}"
 
         return python_tool_call
 

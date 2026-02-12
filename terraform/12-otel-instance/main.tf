@@ -57,7 +57,7 @@ resource "helm_release" "otel_collector" {
               "Authorization" = "Bearer ${var.otlp_http_auth_token}"
             }
             tls = {
-              insecure_skip_verify = false
+              insecure_skip_verify = true
             }
           }
         }
