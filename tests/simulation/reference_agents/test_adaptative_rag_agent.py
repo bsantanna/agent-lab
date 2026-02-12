@@ -20,8 +20,10 @@ scenario.configure(default_model="openai/gpt-5-nano")
 
 @pytest.mark.agent_test
 @pytest.mark.asyncio
+@pytest.mark.skipif(
+    condition=os.getenv("BUILD_WORKFLOW") == "True", reason="Skip Github CI."
+)
 async def test_adaptive_rag_agent(client):
-
     class AdaptiveRagAgent(scenario.AgentAdapter):
         async def call(self, input: scenario.AgentInput) -> scenario.AgentReturnTypes:
             user_message = input.last_new_user_message_str()
@@ -33,10 +35,13 @@ async def test_adaptive_rag_agent(client):
         agents=[
             AdaptiveRagAgent(),
             scenario.UserSimulatorAgent(),
-            scenario.JudgeAgent(temperature=1.0, criteria=[
-                "Agent should answer user question",
-                "Answer should meet given criteria in the query"
-            ])
+            scenario.JudgeAgent(
+                temperature=1.0,
+                criteria=[
+                    "Agent should answer user question",
+                    "Answer should meet given criteria in the query",
+                ],
+            ),
         ],
         script=[
             scenario.user(

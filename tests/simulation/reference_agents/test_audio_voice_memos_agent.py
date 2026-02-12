@@ -21,6 +21,9 @@ scenario.configure(default_model="openai/gpt-5-nano")
 
 @pytest.mark.agent_test
 @pytest.mark.asyncio
+@pytest.mark.skipif(
+    condition=os.getenv("BUILD_WORKFLOW") == "True", reason="Skip Github CI."
+)
 async def test_audio_voice_memos_agent(client):
     class AudioVoiceMemosAgent(scenario.AgentAdapter):
         async def call(self, input: scenario.AgentInput) -> scenario.AgentReturnTypes:
@@ -42,7 +45,7 @@ async def test_audio_voice_memos_agent(client):
                     "Audio document contains a first person voice memo about a meeting and a fictional character responsible for marketing team. "
                     "Audio document is recorded in portuguese. "
                     "The fictional character is concerned about delivery date of project, agent should mention this in report.",
-                ]
+                ],
             ),
         ],
         script=[

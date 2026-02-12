@@ -20,7 +20,9 @@ scenario.configure(default_model="openai/gpt-5-nano")
 
 @pytest.mark.agent_test
 @pytest.mark.asyncio
-@pytest.mark.skipif(condition=os.getenv("BUILD_WORKFLOW") == "True", reason="Skip during CI, vector size error.")
+@pytest.mark.skipif(
+    condition=os.getenv("BUILD_WORKFLOW") == "True", reason="Skip Github CI."
+)
 async def test_supervised_coder_agent(client):
     class SupervisedCoderAgent(scenario.AgentAdapter):
         async def call(self, input: scenario.AgentInput) -> scenario.AgentReturnTypes:
@@ -39,7 +41,7 @@ async def test_supervised_coder_agent(client):
                     "Agent should not ask follow-up questions.",
                     "Agent should generate a solution containing code implementation example in Python."
                     "Solution should match the given criteria in the query.",
-                ]
+                ],
             ),
         ],
         script=[
@@ -56,7 +58,9 @@ async def test_supervised_coder_agent(client):
 
 @pytest.mark.agent_test
 @pytest.mark.asyncio
-@pytest.mark.skipif(condition=os.getenv("BUILD_WORKFLOW") == "True", reason="Skip during CI, vector size error.")
+@pytest.mark.skipif(
+    condition=os.getenv("BUILD_WORKFLOW") == "True", reason="Skip Github CI."
+)
 async def test_supervised_researcher_agent(client):
     class SupervisedResearcherAgent(scenario.AgentAdapter):
         async def call(self, input: scenario.AgentInput) -> scenario.AgentReturnTypes:
@@ -75,7 +79,7 @@ async def test_supervised_researcher_agent(client):
                     "Agent should not ask follow-up questions.",
                     "Agent should generate a comprehensive report containing answer to given question."
                     "Test dataset contains the book 'Sun-Tzu: Art of War', answer must contain be in this context. ",
-                ]
+                ],
             ),
         ],
         script=[

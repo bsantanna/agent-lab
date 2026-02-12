@@ -21,8 +21,7 @@ scenario.configure(default_model="openai/gpt-5-nano")
 @pytest.mark.agent_test
 @pytest.mark.asyncio
 @pytest.mark.skipif(
-    condition=os.getenv("BUILD_WORKFLOW") == "True",
-    reason="Skip during CI, vector size error.",
+    condition=os.getenv("BUILD_WORKFLOW") == "True", reason="Skip Github CI."
 )
 async def test_react_rag_agent(client):
     class ReactRagAgent(scenario.AgentAdapter):
