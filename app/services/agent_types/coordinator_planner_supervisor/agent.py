@@ -391,6 +391,30 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             goto="supervisor",
         )
 
+    @staticmethod
+    def _analyze_ast(tree):
+        collectors = {
+            "imports": [],
+            "functions": [],
+            "classes": [],
+        }
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                module = getattr(node, "module", None) or ""
+                names = ", ".join(alias.name for alias in node.names)
+                collectors["imports"].append(f"{module}: {names}" if module else names)
+            elif isinstance(node, ast.FunctionDef):
+                args = ", ".join(arg.arg for arg in node.args.args)
+                collectors["functions"].append(f"{node.name}({args})")
+            elif isinstance(node, ast.ClassDef):
+                bases = ", ".join(
+                    getattr(b, "id", getattr(b, "attr", "?")) for b in node.bases
+                )
+                collectors["classes"].append(
+                    f"{node.name}({bases})" if bases else node.name
+                )
+        return collectors
+
     def get_python_tool(self) -> BaseTool:
         @tool("python_tool")
         def python_tool_call(
@@ -408,38 +432,11 @@ class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
             self.logger.info("Analyzing Python code")
             try:
                 tree = ast.parse(code)
-                imports = []
-                functions = []
-                classes = []
-                for node in ast.walk(tree):
-                    if isinstance(node, (ast.Import, ast.ImportFrom)):
-                        module = getattr(node, "module", None) or ""
-                        names = [alias.name for alias in node.names]
-                        imports.append(
-                            f"{module}: {', '.join(names)}"
-                            if module
-                            else ", ".join(names)
-                        )
-                    elif isinstance(node, ast.FunctionDef):
-                        args = [arg.arg for arg in node.args.args]
-                        functions.append(f"{node.name}({', '.join(args)})")
-                    elif isinstance(node, ast.ClassDef):
-                        bases = [
-                            getattr(b, "id", getattr(b, "attr", "?"))
-                            for b in node.bases
-                        ]
-                        classes.append(
-                            f"{node.name}({', '.join(bases)})" if bases else node.name
-                        )
-
+                result = self._analyze_ast(tree)
                 summary = ["Syntax: valid", f"Lines: {len(code.splitlines())}"]
-                if imports:
-                    summary.append(f"Imports: {'; '.join(imports)}")
-                if classes:
-                    summary.append(f"Classes: {'; '.join(classes)}")
-                if functions:
-                    summary.append(f"Functions: {'; '.join(functions)}")
-
+                for label, items in result.items():
+                    if items:
+                        summary.append(f"{label.capitalize()}: {'; '.join(items)}")
                 analysis = "\n".join(summary)
                 self.logger.info("Code analysis successful")
                 return f"Analysis of:\n```python\n{code}\n```\n{analysis}"
