@@ -2,6 +2,29 @@
 
 <!-- version list -->
 
+## v1.5.3 (2026-02-12)
+
+### Bug Fixes
+
+- Adjusts for otel collector service 1 ([#258](https://github.com/bsantanna/agent-lab/pull/258),
+  [`a580b49`](https://github.com/bsantanna/agent-lab/commit/a580b49989a55ebce6adc8a2d474e97617c03e48))
+
+- Adjusts for otel collector service 2 ([#258](https://github.com/bsantanna/agent-lab/pull/258),
+  [`a580b49`](https://github.com/bsantanna/agent-lab/commit/a580b49989a55ebce6adc8a2d474e97617c03e48))
+
+- Removes vulnerable bash execution 1 ([#258](https://github.com/bsantanna/agent-lab/pull/258),
+  [`a580b49`](https://github.com/bsantanna/agent-lab/commit/a580b49989a55ebce6adc8a2d474e97617c03e48))
+
+- Removes vulnerable bash execution 2 ([#258](https://github.com/bsantanna/agent-lab/pull/258),
+  [`a580b49`](https://github.com/bsantanna/agent-lab/commit/a580b49989a55ebce6adc8a2d474e97617c03e48))
+
+- Removes vulnerable PythonREPL 1 ([#258](https://github.com/bsantanna/agent-lab/pull/258),
+  [`a580b49`](https://github.com/bsantanna/agent-lab/commit/a580b49989a55ebce6adc8a2d474e97617c03e48))
+
+- Removes vulnerable PythonREPL 2 ([#258](https://github.com/bsantanna/agent-lab/pull/258),
+  [`a580b49`](https://github.com/bsantanna/agent-lab/commit/a580b49989a55ebce6adc8a2d474e97617c03e48))
+
+
 ## v1.5.2 (2026-02-12)
 
 ### Bug Fixes
