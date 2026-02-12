@@ -2,6 +2,32 @@
 
 <!-- version list -->
 
+## v1.5.2 (2026-02-12)
+
+### Bug Fixes
+
+- Fixes CI 1
+  ([`09680de`](https://github.com/bsantanna/agent-lab/commit/09680defedf7f6c2730eef89a93e15acf902568a))
+
+- Fixes CI 2
+  ([`319f15f`](https://github.com/bsantanna/agent-lab/commit/319f15f3970d462d029095c58610e271082d3304))
+
+- Fixes CI 3
+  ([`45a0de3`](https://github.com/bsantanna/agent-lab/commit/45a0de31eb8da91b9881d306e062dd892dd49956))
+
+- Fixes sonar reported issues 1 ([#257](https://github.com/bsantanna/agent-lab/pull/257),
+  [`b2da9c2`](https://github.com/bsantanna/agent-lab/commit/b2da9c2ba255408faf4a85b834b295aaefe57bfa))
+
+- Project ci adjusts 1 ([#256](https://github.com/bsantanna/agent-lab/pull/256),
+  [`4d677a6`](https://github.com/bsantanna/agent-lab/commit/4d677a65976ce0b9082087e276ac9792ffb72ace))
+
+- Project setup adjusts 1 ([#256](https://github.com/bsantanna/agent-lab/pull/256),
+  [`4d677a6`](https://github.com/bsantanna/agent-lab/commit/4d677a65976ce0b9082087e276ac9792ffb72ace))
+
+- Project setup adjusts 2 ([#256](https://github.com/bsantanna/agent-lab/pull/256),
+  [`4d677a6`](https://github.com/bsantanna/agent-lab/commit/4d677a65976ce0b9082087e276ac9792ffb72ace))
+
+
 ## v1.5.1 (2026-02-06)
 
 ### Bug Fixes
