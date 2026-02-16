@@ -65,9 +65,13 @@ class Container(containers.DeclarativeContainer):
     else:
         vault_url = os.getenv("VAULT_URL")
         vault_token = os.getenv("VAULT_TOKEN")
+        vault_engine_path = os.getenv("VAULT_ENGINE_PATH", "secret")
+        vault_secret_path = os.getenv("VAULT_SECRET_PATH", "app_secrets")
         vault_client = hvac.Client(url=vault_url, token=vault_token, verify=False)
         app_secrets = vault_client.secrets.kv.read_secret_version(
-            raise_on_deleted_version=False, path="app_secrets"
+            raise_on_deleted_version=False,
+            path=vault_secret_path,
+            mount_point=vault_engine_path,
         )
 
         config = providers.Configuration()
@@ -76,7 +80,9 @@ class Container(containers.DeclarativeContainer):
         config.set("auth.url", app_secrets["data"]["data"]["auth_url"])
         config.set("auth.realm", app_secrets["data"]["data"]["auth_realm"])
         config.set("auth.client_id", app_secrets["data"]["data"]["auth_client_id"])
-        config.set("auth.client_secret", app_secrets["data"]["data"]["auth_client_secret"])
+        config.set(
+            "auth.client_secret", app_secrets["data"]["data"]["auth_client_secret"]
+        )
         config.set("cdp_url", app_secrets["data"]["data"]["cdp_url"])
         config.set("vault.url", vault_url)
         config.set("vault.token", vault_token)
