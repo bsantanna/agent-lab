@@ -2,6 +2,17 @@
 
 <!-- version list -->
 
+## v1.5.4 (2026-02-17)
+
+### Bug Fixes
+
+- Unit tests ([#263](https://github.com/bsantanna/agent-lab/pull/263),
+  [`781849a`](https://github.com/bsantanna/agent-lab/commit/781849a96b25b541b88d23c17f13b33fa93cd1b0))
+
+- Unit tests (2) ([#263](https://github.com/bsantanna/agent-lab/pull/263),
+  [`781849a`](https://github.com/bsantanna/agent-lab/commit/781849a96b25b541b88d23c17f13b33fa93cd1b0))
+
+
 ## v1.5.3 (2026-02-12)
 
 ### Bug Fixes
