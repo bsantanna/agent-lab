@@ -5,7 +5,7 @@ from fastapi import APIRouter, File, Depends, Body, Path, UploadFile
 from fastapi.security import HTTPBearer
 from fastapi_keycloak_middleware import get_user
 from starlette import status
-from typing_extensions import Annotated
+from typing_extensions import Annotated, List
 from starlette.responses import StreamingResponse
 
 from app.core.container import Container
@@ -16,6 +16,65 @@ from app.services.attachments import AttachmentService
 
 router = APIRouter()
 bearer_scheme = HTTPBearer()
+
+
+@router.get(
+    path="/list",
+    dependencies=[Depends(bearer_scheme)],
+    response_model=List[Attachment],
+    operation_id="get_attachment_list",
+    summary="List all attachments",
+    description="""
+    Returns all active attachments belonging to the authenticated user.
+
+    Each attachment includes its metadata: file name, creation timestamp,
+    parsed text content, and the associated embeddings collection (if any).
+
+    This endpoint is useful for browsing uploaded files before downloading,
+    deleting, or generating embeddings for them.
+
+    The response excludes raw binary content for performance. Use the
+    `/download/{attachment_id}` endpoint to retrieve the actual file.
+    """,
+    response_description="List of all active attachments for the current user",
+    responses={
+        200: {
+            "description": "Attachments retrieved successfully",
+            "content": {
+                "application/json": {
+                    "example": [
+                        {
+                            "id": "att_123456789",
+                            "is_active": True,
+                            "created_at": "2024-01-15T10:30:00Z",
+                            "file_name": "document.pdf",
+                            "parsed_content": "Extracted text content...",
+                            "embeddings_collection": "my_documents",
+                        },
+                        {
+                            "id": "att_987654321",
+                            "is_active": True,
+                            "created_at": "2024-01-16T14:00:00Z",
+                            "file_name": "notes.txt",
+                            "parsed_content": "Meeting notes from...",
+                            "embeddings_collection": None,
+                        },
+                    ]
+                }
+            },
+        },
+    },
+)
+@inject
+async def get_list(
+    attachment_service: Annotated[
+        AttachmentService, Depends(Provide[Container.attachment_service])
+    ],
+    user: Annotated[User, Depends(get_user)],
+):
+    schema = user.id.replace("-", "_") if user is not None else "public"
+    attachments = attachment_service.get_attachments(schema)
+    return [Attachment.model_validate(attachment) for attachment in attachments]
 
 
 @router.post(

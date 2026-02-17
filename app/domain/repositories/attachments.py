@@ -1,6 +1,7 @@
 from datetime import datetime
 from uuid import uuid4
 
+from typing_extensions import Iterator
 
 from app.domain.exceptions.base import NotFoundError
 from app.domain.models import Attachment
@@ -10,6 +11,10 @@ from app.infrastructure.database.sql import Database
 class AttachmentRepository:
     def __init__(self, db: Database) -> None:
         self.db = db
+
+    def get_all(self, schema: str) -> Iterator[Attachment]:
+        with self.db.session(schema_name=schema) as session:
+            return session.query(Attachment).filter(Attachment.is_active).all()
 
     def get_by_id(self, attachment_id: str, schema: str) -> Attachment:
         with self.db.session(schema_name=schema) as session:

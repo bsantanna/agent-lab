@@ -64,7 +64,7 @@ async def test_audio_voice_memos_agent(client):
 def audio_voice_memos_agent(
     client, message_content, agent_type="fast_voice_memos"
 ) -> scenario.AgentReturnTypes:
-    # create integration
+    # create integration (audio transcription needs openai)
     response = client.post(
         url="/integrations/create",
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
