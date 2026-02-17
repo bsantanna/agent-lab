@@ -138,9 +138,9 @@ def supervised_agent(client, message_content) -> scenario.AgentReturnTypes:
         url="/integrations/create",
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         json={
-            "api_endpoint": "https://api.openai.com/v1/",
-            "api_key": os.environ["OPENAI_API_KEY"],
-            "integration_type": "openai_api_v1",
+            "api_endpoint": "https://api.x.ai/v1/",
+            "api_key": os.environ["XAI_API_KEY"],
+            "integration_type": "xai_api_v1",
         },
     )
     integration_id = response.json()["id"]
@@ -151,7 +151,7 @@ def supervised_agent(client, message_content) -> scenario.AgentReturnTypes:
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         json={
             "integration_id": integration_id,
-            "language_model_tag": "gpt-5-nano",
+            "language_model_tag": "grok-code-fast",
         },
     )
     language_model_id = response_2.json()["id"]
@@ -167,6 +167,17 @@ def supervised_agent(client, message_content) -> scenario.AgentReturnTypes:
         },
     )
     agent_id = response_3.json()["id"]
+
+    # update collection_name to match pgvector dump
+    client.post(
+        url="/agents/update_setting",
+        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
+        json={
+            "agent_id": agent_id,
+            "setting_key": "collection_name",
+            "setting_value": "static_document_data_ollama_embeddings",
+        },
+    )
 
     # post message
     response_4 = client.post(
