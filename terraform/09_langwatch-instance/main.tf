@@ -134,6 +134,18 @@ resource "helm_release" "langwatch" {
           publicUrl = "https://${var.langwatch_fqdn}"
           baseHost  = "https://${var.langwatch_fqdn}"
         }
+        podSecurityContext = {
+          runAsNonRoot = false
+          runAsUser    = 0
+          fsGroup      = 0
+        }
+        containerSecurityContext = {
+          allowPrivilegeEscalation = false
+          capabilities = {
+            drop = ["ALL"]
+          }
+          readOnlyRootFilesystem = false
+        }
       }
 
       ingress = {
@@ -176,8 +188,29 @@ resource "helm_release" "langwatch" {
       prometheus = {
         chartManaged = true
       }
+
+      langevals = {
+        podSecurityContext = {
+          runAsNonRoot = false
+          runAsUser    = 0
+          fsGroup      = 0
+        }
+        containerSecurityContext = {
+          allowPrivilegeEscalation = false
+          capabilities = {
+            drop = ["ALL"]
+          }
+          readOnlyRootFilesystem = false
+        }
+      }
+
+      workers = {
+        enabled = false
+      }
     })
   ]
+
+  timeout = 600
 
   depends_on = [
     kubernetes_secret_v1.pg_conn,
