@@ -7,3 +7,9 @@ variable "kibana_fqdn" {
   type        = string
   description = "FQDN for Kibana access (e.g., kibana.local or a public domain)"
 }
+
+variable "kibana_enabled" {
+  type        = bool
+  default     = true
+  description = "Whether to deploy Kibana and its ingress"
+}
