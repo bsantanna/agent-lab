@@ -3,7 +3,7 @@ charset-normalizer==3.4.2
 dependency-injector~=4.48.3
 fastapi-keycloak-middleware~=1.6.0
 fastapi-mcp~=0.4.0
-fastapi[standard]~=0.132.0
+fastapi[standard]~=0.133.0
 flake8~=7.3.0
 hvac~=2.4.0
 icalendar~=7.0.0
