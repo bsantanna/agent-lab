@@ -2,6 +2,27 @@
 
 <!-- version list -->
 
+## v1.5.5 (2026-02-25)
+
+### Bug Fixes
+
+- Adjusts project dependencies and redoc path
+  ([#268](https://github.com/bsantanna/agent-lab/pull/268),
+  [`a8f6bea`](https://github.com/bsantanna/agent-lab/commit/a8f6bea15798388bac6e05bc555b2d6991c9cc0c))
+
+- Dependencies updates ([#268](https://github.com/bsantanna/agent-lab/pull/268),
+  [`a8f6bea`](https://github.com/bsantanna/agent-lab/commit/a8f6bea15798388bac6e05bc555b2d6991c9cc0c))
+
+- Elastic terraform update ([#268](https://github.com/bsantanna/agent-lab/pull/268),
+  [`a8f6bea`](https://github.com/bsantanna/agent-lab/commit/a8f6bea15798388bac6e05bc555b2d6991c9cc0c))
+
+- Langwatch terraform update ([#268](https://github.com/bsantanna/agent-lab/pull/268),
+  [`a8f6bea`](https://github.com/bsantanna/agent-lab/commit/a8f6bea15798388bac6e05bc555b2d6991c9cc0c))
+
+- Project dependencies update 24/02/26 ([#268](https://github.com/bsantanna/agent-lab/pull/268),
+  [`a8f6bea`](https://github.com/bsantanna/agent-lab/commit/a8f6bea15798388bac6e05bc555b2d6991c9cc0c))
+
+
 ## v1.5.4 (2026-02-17)
 
 ### Bug Fixes
