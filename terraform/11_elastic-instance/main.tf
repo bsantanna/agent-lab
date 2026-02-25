@@ -49,90 +49,108 @@ resource "kubernetes_manifest" "elastic_servers_transport" {
   depends_on = [kubernetes_namespace_v1.elastic]
 }
 
+locals {
+  traefik_servers_transport = "${kubernetes_namespace_v1.elastic.metadata[0].name}-elastic-backend-tls@kubernetescrd"
+
+  elasticsearch_values = {
+    enabled          = true
+    fullnameOverride = "elasticsearch"
+
+    http = {
+      tls = {
+        selfSignedCertificate = {
+          disabled = false
+        }
+      }
+      service = {
+        metadata = {
+          annotations = {
+            "traefik.ingress.kubernetes.io/service.serversscheme"    = "https"
+            "traefik.ingress.kubernetes.io/service.serverstransport" = local.traefik_servers_transport
+          }
+        }
+      }
+    }
+
+    ingress = {
+      enabled = false
+    }
+  }
+}
+
 resource "helm_release" "elastic" {
   name       = "elastic"
   repository = "https://helm.elastic.co"
   chart      = "eck-stack"
   namespace  = kubernetes_namespace_v1.elastic.metadata[0].name
 
-  values = [
-    yamlencode({
-      eck-elasticsearch = {
-        enabled          = true
-        fullnameOverride = "elasticsearch"
+  values = [var.kibana_enabled ? yamlencode({
+    eck-elasticsearch = local.elasticsearch_values
 
-        http = {
-          tls = {
-            selfSignedCertificate = {
-              disabled = false
-            }
-          }
-          service = {
-            metadata = {
-              annotations = {
-                "traefik.ingress.kubernetes.io/service.serversscheme"    = "https"
-                "traefik.ingress.kubernetes.io/service.serverstransport" = "${kubernetes_namespace_v1.elastic.metadata[0].name}-elastic-backend-tls@kubernetescrd"
+    eck-kibana = {
+      enabled          = true
+      fullnameOverride = "kibana"
+
+      config = {
+        xpack = {
+          fleet = {
+            packages = [
+              {
+                name    = "apm"
+                version = "latest"
               }
-            }
+            ]
           }
-        }
-
-        ingress = {
-          enabled = false  # Disable built-in ingress; use custom below
         }
       }
 
-      eck-kibana = {
-        enabled          = true
-        fullnameOverride = "kibana"
-
-        config = {
-          xpack = {
-            fleet = {
-              packages = [
-                {
-                  name    = "apm"
-                  version = "latest"
-                }
-              ]
-            }
+      http = {
+        tls = {
+          selfSignedCertificate = {
+            disabled = false
           }
         }
-
-        http = {
-          tls = {
-            selfSignedCertificate = {
-              disabled = false
+        service = {
+          metadata = {
+            annotations = {
+              "traefik.ingress.kubernetes.io/service.serversscheme"    = "https"
+              "traefik.ingress.kubernetes.io/service.serverstransport" = local.traefik_servers_transport
             }
           }
-          service = {
-            metadata = {
-              annotations = {
-                "traefik.ingress.kubernetes.io/service.serversscheme"    = "https"
-                "traefik.ingress.kubernetes.io/service.serverstransport" = "${kubernetes_namespace_v1.elastic.metadata[0].name}-elastic-backend-tls@kubernetescrd"
-              }
-            }
-          }
-        }
-
-        ingress = {
-          enabled = false  # Disable built-in ingress; use custom below
         }
       }
 
-      eck-apm-server = {
-        enabled = true
-
-        elasticsearchRef = {
-          name = "elasticsearch"
-        }
-
-        kibanaRef = {
-          name = "kibana"
-        }
+      ingress = {
+        enabled = false
       }
-    })
-  ]
+    }
+
+    eck-apm-server = {
+      enabled = true
+
+      elasticsearchRef = {
+        name = "elasticsearch"
+      }
+
+      kibanaRef = {
+        name = "kibana"
+      }
+    }
+  }) : yamlencode({
+    eck-elasticsearch = local.elasticsearch_values
+
+    eck-kibana = {
+      enabled = false
+    }
+
+    eck-apm-server = {
+      enabled = true
+
+      elasticsearchRef = {
+        name = "elasticsearch"
+      }
+    }
+  })]
 
   depends_on = [
     kubernetes_namespace_v1.elastic,
@@ -194,6 +212,8 @@ resource "kubernetes_ingress_v1" "elasticsearch" {
 
 # Custom Traefik Ingress for Kibana
 resource "kubernetes_ingress_v1" "kibana" {
+  count = var.kibana_enabled ? 1 : 0
+
   metadata {
     name      = "kibana"
     namespace = kubernetes_namespace_v1.elastic.metadata[0].name

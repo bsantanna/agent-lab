@@ -63,6 +63,7 @@ def setup_auth(container, application):
                 "/auth",
                 "/docs",
                 "/openapi.json",
+                "/redoc",
                 "/status/*",
                 ".well-known/*",
             ],
