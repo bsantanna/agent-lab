@@ -33,6 +33,7 @@ resource "helm_release" "eck-operator" {
   name       = "elastic"
   repository = "https://helm.elastic.co"
   chart      = "eck-operator"
+  version    = var.eck_operator_version
   namespace  = kubernetes_namespace_v1.elastic_system.metadata[0].name
   depends_on = [kubernetes_namespace_v1.elastic_system]
 }
