@@ -21,6 +21,13 @@ provider "helm" {
   }
 }
 
+data "kubernetes_secret_v1" "apm_token" {
+  metadata {
+    name      = "elastic-eck-apm-server-apm-token"
+    namespace = "elastic"
+  }
+}
+
 resource "kubernetes_namespace_v1" "otel" {
   metadata {
     name = "otel"
@@ -54,7 +61,7 @@ resource "helm_release" "otel_collector" {
           otlphttp: {
             endpoint = var.otlp_http_endpoint
             headers = {
-              "Authorization" = "Bearer ${var.otlp_http_auth_token}"
+              "Authorization" = "Bearer ${data.kubernetes_secret_v1.apm_token.data["secret-token"]}"
             }
             tls = {
               insecure_skip_verify = true
