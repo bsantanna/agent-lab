@@ -2,6 +2,36 @@
 
 <!-- version list -->
 
+## v1.5.6 (2026-03-07)
+
+### Bug Fixes
+
+- Fix elastic operator terraform setup ([#274](https://github.com/bsantanna/agent-lab/pull/274),
+  [`274c10c`](https://github.com/bsantanna/agent-lab/commit/274c10c030a1a8fe1cf983ac2ebcd81f24b0efc5))
+
+- Fix simulation test_react_rag_agent, minor updates
+  ([#274](https://github.com/bsantanna/agent-lab/pull/274),
+  [`274c10c`](https://github.com/bsantanna/agent-lab/commit/274c10c030a1a8fe1cf983ac2ebcd81f24b0efc5))
+
+- Otel / traefik terraform setup ([#274](https://github.com/bsantanna/agent-lab/pull/274),
+  [`274c10c`](https://github.com/bsantanna/agent-lab/commit/274c10c030a1a8fe1cf983ac2ebcd81f24b0efc5))
+
+- Project update 07/03/26 ([#274](https://github.com/bsantanna/agent-lab/pull/274),
+  [`274c10c`](https://github.com/bsantanna/agent-lab/commit/274c10c030a1a8fe1cf983ac2ebcd81f24b0efc5))
+
+- Requirements updates ([#274](https://github.com/bsantanna/agent-lab/pull/274),
+  [`274c10c`](https://github.com/bsantanna/agent-lab/commit/274c10c030a1a8fe1cf983ac2ebcd81f24b0efc5))
+
+- Skill update ([#275](https://github.com/bsantanna/agent-lab/pull/275),
+  [`d92ccd5`](https://github.com/bsantanna/agent-lab/commit/d92ccd5a8ee6cbea1e73da81a996f579638d7029))
+
+- Skill update 2 ([#275](https://github.com/bsantanna/agent-lab/pull/275),
+  [`d92ccd5`](https://github.com/bsantanna/agent-lab/commit/d92ccd5a8ee6cbea1e73da81a996f579638d7029))
+
+- Software engineer skill ([#275](https://github.com/bsantanna/agent-lab/pull/275),
+  [`d92ccd5`](https://github.com/bsantanna/agent-lab/commit/d92ccd5a8ee6cbea1e73da81a996f579638d7029))
+
+
 ## v1.5.5 (2026-02-25)
 
 ### Bug Fixes
