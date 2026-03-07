@@ -152,4 +152,4 @@ Choose the method based on the operation's semantics, not implementation conveni
 - **Agent prompts**: Use Jinja2 templates stored in agent settings, rendered via `AgentBase.parse_prompt_template()`.
 - **Versioning**: Managed by `python-semantic-release`.
 - **Testing**: pytest with testcontainers — tests spin up real Postgres, Redis, Vault, Keycloak, Ollama, and chromedp containers. The `conftest.py` session fixture manages container lifecycle.
-s
+
