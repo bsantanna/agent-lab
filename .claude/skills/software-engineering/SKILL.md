@@ -55,13 +55,6 @@ Three PostgreSQL databases:
 - **agent_lab_vectors**: pgvector embeddings via `DocumentRepository`
 - **agent_lab_checkpoints**: LangGraph workflow state via `GraphPersistenceFactory`
 
-### Market Data Pipeline
-
-- Airflow DAGs in `dags/` fetch data from Alpaca Markets API on schedule
-- Data lands in Elasticsearch indices: `stocks-eod`, `stocks-metadata`, `stocks-financial-statements`, `stocks-insider-trades`, `stocks-estimated-earnings`, `markets-news`
-- Terraform in `terraform/elasticsearch/` manages index lifecycle policies (365-day retention), index templates, and Mustache search templates for technical indicators (RSI, MACD, EMA, ADX, OBV, Stochastic, CCI, AD)
-- `MarketsNewsService` and `MarketsStatsService` query Elasticsearch and are injected via the Container
-
 ### Observability
 
 OpenTelemetry is configured in `app/infrastructure/metrics/tracer.py`. Instrumented: FastAPI, HTTPx, LangChain, SQLAlchemy, Psycopg. Exports via OTLP to a collector that feeds Prometheus (metrics), Loki (logs), Tempo (traces), and Grafana (dashboards). Config in `otel/`.
@@ -106,16 +99,6 @@ docker compose build app && docker compose up -d app
 ```
 
 **Note:** The backend runs inside a Docker container (`compose.yml`). Local changes to Python files in `app/` are NOT reflected until the container is rebuilt. Always rebuild after modifying backend code.
-
-### Frontend (from `frontend/` directory)
-
-```bash
-npm install
-npm start                   # Dev server on port 4200
-npm run build               # Production build → copies output to app/static/frontend/
-npx jest                    # Run all Jest tests
-npx jest -- <pattern>       # Run tests matching a pattern (e.g. npx jest -- markets-performance)
-```
 
 ## REST API Design
 
@@ -169,4 +152,4 @@ Choose the method based on the operation's semantics, not implementation conveni
 - **Agent prompts**: Use Jinja2 templates stored in agent settings, rendered via `AgentBase.parse_prompt_template()`.
 - **Versioning**: Managed by `python-semantic-release`.
 - **Testing**: pytest with testcontainers — tests spin up real Postgres, Redis, Vault, Keycloak, Ollama, and chromedp containers. The `conftest.py` session fixture manages container lifecycle.
-s
+
