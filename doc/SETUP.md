@@ -152,6 +152,11 @@ terraform init
 terraform apply
 ```
 
+Obtain initial admin password for Keycloak:
+```bash
+echo "$(kubectl --namespace keycloak get secret/keycloak-initial-admin -o go-template='{{index .data "password" | base64decode}}')"
+```
+
 Please refer to [Keycloak guide](KEYCLOAK.md) for detailed steps how setting up OIDC connection.
 
 ### Setup Vault

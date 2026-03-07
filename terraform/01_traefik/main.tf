@@ -38,12 +38,10 @@ resource "helm_release" "traefik" {
       ports = {
         web = {
           port     = 8000
-          nodePort = 30080
           protocol = "TCP"
         }
         websecure = {
           port     = 8443
-          nodePort = 30443
           protocol = "TCP"
         }
         traefik = {
@@ -53,7 +51,7 @@ resource "helm_release" "traefik" {
 
       service = {
         enabled = true
-        type    = "NodePort"
+        type    = "LoadBalancer"
       }
 
       securityContext = {
