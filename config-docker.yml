@@ -2,6 +2,11 @@ api_base_url: "http://localhost:18000"
 cdp_url: "http://headless-shell:9222"
 auth:
   enabled: False
+#  enabled: True
+#  url: "http://keycloak:8080"
+#  realm: "agent-lab"
+#  client_id: "agent-lab-client"
+#  client_secret: "dev-only-secret"
 broker:
   url: "redis://redis:6379/0"
 db:
