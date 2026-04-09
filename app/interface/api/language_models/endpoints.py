@@ -7,6 +7,7 @@ from typing_extensions import Annotated, List
 from app.core.container import Container
 from app.domain.models import LanguageModel as DomainLanguageModel
 from app.infrastructure.auth.schema import User
+from app.infrastructure.auth.user import get_schema
 from app.interface.api.language_models.schema import (
     LanguageModelCreateRequest,
     LanguageModelExpanded,
@@ -67,7 +68,7 @@ async def get_list(
     ],
     user: Annotated[User, Depends(get_user)],
 ):
-    schema = user.id.replace("-", "_") if user is not None else "public"
+    schema = get_schema(user.id if user is not None else None)
     language_models = language_model_service.get_language_models(schema)
     return [LanguageModel.model_validate(lm) for lm in language_models]
 
@@ -145,7 +146,7 @@ async def add(
     ],
     user: Annotated[User, Depends(get_user)],
 ):
-    schema = user.id.replace("-", "_") if user is not None else "public"
+    schema = get_schema(user.id if user is not None else None)
     language_model = language_model_service.create_language_model(
         integration_id=language_model_data.integration_id,
         language_model_tag=language_model_data.language_model_tag,
@@ -214,7 +215,7 @@ async def get_by_id(
     ],
     user: Annotated[User, Depends(get_user)],
 ):
-    schema = user.id.replace("-", "_") if user is not None else "public"
+    schema = get_schema(user.id if user is not None else None)
     language_model = language_model_service.get_language_model_by_id(
         language_model_id, schema
     )
@@ -258,7 +259,7 @@ async def remove(
     ],
     user: Annotated[User, Depends(get_user)],
 ):
-    schema = user.id.replace("-", "_") if user is not None else "public"
+    schema = get_schema(user.id if user is not None else None)
     language_model_service.delete_language_model_by_id(language_model_id, schema)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
@@ -336,7 +337,7 @@ async def update(
     ],
     user: Annotated[User, Depends(get_user)],
 ):
-    schema = user.id.replace("-", "_") if user is not None else "public"
+    schema = get_schema(user.id if user is not None else None)
     language_model = language_model_service.update_language_model(
         language_model_id=language_model_data.language_model_id,
         language_model_tag=language_model_data.language_model_tag,
@@ -430,7 +431,7 @@ async def update_setting(
     ],
     user: Annotated[User, Depends(get_user)],
 ):
-    schema = user.id.replace("-", "_") if user is not None else "public"
+    schema = get_schema(user.id if user is not None else None)
     language_model_setting_service.update_by_key(
         language_model_id=language_model_data.language_model_id,
         setting_key=language_model_data.setting_key,

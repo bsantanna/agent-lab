@@ -8,6 +8,7 @@ from app.core.container import Container
 from app.domain.exceptions.base import NotFoundError
 from app.domain.models import Message as DomainMessage
 from app.infrastructure.auth.schema import User
+from app.infrastructure.auth.user import get_schema
 from app.interface.api.attachments.schema import Attachment
 from app.interface.api.messages.schema import (
     MessageListRequest,
@@ -95,7 +96,7 @@ async def get_list(
     ],
     user: Annotated[User, Depends(get_user)],
 ):
-    schema = user.id.replace("-", "_") if user is not None else "public"
+    schema = get_schema(user.id if user is not None else None)
     messages = message_service.get_messages(message_data.agent_id, schema)
     return [Message.model_validate(message) for message in messages]
 
@@ -182,7 +183,7 @@ async def post_message(
     ],
     user: Annotated[User, Depends(get_user)],
 ):
-    schema = user.id.replace("-", "_") if user is not None else "public"
+    schema = get_schema(user.id if user is not None else None)
     agent = agent_service.get_agent_by_id(message_data.agent_id, schema)
     matching_agent = agent_registry.get_agent(agent.agent_type)
 
@@ -280,7 +281,7 @@ async def get_by_id(
     ],
     user: Annotated[User, Depends(get_user)],
 ):
-    schema = user.id.replace("-", "_") if user is not None else "public"
+    schema = get_schema(user.id if user is not None else None)
     assistant_message = message_service.get_message_by_id(message_id, schema)
     human_message = message_service.get_message_by_id(
         assistant_message.replies_to, schema
@@ -326,7 +327,7 @@ async def remove(
     ],
     user: Annotated[User, Depends(get_user)],
 ):
-    schema = user.id.replace("-", "_") if user is not None else "public"
+    schema = get_schema(user.id if user is not None else None)
     message_service.delete_message_by_id(message_id, schema)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 

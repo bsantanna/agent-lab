@@ -6,6 +6,7 @@ from typing_extensions import Annotated, List
 
 from app.core.container import Container
 from app.infrastructure.auth.schema import User
+from app.infrastructure.auth.user import get_schema
 from app.interface.api.integrations.schema import (
     IntegrationCreateRequest,
     Integration,
@@ -60,7 +61,7 @@ async def get_list(
     ],
     user: Annotated[User, Depends(get_user)],
 ):
-    schema = user.id.replace("-", "_") if user is not None else "public"
+    schema = get_schema(user.id if user is not None else None)
     integrations = integration_service.get_integrations(schema)
     return [Integration.model_validate(integration) for integration in integrations]
 
@@ -111,7 +112,7 @@ async def get_by_id(
     ],
     user: Annotated[User, Depends(get_user)],
 ):
-    schema = user.id.replace("-", "_") if user is not None else "public"
+    schema = get_schema(user.id if user is not None else None)
     integration = integration_service.get_integration_by_id(integration_id, schema)
     return Integration.model_validate(integration)
 
@@ -189,7 +190,7 @@ async def add(
     ],
     user: Annotated[User, Depends(get_user)],
 ):
-    schema = user.id.replace("-", "_") if user is not None else "public"
+    schema = get_schema(user.id if user is not None else None)
     integration = integration_service.create_integration(
         integration_type=integration_data.integration_type,
         api_endpoint=integration_data.api_endpoint,
@@ -235,6 +236,6 @@ async def remove(
     ],
     user: Annotated[User, Depends(get_user)],
 ):
-    schema = user.id.replace("-", "_") if user is not None else "public"
+    schema = get_schema(user.id if user is not None else None)
     integration_service.delete_integration_by_id(integration_id, schema)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
