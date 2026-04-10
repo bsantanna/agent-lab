@@ -2,6 +2,34 @@
 
 <!-- version list -->
 
+## v1.6.0 (2026-04-10)
+
+### Bug Fixes
+
+- Projects updates ([#281](https://github.com/bsantanna/agent-lab/pull/281),
+  [`8ecd513`](https://github.com/bsantanna/agent-lab/commit/8ecd513e6ba4763a5f3d07cf8e9689cb39c70cff))
+
+- Projects updates (2) ([#281](https://github.com/bsantanna/agent-lab/pull/281),
+  [`8ecd513`](https://github.com/bsantanna/agent-lab/commit/8ecd513e6ba4763a5f3d07cf8e9689cb39c70cff))
+
+- Projects updates (3) ([#281](https://github.com/bsantanna/agent-lab/pull/281),
+  [`8ecd513`](https://github.com/bsantanna/agent-lab/commit/8ecd513e6ba4763a5f3d07cf8e9689cb39c70cff))
+
+- Projects updates (4) ([#281](https://github.com/bsantanna/agent-lab/pull/281),
+  [`8ecd513`](https://github.com/bsantanna/agent-lab/commit/8ecd513e6ba4763a5f3d07cf8e9689cb39c70cff))
+
+- Projects updates (5) ([#281](https://github.com/bsantanna/agent-lab/pull/281),
+  [`8ecd513`](https://github.com/bsantanna/agent-lab/commit/8ecd513e6ba4763a5f3d07cf8e9689cb39c70cff))
+
+- Projects updates (6) ([#281](https://github.com/bsantanna/agent-lab/pull/281),
+  [`8ecd513`](https://github.com/bsantanna/agent-lab/commit/8ecd513e6ba4763a5f3d07cf8e9689cb39c70cff))
+
+### Features
+
+- Projects updates (1) ([#281](https://github.com/bsantanna/agent-lab/pull/281),
+  [`8ecd513`](https://github.com/bsantanna/agent-lab/commit/8ecd513e6ba4763a5f3d07cf8e9689cb39c70cff))
+
+
 ## v1.5.6 (2026-03-07)
 
 ### Bug Fixes

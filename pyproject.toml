@@ -1,6 +1,6 @@
 [project]
 name = "agent-lab"
-version = "1.5.6"
+version = "1.6.0"
 description = "Cloud-native LLM Agent Development and Testing Toolkit"
 requires-python = ">=3.12"
 dependencies = [
