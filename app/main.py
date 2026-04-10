@@ -2,14 +2,13 @@ import logging
 import os
 import re
 
-from fastapi import FastAPI, HTTPException, Request, Depends
-from fastapi.security import HTTPBearer
+from fastapi import FastAPI, HTTPException, Request
 from fastapi_keycloak_middleware import KeycloakConfiguration, setup_keycloak_middleware
-from fastapi_mcp import FastApiMCP, AuthConfig
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
 from app.core.container import Container
+from app.interface.mcp.server import build_mcp_server
 from app.infrastructure.auth.user import map_user
 from app.infrastructure.metrics.logging_middleware import LoggingMiddleware
 from app.interface.api.agents.endpoints import router as agents_router
@@ -23,25 +22,29 @@ from app.interface.api.status.endpoints import router as status_router
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-bearer_scheme = HTTPBearer()
-
 
 def create_app():
     container = Container()
+
+    mcp_server = build_mcp_server(container)
+    mcp_app = mcp_server.http_app(path="/", stateless_http=True)
 
     application = FastAPI(
         title=os.getenv("SERVICE_NAME", "Agent-Lab"),
         version=os.getenv("SERVICE_VERSION", "snapshot"),
         dependencies=[],
+        lifespan=mcp_app.lifespan,
     )
     application.container = container
 
     setup_tracing(container, application)
     setup_auth(container, application)
     setup_routers(container, application)
-    setup_mcp(container, application)
+    application.mount("/mcp", mcp_app)
+    setup_resource_metadata(container, application)
     setup_exception_handlers(application)
     setup_middleware(application)
+    setup_mcp_slash_rewrite(application)
 
     return application
 
@@ -60,12 +63,13 @@ def setup_auth(container, application):
             application,
             keycloak_configuration=keycloak_config,
             exclude_patterns=[
-                "/auth",
-                "/docs",
-                "/openapi.json",
-                "/redoc",
-                "/status/*",
-                ".well-known/*",
+                "/auth/login(/|$)",
+                "/auth/renew(/|$)",
+                "/auth/exchange(/|$)",
+                "/openapi.json(/|$)",
+                "/status/",
+                ".*well-known/",
+                "/mcp(/.*)?$",
             ],
             user_mapper=map_user,
         )
@@ -74,30 +78,52 @@ def setup_auth(container, application):
         logger.warning("Authentication disabled")
 
 
-def setup_mcp(container: Container, application: FastAPI):
+def setup_resource_metadata(container: Container, application: FastAPI):
     config = container.config()
-    if config["auth"]["enabled"]:
-        mcp = FastApiMCP(
-            application,
-            name=os.getenv("SERVICE_NAME", "Agent-Lab"),
-            include_operations=["get_agent_list", "get_message_list", "post_message"],
-            describe_all_responses=True,
-            describe_full_response_schema=True,
-            auth_config=AuthConfig(
-                dependencies=[Depends(bearer_scheme)],
-            ),
-        )
-    else:
-        mcp = FastApiMCP(
-            application,
-            name=os.getenv("SERVICE_NAME", "Agent-Lab"),
-            include_operations=["get_agent_list", "get_message_list", "post_message"],
-            describe_all_responses=True,
-            describe_full_response_schema=True,
-        )
+    if not config["auth"]["enabled"]:
+        return
 
-    mcp.mount_http()
-    mcp.mount_sse()
+    base_url = config["api_base_url"]
+    resource_url = f"{base_url}/mcp"
+    authorization_server = f"{base_url}/mcp"
+
+    resource_metadata = {
+        "resource": resource_url,
+        "authorization_servers": [authorization_server],
+        "scopes_supported": ["openid", "profile", "email"],
+        "bearer_methods_supported": ["header"],
+    }
+
+    @application.get("/.well-known/oauth-protected-resource/mcp")
+    async def oauth_protected_resource_metadata():
+        return JSONResponse(resource_metadata)
+
+    @application.get("/.well-known/oauth-protected-resource/mcp/")
+    async def oauth_protected_resource_metadata_slash():
+        return JSONResponse(resource_metadata)
+
+    auth_server_metadata = {
+        "issuer": authorization_server,
+        "authorization_endpoint": f"{authorization_server}/authorize",
+        "token_endpoint": f"{authorization_server}/token",
+        "registration_endpoint": f"{authorization_server}/register",
+        "scopes_supported": ["openid", "profile", "email"],
+        "response_types_supported": ["code"],
+        "grant_types_supported": ["authorization_code", "refresh_token"],
+        "token_endpoint_auth_methods_supported": [
+            "client_secret_post",
+            "client_secret_basic",
+        ],
+        "code_challenge_methods_supported": ["S256"],
+    }
+
+    @application.get("/.well-known/oauth-authorization-server/mcp")
+    async def oauth_authorization_server_metadata():
+        return JSONResponse(auth_server_metadata)
+
+    @application.get("/.well-known/oauth-authorization-server/mcp/")
+    async def oauth_authorization_server_metadata_slash():
+        return JSONResponse(auth_server_metadata)
 
 
 def setup_routers(container: Container, application: FastAPI):
@@ -150,6 +176,16 @@ def setup_middleware(application: FastAPI):
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+
+def setup_mcp_slash_rewrite(application: FastAPI):
+    @application.middleware("http")
+    async def mcp_slash_rewrite(request: Request, call_next):
+        if request.url.path == "/mcp":
+            scope = request.scope
+            scope["path"] = "/mcp/"
+            scope["raw_path"] = b"/mcp/"
+        return await call_next(request)
 
 
 app = create_app()

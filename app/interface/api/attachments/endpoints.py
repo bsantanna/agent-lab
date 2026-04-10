@@ -11,6 +11,7 @@ from starlette.responses import StreamingResponse
 from app.core.container import Container
 from app.domain.exceptions.base import FileToLargeError
 from app.infrastructure.auth.schema import User
+from app.infrastructure.auth.user import get_schema
 from app.interface.api.attachments.schema import Attachment, EmbeddingsRequest
 from app.services.attachments import AttachmentService
 
@@ -72,7 +73,7 @@ async def get_list(
     ],
     user: Annotated[User, Depends(get_user)],
 ):
-    schema = user.id.replace("-", "_") if user is not None else "public"
+    schema = get_schema(user.id if user is not None else None)
     attachments = attachment_service.get_attachments(schema)
     return [Attachment.model_validate(attachment) for attachment in attachments]
 
@@ -140,7 +141,7 @@ async def upload_attachment(
     ],
     user: Annotated[User, Depends(get_user)],
 ):
-    schema = user.id.replace("-", "_") if user is not None else "public"
+    schema = get_schema(user.id if user is not None else None)
     # validate file size
     file.file.seek(0, 2)
     file_size = file.file.tell()
@@ -214,7 +215,7 @@ async def download_attachment(
     ],
     user: Annotated[User, Depends(get_user)],
 ):
-    schema = user.id.replace("-", "_") if user is not None else "public"
+    schema = get_schema(user.id if user is not None else None)
     attachment = attachment_service.get_attachment_by_id(attachment_id, schema)
     response = StreamingResponse(
         BytesIO(attachment.raw_content),
@@ -301,7 +302,7 @@ async def create_embeddings(
     ],
     user: Annotated[User, Depends(get_user)],
 ):
-    schema = user.id.replace("-", "_") if user is not None else "public"
+    schema = get_schema(user.id if user is not None else None)
     attachment = await attachment_service.create_embeddings(
         attachment_id=embeddings.attachment_id,
         language_model_id=embeddings.language_model_id,

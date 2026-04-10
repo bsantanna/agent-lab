@@ -148,6 +148,8 @@ def setup_keycloak():
         "enabled": True,
         "protocol": "openid-connect",
         "standardFlowEnabled": True,
+        "directAccessGrantsEnabled": True,
+        "serviceAccountsEnabled": True,
         "clientAuthenticatorType": "client-secret",
         "publicClient": False,
         "secret": "test-secret",
@@ -156,6 +158,35 @@ def setup_keycloak():
         "http://localhost:18080/admin/realms/test-realm/clients",
         headers=headers,
         data=json.dumps(client_data),
+    )
+    response.raise_for_status()
+
+    # Grant realm-admin role to the service account so /auth/profile can use admin API
+    base = "http://localhost:18080/admin/realms/test-realm"
+    clients = requests.get(
+        f"{base}/clients?clientId=test-client", headers=headers
+    ).json()
+    client_uuid = clients[0]["id"]
+
+    sa_user = requests.get(
+        f"{base}/clients/{client_uuid}/service-account-user", headers=headers
+    ).json()
+    sa_user_id = sa_user["id"]
+
+    rm_clients = requests.get(
+        f"{base}/clients?clientId=realm-management", headers=headers
+    ).json()
+    rm_client_uuid = rm_clients[0]["id"]
+
+    roles = requests.get(
+        f"{base}/clients/{rm_client_uuid}/roles", headers=headers
+    ).json()
+    realm_admin_role = next(r for r in roles if r["name"] == "realm-admin")
+
+    response = requests.post(
+        f"{base}/users/{sa_user_id}/role-mappings/clients/{rm_client_uuid}",
+        headers=headers,
+        data=json.dumps([realm_admin_role]),
     )
     response.raise_for_status()
 

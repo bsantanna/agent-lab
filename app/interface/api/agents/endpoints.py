@@ -17,6 +17,7 @@ from typing_extensions import List, Annotated
 from app.core.container import Container
 from app.domain.models import Agent as DomainAgent
 from app.infrastructure.auth.schema import User
+from app.infrastructure.auth.user import get_schema
 from app.interface.api.agents.schema import (
     AgentCreateRequest,
     AgentExpanded,
@@ -84,7 +85,7 @@ async def get_list(
     agent_service: Annotated[AgentService, Depends(Provide[Container.agent_service])],
     user: Annotated[User, Depends(get_user)],
 ):
-    schema = user.id.replace("-", "_") if user is not None else "public"
+    schema = get_schema(user.id if user is not None else None)
     agents = agent_service.get_agents(schema)
     return [Agent.model_validate(agent) for agent in agents]
 
@@ -147,7 +148,7 @@ async def get_by_id(
     ],
     user: Annotated[User, Depends(get_user)],
 ):
-    schema = user.id.replace("-", "_") if user is not None else "public"
+    schema = get_schema(user.id if user is not None else None)
     agent = agent_service.get_agent_by_id(agent_id, schema)
     return _format_expanded_response(agent, agent_setting_service, schema)
 
@@ -226,7 +227,7 @@ async def add(
     ],
     user: Annotated[User, Depends(get_user)],
 ):
-    schema = user.id.replace("-", "_") if user is not None else "public"
+    schema = get_schema(user.id if user is not None else None)
     agent = agent_service.create_agent(
         language_model_id=agent_data.language_model_id,
         agent_name=agent_data.agent_name,
@@ -269,7 +270,7 @@ async def remove(
     agent_service: Annotated[AgentService, Depends(Provide[Container.agent_service])],
     user: Annotated[User, Depends(get_user)],
 ):
-    schema = user.id.replace("-", "_") if user is not None else "public"
+    schema = get_schema(user.id if user is not None else None)
     agent_service.delete_agent_by_id(agent_id, schema)
 
 
@@ -332,7 +333,7 @@ async def update(
     agent_service: Annotated[AgentService, Depends(Provide[Container.agent_service])],
     user: Annotated[User, Depends(get_user)],
 ):
-    schema = user.id.replace("-", "_") if user is not None else "public"
+    schema = get_schema(user.id if user is not None else None)
     agent = agent_service.update_agent(
         agent_id=agent_data.agent_id,
         agent_name=agent_data.agent_name,
@@ -415,7 +416,7 @@ async def update_setting(
     ],
     user: Annotated[User, Depends(get_user)],
 ):
-    schema = user.id.replace("-", "_") if user is not None else "public"
+    schema = get_schema(user.id if user is not None else None)
     agent_setting_service.update_by_key(
         agent_id=agent_data.agent_id,
         setting_key=agent_data.setting_key,

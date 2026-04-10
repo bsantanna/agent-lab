@@ -17,15 +17,12 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GH_TOKEN }}
 
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v3
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.12"
 
-      - name: Install dependencies
-        run: pip install python-semantic-release
-
       - name: Run semantic release
-        run: semantic-release version
+        run: uv tool run python-semantic-release version
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
