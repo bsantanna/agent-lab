@@ -88,7 +88,7 @@ requires-dist = [
     { name = "dependency-injector", specifier = "~=4.48.3" },
     { name = "fastapi", extras = ["standard"], specifier = "~=0.135.1" },
     { name = "fastapi-keycloak-middleware", specifier = "~=1.6.0" },
-    { name = "fastmcp", specifier = "==3.2.0" },
+    { name = "fastmcp", specifier = "~=3.2.0" },
     { name = "hvac", specifier = "~=2.4.0" },
     { name = "icalendar", specifier = "~=7.0.2" },
     { name = "jinja2", specifier = "~=3.1.6" },

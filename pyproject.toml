@@ -8,7 +8,7 @@ dependencies = [
   "charset-normalizer==3.4.2",
   "dependency-injector~=4.48.3",
   "fastapi-keycloak-middleware~=1.6.0",
-  "fastmcp==3.2.0",
+  "fastmcp~=3.2.0",
   "fastapi[standard]~=0.135.1",
   "hvac~=2.4.0",
   "icalendar~=7.0.2",

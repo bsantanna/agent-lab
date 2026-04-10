@@ -1,4 +1,4 @@
-api_base_url: "http://test"
+api_base_url: "http://localhost"
 cdp_url: "http://localhost:19222"
 auth:
   enabled: true
