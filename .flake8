@@ -1,3 +1,20 @@
 [flake8]
-exclude = .venv, notebooks/.ipynb_checkpoints
-ignore = E203, E501, W201, W503
+exclude =
+    frontend,
+    node_modules,
+    __pycache__,
+    .git,
+    docker,
+    terraform,
+    otel,
+    doc,
+    notebooks,
+    .eggs,
+    *.egg,
+    app/static,
+    build,
+    dist,
+    *.egg-info
+ignore = C901,E203,E501,W201,W503
+max-line-length = 127
+max-complexity = 10
