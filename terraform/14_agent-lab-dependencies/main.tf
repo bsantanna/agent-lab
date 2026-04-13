@@ -195,7 +195,7 @@ resource "vault_kv_secret_v2" "app_secrets" {
   name  = var.vault_secret_path
 
   data_json = jsonencode({
-    api_base_url = var.agent_lab_fqdn
+    api_base_url = "https://${var.agent_lab_fqdn}"
 
     # Auth secrets
     auth_enabled       = true
