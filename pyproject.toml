@@ -27,7 +27,7 @@ dependencies = [
   "langgraph~=1.1.2",
   "langgraph-checkpoint-postgres~=3.0.4",
   "langgraph-prebuilt~=1.0.8",
-  "langwatch~=0.16.0",
+  "langwatch~=0.18.0",
   "langwatch-scenario~=0.7.15",
   "litellm==1.83.0",
   "markitdown[all]~=0.1.5",
