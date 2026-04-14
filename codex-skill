@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+repo_root="$script_dir"
+skills_root="$repo_root/.codex/skills"
+safe_skill_re='^[a-z0-9][a-z0-9_-]*$'
+
+usage() {
+  cat <<'EOF'
+Usage:
+  ./codex-skill <skill> [prompt...]
+
+Examples:
+  ./codex-skill quant
+  ./codex-skill quant "Analyze NVDA valuation risks"
+  ./codex-skill seo "Audit the landing page metadata"
+EOF
+}
+
+if [[ $# -lt 1 || "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  usage
+  echo
+  echo "Available skills:"
+  find "$skills_root" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort
+  exit 0
+fi
+
+skill="$1"
+shift
+
+if [[ ! "$skill" =~ $safe_skill_re ]]; then
+  echo "Invalid skill name: $skill" >&2
+  echo "Skill names must match: $safe_skill_re" >&2
+  exit 1
+fi
+
+skill_dir="$skills_root/$skill"
+
+if [[ ! -d "$skill_dir" ]]; then
+  echo "Unknown skill: $skill" >&2
+  echo >&2
+  echo "Available skills:" >&2
+  find "$skills_root" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort >&2
+  exit 1
+fi
+
+if [[ $# -gt 0 ]]; then
+  prompt="$*"
+  exec codex --cd "$skill_dir" "$prompt"
+fi
+
+exec codex --cd "$skill_dir"

@@ -29,6 +29,7 @@ dependencies = [
   "langgraph-prebuilt~=1.0.8",
   "langwatch~=0.16.0",
   "langwatch-scenario~=0.7.15",
+  "litellm==1.83.0",
   "markitdown[all]~=0.1.5",
   "msal~=1.35.1",
   "opentelemetry-api==1.40.0",
@@ -72,6 +73,12 @@ test = [
   "testcontainers[postgres]~=4.14.1",
   "testcontainers[redis]~=4.14.1",
   "testcontainers[vault]~=4.14.1",
+]
+notebooks = [
+  "IPython",
+  "nest_asyncio",
+  "pyppeteer",
+  "python-dotenv",
 ]
 
 [tool.semantic_release]

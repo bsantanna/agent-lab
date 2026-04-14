@@ -26,7 +26,8 @@ logger = logging.getLogger(__name__)
 def create_app():
     container = Container()
 
-    mcp_server = build_mcp_server(container)
+    mcp_registrars = container.mcp_registrars()
+    mcp_server = build_mcp_server(container, mcp_registrars)
     mcp_app = mcp_server.http_app(path="/", stateless_http=True)
 
     application = FastAPI(
