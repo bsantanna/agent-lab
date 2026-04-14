@@ -1,17 +1,14 @@
 from unittest.mock import MagicMock, patch
 
-import pytest
-
-from app.interface.mcp.server import (
+from app.interface.mcp.schema import (
     AgentItem,
     MessageItem,
     PostMessageResult,
-    _build_auth,
-    _read_prompt,
-    _make_prompt_fn,
-    _AGENT_TYPE_PROMPTS,
-    _PROMPTS_BASE,
+    _get_mcp_schema,
 )
+from app.interface.mcp.server import _build_auth
+from app.interface.mcp.registrar import McpRegistrar
+from app.interface.mcp.default_tool_registrar import DefaultToolRegistrar
 
 
 class TestMcpModels:
@@ -103,53 +100,56 @@ class TestBuildAuth:
 
 
 class TestGetMcpSchema:
-    @patch("app.interface.mcp.server.get_access_token", return_value=None)
+    @patch("app.interface.mcp.schema.get_access_token", return_value=None)
     def test_get_mcp_schema_no_token(self, mock_token):
-        from app.interface.mcp.server import _get_mcp_schema
-
         result = _get_mcp_schema()
         assert result == "public"
 
-    @patch("app.interface.mcp.server.get_access_token")
+    @patch("app.interface.mcp.schema.get_access_token")
     def test_get_mcp_schema_with_token(self, mock_token):
-        from app.interface.mcp.server import _get_mcp_schema
-
         mock_token.return_value = MagicMock(claims={"sub": "abc-def-123"})
         result = _get_mcp_schema()
         assert result == "id_abc_def_123"
 
-    @patch("app.interface.mcp.server.get_access_token")
+    @patch("app.interface.mcp.schema.get_access_token")
     def test_get_mcp_schema_token_no_sub(self, mock_token):
-        from app.interface.mcp.server import _get_mcp_schema
-
         mock_token.return_value = MagicMock(claims={})
         result = _get_mcp_schema()
         assert result == "public"
 
 
-class TestPromptHelpers:
-    def test_read_prompt_returns_content(self):
-        prompt_file = "adaptive_rag/default_execution_system_prompt.txt"
-        content = _read_prompt(prompt_file)
-        assert isinstance(content, str)
-        assert len(content) > 0
+class TestMcpRegistrar:
+    def test_base_registrar_no_ops(self):
+        class NoOpRegistrar(McpRegistrar):
+            pass
 
-    def test_read_prompt_nonexistent_raises(self):
-        with pytest.raises(FileNotFoundError):
-            _read_prompt("nonexistent/file.txt")
+        registrar = NoOpRegistrar()
+        mcp = MagicMock()
+        container = MagicMock()
+        registrar.register_tools(mcp, container)
+        registrar.register_prompts(mcp)
+        registrar.register_resources(mcp)
 
-    def test_make_prompt_fn_returns_callable(self):
-        prompt_file = "adaptive_rag/default_execution_system_prompt.txt"
-        fn = _make_prompt_fn(prompt_file)
-        assert callable(fn)
-        result = fn()
-        assert isinstance(result, str)
-        assert len(result) > 0
+    def test_default_tool_registrar_is_mcp_registrar(self):
+        assert issubclass(DefaultToolRegistrar, McpRegistrar)
 
-    def test_agent_type_prompts_structure(self):
-        for agent_type, info in _AGENT_TYPE_PROMPTS.items():
-            assert "description" in info
-            assert "prompt_file" in info
-            if info["prompt_file"] is not None:
-                full_path = _PROMPTS_BASE / info["prompt_file"]
-                assert full_path.exists(), f"Prompt file missing for {agent_type}: {full_path}"
+    def test_default_tool_registrar_registers_tools(self):
+        registrar = DefaultToolRegistrar()
+        mcp = MagicMock()
+        container = MagicMock()
+        registrar.register_tools(mcp, container)
+        tool_names = sorted(call[1]["name"] for call in mcp.tool.call_args_list)
+        assert tool_names == ["get_agent_list", "get_message_list", "post_message"]
+
+    def test_custom_registrar_overrides(self):
+        class CustomRegistrar(McpRegistrar):
+            def register_prompts(self, mcp):
+                mcp.prompt(name="test_prompt")(lambda: "test")
+
+        registrar = CustomRegistrar()
+        mcp = MagicMock()
+        container = MagicMock()
+        registrar.register_prompts(mcp)
+        mcp.prompt.assert_called_once_with(name="test_prompt")
+        registrar.register_tools(mcp, container)
+        registrar.register_resources(mcp)

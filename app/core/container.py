@@ -15,6 +15,7 @@ from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.sql import Database
 from app.infrastructure.database.vectors import DocumentRepository
 from app.infrastructure.metrics.tracer import Tracer
+from app.interface.mcp.default_tool_registrar import DefaultToolRegistrar
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.adaptive_rag.agent import AdaptiveRagAgent
 from app.services.agent_types.base import AgentUtils
@@ -243,5 +244,9 @@ class Container(containers.DeclarativeContainer):
         azure_entra_id_voice_memos_agent=azure_entra_id_voice_memos_agent,
         fast_voice_memos_agent=fast_voice_memos_agent,
     )
+
+    default_tool_registrar = providers.Singleton(DefaultToolRegistrar)
+
+    mcp_registrars = providers.List(default_tool_registrar)
 
     tracer = providers.Singleton(Tracer)
