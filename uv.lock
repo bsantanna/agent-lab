@@ -113,7 +113,7 @@ requires-dist = [
     { name = "langgraph", specifier = "~=1.1.2" },
     { name = "langgraph-checkpoint-postgres", specifier = "~=3.0.4" },
     { name = "langgraph-prebuilt", specifier = "~=1.0.8" },
-    { name = "langwatch", specifier = "~=0.16.0" },
+    { name = "langwatch", specifier = "~=0.18.0" },
     { name = "langwatch-scenario", specifier = "~=0.7.15" },
     { name = "litellm", specifier = "==1.83.0" },
     { name = "markitdown", extras = ["all"], specifier = "~=0.1.5" },
@@ -2576,14 +2576,13 @@ wheels = [
 
 [[package]]
 name = "langwatch"
-version = "0.16.0"
+version = "0.18.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
     { name = "coolname" },
     { name = "deprecated" },
     { name = "httpx" },
-    { name = "langchain-core" },
     { name = "nanoid" },
     { name = "openinference-instrumentation-haystack" },
     { name = "openinference-instrumentation-langchain" },
@@ -2600,9 +2599,9 @@ dependencies = [
     { name = "retry" },
     { name = "termcolor" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f1/88/71f318506d14168e0f9718258c0374f4b07fb98be6cb7caa9191e0d91861/langwatch-0.16.0.tar.gz", hash = "sha256:b49e67788e2adeb0e3e68673493d79c0b428131b55f8427e60a14ae6ec84301f", size = 1502360, upload-time = "2026-03-13T13:04:33.585Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/36/5a/695ca1ad84028a3256bd0e6030baf6e342e828798537dbe44b15559f1a9d/langwatch-0.18.0.tar.gz", hash = "sha256:6345e160408bf0cb19ab188aa2f22042c8bcb4ecc29bda337d16d38f3a14d1f9", size = 1548743, upload-time = "2026-04-10T12:18:44.708Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a5/91/cd1a1eba23a48a6b3c6fa938d744075c3a0d8c8af28756f86f7eda1cd6ce/langwatch-0.16.0-py3-none-any.whl", hash = "sha256:3ce0ddf4316554794358a9ee219af5390c66fa0051d7fa063daecd41281b7d26", size = 798238, upload-time = "2026-03-13T13:04:32.161Z" },
+    { url = "https://files.pythonhosted.org/packages/6a/8d/f4c0f8432467c08419f822662c004ef2baa4e3d13ddf6773521a439e8d3a/langwatch-0.18.0-py3-none-any.whl", hash = "sha256:bf24736705be4370f36f72fe9d8a7339dd9a2a45b45c06da42d22049b441ef7d", size = 927467, upload-time = "2026-04-10T12:18:43.091Z" },
 ]
 
 [[package]]
