@@ -5,7 +5,7 @@ description = "Cloud-native LLM Agent Development and Testing Toolkit"
 requires-python = ">=3.12"
 dependencies = [
   "browser-use",
-  "charset-normalizer==3.4.2",
+  "charset-normalizer==3.4.7",
   "dependency-injector~=4.48.3",
   "fastapi-keycloak-middleware~=1.6.0",
   "fastmcp~=3.2.0",
