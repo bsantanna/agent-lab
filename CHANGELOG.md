@@ -2,6 +2,26 @@
 
 <!-- version list -->
 
+## v1.6.1 (2026-04-14)
+
+### Bug Fixes
+
+- Mcp resource registry (1) ([#289](https://github.com/bsantanna/agent-lab/pull/289),
+  [`1256744`](https://github.com/bsantanna/agent-lab/commit/1256744b0997a1b2c0bdf4bce1e39b9d5a6c5690))
+
+- Projects updates (7) ([#289](https://github.com/bsantanna/agent-lab/pull/289),
+  [`1256744`](https://github.com/bsantanna/agent-lab/commit/1256744b0997a1b2c0bdf4bce1e39b9d5a6c5690))
+
+- Projects updates (8) ([#289](https://github.com/bsantanna/agent-lab/pull/289),
+  [`1256744`](https://github.com/bsantanna/agent-lab/commit/1256744b0997a1b2c0bdf4bce1e39b9d5a6c5690))
+
+- Projects updates (9) ([#289](https://github.com/bsantanna/agent-lab/pull/289),
+  [`1256744`](https://github.com/bsantanna/agent-lab/commit/1256744b0997a1b2c0bdf4bce1e39b9d5a6c5690))
+
+- Release fixes (1) ([#289](https://github.com/bsantanna/agent-lab/pull/289),
+  [`1256744`](https://github.com/bsantanna/agent-lab/commit/1256744b0997a1b2c0bdf4bce1e39b9d5a6c5690))
+
+
 ## v1.6.0 (2026-04-10)
 
 ### Bug Fixes
