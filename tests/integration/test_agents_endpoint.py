@@ -355,6 +355,39 @@ class TestAgentsEndpoints:
         )
 
     @pytest.mark.asyncio
+    async def test_reset_settings_success(self, client):
+        # given
+        create_response = self._create_agent(client)
+        agent_id = create_response.json()["id"]
+
+        # when
+        reset_response = client.post(
+            url=f"/agents/{agent_id}/reset_settings",
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
+        )
+
+        # then
+        assert reset_response.status_code == 200
+        response_json = reset_response.json()
+        assert response_json["id"] == agent_id
+        assert "ag_settings" in response_json
+        assert isinstance(response_json["ag_settings"], list)
+
+    @pytest.mark.asyncio
+    async def test_reset_settings_not_found(self, client):
+        # given
+        agent_id = "not_existing_id"
+
+        # when
+        response = client.post(
+            url=f"/agents/{agent_id}/reset_settings",
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
+        )
+
+        # then
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
     async def test_task_notification_websocket_receives_messages(
         self, client, container
     ):

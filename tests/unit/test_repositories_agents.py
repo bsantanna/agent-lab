@@ -195,6 +195,17 @@ class TestAgentSettingRepository:
                 schema="test_schema",
             )
 
+    def test_delete_by_agent_id(self, mock_db):
+        db, session = mock_db
+        repo = AgentSettingRepository(db=db)
+
+        repo.delete_by_agent_id(agent_id="agent-1", schema="test_schema")
+
+        session.query.return_value.filter.return_value.delete.assert_called_once_with(
+            synchronize_session=False
+        )
+        session.commit.assert_called_once()
+
 
 class TestAgentNotFoundError:
     def test_entity_name(self):

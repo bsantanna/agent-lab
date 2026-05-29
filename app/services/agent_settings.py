@@ -30,3 +30,6 @@ class AgentSettingService:
             setting_value=setting_value,
             schema=schema,
         )
+
+    def delete_by_agent_id(self, agent_id: str, schema: str) -> None:
+        return self.repository.delete_by_agent_id(agent_id=agent_id, schema=schema)

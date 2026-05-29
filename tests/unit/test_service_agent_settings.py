@@ -63,3 +63,12 @@ class TestAgentSettingService:
             setting_value="Updated",
             schema="test",
         )
+
+    def test_delete_by_agent_id(self, setting_service):
+        service, repo = setting_service
+
+        service.delete_by_agent_id(agent_id="agent-1", schema="test")
+
+        repo.delete_by_agent_id.assert_called_once_with(
+            agent_id="agent-1", schema="test"
+        )

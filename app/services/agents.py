@@ -1,4 +1,4 @@
-from typing_extensions import Iterator
+from typing_extensions import Iterator, Optional
 
 from app.domain.models import Agent
 from app.domain.repositories.agents import AgentRepository
@@ -24,18 +24,19 @@ class AgentService:
         return self.agent_repository.get_by_id(agent_id, schema)
 
     def create_agent(
-        self, agent_name: str, agent_type: str, language_model_id: str, schema: str
+        self,
+        agent_name: str,
+        agent_type: str,
+        schema: str,
+        language_model_id: Optional[str] = None,
     ) -> Agent:
-        # verify language model
-        language_model = self.language_model_service.get_language_model_by_id(
+        resolved_language_model_id = self._resolve_language_model_id(
             language_model_id, schema
         )
-
-        # create agent
         agent = self.agent_repository.add(
             agent_name=agent_name,
             agent_type=agent_type,
-            language_model_id=language_model.id,
+            language_model_id=resolved_language_model_id,
             schema=schema,
         )
 
@@ -48,17 +49,27 @@ class AgentService:
         self,
         agent_id: str,
         agent_name: str,
-        language_model_id: str,
         schema: str,
         agent_summary: str = None,
+        language_model_id: Optional[str] = None,
     ) -> Agent:
-        language_model = self.language_model_service.get_language_model_by_id(
+        resolved_language_model_id = self._resolve_language_model_id(
             language_model_id, schema
         )
         return self.agent_repository.update_agent(
             agent_id=agent_id,
             agent_name=agent_name,
-            language_model_id=language_model.id,
+            language_model_id=resolved_language_model_id,
             agent_summary=agent_summary,
             schema=schema,
         )
+
+    def _resolve_language_model_id(
+        self, language_model_id: Optional[str], schema: str
+    ) -> Optional[str]:
+        if language_model_id is None:
+            return None
+        language_model = self.language_model_service.get_language_model_by_id(
+            language_model_id, schema
+        )
+        return language_model.id

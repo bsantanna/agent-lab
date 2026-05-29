@@ -64,6 +64,26 @@ class TestAgentService:
             schema="test",
         )
 
+    def test_create_agent_without_language_model(self, agent_service):
+        service, repo, _, lm_service = agent_service
+        agent = MagicMock(spec=Agent)
+        repo.add.return_value = agent
+
+        result = service.create_agent(
+            agent_name="Test",
+            agent_type="echo",
+            schema="test",
+        )
+
+        assert result == agent
+        lm_service.get_language_model_by_id.assert_not_called()
+        repo.add.assert_called_once_with(
+            agent_name="Test",
+            agent_type="echo",
+            language_model_id=None,
+            schema="test",
+        )
+
     def test_create_agent_invalid_language_model(self, agent_service):
         service, repo, _, lm_service = agent_service
         lm_service.get_language_model_by_id.side_effect = Exception("not found")
@@ -107,6 +127,28 @@ class TestAgentService:
             agent_id="agent-1",
             agent_name="Updated",
             language_model_id="lm-2",
+            agent_summary="summary",
+            schema="test",
+        )
+
+    def test_update_agent_without_language_model(self, agent_service):
+        service, repo, _, lm_service = agent_service
+        updated_agent = MagicMock(spec=Agent)
+        repo.update_agent.return_value = updated_agent
+
+        result = service.update_agent(
+            agent_id="agent-1",
+            agent_name="Updated",
+            schema="test",
+            agent_summary="summary",
+        )
+
+        assert result == updated_agent
+        lm_service.get_language_model_by_id.assert_not_called()
+        repo.update_agent.assert_called_once_with(
+            agent_id="agent-1",
+            agent_name="Updated",
+            language_model_id=None,
             agent_summary="summary",
             schema="test",
         )

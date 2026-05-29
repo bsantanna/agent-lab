@@ -16,10 +16,13 @@ class McpRegistrar:
     """
 
     def register_tools(self, mcp: FastMCP, container: Container) -> None:
-        pass
+        """Override in subclasses to register MCP tools."""
+        pass  # intentionally empty — subclasses override as needed
 
     def register_prompts(self, mcp: FastMCP) -> None:
-        pass
+        """Override in subclasses to register MCP prompts."""
+        pass  # intentionally empty — subclasses override as needed
 
     def register_resources(self, mcp: FastMCP) -> None:
-        pass
+        """Override in subclasses to register MCP resources."""
+        pass  # intentionally empty — subclasses override as needed
