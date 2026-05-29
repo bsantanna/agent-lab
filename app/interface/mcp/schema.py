@@ -13,7 +13,11 @@ class AgentItem(BaseModel):
     agent_name: str = Field(description="Human-readable agent name")
     agent_type: str = Field(description="Agent type key (e.g. react_rag, vision_document)")
     agent_summary: str = Field(description="Brief description of the agent's purpose and capabilities")
-    language_model_id: str = Field(description="ID of the language model powering this agent")
+    language_model_id: Optional[str] = Field(
+        default=None,
+        description="ID of the language model powering this agent. "
+        "Null when no model has been assigned yet.",
+    )
     is_active: bool = Field(description="Whether the agent is currently active")
 
 
