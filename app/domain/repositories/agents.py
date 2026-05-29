@@ -140,6 +140,13 @@ class AgentSettingRepository:
             session.refresh(entity)
             return entity
 
+    def delete_by_agent_id(self, agent_id: str, schema: str) -> None:
+        with self.db.session(schema_name=schema) as session:
+            session.query(AgentSetting).filter(
+                AgentSetting.agent_id == agent_id
+            ).delete(synchronize_session=False)
+            session.commit()
+
 
 class AgentSettingNotFoundError(NotFoundError):
     entity_name: str = "AgentSetting"

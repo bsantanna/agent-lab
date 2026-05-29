@@ -19,11 +19,16 @@ valid_agent_types = [
 
 invalid_characters_description = "contains invalid characters"
 
+setting_value_max_length = 16000
+setting_value_too_long_description = (
+    f"exceeds maximum length of {setting_value_max_length} characters"
+)
+
 
 class AgentCreateRequest(BaseModel):
     agent_name: str
     agent_type: str
-    language_model_id: str
+    language_model_id: Optional[str] = None
 
     @field_validator("agent_name")
     def validate_agent_name(cls, v: str):
@@ -52,8 +57,8 @@ class AgentSetting(BaseModel):
 
     @field_validator("setting_value")
     def validate_setting_value(cls, v: str):
-        if not re.match(r"^[a-zA-Z0-9\\._-]+$", v):
-            raise InvalidFieldError("setting_value", invalid_characters_description)
+        if len(v) > setting_value_max_length:
+            raise InvalidFieldError("setting_value", setting_value_too_long_description)
         return v
 
     class Config:
@@ -67,7 +72,7 @@ class Agent(BaseModel):
     agent_name: str
     agent_type: str
     agent_summary: str
-    language_model_id: str
+    language_model_id: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -80,7 +85,7 @@ class AgentExpanded(Agent):
 class AgentUpdateRequest(BaseModel):
     agent_id: str
     agent_name: str
-    language_model_id: str
+    language_model_id: Optional[str] = None
     agent_summary: Optional[str] = None
 
     @field_validator("agent_name")
@@ -97,8 +102,8 @@ class AgentSettingUpdateRequest(BaseModel):
 
     @field_validator("setting_value")
     def validate_setting_value(cls, v: str):
-        if not re.match(r"^[a-zA-Z0-9\\._-]+$", v):
-            raise InvalidFieldError("setting_value", invalid_characters_description)
+        if len(v) > setting_value_max_length:
+            raise InvalidFieldError("setting_value", setting_value_too_long_description)
         return v
 
     @field_validator("setting_key")

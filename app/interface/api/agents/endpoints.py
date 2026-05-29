@@ -428,6 +428,50 @@ async def update_setting(
     return _format_expanded_response(agent, agent_setting_service, schema)
 
 
+@router.post(
+    path="/{agent_id}/reset_settings",
+    dependencies=[Depends(bearer_scheme)],
+    response_model=AgentExpanded,
+    summary="Reset agent settings to factory defaults",
+    description="""
+    Deletes all current settings for the agent and re-seeds the factory defaults
+    defined by the agent's type (same defaults that are applied at agent creation).
+
+    Parameters:
+    - `agent_id` (path): The unique identifier of the agent.
+    """,
+    response_description="Agent with freshly seeded default settings",
+    responses={
+        200: {"description": "Settings successfully reset"},
+        404: {
+            "description": "Agent not found",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Agent with ID 'agent_123456789' not found"}
+                }
+            },
+        },
+    },
+)
+@inject
+async def reset_settings(
+    agent_id: str,
+    agent_service: Annotated[AgentService, Depends(Provide[Container.agent_service])],
+    agent_setting_service: Annotated[
+        AgentSettingService, Depends(Provide[Container.agent_setting_service])
+    ],
+    agent_registry: Annotated[
+        AgentRegistry, Depends(Provide[Container.agent_registry])
+    ],
+    user: Annotated[User, Depends(get_user)],
+):
+    schema = get_schema(user.id if user is not None else None)
+    agent = agent_service.get_agent_by_id(agent_id, schema)
+    agent_setting_service.delete_by_agent_id(agent.id, schema)
+    agent_registry.get_agent(agent.agent_type).create_default_settings(agent.id, schema)
+    return _format_expanded_response(agent, agent_setting_service, schema)
+
+
 @router.websocket("/ws/task_updates/{agent_id}")
 @inject
 async def task_updates_endpoint(
@@ -453,19 +497,26 @@ async def task_updates_endpoint(
             except asyncio.TimeoutError:
                 break
 
-            if message.get("type") != "message":
-                continue
-            try:
-                data = json.loads(message["data"])
-            except (ValueError, TypeError):
-                continue
-            if data.get("agent_id") == agent_id:
+            data = _parse_agent_task_message(message, agent_id)
+            if data is not None:
                 await websocket.send_json(data)
                 break
     except WebSocketDisconnect:
         pass
     finally:
         task_notification_service.close()
+
+
+def _parse_agent_task_message(message: dict, agent_id: str) -> dict | None:
+    if message.get("type") != "message":
+        return None
+    try:
+        data = json.loads(message["data"])
+    except (ValueError, TypeError):
+        return None
+    if data.get("agent_id") != agent_id:
+        return None
+    return data
 
 
 def _format_expanded_response(
