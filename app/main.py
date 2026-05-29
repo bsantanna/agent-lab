@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+from urllib.parse import urlencode
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi_keycloak_middleware import KeycloakConfiguration, setup_keycloak_middleware
@@ -46,6 +47,7 @@ def create_app():
     setup_exception_handlers(application)
     setup_middleware(application)
     setup_mcp_slash_rewrite(application)
+    setup_mcp_authorize_resource_rewrite(container, application)
 
     return application
 
@@ -85,23 +87,25 @@ def setup_resource_metadata(container: Container, application: FastAPI):
         return
 
     base_url = config["api_base_url"]
-    resource_url = f"{base_url}/mcp"
     authorization_server = f"{base_url}/mcp"
 
-    resource_metadata = {
-        "resource": resource_url,
-        "authorization_servers": [authorization_server],
-        "scopes_supported": ["openid", "profile", "email"],
-        "bearer_methods_supported": ["header"],
-    }
+    def build_resource_metadata(request: Request) -> dict:
+        user_agent = request.headers.get("user-agent") or ""
+        resource = base_url if not user_agent else f"{base_url}/mcp"
+        return {
+            "resource": resource,
+            "authorization_servers": [authorization_server],
+            "scopes_supported": ["openid", "profile", "email"],
+            "bearer_methods_supported": ["header"],
+        }
 
     @application.get("/.well-known/oauth-protected-resource/mcp")
-    async def oauth_protected_resource_metadata():
-        return JSONResponse(resource_metadata)
+    async def oauth_protected_resource_metadata(request: Request):
+        return JSONResponse(build_resource_metadata(request))
 
     @application.get("/.well-known/oauth-protected-resource/mcp/")
-    async def oauth_protected_resource_metadata_slash():
-        return JSONResponse(resource_metadata)
+    async def oauth_protected_resource_metadata_slash(request: Request):
+        return JSONResponse(build_resource_metadata(request))
 
     auth_server_metadata = {
         "issuer": authorization_server,
@@ -186,6 +190,30 @@ def setup_mcp_slash_rewrite(application: FastAPI):
             scope = request.scope
             scope["path"] = "/mcp/"
             scope["raw_path"] = b"/mcp/"
+        return await call_next(request)
+
+
+def setup_mcp_authorize_resource_rewrite(container: Container, application: FastAPI):
+    config = container.config()
+    if not config["auth"]["enabled"]:
+        return
+
+    bare = config["api_base_url"].rstrip("/")
+    target = f"{bare}/mcp"
+
+    def is_bare(value: str) -> bool:
+        return value.rstrip("/") == bare
+
+    @application.middleware("http")
+    async def mcp_authorize_resource_rewrite(request: Request, call_next):
+        if request.url.path == "/mcp/authorize":
+            items = list(request.query_params.multi_items())
+            if any(k == "resource" and is_bare(v) for k, v in items):
+                rewritten = [
+                    (k, target if (k == "resource" and is_bare(v)) else v)
+                    for k, v in items
+                ]
+                request.scope["query_string"] = urlencode(rewritten).encode("ascii")
         return await call_next(request)
 
 

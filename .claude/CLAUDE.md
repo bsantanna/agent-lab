@@ -86,3 +86,11 @@ Agent-Lab is a cloud-native LLM Agent Development and Testing Toolkit built with
 
 
 - `/software-engineering` — Architecture, common commands (build, test, lint), and code conventions.
+
+## Synchronization with downstream projects
+
+Agent-Lab is the **generic base** for downstream reference implementations (e.g. Quaks, a financial agents platform). Keep this boundary:
+
+- **Only generic, reusable features belong here.** Never add a downstream project's specialized code: product-specific agent types, frontends, domain services (e.g. markets/waitlist), domain MCP tools/schemas/exceptions, or product skills.
+- **Generic improvements flow upstream into Agent-Lab.** When a downstream reference implementation carries a newer generic solution (auth, MCP server/transport, shared schemas, infrastructure), port it here so Agent-Lab stays canonical for generic code. Keep generic capabilities even if a downstream project dropped them in favor of product-specific ones.
+- Files like `app/core/container.py`, `app/services/agent_types/registry.py`, and the MCP server `instructions` enumerate concrete implementations and will legitimately differ from any downstream fork.

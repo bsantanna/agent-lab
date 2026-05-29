@@ -49,18 +49,38 @@ def _build_auth(config: dict):
     if not config["auth"]["enabled"]:
         return None
 
+    from cryptography.fernet import Fernet
     from fastmcp.server.auth import OAuthProxy
+    from fastmcp.server.auth.jwt_issuer import derive_jwt_key
     from fastmcp.server.auth.providers.jwt import JWTVerifier
+    from key_value.aio.stores.redis import RedisStore
+    from key_value.aio.wrappers.encryption import FernetEncryptionWrapper
 
     auth_url = config["auth"]["url"]
     realm = config["auth"]["realm"]
     realm_base = f"{auth_url}/realms/{realm}"
+    upstream_client_secret = config["auth"]["client_secret"]
+
+    jwt_signing_key = derive_jwt_key(
+        high_entropy_material=upstream_client_secret,
+        salt="fastmcp-jwt-signing-key",
+    )
+    storage_encryption_key = derive_jwt_key(
+        high_entropy_material=jwt_signing_key.decode(),
+        salt="fastmcp-storage-encryption-key",
+    )
+
+    client_storage = FernetEncryptionWrapper(
+        key_value=RedisStore(url=config["broker"]["url"]),
+        fernet=Fernet(key=storage_encryption_key),
+        raise_on_decryption_error=False,
+    )
 
     return OAuthProxy(
         upstream_authorization_endpoint=f"{realm_base}/protocol/openid-connect/auth",
         upstream_token_endpoint=f"{realm_base}/protocol/openid-connect/token",
         upstream_client_id=config["auth"]["client_id"],
-        upstream_client_secret=config["auth"]["client_secret"],
+        upstream_client_secret=upstream_client_secret,
         token_verifier=JWTVerifier(
             jwks_uri=f"{realm_base}/protocol/openid-connect/certs",
             issuer=realm_base,
@@ -68,4 +88,5 @@ def _build_auth(config: dict):
             required_scopes=["openid", "profile", "email"],
         ),
         base_url=f"{config['api_base_url']}/mcp",
+        client_storage=client_storage,
     )
