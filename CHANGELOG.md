@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.6.3 (2026-05-29)
+
+### Bug Fixes
+
+- Project upgrade (2) ([#307](https://github.com/bsantanna/agent-lab/pull/307),
+  [`7d4676e`](https://github.com/bsantanna/agent-lab/commit/7d4676ee00a569baeb49caf62dc2b3fb7a19f9f6))
+
+
 ## v1.6.2 (2026-05-29)
 
 ### Bug Fixes
