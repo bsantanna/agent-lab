@@ -62,7 +62,7 @@ dev = [
   "flake8~=7.3.0",
   "isort~=8.0.1",
   "pre-commit~=4.6.0",
-  "ruff~=0.15.10",
+  "ruff~=0.15.15",
 ]
 test = [
   "pytest~=9.0.3",
