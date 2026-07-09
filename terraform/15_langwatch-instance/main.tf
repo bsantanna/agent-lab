@@ -38,9 +38,11 @@ provider "keycloak" {
 
 # Look up the pre-existing realm provisioned by 13_agent-lab-auth-realm and
 # register a confidential OIDC client for LangWatch's SSO. LangWatch exposes no
-# generic-OIDC provider, so we drive Keycloak through its NextAuth "auth0"
-# provider, which is a standards-based OIDC client (discovers the realm via
-# <issuer>/.well-known/openid-configuration). Callback: /api/auth/callback/auth0.
+# generic-OIDC provider, so we drive Keycloak through its "okta" provider. On the
+# 3.x (better-auth) app the okta helper takes the FULL issuer URL and discovers
+# the realm via <issuer>/.well-known/openid-configuration — unlike the "auth0"
+# helper, which keeps only the issuer host and drops the /realms/<realm> path,
+# breaking Keycloak. Callback: /api/auth/callback/okta.
 data "keycloak_realm" "agent_lab" {
   realm = var.auth_realm
 }
@@ -54,7 +56,7 @@ resource "keycloak_openid_client" "langwatch" {
   access_type           = "CONFIDENTIAL"
   standard_flow_enabled = true
 
-  valid_redirect_uris = ["https://${var.langwatch_fqdn}/api/auth/callback/auth0"]
+  valid_redirect_uris = ["https://${var.langwatch_fqdn}/api/auth/callback/okta"]
   web_origins         = ["+"]
 }
 
@@ -149,7 +151,8 @@ resource "kubernetes_secret_v1" "redis_conn" {
 resource "helm_release" "langwatch" {
   name       = "langwatch"
   repository = "https://langwatch.github.io/langwatch/"
-  chart      = "langwatch-helm"
+  chart      = "langwatch"
+  version    = "3.5.0"
   namespace  = kubernetes_namespace_v1.langwatch.metadata[0].name
 
   values = [
@@ -167,28 +170,20 @@ resource "helm_release" "langwatch" {
           publicUrl = "https://${var.langwatch_fqdn}"
           baseHost  = "https://${var.langwatch_fqdn}"
         }
-        podSecurityContext = {
-          runAsNonRoot = false
-          runAsUser    = 0
-          fsGroup      = 0
-        }
-        containerSecurityContext = {
-          allowPrivilegeEscalation = false
-          capabilities = {
-            drop = ["ALL"]
-          }
-          readOnlyRootFilesystem = false
-        }
 
         # Keycloak SSO (SSO-only). LangWatch has no generic-OIDC provider, so we
-        # use its NextAuth "auth0" provider as a standards-based OIDC client and
-        # point its issuer at the Keycloak realm from 13_agent-lab-auth-realm.
+        # use its "okta" provider as a standards-based OIDC client and point its
+        # issuer at the Keycloak realm from 13_agent-lab-auth-realm. On the 3.x
+        # (better-auth) app the okta helper discovers the realm from the full
+        # issuer URL; the "auth0" helper drops the /realms/<realm> path and fails.
         # Setting a provider makes the chart hide the credential form (SSO-only).
-        # ISSUER must match the iss Keycloak stamps into tokens.
+        # ISSUER must match the iss Keycloak stamps into tokens. better-auth
+        # persists OIDC accounts generically, tolerating the extra Keycloak token
+        # fields (refresh_expires_in, not-before-policy) that broke 2.6.0.
         nextAuth = {
-          provider = "auth0"
+          provider = "okta"
           providers = {
-            auth0 = {
+            okta = {
               clientId = {
                 value = keycloak_openid_client.langwatch.client_id
               }
@@ -231,36 +226,13 @@ resource "helm_release" "langwatch" {
         }
       }
 
-      opensearch = {
+      # 3.x replaced OpenSearch with a chart-managed ClickHouse. Keep hot storage
+      # modest for the single-node dev cluster (chart default is 50Gi).
+      clickhouse = {
         chartManaged = true
-        replicas     = 1
-        persistence = {
-          enabled = true
-          size    = "10Gi"
+        storage = {
+          size = "10Gi"
         }
-      }
-
-      prometheus = {
-        chartManaged = true
-      }
-
-      langevals = {
-        podSecurityContext = {
-          runAsNonRoot = false
-          runAsUser    = 0
-          fsGroup      = 0
-        }
-        containerSecurityContext = {
-          allowPrivilegeEscalation = false
-          capabilities = {
-            drop = ["ALL"]
-          }
-          readOnlyRootFilesystem = false
-        }
-      }
-
-      workers = {
-        enabled = false
       }
     })
   ]
