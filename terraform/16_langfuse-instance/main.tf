@@ -169,7 +169,9 @@ resource "helm_release" "langfuse" {
         # Keycloak SSO (SSO-only): the client is provisioned above in the realm
         # from 13_agent-lab-auth-realm. ISSUER must match the iss Keycloak stamps
         # into tokens (driven by the keycloak instance hostname + proxy config).
-        # Disabling username/password + signup forces all logins through Keycloak.
+        # AUTH_DISABLE_USERNAME_PASSWORD forces all logins through Keycloak; signup
+        # stays enabled so first-time SSO users are auto-provisioned (realm
+        # membership is the access gate).
         additionalEnv = [
           {
             name  = "AUTH_KEYCLOAK_CLIENT_ID"
@@ -189,10 +191,6 @@ resource "helm_release" "langfuse" {
           },
           {
             name  = "AUTH_DISABLE_USERNAME_PASSWORD"
-            value = "true"
-          },
-          {
-            name  = "AUTH_DISABLE_SIGNUP"
             value = "true"
           },
         ]
