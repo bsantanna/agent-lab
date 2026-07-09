@@ -62,6 +62,23 @@ variable "langwatch_api_key" {
   type        = string
 }
 
+variable "langfuse_host" {
+  description = "Base URL of the Langfuse instance (e.g. https://langfuse.my-domain.com)"
+  type        = string
+}
+
+variable "langfuse_public_key" {
+  description = "Langfuse project public key (pk-lf-...)"
+  type        = string
+  sensitive   = true
+}
+
+variable "langfuse_secret_key" {
+  description = "Langfuse project secret key (sk-lf-...)"
+  type        = string
+  sensitive   = true
+}
+
 variable "pg_image" {
   type        = string
   default     = "bsantanna/cloudnative-pg-vector:17.4"

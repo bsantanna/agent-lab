@@ -1,9 +1,7 @@
+import base64
 import logging
 import os
 
-from langwatch.attributes import AttributeKey
-from langwatch.domain import SpanProcessingExcludeRule
-from openinference.instrumentation.openai import OpenAIInstrumentor
 from opentelemetry import trace, metrics
 from opentelemetry.context import Context
 from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
@@ -21,12 +19,10 @@ from opentelemetry.sdk.resources import Resource, SERVICE_NAME, Attributes
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.trace.sampling import Sampler, Decision, SamplingResult
-import langwatch
 from opentelemetry.trace import SpanKind, TraceState, Link
 from typing_extensions import Optional, Sequence
 
 service_name = os.getenv("SERVICE_NAME", "Agent-Lab")
-service_version = os.getenv("SERVICE_VERSION", "snapshot")
 collector_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
 resource = Resource(attributes={SERVICE_NAME: service_name})
 excluded_paths = [
@@ -105,33 +101,28 @@ class Tracer:
         LangchainInstrumentor().instrument()
         SQLAlchemyInstrumentor().instrument()
 
-        langwatch_endpoint = os.getenv("LANGWATCH_ENDPOINT")
-        langwatch_api_key = os.getenv("LANGWATCH_API_KEY")
+        langfuse_host = os.getenv("LANGFUSE_HOST")
+        langfuse_public_key = os.getenv("LANGFUSE_PUBLIC_KEY")
+        langfuse_secret_key = os.getenv("LANGFUSE_SECRET_KEY")
         if (
-            langwatch_endpoint is not None
-            and langwatch_api_key is not None
+            langfuse_host is not None
+            and langfuse_public_key is not None
+            and langfuse_secret_key is not None
             and tracer_provider is not None
         ):
-            exclude_rules = []
-            for path in excluded_paths:
-                exclude_rules.append(
-                    SpanProcessingExcludeRule(
-                        field_name="span_name",
-                        match_value=f"{path}",
-                        match_operation="includes",
-                    )
-                )
-
-            langwatch.setup(
-                endpoint_url=langwatch_endpoint,
-                api_key=langwatch_api_key,
-                base_attributes={
-                    AttributeKey.ServiceName: service_name,
-                    AttributeKey.ServiceVersion: service_version,
+            # Langfuse ingests via OTLP; excluded paths are already dropped by
+            # ExcludePathSampler, so this exporter simply mirrors the sampled
+            # spans to Langfuse alongside the collector export.
+            auth = base64.b64encode(
+                f"{langfuse_public_key}:{langfuse_secret_key}".encode()
+            ).decode()
+            langfuse_exporter = OTLPSpanExporter(
+                endpoint=f"{langfuse_host}/api/public/otel/v1/traces",
+                headers={
+                    "Authorization": f"Basic {auth}",
+                    "x-langfuse-ingestion-version": "4",
                 },
-                instrumentors=[LangchainInstrumentor(), OpenAIInstrumentor()],
-                span_exclude_rules=exclude_rules,
-                tracer_provider=tracer_provider,
             )
+            tracer_provider.add_span_processor(BatchSpanProcessor(langfuse_exporter))
         else:
-            logging.warning("Langwatch tracing is disabled.")
+            logging.warning("Langfuse tracing is disabled.")

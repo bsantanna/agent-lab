@@ -169,12 +169,15 @@ resource "kubernetes_secret_v1" "agent_lab_secret" {
 
   # APP BOOT dependencies
   data = {
-    VAULT_URL          = var.vault_url
-    VAULT_TOKEN        = var.vault_api_key
-    VAULT_ENGINE_PATH  = var.vault_engine_path
-    VAULT_SECRET_PATH  = var.vault_secret_path
-    LANGWATCH_ENDPOINT = var.langwatch_endpoint
-    LANGWATCH_API_KEY  = var.langwatch_api_key
+    VAULT_URL           = var.vault_url
+    VAULT_TOKEN         = var.vault_api_key
+    VAULT_ENGINE_PATH   = var.vault_engine_path
+    VAULT_SECRET_PATH   = var.vault_secret_path
+    LANGWATCH_ENDPOINT  = var.langwatch_endpoint
+    LANGWATCH_API_KEY   = var.langwatch_api_key
+    LANGFUSE_HOST       = var.langfuse_host
+    LANGFUSE_PUBLIC_KEY = var.langfuse_public_key
+    LANGFUSE_SECRET_KEY = var.langfuse_secret_key
   }
 
   type = "Opaque"

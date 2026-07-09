@@ -9,7 +9,6 @@ from datetime import timedelta, datetime, timezone
 
 import hvac
 import icalendar
-import langwatch
 from browser_use import (
     llm as browser_use_llm,
     Agent as BrowserAgent,
@@ -39,6 +38,10 @@ from app.domain.exceptions.base import ResourceNotFoundError
 from app.domain.models import Agent, Integration, LanguageModel
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.vectors import DocumentRepository
+from app.infrastructure.metrics.tracing import (
+    trace_agent_message,
+    set_current_trace_io,
+)
 from app.interface.api.messages.schema import MessageRequest, Message
 from app.services.agent_settings import AgentSettingService
 from app.services.agents import AgentService
@@ -287,7 +290,7 @@ class WorkflowAgentBase(AgentBase, ABC):
 
         return thought_chain
 
-    @langwatch.trace()
+    @trace_agent_message
     def process_message(self, message_request: MessageRequest, schema: str) -> Message:
         agent_id = message_request.agent_id
         checkpointer = self.graph_persistence_factory.build_checkpoint_saver()
@@ -322,10 +325,10 @@ class WorkflowAgentBase(AgentBase, ABC):
             )
         )
 
-        # Langwatch output formatting
-        langwatch.get_current_trace().update(
-            input=message_request.message_content,
-            output=response_content,
+        # Langfuse trace output formatting
+        set_current_trace_io(
+            input_value=message_request.message_content,
+            output_value=response_content,
             metadata={
                 "agent_id": agent_id,
                 "agent_class": self.__class__.__name__,
@@ -383,14 +386,25 @@ class WorkflowAgentBase(AgentBase, ABC):
         return "command"
 
     @staticmethod
-    def _analyze_shell(script):
-        commands = []
-        current_cmd = []
-        pipes = 0
-        redirections = []
-        variables = []
-        subshells = 0
+    def _apply_shell_token(kind, token, state):
+        if kind in ("pipe", "separator") and state["current_cmd"]:
+            state["commands"].append(" ".join(state["current_cmd"]))
+            state["current_cmd"] = []
 
+        if kind == "pipe":
+            state["pipes"] += 1
+        elif kind == "redirection":
+            state["redirections"].append(token)
+        elif kind == "variable":
+            state["variables"].append(token.split("=", 1)[0])
+        elif kind == "subshell":
+            state["subshells"] += 1
+            state["current_cmd"].append(token)
+        elif kind == "command":
+            state["current_cmd"].append(token)
+
+    @staticmethod
+    def _analyze_shell(script):
         try:
             tokens = shlex.split(script)
         except ValueError as e:
@@ -398,35 +412,29 @@ class WorkflowAgentBase(AgentBase, ABC):
 
         classify = WorkflowAgentBase._classify_shell_token
         ops = WorkflowAgentBase._REDIRECT_OPS
+        apply_token = WorkflowAgentBase._apply_shell_token
+
+        state = {
+            "commands": [],
+            "current_cmd": [],
+            "pipes": 0,
+            "redirections": [],
+            "variables": [],
+            "subshells": 0,
+        }
 
         for token in tokens:
-            kind = classify(token, ops)
+            apply_token(classify(token, ops), token, state)
 
-            if kind in ("pipe", "separator") and current_cmd:
-                commands.append(" ".join(current_cmd))
-                current_cmd = []
-
-            if kind == "pipe":
-                pipes += 1
-            elif kind == "redirection":
-                redirections.append(token)
-            elif kind == "variable":
-                variables.append(token.split("=", 1)[0])
-            elif kind == "subshell":
-                subshells += 1
-                current_cmd.append(token)
-            elif kind == "command":
-                current_cmd.append(token)
-
-        if current_cmd:
-            commands.append(" ".join(current_cmd))
+        if state["current_cmd"]:
+            state["commands"].append(" ".join(state["current_cmd"]))
 
         return {
-            "commands": commands,
-            "pipes": pipes,
-            "redirections": redirections,
-            "variables": variables,
-            "subshells": subshells,
+            "commands": state["commands"],
+            "pipes": state["pipes"],
+            "redirections": state["redirections"],
+            "variables": state["variables"],
+            "subshells": state["subshells"],
         }, None
 
     def get_bash_tool(self) -> BaseTool:
