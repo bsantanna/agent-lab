@@ -1,6 +1,7 @@
 import logging
 import os
 
+from openinference.instrumentation.openai import OpenAIInstrumentor
 from opentelemetry import trace, metrics
 from opentelemetry.context import Context
 from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
@@ -106,10 +107,15 @@ class Tracer:
         self._backends = backends
 
     def setup(self, app):
+        # Framework-neutral base instrumentation. These bind to the shared
+        # (global) TracerProvider, so every backend's exporter receives the same
+        # FastAPI/HTTPx/LangChain/SQLAlchemy/OpenAI spans — instrumentation is a
+        # shared concern, not owned by any single tracing framework.
         FastAPIInstrumentor.instrument_app(app)
         HTTPXClientInstrumentor().instrument()
         LangchainInstrumentor().instrument()
         SQLAlchemyInstrumentor().instrument()
+        OpenAIInstrumentor().instrument()
 
         active_backends = [
             backend for backend in self._backends if backend.configure(tracer_provider)

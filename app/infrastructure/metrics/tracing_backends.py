@@ -7,10 +7,8 @@ from contextlib import nullcontext
 import langwatch
 from langwatch.attributes import AttributeKey
 from langwatch.domain import SpanProcessingExcludeRule
-from openinference.instrumentation.openai import OpenAIInstrumentor
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-from opentelemetry.instrumentation.langchain import LangchainInstrumentor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
@@ -102,6 +100,9 @@ class LangWatchTracingBackend(TracingBackend):
             )
             for path in self._excluded_paths
         ]
+        # Instrumentation is installed once at the base (see Tracer.setup) and
+        # reaches LangWatch through the shared tracer_provider, so no instrumentors
+        # are registered here — this backend only attaches its exporter.
         langwatch.setup(
             endpoint_url=endpoint,
             api_key=api_key,
@@ -109,7 +110,6 @@ class LangWatchTracingBackend(TracingBackend):
                 AttributeKey.ServiceName: self._service_name,
                 AttributeKey.ServiceVersion: self._service_version,
             },
-            instrumentors=[LangchainInstrumentor(), OpenAIInstrumentor()],
             span_exclude_rules=exclude_rules,
             tracer_provider=tracer_provider,
         )
