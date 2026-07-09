@@ -1,11 +1,6 @@
-import base64
 import logging
 import os
 
-import langwatch
-from langwatch.attributes import AttributeKey
-from langwatch.domain import SpanProcessingExcludeRule
-from openinference.instrumentation.openai import OpenAIInstrumentor
 from opentelemetry import trace, metrics
 from opentelemetry.context import Context
 from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
@@ -26,7 +21,7 @@ from opentelemetry.sdk.trace.sampling import Sampler, Decision, SamplingResult
 from opentelemetry.trace import SpanKind, TraceState, Link
 from typing_extensions import Optional, Sequence
 
-from app.infrastructure.metrics.tracing import enable_langwatch_tracing
+from app.infrastructure.metrics.tracing import register_active_backends
 
 service_name = os.getenv("SERVICE_NAME", "Agent-Lab")
 service_version = os.getenv("SERVICE_VERSION", "snapshot")
@@ -102,71 +97,21 @@ if collector_endpoint is not None:
 
 
 class Tracer:
+    """Coordinates the framework-neutral OpenTelemetry base instrumentation and
+    delegates framework-specific wiring to the injected ``TracingBackend`` list.
+    Adding or removing a backend is a container change only — this class never
+    changes (Open/Closed, Dependency Inversion)."""
+
+    def __init__(self, backends):
+        self._backends = backends
+
     def setup(self, app):
         FastAPIInstrumentor.instrument_app(app)
         HTTPXClientInstrumentor().instrument()
         LangchainInstrumentor().instrument()
         SQLAlchemyInstrumentor().instrument()
 
-        langfuse_host = os.getenv("LANGFUSE_HOST")
-        langfuse_public_key = os.getenv("LANGFUSE_PUBLIC_KEY")
-        langfuse_secret_key = os.getenv("LANGFUSE_SECRET_KEY")
-        if (
-            langfuse_host is not None
-            and langfuse_public_key is not None
-            and langfuse_secret_key is not None
-            and tracer_provider is not None
-        ):
-            # Langfuse ingests via OTLP; excluded paths are already dropped by
-            # ExcludePathSampler, so this exporter simply mirrors the sampled
-            # spans to Langfuse alongside the collector export.
-            auth = base64.b64encode(
-                f"{langfuse_public_key}:{langfuse_secret_key}".encode()
-            ).decode()
-            langfuse_exporter = OTLPSpanExporter(
-                endpoint=f"{langfuse_host}/api/public/otel/v1/traces",
-                headers={
-                    "Authorization": f"Basic {auth}",
-                    "x-langfuse-ingestion-version": "4",
-                },
-            )
-            tracer_provider.add_span_processor(BatchSpanProcessor(langfuse_exporter))
-        else:
-            logging.warning("Langfuse tracing is disabled.")
-
-        # LangWatch tracing runs alongside Langfuse for side-by-side comparison.
-        # It attaches to the shared tracer_provider (tracer_provider=...), so the
-        # same spans are also exported to LangWatch without clobbering the
-        # collector/Langfuse exporters. The @trace_agent_message decorator fans
-        # out to both backends when this setup succeeds (see tracing.py).
-        langwatch_endpoint = os.getenv("LANGWATCH_ENDPOINT")
-        langwatch_api_key = os.getenv("LANGWATCH_API_KEY")
-        if (
-            langwatch_endpoint is not None
-            and langwatch_api_key is not None
-            and tracer_provider is not None
-        ):
-            exclude_rules = []
-            for path in excluded_paths:
-                exclude_rules.append(
-                    SpanProcessingExcludeRule(
-                        field_name="span_name",
-                        match_value=f"{path}",
-                        match_operation="includes",
-                    )
-                )
-
-            langwatch.setup(
-                endpoint_url=langwatch_endpoint,
-                api_key=langwatch_api_key,
-                base_attributes={
-                    AttributeKey.ServiceName: service_name,
-                    AttributeKey.ServiceVersion: service_version,
-                },
-                instrumentors=[LangchainInstrumentor(), OpenAIInstrumentor()],
-                span_exclude_rules=exclude_rules,
-                tracer_provider=tracer_provider,
-            )
-            enable_langwatch_tracing()
-        else:
-            logging.warning("Langwatch tracing is disabled.")
+        active_backends = [
+            backend for backend in self._backends if backend.configure(tracer_provider)
+        ]
+        register_active_backends(active_backends)
