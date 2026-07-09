@@ -8,6 +8,10 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = ">= 2.0.0"
     }
+    keycloak = {
+      source  = "keycloak/keycloak"
+      version = ">= 5.0.0"
+    }
     random = {
       source  = "hashicorp/random"
       version = ">= 3.0.0"
@@ -27,6 +31,33 @@ provider "helm" {
   kubernetes = {
     config_path = "~/.kube/config"
   }
+}
+
+provider "keycloak" {
+  client_id = "admin-cli"
+  username  = var.auth_admin_username
+  password  = var.auth_admin_secret
+  url       = var.auth_url
+}
+
+# Look up the pre-existing realm provisioned by 13_agent-lab-auth-realm and
+# register a confidential OIDC client for Langfuse's Keycloak SSO. NextAuth's
+# Keycloak provider calls back at /api/auth/callback/keycloak.
+data "keycloak_realm" "agent_lab" {
+  realm = var.auth_realm
+}
+
+resource "keycloak_openid_client" "langfuse" {
+  realm_id  = data.keycloak_realm.agent_lab.id
+  client_id = var.auth_client_id
+  name      = var.auth_client_id
+  enabled   = true
+
+  access_type           = "CONFIDENTIAL"
+  standard_flow_enabled = true
+
+  valid_redirect_uris = ["https://${var.langfuse_fqdn}/api/auth/callback/keycloak"]
+  web_origins         = ["+"]
 }
 
 resource "kubernetes_namespace_v1" "langfuse" {
@@ -134,6 +165,37 @@ resource "helm_release" "langfuse" {
         ingress = {
           enabled = false
         }
+
+        # Keycloak SSO (SSO-only): the client is provisioned above in the realm
+        # from 13_agent-lab-auth-realm. ISSUER must match the iss Keycloak stamps
+        # into tokens (driven by the keycloak instance hostname + proxy config).
+        # Disabling username/password + signup forces all logins through Keycloak.
+        additionalEnv = [
+          {
+            name  = "AUTH_KEYCLOAK_CLIENT_ID"
+            value = keycloak_openid_client.langfuse.client_id
+          },
+          {
+            name  = "AUTH_KEYCLOAK_CLIENT_SECRET"
+            value = keycloak_openid_client.langfuse.client_secret
+          },
+          {
+            name  = "AUTH_KEYCLOAK_ISSUER"
+            value = "${var.auth_url}/realms/${var.auth_realm}"
+          },
+          {
+            name  = "AUTH_KEYCLOAK_ALLOW_ACCOUNT_LINKING"
+            value = "true"
+          },
+          {
+            name  = "AUTH_DISABLE_USERNAME_PASSWORD"
+            value = "true"
+          },
+          {
+            name  = "AUTH_DISABLE_SIGNUP"
+            value = "true"
+          },
+        ]
       }
 
       # External Postgres provisioned by CloudNativePG. Username/database are the
