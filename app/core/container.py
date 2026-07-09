@@ -14,7 +14,16 @@ from app.domain.repositories.messages import MessageRepository
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.sql import Database
 from app.infrastructure.database.vectors import DocumentRepository
-from app.infrastructure.metrics.tracer import Tracer
+from app.infrastructure.metrics.tracer import (
+    Tracer,
+    service_name,
+    service_version,
+    excluded_paths,
+)
+from app.infrastructure.metrics.tracing_backends import (
+    LangfuseTracingBackend,
+    LangWatchTracingBackend,
+)
 from app.interface.mcp.default_tool_registrar import DefaultToolRegistrar
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.adaptive_rag.agent import AdaptiveRagAgent
@@ -249,4 +258,22 @@ class Container(containers.DeclarativeContainer):
 
     mcp_registrars = providers.List(default_tool_registrar)
 
-    tracer = providers.Singleton(Tracer)
+    # Tracing frameworks are decoupled behind the TracingBackend abstraction and
+    # composed here as a list (mirroring mcp_registrars). Adding a framework is a
+    # new backend class + one entry below — the Tracer coordinator, the
+    # @trace_agent_message decorator and the agent call sites stay untouched.
+    langfuse_tracing_backend = providers.Singleton(LangfuseTracingBackend)
+
+    langwatch_tracing_backend = providers.Singleton(
+        LangWatchTracingBackend,
+        service_name=service_name,
+        service_version=service_version,
+        excluded_paths=excluded_paths,
+    )
+
+    tracing_backends = providers.List(
+        langfuse_tracing_backend,
+        langwatch_tracing_backend,
+    )
+
+    tracer = providers.Singleton(Tracer, backends=tracing_backends)

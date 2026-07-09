@@ -187,7 +187,7 @@ kubectl --namespace vault exec vault-0 -- vault operator unseal $VAULT_UNSEAL_KE
 
 ### Setup LangWatch
 
-[LangWatch](https://langwatch.ai) is used by Agent-Lab for observability of LLM usage and simulation testing.
+[LangWatch](https://langwatch.ai) is used by Agent-Lab for simulation testing (via `langwatch-scenario`) and its scenario dashboards.
 
 Please determine a <langwatch_fqdn> for accessing LangWatch web UI, example: langwatch.my-domain.com
 
@@ -196,6 +196,20 @@ cd terraform/09_langwatch-instance/
 terraform init
 terraform apply
 ```
+
+### Setup Langfuse
+
+[Langfuse](https://langfuse.com) is used by Agent-Lab for observability of LLM usage. The application exports OpenTelemetry traces to Langfuse via its OTLP endpoint (`{LANGFUSE_HOST}/api/public/otel/v1/traces`) alongside the existing collector export, so the rest of the observability stack keeps working unchanged.
+
+Please determine a <langfuse_fqdn> for accessing the Langfuse web UI, example: langfuse.my-domain.com
+
+```bash
+cd terraform/09b_langfuse-instance/
+terraform init
+terraform apply
+```
+
+After the instance is running, create a project in the Langfuse UI and copy its **public** (`pk-lf-...`) and **secret** (`sk-lf-...`) keys. These, together with the base URL, configure the application via `LANGFUSE_HOST`, `LANGFUSE_PUBLIC_KEY`, and `LANGFUSE_SECRET_KEY` (wired through `terraform/14_agent-lab-dependencies`). If any of the three is unset, Langfuse tracing is silently disabled and the app still boots.
 
 ### Setup Elastic Kubernetes Cluster (ECK) for Observability
 
