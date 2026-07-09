@@ -2,6 +2,10 @@ import base64
 import logging
 import os
 
+import langwatch
+from langwatch.attributes import AttributeKey
+from langwatch.domain import SpanProcessingExcludeRule
+from openinference.instrumentation.openai import OpenAIInstrumentor
 from opentelemetry import trace, metrics
 from opentelemetry.context import Context
 from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
@@ -22,7 +26,10 @@ from opentelemetry.sdk.trace.sampling import Sampler, Decision, SamplingResult
 from opentelemetry.trace import SpanKind, TraceState, Link
 from typing_extensions import Optional, Sequence
 
+from app.infrastructure.metrics.tracing import enable_langwatch_tracing
+
 service_name = os.getenv("SERVICE_NAME", "Agent-Lab")
+service_version = os.getenv("SERVICE_VERSION", "snapshot")
 collector_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
 resource = Resource(attributes={SERVICE_NAME: service_name})
 excluded_paths = [
@@ -126,3 +133,40 @@ class Tracer:
             tracer_provider.add_span_processor(BatchSpanProcessor(langfuse_exporter))
         else:
             logging.warning("Langfuse tracing is disabled.")
+
+        # LangWatch tracing runs alongside Langfuse for side-by-side comparison.
+        # It attaches to the shared tracer_provider (tracer_provider=...), so the
+        # same spans are also exported to LangWatch without clobbering the
+        # collector/Langfuse exporters. The @trace_agent_message decorator fans
+        # out to both backends when this setup succeeds (see tracing.py).
+        langwatch_endpoint = os.getenv("LANGWATCH_ENDPOINT")
+        langwatch_api_key = os.getenv("LANGWATCH_API_KEY")
+        if (
+            langwatch_endpoint is not None
+            and langwatch_api_key is not None
+            and tracer_provider is not None
+        ):
+            exclude_rules = []
+            for path in excluded_paths:
+                exclude_rules.append(
+                    SpanProcessingExcludeRule(
+                        field_name="span_name",
+                        match_value=f"{path}",
+                        match_operation="includes",
+                    )
+                )
+
+            langwatch.setup(
+                endpoint_url=langwatch_endpoint,
+                api_key=langwatch_api_key,
+                base_attributes={
+                    AttributeKey.ServiceName: service_name,
+                    AttributeKey.ServiceVersion: service_version,
+                },
+                instrumentors=[LangchainInstrumentor(), OpenAIInstrumentor()],
+                span_exclude_rules=exclude_rules,
+                tracer_provider=tracer_provider,
+            )
+            enable_langwatch_tracing()
+        else:
+            logging.warning("Langwatch tracing is disabled.")
