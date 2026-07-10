@@ -39,7 +39,7 @@ async def test_browser_automation_agent(client):
                 temperature=1.0,
                 criteria=[
                     "Agent should not ask follow-up questions. ",
-                    "Agent should match the given criteria in the query.",
+                    "Agent should match the given acceptance criteria in the query.",
                 ],
             ),
         ],
