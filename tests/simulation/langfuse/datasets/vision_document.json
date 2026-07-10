@@ -1,0 +1,23 @@
+{
+  "name": "simulation_vision_document",
+  "description": "Answer questions about given image document.",
+  "items": [
+    {
+      "id": "vision_document_001",
+      "input": {
+        "message": "Can you describe the following image in details?"
+      },
+      "expected_output": {
+        "criteria": [
+          "Agent should answer user question about given image document.",
+          "Image document contains a fisherman sit and adjusting his net.",
+          "There is a philosophical quote in the image evoking preparation and readiness, agent must describe this."
+        ]
+      },
+      "metadata": {
+        "agent_type": "vision_document",
+        "attachment": "tests/integration/vision_document_01.jpg"
+      }
+    }
+  ]
+}

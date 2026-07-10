@@ -1,11 +1,12 @@
 import os
-from uuid import uuid4
 
 import scenario
 import pytest
 from starlette.testclient import TestClient
 
 from app.main import app
+from tests.simulation.common.config import judge_model_config
+from tests.simulation.common.reference_agents import supervised_agent
 
 
 @pytest.fixture
@@ -14,8 +15,7 @@ def client():
 
 
 # Configure the default model for simulation
-# scenario.configure(default_model="anthropic/claude-haiku-4-5")
-scenario.configure(default_model="openai/gpt-5-nano")
+scenario.configure(default_model=judge_model_config())
 
 
 @pytest.mark.agent_test
@@ -92,65 +92,3 @@ async def test_supervised_researcher_agent(client):
     )
 
     assert result.success
-
-
-@scenario.cache()
-def supervised_agent(client, message_content) -> scenario.AgentReturnTypes:
-    # create integration
-    response = client.post(
-        url="/integrations/create",
-        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
-        json={
-            "api_endpoint": "https://api.x.ai/v1/",
-            "api_key": os.environ["XAI_API_KEY"],
-            "integration_type": "xai_api_v1",
-        },
-    )
-    integration_id = response.json()["id"]
-
-    # create llm
-    response_2 = client.post(
-        url="/llms/create",
-        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
-        json={
-            "integration_id": integration_id,
-            "language_model_tag": "grok-code-fast",
-        },
-    )
-    language_model_id = response_2.json()["id"]
-
-    # create agent
-    response_3 = client.post(
-        url="/agents/create",
-        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
-        json={
-            "language_model_id": language_model_id,
-            "agent_type": "coordinator_planner_supervisor",
-            "agent_name": f"agent-{uuid4()}",
-        },
-    )
-    agent_id = response_3.json()["id"]
-
-    # update collection_name to match pgvector dump
-    client.post(
-        url="/agents/update_setting",
-        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
-        json={
-            "agent_id": agent_id,
-            "setting_key": "collection_name",
-            "setting_value": "static_document_data_ollama_embeddings",
-        },
-    )
-
-    # post message
-    response_4 = client.post(
-        "/messages/post",
-        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
-        json={
-            "message_role": "human",
-            "message_content": message_content,
-            "agent_id": agent_id,
-        },
-    )
-
-    return response_4.json()["message_content"]

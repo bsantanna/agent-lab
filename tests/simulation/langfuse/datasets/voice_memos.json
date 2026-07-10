@@ -1,0 +1,26 @@
+{
+  "name": "simulation_voice_memos",
+  "description": "Answer questions about given audio document.",
+  "items": [
+    {
+      "id": "voice_memos_001",
+      "input": {
+        "message": "Can you describe the voice memo recording? Please identify stakeholders involved."
+      },
+      "expected_output": {
+        "criteria": [
+          "Agent should not ask further questions.",
+          "Agent should answer user question about given audio document.",
+          "Agent answer format is a detailed report with remarks of the audio and follow up actions.",
+          "Audio document contains a first person voice memo about a meeting and a fictional character responsible for marketing team.",
+          "Audio document is recorded in portuguese.",
+          "The fictional character is concerned about delivery date of project, agent should mention this in report."
+        ]
+      },
+      "metadata": {
+        "agent_type": "fast_voice_memos",
+        "attachment": "tests/integration/voice_memos_01_pt_BR.mp3"
+      }
+    }
+  ]
+}

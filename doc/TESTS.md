@@ -27,4 +27,25 @@ Run integration tests using the following command:
 make test
 ```
 
+---
 
+## Agent Simulations
+
+End-to-end agent simulations live in `tests/simulation/` and call live LLM providers. They are marked with `agent_test` and deselected by default; run them with:
+
+```bash
+make test_simulations
+```
+
+Two complementary tracks share the agent bootstrap helpers in `tests/simulation/common/`:
+
+- `tests/simulation/scenario/` — conversational simulations using the [langwatch-scenario](https://github.com/langwatch/scenario) framework (user simulator + judge agent).
+- `tests/simulation/langfuse/` — dataset-driven experiments using [Langfuse](https://langfuse.com/) datasets. Dataset definitions are versioned under `tests/simulation/langfuse/datasets/` and synced idempotently to Langfuse on each run (or standalone with `uv run python scripts/setup_langfuse_evals.py`). Each run invokes the agent per dataset item, scores the output with an LLM-as-judge, and records the run and scores in Langfuse for comparison over time. These tests skip automatically when `LANGFUSE_HOST`, `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are not set.
+
+Both tracks use the same judge model configuration:
+
+| Environment variable | Default | Purpose |
+|---|---|---|
+| `SIMULATION_JUDGE_MODEL` | `openai/gpt-5-nano` | litellm model id used by the user simulator and LLM-as-judge |
+| `SIMULATION_JUDGE_API_BASE` | provider default | custom OpenAI API compatible endpoint for the judge model |
+| `SIMULATION_JUDGE_API_KEY` | provider default | API key for the custom endpoint |
