@@ -2,6 +2,34 @@
 
 <!-- version list -->
 
+## v1.7.0 (2026-07-10)
+
+### Bug Fixes
+
+- Adjusts simulation tests ([#327](https://github.com/bsantanna/agent-lab/pull/327),
+  [`eeacc01`](https://github.com/bsantanna/agent-lab/commit/eeacc01d8c5415267e15416af01cafc3a3eab992))
+
+- Adjusts simulation tests (2) ([#327](https://github.com/bsantanna/agent-lab/pull/327),
+  [`eeacc01`](https://github.com/bsantanna/agent-lab/commit/eeacc01d8c5415267e15416af01cafc3a3eab992))
+
+- App runtime warnings adjust ([#327](https://github.com/bsantanna/agent-lab/pull/327),
+  [`eeacc01`](https://github.com/bsantanna/agent-lab/commit/eeacc01d8c5415267e15416af01cafc3a3eab992))
+
+- Langfuse deployment adjusts ([#327](https://github.com/bsantanna/agent-lab/pull/327),
+  [`eeacc01`](https://github.com/bsantanna/agent-lab/commit/eeacc01d8c5415267e15416af01cafc3a3eab992))
+
+### Features
+
+- Release q3 2: removes Ollama and Tavily ([#327](https://github.com/bsantanna/agent-lab/pull/327),
+  [`eeacc01`](https://github.com/bsantanna/agent-lab/commit/eeacc01d8c5415267e15416af01cafc3a3eab992))
+
+- Removes ollama runtime dependency ([#327](https://github.com/bsantanna/agent-lab/pull/327),
+  [`eeacc01`](https://github.com/bsantanna/agent-lab/commit/eeacc01d8c5415267e15416af01cafc3a3eab992))
+
+- Removes tavily runtime dependency ([#327](https://github.com/bsantanna/agent-lab/pull/327),
+  [`eeacc01`](https://github.com/bsantanna/agent-lab/commit/eeacc01d8c5415267e15416af01cafc3a3eab992))
+
+
 ## v1.6.4 (2026-07-10)
 
 ### Bug Fixes
