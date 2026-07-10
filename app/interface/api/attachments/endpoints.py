@@ -134,7 +134,8 @@ async def get_list(
 @inject
 async def upload_attachment(
     file: Annotated[
-        UploadFile, File(..., description="The file to upload.", example="document.pdf")
+        UploadFile,
+        File(..., description="The file to upload.", examples=["document.pdf"]),
     ],
     attachment_service: Annotated[
         AttachmentService, Depends(Provide[Container.attachment_service])
@@ -205,7 +206,7 @@ async def download_attachment(
         Path(
             ...,
             description="Unique identifier of the attachment to download",
-            example="att_123456789",
+            examples=["att_123456789"],
             min_length=1,
             max_length=50,
         ),
@@ -290,11 +291,13 @@ async def create_embeddings(
         Body(
             ...,
             description="Configuration for embedding generation",
-            example={
-                "attachment_id": "att_123456789",
-                "language_model_id": "lm_abc123",
-                "collection_name": "my_documents",
-            },
+            examples=[
+                {
+                    "attachment_id": "att_123456789",
+                    "language_model_id": "lm_abc123",
+                    "collection_name": "my_documents",
+                }
+            ],
         ),
     ],
     attachment_service: Annotated[

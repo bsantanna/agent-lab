@@ -178,11 +178,13 @@ async def add(
         Body(
             ...,
             description="Integration configuration data",
-            example={
-                "integration_type": "openai_api_v1",
-                "api_endpoint": "https://api.openai.com/v1",
-                "api_key": "an_api_key",
-            },
+            examples=[
+                {
+                    "integration_type": "openai_api_v1",
+                    "api_endpoint": "https://api.openai.com/v1",
+                    "api_key": "an_api_key",
+                }
+            ],
         ),
     ],
     integration_service: Annotated[

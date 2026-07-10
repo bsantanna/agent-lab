@@ -65,7 +65,7 @@ OpenTelemetry is configured in `app/infrastructure/metrics/tracer.py`. Instrumen
 
 ### Backend
 
-**Important:** All Python commands must use the `agent-lab` conda environment: `conda run -n agent-lab <command>`
+**Important:** This project uses [uv](https://docs.astral.sh/uv/) for dependency and environment management. Run all Python commands through `uv run <command>` so they execute inside the project's managed virtualenv. Use `uv sync` to install/update dependencies from `uv.lock`.
 
 ```bash
 # Run the app locally (requires Postgres, Redis, Vault running)
@@ -75,17 +75,17 @@ make run
 make test
 
 # Run a single test file
-pytest tests/integration/test_status_endpoint.py
+uv run pytest tests/integration/test_status_endpoint.py
 
 # Run a single test by name
-pytest tests/integration/test_status_endpoint.py -k "test_name"
+uv run pytest tests/integration/test_status_endpoint.py -k "test_name"
 
 # Lint
 make lint
 
 # Format (via ruff)
-ruff format .
-ruff check --fix .
+uv run ruff format .
+uv run ruff check --fix .
 ```
 
 ### Backend Debugging

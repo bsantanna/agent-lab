@@ -138,7 +138,9 @@ async def add(
         Body(
             ...,
             description="Language model creation data",
-            example={"integration_id": "int_openai_456", "language_model_tag": "gpt-4"},
+            examples=[
+                {"integration_id": "int_openai_456", "language_model_tag": "gpt-4"}
+            ],
         ),
     ],
     language_model_service: Annotated[
@@ -325,11 +327,13 @@ async def update(
         Body(
             ...,
             description="Language model update data",
-            example={
-                "language_model_id": "lm_123",
-                "language_model_tag": "gpt-4-turbo",
-                "integration_id": "int_openai_456",
-            },
+            examples=[
+                {
+                    "language_model_id": "lm_123",
+                    "language_model_tag": "gpt-4-turbo",
+                    "integration_id": "int_openai_456",
+                }
+            ],
         ),
     ],
     language_model_service: Annotated[
@@ -415,11 +419,13 @@ async def update_setting(
         Body(
             ...,
             description="Language model setting update data",
-            example={
-                "language_model_id": "lm_123",
-                "setting_key": "temperature",
-                "setting_value": "0.9",
-            },
+            examples=[
+                {
+                    "language_model_id": "lm_123",
+                    "setting_key": "temperature",
+                    "setting_value": "0.9",
+                }
+            ],
         ),
     ],
     language_model_service: Annotated[
