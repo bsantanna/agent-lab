@@ -80,6 +80,7 @@ notebooks = [
     "nest_asyncio",
     "pyppeteer",
     "python-dotenv",
+    "ipykernel>=7.3.0",
 ]
 
 [tool.semantic_release]
