@@ -229,10 +229,16 @@ resource "helm_release" "langfuse" {
       # Zookeeper subchart + a 2xlarge preset. Collapse to one non-HA node with
       # no Zookeeper (not needed without replication) and a small preset.
       clickhouse = {
-        deploy          = true
-        clusterEnabled  = false
-        replicaCount    = 1
-        resourcesPreset = "small"
+        deploy         = true
+        clusterEnabled = false
+        replicaCount   = 1
+        # The "small" preset caps ClickHouse at 768Mi, which OOM-kills it during
+        # MergeTree merges (self-tuned max_server_memory_usage ~= 691Mi). Set
+        # explicit resources so merges have headroom.
+        resources = {
+          requests = { cpu = "500m", memory = "1Gi" }
+          limits   = { cpu = "1", memory = "4Gi" }
+        }
         zookeeper = {
           enabled = false
         }
