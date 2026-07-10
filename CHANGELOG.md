@@ -2,6 +2,55 @@
 
 <!-- version list -->
 
+## v1.6.4 (2026-07-10)
+
+### Bug Fixes
+
+- Dependency injection instrumentation ([#325](https://github.com/bsantanna/agent-lab/pull/325),
+  [`dfd87a7`](https://github.com/bsantanna/agent-lab/commit/dfd87a759cd69432b5ecc5bcc6a2dee029ddd0b5))
+
+- Dependency injection instrumentation (2) ([#325](https://github.com/bsantanna/agent-lab/pull/325),
+  [`dfd87a7`](https://github.com/bsantanna/agent-lab/commit/dfd87a759cd69432b5ecc5bcc6a2dee029ddd0b5))
+
+- Dependency updates ([#325](https://github.com/bsantanna/agent-lab/pull/325),
+  [`dfd87a7`](https://github.com/bsantanna/agent-lab/commit/dfd87a759cd69432b5ecc5bcc6a2dee029ddd0b5))
+
+- Langfuse infrastructure ([#325](https://github.com/bsantanna/agent-lab/pull/325),
+  [`dfd87a7`](https://github.com/bsantanna/agent-lab/commit/dfd87a759cd69432b5ecc5bcc6a2dee029ddd0b5))
+
+- Langfuse keycloak realm sso ([#325](https://github.com/bsantanna/agent-lab/pull/325),
+  [`dfd87a7`](https://github.com/bsantanna/agent-lab/commit/dfd87a759cd69432b5ecc5bcc6a2dee029ddd0b5))
+
+- Langfuse keycloak realm sso account creation
+  ([#325](https://github.com/bsantanna/agent-lab/pull/325),
+  [`dfd87a7`](https://github.com/bsantanna/agent-lab/commit/dfd87a759cd69432b5ecc5bcc6a2dee029ddd0b5))
+
+- Langfuse prototype ([#325](https://github.com/bsantanna/agent-lab/pull/325),
+  [`dfd87a7`](https://github.com/bsantanna/agent-lab/commit/dfd87a759cd69432b5ecc5bcc6a2dee029ddd0b5))
+
+- Langwatch instrumentation ([#325](https://github.com/bsantanna/agent-lab/pull/325),
+  [`dfd87a7`](https://github.com/bsantanna/agent-lab/commit/dfd87a759cd69432b5ecc5bcc6a2dee029ddd0b5))
+
+- Langwatch keycloak realm sso ([#325](https://github.com/bsantanna/agent-lab/pull/325),
+  [`dfd87a7`](https://github.com/bsantanna/agent-lab/commit/dfd87a759cd69432b5ecc5bcc6a2dee029ddd0b5))
+
+- Langwatch keycloak realm sso account creation
+  ([#325](https://github.com/bsantanna/agent-lab/pull/325),
+  [`dfd87a7`](https://github.com/bsantanna/agent-lab/commit/dfd87a759cd69432b5ecc5bcc6a2dee029ddd0b5))
+
+- Q3 release 1 ([#325](https://github.com/bsantanna/agent-lab/pull/325),
+  [`dfd87a7`](https://github.com/bsantanna/agent-lab/commit/dfd87a759cd69432b5ecc5bcc6a2dee029ddd0b5))
+
+- Release pipeline adjust ([#326](https://github.com/bsantanna/agent-lab/pull/326),
+  [`60ff278`](https://github.com/bsantanna/agent-lab/commit/60ff2781d1a9fc8e1490ebf84858948727d61ea0))
+
+- Removes agent configurations ([#325](https://github.com/bsantanna/agent-lab/pull/325),
+  [`dfd87a7`](https://github.com/bsantanna/agent-lab/commit/dfd87a759cd69432b5ecc5bcc6a2dee029ddd0b5))
+
+- Upgrades dependencies ([#325](https://github.com/bsantanna/agent-lab/pull/325),
+  [`dfd87a7`](https://github.com/bsantanna/agent-lab/commit/dfd87a759cd69432b5ecc5bcc6a2dee029ddd0b5))
+
+
 ## v1.6.3 (2026-05-29)
 
 ### Bug Fixes
