@@ -148,7 +148,7 @@ def process_jpg_files():
 
     # constants
     agent_lab_endpoint = "http://btech-agent-lab.compute.svc.cluster.local:8000"
-    integration_endpoints = ["http://moon.btech.software:11434"]
+    integration_endpoints = ["http://moon.btech.software:11434/v1"]
     model_tag = "granite3.2-vision:latest"
     instructions = (
         "You are studying this material, please generate a comprehensive overview, explain with details. "
@@ -162,7 +162,7 @@ def process_jpg_files():
             json={
                 "api_endpoint": api_endpoint,
                 "api_key": "ollama",
-                "integration_type": "ollama_api_v1",
+                "integration_type": "openai_api_v1",
             },
             verify=False,
         )

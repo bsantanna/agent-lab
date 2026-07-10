@@ -36,7 +36,9 @@ Key patterns:
 - `openai_api_v1` → `ChatOpenAI`
 - `anthropic_api_v1` → `ChatAnthropic`
 - `xai_api_v1` → `ChatXAI`
-- `ollama_api_v1` / default → `ChatOllama`
+- any other type → raises `ConfigurationError`
+
+Embeddings use `OpenAIEmbeddings`: `openai_api_v1` integrations use their own endpoint/key; all other integration types fall back to the OpenAI-compatible embeddings server configured via the `EMBEDDINGS_ENDPOINT` / `EMBEDDINGS_API_KEY` env vars. In tests, the Ollama container serves this endpoint (`/v1`), transparently mocking the OpenAI API.
 
 API keys and endpoints are stored in Vault under `integration_{id}` and retrieved via `get_integration_credentials()`.
 
@@ -152,4 +154,3 @@ Choose the method based on the operation's semantics, not implementation conveni
 - **Agent prompts**: Use Jinja2 templates stored in agent settings, rendered via `AgentBase.parse_prompt_template()`.
 - **Versioning**: Managed by `python-semantic-release`.
 - **Testing**: pytest with testcontainers — tests spin up real Postgres, Redis, Vault, Keycloak, Ollama, and chromedp containers. The `conftest.py` session fixture manages container lifecycle.
-

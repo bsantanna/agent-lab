@@ -49,7 +49,7 @@ All wiring lives in `app/core/container.py` via `dependency-injector`.
 **Agent system** — Agents extend `WorkflowAgentBase` (which uses LangGraph state graphs). Each agent type lives under `app/services/agent_types/` and is registered in a registry. The hierarchy goes from simple (echo, adaptive RAG) to complex (coordinator-planner-supervisor multi-agent). Agents process messages, have configurable settings (Jinja2-templated prompts), and persist state in the checkpoints database.
 
 **Testing** — Two layers:
-- **Integration tests** spin up real infrastructure via testcontainers (Postgres, Redis, Keycloak, Ollama, headless Chrome).
+- **Integration tests** spin up real infrastructure via testcontainers (Postgres, Redis, Keycloak, Ollama as an OpenAI-compatible embeddings mock, headless Chrome).
 - **Simulation tests** use `langwatch-scenario` with LLM judges to evaluate agent behavior end-to-end.
 
 **Deployment** — Ships with Helm charts (`charts/`) for Kubernetes and Terraform scripts (`terraform/`) for provisioning cloud infrastructure including databases, auth realms, and secrets. See [Setup guide](doc/SETUP.md) for details.

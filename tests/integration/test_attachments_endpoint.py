@@ -28,20 +28,20 @@ class TestAttachmentsEndpoint:
         )
 
     def _create_llm(self, client):
-        # create integration
+        # create integration (ollama test container mocking the openai api)
         response = client.post(
             url="/integrations/create",
             headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
-                "integration_type": "ollama_api_v1",
-                "api_endpoint": os.getenv("OLLAMA_ENDPOINT"),
+                "integration_type": "openai_api_v1",
+                "api_endpoint": os.getenv("EMBEDDINGS_ENDPOINT"),
                 "api_key": "ollama",
             },
         )
         integration_id = response.json()["id"]
 
         # create llm
-        return client.post(
+        llm_response = client.post(
             url="/llms/create",
             headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
             json={
@@ -49,6 +49,19 @@ class TestAttachmentsEndpoint:
                 "language_model_tag": "phi3",
             },
         )
+
+        # override the openai default embeddings model with one served by ollama
+        client.post(
+            url="/llms/update_setting",
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
+            json={
+                "language_model_id": llm_response.json()["id"],
+                "setting_key": "embeddings",
+                "setting_value": "bge-m3",
+            },
+        )
+
+        return llm_response
 
     def _upload_file(self, client, filename: str, content_type: str):
         current_dir = Path(__file__).parent

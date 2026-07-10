@@ -20,3 +20,9 @@ variable "telemetry_endpoint" {
   type        = string
   default     = "http://otel-collector-opentelemetry-collector.otel.svc.cluster.local:4318"
 }
+
+variable "embeddings_endpoint" {
+  description = "OpenAI-compatible embeddings server endpoint URL"
+  type        = string
+  default     = ""
+}

@@ -75,31 +75,6 @@ class TestLanguageModelService:
             schema="test",
         )
 
-    def test_create_language_model_ollama(self, lm_service):
-        service, repo, setting_service, integration_service = lm_service
-        integration = MagicMock(spec=Integration)
-        integration.id = "int-1"
-        integration.integration_type = "ollama_api_v1"
-        integration_service.get_integration_by_id.return_value = integration
-
-        lm = MagicMock(spec=LanguageModel)
-        lm.id = "lm-1"
-        repo.add.return_value = lm
-
-        result = service.create_language_model(
-            integration_id="int-1",
-            language_model_tag="llama3",
-            schema="test",
-        )
-
-        assert result == lm
-        setting_service.create_language_model_setting.assert_called_once_with(
-            language_model_id="lm-1",
-            setting_key="embeddings",
-            setting_value="bge-m3",
-            schema="test",
-        )
-
     def test_create_language_model_other_type(self, lm_service):
         service, repo, setting_service, integration_service = lm_service
         integration = MagicMock(spec=Integration)
