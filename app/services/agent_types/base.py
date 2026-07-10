@@ -15,7 +15,6 @@ from browser_use import (
     Browser,
     ChatOpenAI as BrowserChatOpenAI,
     ChatAnthropic as BrowserChatAnthropic,
-    ChatOllama as BrowserChatOllama,
 )
 from dependency_injector.providers import Configuration
 from jinja2 import Environment, DictLoader, select_autoescape
@@ -26,15 +25,15 @@ from langchain_core.messages import HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool, BaseTool
 from langchain_xai import ChatXAI
-from langchain_ollama import ChatOllama, OllamaEmbeddings
+from langchain_community.tools import DuckDuckGoSearchResults
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_tavily import TavilySearch, TavilyExtract
+from markitdown import MarkItDown
 from langgraph.graph import MessagesState
 from langgraph.types import Command
 from openai import OpenAI
 from typing_extensions import List, Annotated, Literal
 
-from app.domain.exceptions.base import ResourceNotFoundError
+from app.domain.exceptions.base import ConfigurationError, ResourceNotFoundError
 from app.domain.models import Agent, Integration, LanguageModel
 from app.infrastructure.database.checkpoints import GraphPersistenceFactory
 from app.infrastructure.database.vectors import DocumentRepository
@@ -163,21 +162,16 @@ class AgentBase(ABC):
             setting.setting_key: setting.setting_value for setting in lm_settings
         }
 
-        if integration.integration_type == "openai_api_v1":
-            return OpenAIEmbeddings(
-                model=lm_settings_dict["embeddings"],
-                openai_api_base=api_endpoint,
-                openai_api_key=api_key,
-            )
-        elif integration.integration_type == "ollama_api_v1":
-            return OllamaEmbeddings(
-                model=lm_settings_dict["embeddings"], base_url=api_endpoint
-            )
-        else:
-            return OllamaEmbeddings(
-                model=lm_settings_dict["embeddings"],
-                base_url=f"{os.getenv('OLLAMA_ENDPOINT')}",
-            )
+        if integration.integration_type != "openai_api_v1":
+            api_endpoint = os.getenv("EMBEDDINGS_ENDPOINT")
+            api_key = os.getenv("EMBEDDINGS_API_KEY")
+
+        return OpenAIEmbeddings(
+            model=lm_settings_dict["embeddings"],
+            openai_api_base=api_endpoint,
+            openai_api_key=api_key,
+            check_embedding_ctx_length=False,
+        )
 
     def get_chat_model(
         self, agent_id, schema: str, language_model_tag: str = None
@@ -208,9 +202,8 @@ class AgentBase(ABC):
                 anthropic_api_key=api_key,
             )
         else:
-            return ChatOllama(
-                model=language_model_tag,
-                base_url=api_endpoint,
+            raise ConfigurationError(
+                f"unsupported integration type: {integration.integration_type}"
             )
 
     def get_openai_client(self, agent_id: str, schema: str) -> OpenAI:
@@ -601,9 +594,8 @@ class WebAgentBase(WorkflowAgentBase, ABC):
                 api_key=api_key,
             )
         else:
-            return BrowserChatOllama(
-                model=language_model_tag,
-                host=api_endpoint,
+            raise ConfigurationError(
+                f"unsupported integration type: {integration.integration_type}"
             )
 
     def get_web_browser_tool(self, agent_id: str, schema: str) -> BaseTool:
@@ -650,11 +642,38 @@ class WebAgentBase(WorkflowAgentBase, ABC):
 
         return browser_tool_call
 
-    def get_web_crawl_tool(self, extract_depth="basic") -> BaseTool:
-        return TavilyExtract(extract_depth=extract_depth)
+    def get_web_crawl_tool(self) -> BaseTool:
+        @tool("web_crawl")
+        def web_crawl_tool_call(
+            urls: Annotated[List[str], "The URLs to read content from."],
+        ):
+            """
+            Extracts content from web pages based on provided URLs and returns
+            it as markdown. Input should be a list of one or more URLs.
+            """
+            markitdown = MarkItDown()
+            results = []
+            for url in urls:
+                try:
+                    results.append(
+                        {"url": url, "content": markitdown.convert(url).text_content}
+                    )
+                except Exception as e:
+                    results.append({"url": url, "error": str(e)})
+            return json.dumps({"results": results}, ensure_ascii=False)
 
-    def get_web_search_tool(self, max_results=5, topic="general") -> BaseTool:
-        return TavilySearch(max_results=max_results, topic=topic)
+        return web_crawl_tool_call
+
+    def get_web_search_tool(self, max_results=5) -> BaseTool:
+        return DuckDuckGoSearchResults(
+            name="web_search",
+            description=(
+                "A web search engine. Useful for when you need to answer "
+                "questions about current events. Input should be a search query."
+            ),
+            num_results=max_results,
+            output_format="list",
+        )
 
 
 class SupervisedWorkflowAgentBase(WebAgentBase, ABC):

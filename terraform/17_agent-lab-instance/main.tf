@@ -28,7 +28,8 @@ resource "helm_release" "agent_lab" {
   values = [
     yamlencode({
       config = {
-        telemetry_endpoint = var.telemetry_endpoint
+        telemetry_endpoint  = var.telemetry_endpoint
+        embeddings_endpoint = var.embeddings_endpoint
       }
 
       ingress = {

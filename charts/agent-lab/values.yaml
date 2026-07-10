@@ -14,7 +14,7 @@ nameOverride: ""
 fullnameOverride: ""
 
 config:
-  ollama_endpoint: ""
+  embeddings_endpoint: ""
   telemetry_endpoint: ""
 
 serviceAccount:

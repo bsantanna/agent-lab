@@ -46,12 +46,6 @@ variable "vault_secret_value_cdp_url" {
   default     = "http://cdp-agent-lab.agent-lab.svc.cluster.local:9222"
 }
 
-variable "vault_secret_value_tavily_api_key" {
-  description = "Tavily API KEY"
-  type        = string
-  sensitive   = true
-}
-
 variable "langwatch_endpoint" {
   description = "Endpoint URL of Langwatch instance"
   type        = string
@@ -83,4 +77,9 @@ variable "pg_image" {
   type        = string
   default     = "bsantanna/cloudnative-pg-vector:17.4"
   description = "PostgreSQL image with pgvector (adjust if needed)"
+}
+
+variable "embeddings_api_key" {
+  description = "API key of the OpenAI-compatible embeddings server"
+  type        = string
 }

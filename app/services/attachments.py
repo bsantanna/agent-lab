@@ -6,7 +6,6 @@ import anyio
 import hvac
 from fastapi import File
 from langchain_community.document_loaders import UnstructuredMarkdownLoader
-from langchain_ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
 from markitdown import MarkItDown
@@ -119,21 +118,16 @@ class AttachmentService:
         api_endpoint = secrets["data"]["data"]["api_endpoint"]
         api_key = secrets["data"]["data"]["api_key"]
 
-        if integration.integration_type == "openai_api_v1":
-            embeddings_model = OpenAIEmbeddings(
-                model=lm_settings_dict["embeddings"],
-                openai_api_base=api_endpoint,
-                openai_api_key=api_key,
-            )
-        elif integration.integration_type == "ollama_api_v1":
-            embeddings_model = OllamaEmbeddings(
-                model=lm_settings_dict["embeddings"], base_url=api_endpoint
-            )
-        else:
-            embeddings_model = OllamaEmbeddings(
-                model=lm_settings_dict["embeddings"],
-                base_url=f"{os.getenv('OLLAMA_ENDPOINT')}",
-            )
+        if integration.integration_type != "openai_api_v1":
+            api_endpoint = os.getenv("EMBEDDINGS_ENDPOINT")
+            api_key = os.getenv("EMBEDDINGS_API_KEY")
+
+        embeddings_model = OpenAIEmbeddings(
+            model=lm_settings_dict["embeddings"],
+            openai_api_base=api_endpoint,
+            openai_api_key=api_key,
+            check_embedding_ctx_length=False,
+        )
 
         attachment = self.attachment_repository.get_by_id(attachment_id, schema)
         temp_file_path = f"temp-{uuid4()}"

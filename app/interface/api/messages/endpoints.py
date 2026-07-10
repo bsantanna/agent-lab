@@ -88,7 +88,7 @@ async def get_list(
         Body(
             ...,
             description="Request containing the agent ID to retrieve messages for",
-            example={"agent_id": "agent_456"},
+            examples=[{"agent_id": "agent_456"}],
         ),
     ],
     message_service: Annotated[
@@ -166,12 +166,14 @@ async def post_message(
         Body(
             ...,
             description="The message to send to the agent",
-            example={
-                "agent_id": "agent_456",
-                "message_role": "human",
-                "message_content": "Can you help me write a Python function?",
-                "attachment_id": None,
-            },
+            examples=[
+                {
+                    "agent_id": "agent_456",
+                    "message_role": "human",
+                    "message_content": "Can you help me write a Python function?",
+                    "attachment_id": None,
+                }
+            ],
         ),
     ],
     agent_service: Annotated[AgentService, Depends(Provide[Container.agent_service])],

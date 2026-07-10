@@ -26,7 +26,7 @@ bearer_scheme = HTTPBearer()
     description="""
     Returns all configured third-party AI service integrations.
 
-    Integrations represent connections to external AI providers (OpenAI, Anthropic, xAI, Ollama).
+    Integrations represent connections to external AI providers (OpenAI, Anthropic, xAI).
     Each integration stores the API endpoint and credentials needed to make requests.
     """,
     response_description="List of all integrations",
@@ -178,11 +178,13 @@ async def add(
         Body(
             ...,
             description="Integration configuration data",
-            example={
-                "integration_type": "openai_api_v1",
-                "api_endpoint": "https://api.openai.com/v1",
-                "api_key": "an_api_key",
-            },
+            examples=[
+                {
+                    "integration_type": "openai_api_v1",
+                    "api_endpoint": "https://api.openai.com/v1",
+                    "api_key": "an_api_key",
+                }
+            ],
         ),
     ],
     integration_service: Annotated[

@@ -85,6 +85,7 @@ class TestBuildAuth:
                 "client_id": "test-client",
                 "client_secret": "test-secret",
             },
+            "broker": {"url": "redis://localhost:6379"},
             "api_base_url": "http://localhost:8000",
         }
 

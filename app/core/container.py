@@ -101,9 +101,6 @@ class Container(containers.DeclarativeContainer):
         config.set("db.vectors", app_secrets["data"]["data"]["db_vectors"])
         config.set("db.checkpoints", app_secrets["data"]["data"]["db_checkpoints"])
 
-        # dependencies environment variables
-        os.environ["TAVILY_API_KEY"] = app_secrets["data"]["data"]["tavily_api_key"]
-
     db = providers.Singleton(Database, db_url=config.db.url)
 
     graph_persistence_factory = providers.Singleton(

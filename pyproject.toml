@@ -6,6 +6,7 @@ requires-python = ">=3.12"
 dependencies = [
     "browser-use",
     "charset-normalizer~=3.4.7",
+    "ddgs~=9.14.4",
     "dependency-injector~=4.48.3",
     "fastapi-keycloak-middleware~=1.6.0",
     "fastmcp~=3.2.4",
@@ -18,10 +19,8 @@ dependencies = [
     "langchain-community~=0.4.1",
     "langchain-core~=1.4.9",
     "langchain-experimental~=0.4.1",
-    "langchain-ollama~=1.1.0",
     "langchain-openai~=1.2.1",
     "langchain-postgres~=0.0.16",
-    "langchain-tavily~=0.2.18",
     "langchain-text-splitters~=1.1.2",
     "langchain-xai~=1.2.2",
     "langgraph~=1.2.5",
@@ -80,6 +79,7 @@ notebooks = [
     "nest_asyncio",
     "pyppeteer",
     "python-dotenv",
+    "ipykernel>=7.3.0",
 ]
 
 [tool.semantic_release]

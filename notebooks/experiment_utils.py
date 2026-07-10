@@ -19,6 +19,7 @@ def create_llm_with_integration(
     llm_tag: str,
     integration_params: dict,
     agent_lab_endpoint: str = "http://localhost:18000",
+    embeddings_tag: str = None,
 ):
     integration_response = requests.post(
         f"{agent_lab_endpoint}/integrations/create",
@@ -39,7 +40,21 @@ def create_llm_with_integration(
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN', 'x')}"},
     )
     llm_response.raise_for_status()
-    return llm_response.json()
+    llm_result = llm_response.json()
+
+    if embeddings_tag is not None:
+        update_response = requests.post(
+            f"{agent_lab_endpoint}/llms/update_setting",
+            json={
+                "language_model_id": llm_result["id"],
+                "setting_key": "embeddings",
+                "setting_value": embeddings_tag,
+            },
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN', 'x')}"},
+        )
+        update_response.raise_for_status()
+
+    return llm_result
 
 
 def create_agent_with_integration(
@@ -47,11 +62,14 @@ def create_agent_with_integration(
     agent_type: str,
     integration_params: dict,
     agent_lab_endpoint: str = "http://localhost:18000",
+    embeddings_tag: str = None,
+    rag_collection: str = None,
 ):
     llm_result = create_llm_with_integration(
         llm_tag=llm_tag,
         integration_params=integration_params,
         agent_lab_endpoint=agent_lab_endpoint,
+        embeddings_tag=embeddings_tag,
     )
 
     agent_params = {
@@ -70,7 +88,9 @@ def create_agent_with_integration(
 
     rag_agent_types = ["adaptive_rag", "react_rag", "coordinator_planner_supervisor"]
     if agent_type in rag_agent_types:
-        if integration_params["integration_type"] == "openai_api_v1":
+        if rag_collection is not None:
+            collection = rag_collection
+        elif integration_params["integration_type"] == "openai_api_v1":
             collection = "static_document_data_openai_embeddings"
         else:
             collection = "static_document_data_ollama_embeddings"
@@ -84,15 +104,16 @@ def create_agent_with_integration(
     return agent_result
 
 
-def create_ollama_agent(
+def create_local_agent(
     llm_tag: str = "smollm2",
     agent_type: str = "test_echo",
     agent_lab_endpoint: str = "http://localhost:18000",
-    ollama_endpoint: str = "http://localhost:11434",
+    local_endpoint: str = "http://localhost:11434/v1",
 ) -> str:
+    # local openai-compatible server (e.g. ollama) mocking the openai api
     integration_params = {
-        "integration_type": "ollama_api_v1",
-        "api_endpoint": ollama_endpoint,
+        "integration_type": "openai_api_v1",
+        "api_endpoint": local_endpoint,
         "api_key": "ollama",
     }
 
@@ -101,6 +122,8 @@ def create_ollama_agent(
         agent_type,
         integration_params,
         agent_lab_endpoint,
+        embeddings_tag="bge-m3",
+        rag_collection="static_document_data_ollama_embeddings",
     )
 
 
@@ -218,23 +241,20 @@ def openai_responses_api_mcp_tool_request(
     query: str,
     mcp_server: dict,
     model: str = "gpt-5-nano",
-    reasoning: dict = {
-        "effort": "low",
-        "summary": "auto"
-    }
+    reasoning: dict = {"effort": "low", "summary": "auto"},
 ) -> dict:
     response = requests.post(
         url="https://api.openai.com/v1/responses",
         headers={
             "Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         },
         json={
             "model": model,
             "tools": [mcp_server],
             "reasoning": reasoning,
-            "input": query
-        }
+            "input": query,
+        },
     )
 
     return response.json()
