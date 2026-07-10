@@ -222,9 +222,6 @@ resource "vault_kv_secret_v2" "app_secrets" {
 
     # Chrome DevTools Protocol
     cdp_url = var.vault_secret_value_cdp_url
-
-    # Tavily API KEY
-    tavily_api_key = var.vault_secret_value_tavily_api_key
   })
 
   depends_on = [

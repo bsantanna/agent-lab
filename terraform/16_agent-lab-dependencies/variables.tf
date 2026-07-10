@@ -46,12 +46,6 @@ variable "vault_secret_value_cdp_url" {
   default     = "http://cdp-agent-lab.agent-lab.svc.cluster.local:9222"
 }
 
-variable "vault_secret_value_tavily_api_key" {
-  description = "Tavily API KEY"
-  type        = string
-  sensitive   = true
-}
-
 variable "langwatch_endpoint" {
   description = "Endpoint URL of Langwatch instance"
   type        = string
