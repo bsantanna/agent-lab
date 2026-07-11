@@ -49,6 +49,14 @@ Both tracks use the same judge model configuration:
 
 | Environment variable | Default | Purpose |
 |---|---|---|
-| `SIMULATION_JUDGE_MODEL` | `openai/gpt-5-nano` | litellm model id used by the user simulator and LLM-as-judge |
+| `SIMULATION_JUDGE_MODEL` | `openai/gpt-5-nano` | litellm model id used by the LLM-as-judge |
 | `SIMULATION_JUDGE_API_BASE` | provider default | custom OpenAI API compatible endpoint for the judge model |
 | `SIMULATION_JUDGE_API_KEY` | provider default | API key for the custom endpoint |
+
+The agents under test (and the scenario user simulator) run on a default LLM served by any OpenAI API compatible endpoint (e.g. a LAN inference server), provisioned per test by `tests/simulation/common/llm_factory.py`. The only exception is the voice memos agent, which stays on OpenAI because it needs audio chat input. Embeddings are unaffected: they keep using the `EMBEDDINGS_ENDPOINT` fallback (the test Ollama container serving `bge-m3`), matching the pgvector dump. The endpoint must support tool calling / structured output for the supervisor-based suites (browser automation, supervisor):
+
+| Environment variable | Default | Purpose |
+|---|---|---|
+| `SIMULATION_LLM_MODEL` | none (required) | model tag executing the simulations (e.g. `qwen3:30b`) |
+| `SIMULATION_LLM_API_BASE` | none (required) | OpenAI API compatible endpoint serving the model |
+| `SIMULATION_LLM_API_KEY` | `dummy-key` | API key, if the endpoint requires one |

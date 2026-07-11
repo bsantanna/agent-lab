@@ -5,7 +5,10 @@ import pytest
 from starlette.testclient import TestClient
 
 from app.main import app
-from tests.simulation.common.config import judge_model_config
+from tests.simulation.common.config import (
+    judge_agent_kwargs,
+    simulation_model_config,
+)
 from tests.simulation.common.reference_agents import adaptive_rag_agent
 
 
@@ -15,7 +18,7 @@ def client():
 
 
 # Configure the default model for simulation
-scenario.configure(default_model=judge_model_config())
+scenario.configure(default_model=simulation_model_config())
 
 
 @pytest.mark.agent_test
@@ -36,6 +39,7 @@ async def test_adaptive_rag_agent(client):
             AdaptiveRagAgent(),
             scenario.UserSimulatorAgent(),
             scenario.JudgeAgent(
+                **judge_agent_kwargs(),
                 temperature=1.0,
                 criteria=[
                     "Agent should answer user question",

@@ -4,30 +4,11 @@ from uuid import uuid4
 
 import scenario
 
+from tests.simulation.common.llm_factory import LanguageModelBuilder
+
 
 def react_rag_agent(client, message_content) -> scenario.AgentReturnTypes:
-    # create integration
-    response = client.post(
-        url="/integrations/create",
-        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
-        json={
-            "api_endpoint": "https://api.x.ai/v1/",
-            "api_key": os.environ["XAI_API_KEY"],
-            "integration_type": "xai_api_v1",
-        },
-    )
-    integration_id = response.json()["id"]
-
-    # create llm
-    response_2 = client.post(
-        url="/llms/create",
-        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
-        json={
-            "integration_id": integration_id,
-            "language_model_tag": "grok-code-fast",
-        },
-    )
-    language_model_id = response_2.json()["id"]
+    language_model_id = LanguageModelBuilder(client).build()
 
     # create agent
     response_3 = client.post(
@@ -66,28 +47,7 @@ def react_rag_agent(client, message_content) -> scenario.AgentReturnTypes:
 
 
 def adaptive_rag_agent(client, message_content) -> scenario.AgentReturnTypes:
-    # create integration
-    response = client.post(
-        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
-        url="/integrations/create",
-        json={
-            "api_endpoint": "https://api.x.ai/v1/",
-            "api_key": os.environ["XAI_API_KEY"],
-            "integration_type": "xai_api_v1",
-        },
-    )
-    integration_id = response.json()["id"]
-
-    # create llm
-    response_2 = client.post(
-        url="/llms/create",
-        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
-        json={
-            "integration_id": integration_id,
-            "language_model_tag": "grok-code-fast",
-        },
-    )
-    language_model_id = response_2.json()["id"]
+    language_model_id = LanguageModelBuilder(client).build()
 
     # create agent
     response_3 = client.post(
@@ -126,28 +86,7 @@ def adaptive_rag_agent(client, message_content) -> scenario.AgentReturnTypes:
 
 
 def supervised_agent(client, message_content) -> scenario.AgentReturnTypes:
-    # create integration
-    response = client.post(
-        url="/integrations/create",
-        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
-        json={
-            "api_endpoint": "https://api.x.ai/v1/",
-            "api_key": os.environ["XAI_API_KEY"],
-            "integration_type": "xai_api_v1",
-        },
-    )
-    integration_id = response.json()["id"]
-
-    # create llm
-    response_2 = client.post(
-        url="/llms/create",
-        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
-        json={
-            "integration_id": integration_id,
-            "language_model_tag": "grok-code-fast",
-        },
-    )
-    language_model_id = response_2.json()["id"]
+    language_model_id = LanguageModelBuilder(client).build()
 
     # create agent
     response_3 = client.post(
@@ -187,28 +126,7 @@ def supervised_agent(client, message_content) -> scenario.AgentReturnTypes:
 
 
 def web_browser_agent(client, message_content) -> scenario.AgentReturnTypes:
-    # create integration
-    response = client.post(
-        url="/integrations/create",
-        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
-        json={
-            "api_endpoint": "https://api.anthropic.com",
-            "api_key": os.environ["ANTHROPIC_API_KEY"],
-            "integration_type": "anthropic_api_v1",
-        },
-    )
-    integration_id = response.json()["id"]
-
-    # create llm
-    response_2 = client.post(
-        url="/llms/create",
-        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
-        json={
-            "integration_id": integration_id,
-            "language_model_tag": "claude-sonnet-4-5",
-        },
-    )
-    language_model_id = response_2.json()["id"]
+    language_model_id = LanguageModelBuilder(client).build()
 
     # create agent
     response_3 = client.post(
@@ -239,28 +157,17 @@ def web_browser_agent(client, message_content) -> scenario.AgentReturnTypes:
 def audio_voice_memos_agent(
     client, message_content, agent_type="fast_voice_memos"
 ) -> scenario.AgentReturnTypes:
-    # create integration (audio transcription needs openai)
-    response = client.post(
-        url="/integrations/create",
-        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
-        json={
-            "api_endpoint": "https://api.openai.com/v1/",
-            "api_key": os.environ["OPENAI_API_KEY"],
-            "integration_type": "openai_api_v1",
-        },
+    # audio chat input needs openai (LAN model has no audio support)
+    language_model_id = (
+        LanguageModelBuilder(client)
+        .with_integration(
+            api_endpoint="https://api.openai.com/v1/",
+            api_key=os.environ["OPENAI_API_KEY"],
+            integration_type="openai_api_v1",
+        )
+        .with_model_tag("gpt-5-nano")
+        .build()
     )
-    integration_id = response.json()["id"]
-
-    # create llm
-    response_2 = client.post(
-        url="/llms/create",
-        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
-        json={
-            "integration_id": integration_id,
-            "language_model_tag": "gpt-5-nano",
-        },
-    )
-    language_model_id = response_2.json()["id"]
 
     # create agent
     response_3 = client.post(
@@ -305,28 +212,7 @@ def audio_voice_memos_agent(
 
 
 def image_vision_document_agent(client, message_content) -> scenario.AgentReturnTypes:
-    # create integration
-    response = client.post(
-        url="/integrations/create",
-        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
-        json={
-            "api_endpoint": "https://api.x.ai/v1/",
-            "api_key": os.environ["XAI_API_KEY"],
-            "integration_type": "xai_api_v1",
-        },
-    )
-    integration_id = response.json()["id"]
-
-    # create llm
-    response_2 = client.post(
-        url="/llms/create",
-        headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
-        json={
-            "integration_id": integration_id,
-            "language_model_tag": "grok-4-1-fast-non-reasoning",
-        },
-    )
-    language_model_id = response_2.json()["id"]
+    language_model_id = LanguageModelBuilder(client).build()
 
     # create agent
     response_3 = client.post(

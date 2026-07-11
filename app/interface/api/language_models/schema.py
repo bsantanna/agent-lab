@@ -15,7 +15,7 @@ class LanguageModelCreateRequest(BaseModel):
 
     @field_validator("language_model_tag")
     def validate_language_model_tag(cls, v: str):
-        if not re.match(r"^[a-zA-Z0-9\\.:_-]+$", v):
+        if not re.match(r"^[a-zA-Z0-9\\.:/_-]+$", v):
             raise InvalidFieldError(
                 "language_model_tag", invalid_characters_description
             )
@@ -64,7 +64,7 @@ class LanguageModelUpdateRequest(BaseModel):
 
     @field_validator("language_model_tag")
     def validate_language_model_tag(cls, v: str):
-        if not re.match(r"^[a-zA-Z0-9\\.:_-]+$", v):
+        if not re.match(r"^[a-zA-Z0-9\\.:/_-]+$", v):
             raise InvalidFieldError(
                 "language_model_tag", invalid_characters_description
             )

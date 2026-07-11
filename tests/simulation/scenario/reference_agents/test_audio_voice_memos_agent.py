@@ -5,7 +5,10 @@ import pytest
 from starlette.testclient import TestClient
 
 from app.main import app
-from tests.simulation.common.config import judge_model_config
+from tests.simulation.common.config import (
+    judge_agent_kwargs,
+    simulation_model_config,
+)
 from tests.simulation.common.reference_agents import audio_voice_memos_agent
 
 
@@ -15,7 +18,7 @@ def client():
 
 
 # Configure the default model for simulation
-scenario.configure(default_model=judge_model_config())
+scenario.configure(default_model=simulation_model_config())
 
 
 @pytest.mark.agent_test
@@ -36,6 +39,7 @@ async def test_audio_voice_memos_agent(client):
             AudioVoiceMemosAgent(),
             scenario.UserSimulatorAgent(),
             scenario.JudgeAgent(
+                **judge_agent_kwargs(),
                 temperature=1.0,
                 criteria=[
                     "Agent should not ask further questions.",
