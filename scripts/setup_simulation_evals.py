@@ -1,20 +1,26 @@
-"""Idempotently provision the simulation datasets and evaluators in Langfuse.
+"""Idempotently provision the simulation datasets and evaluators.
 
-Reads every dataset definition under tests/simulation/langfuse/datasets and
-creates or updates the corresponding Langfuse dataset and items. Also
-provisions the server-side LLM-as-Judge setup so results appear in the
-Evaluations section: an LLM connection for the judge model, one
-'simulation_llm_as_judge' evaluator, and one evaluation rule per dataset
-targeting its experiment runs. Safe to re-run: datasets are upserted by name,
-items by id, the LLM connection by provider, and evaluators/rules are only
-created when absent.
+Reads every dataset definition under tests/simulation/datasets and mirrors it
+to the configured observability platforms:
+
+- Langfuse: creates/updates datasets and items, plus the server-side
+  LLM-as-Judge setup so results appear in the Evaluations section (an LLM
+  connection for the judge model, one 'simulation_llm_as_judge' evaluator,
+  and one evaluation rule per dataset targeting its experiment runs).
+- LangWatch: syncs all definitions into a single consolidated 'simulations'
+  dataset (free-plan limit of 3 datasets per project), appending missing
+  entries matched by item_id.
+
+Safe to re-run: everything is upserted or skipped when already present.
+Platforms without credentials are skipped.
 
 Usage:
-    uv run python scripts/setup_langfuse_evals.py
+    uv run python scripts/setup_simulation_evals.py
 
-Requires LANGFUSE_BASE_URL (or LANGFUSE_HOST), LANGFUSE_PUBLIC_KEY and
-LANGFUSE_SECRET_KEY. The judge model follows SIMULATION_JUDGE_MODEL /
-SIMULATION_JUDGE_API_BASE / SIMULATION_JUDGE_API_KEY.
+Langfuse needs LANGFUSE_BASE_URL (or LANGFUSE_HOST), LANGFUSE_PUBLIC_KEY and
+LANGFUSE_SECRET_KEY; LangWatch needs LANGWATCH_ENDPOINT and LANGWATCH_API_KEY.
+The judge model follows SIMULATION_JUDGE_MODEL / SIMULATION_JUDGE_API_BASE /
+SIMULATION_JUDGE_API_KEY.
 """
 
 import os
@@ -51,11 +57,12 @@ from tests.simulation.common.config import (  # noqa: E402
     JUDGE_API_KEY,
     JUDGE_MODEL,
 )
-from tests.simulation.langfuse.runner import (  # noqa: E402
+from tests.simulation.common.datasets import (  # noqa: E402
     DATASETS_DIR,
     load_definition,
-    sync_dataset,
 )
+from tests.simulation.langfuse.runner import sync_dataset  # noqa: E402
+from tests.simulation.langwatch.runner import sync_dataset_entries  # noqa: E402
 
 EVALUATOR_NAME = "simulation_llm_as_judge"
 
@@ -182,18 +189,7 @@ def ensure_evaluation_rules(langfuse: Langfuse, dataset_names: list) -> None:
         print(f"Created evaluation rule '{rule_name}'")
 
 
-def main() -> int:
-    if not (
-        (os.getenv("LANGFUSE_BASE_URL") or os.getenv("LANGFUSE_HOST"))
-        and os.getenv("LANGFUSE_PUBLIC_KEY")
-        and os.getenv("LANGFUSE_SECRET_KEY")
-    ):
-        print(
-            "Missing environment variables: LANGFUSE_BASE_URL (or LANGFUSE_HOST), "
-            "LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY"
-        )
-        return 1
-
+def sync_langfuse() -> None:
     langfuse = Langfuse()
     dataset_names = []
     for path in sorted(DATASETS_DIR.glob("*.json")):
@@ -201,7 +197,8 @@ def main() -> int:
         sync_dataset(langfuse, definition)
         dataset_names.append(definition["name"])
         print(
-            f"Synced dataset '{definition['name']}' ({len(definition['items'])} items)"
+            f"Synced Langfuse dataset '{definition['name']}' "
+            f"({len(definition['items'])} items)"
         )
 
     if sync_llm_connection(langfuse):
@@ -209,6 +206,45 @@ def main() -> int:
         ensure_evaluation_rules(langfuse, dataset_names)
 
     langfuse.flush()
+
+
+def sync_langwatch() -> None:
+    for path in sorted(DATASETS_DIR.glob("*.json")):
+        definition = load_definition(path.stem)
+        try:
+            sync_dataset_entries(definition)
+            print(f"Synced LangWatch dataset '{definition['name']}'")
+        except Exception as error:
+            print(f"LangWatch sync failed for '{definition['name']}': {error}")
+
+
+def main() -> int:
+    langfuse_configured = bool(
+        (os.getenv("LANGFUSE_BASE_URL") or os.getenv("LANGFUSE_HOST"))
+        and os.getenv("LANGFUSE_PUBLIC_KEY")
+        and os.getenv("LANGFUSE_SECRET_KEY")
+    )
+    langwatch_configured = bool(
+        os.getenv("LANGWATCH_ENDPOINT") and os.getenv("LANGWATCH_API_KEY")
+    )
+    if not langfuse_configured and not langwatch_configured:
+        print(
+            "No platform credentials found. Set LANGFUSE_BASE_URL (or "
+            "LANGFUSE_HOST) + LANGFUSE_PUBLIC_KEY + LANGFUSE_SECRET_KEY and/or "
+            "LANGWATCH_ENDPOINT + LANGWATCH_API_KEY."
+        )
+        return 1
+
+    if langfuse_configured:
+        sync_langfuse()
+    else:
+        print("Langfuse credentials not set, skipping Langfuse sync")
+
+    if langwatch_configured:
+        sync_langwatch()
+    else:
+        print("LangWatch credentials not set, skipping LangWatch sync")
+
     return 0
 
 

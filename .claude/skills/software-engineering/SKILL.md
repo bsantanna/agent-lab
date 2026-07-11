@@ -1,6 +1,6 @@
 ---
 name: software-engineering
-description: Use when the user asks about architecture, running, testing, linting, or building the project, or about code conventions.
+description: Use when the user asks about architecture, running, testing, linting, or building the project, about code conventions, or about the agent simulation suites (scenario, Langfuse, LangWatch) and their observability platform integrations.
 ---
 
 # Software Engineering
@@ -71,7 +71,7 @@ OpenTelemetry is configured in `app/infrastructure/metrics/tracer.py`. Instrumen
 
 ```bash
 # Run the app locally (requires Postgres, Redis, Vault running)
-make run
+docker compose -f compose-grafana.yml up --build -d
 
 # Run all tests (spins up testcontainers: Postgres, Redis, Vault, Keycloak, Ollama, chromedp)
 make test
@@ -81,6 +81,12 @@ uv run pytest tests/integration/test_status_endpoint.py
 
 # Run a single test by name
 uv run pytest tests/integration/test_status_endpoint.py -k "test_name"
+
+# Agent simulations (live LLM calls; see the Agent Simulations section)
+make test_simulations       # all suites in one pytest session (containers boot once)
+make scenario_simulation    # or run one suite: scenario | langfuse | langwatch
+make langfuse_simulation
+make langwatch_simulation
 
 # Lint
 make lint
@@ -101,6 +107,26 @@ docker compose build app && docker compose up -d app
 ```
 
 **Note:** The backend runs inside a Docker container (`compose.yml`). Local changes to Python files in `app/` are NOT reflected until the container is rebuilt. Always rebuild after modifying backend code.
+
+## Agent Simulations
+
+End-to-end agent simulations live in `tests/simulation/` behind the `agent_test` marker (deselected by default via `pytest.ini` addopts — any manual pytest invocation of these suites needs `-m agent_test`). Three tracks share the agent bootstrap helpers (`common/reference_agents.py`), the litellm LLM-as-judge (`common/judge.py`), and the versioned dataset definitions (`tests/simulation/datasets/*.json`):
+
+- `scenario/` — conversational simulations via langwatch-scenario (user simulator + judge agent)
+- `langfuse/` — dataset-driven experiments via Langfuse `run_experiment`; client-side judge scores are pushed to each run's trace
+- `langwatch/` — the same experiments mirrored to LangWatch via `langwatch.experiment`
+
+`uv run python scripts/setup_simulation_evals.py` idempotently provisions everything server-side: datasets on both platforms plus the Langfuse LLM connection, `simulation_llm_as_judge` evaluator, and per-dataset evaluation rules. All tracks share the judge configuration: `SIMULATION_JUDGE_MODEL` (default `openai/gpt-5-nano`), with `SIMULATION_JUDGE_API_BASE` / `SIMULATION_JUDGE_API_KEY` for a custom OpenAI-compatible endpoint. Details in `doc/TESTS.md`.
+
+### Simulation platform gotchas
+
+These cost real debugging time — check them before touching the simulation code:
+
+- The repo-root `.env` loads as a side effect of `import scenario`, and `load_dotenv` does **not** override already-exported shell variables — a stale exported key silently shadows a rotated one in `.env`.
+- Never put `@scenario.cache()` on helpers shared outside `scenario.run()`: it reads scenario's run ContextVar before checking whether caching is enabled, so any call outside a scenario run crashes.
+- Langfuse v4: experiment items whose task raised are silently dropped from `item_results` — assert against the dataset's item list or a green test can be vacuous (`tests/simulation/langfuse/runner.py` does this). The evaluator-create request field is `model_config_` (trailing underscore; `model_config` is Pydantic-reserved and gets silently swallowed). Evaluator/rule creation preflights a live LLM call — pass `request_options={"timeout_in_seconds": 120}`. Evaluation rules are live-ingestion only (no backfill of past runs). The SDK prefers `LANGFUSE_BASE_URL`; `LANGFUSE_HOST` is a deprecated fallback still used by the app and `.env`.
+- LangWatch: dataset create/list endpoints exist server-side but are not wrapped by the SDK — call them through `get_instance().rest_api_client.get_httpx_client()`. The server slugifies dataset names (underscores become dashes): always use the slug the server returns. Entries are schema-validated against the dataset's `columnTypes`, and the free plan caps a project at 3 datasets — which is why all definitions consolidate into the single `simulations` dataset with a `dataset` column.
+- When a test's outcome lives in an external platform, verify through that platform's API that the runs/scores actually landed; exit code alone has produced false positives here.
 
 ## REST API Design
 

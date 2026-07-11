@@ -37,12 +37,13 @@ End-to-end agent simulations live in `tests/simulation/` and call live LLM provi
 make test_simulations
 ```
 
-Two complementary tracks share the agent bootstrap helpers in `tests/simulation/common/`:
+Three complementary tracks share the agent bootstrap helpers, judge, and the dataset definitions versioned under `tests/simulation/datasets/`:
 
 - `tests/simulation/scenario/` — conversational simulations using the [langwatch-scenario](https://github.com/langwatch/scenario) framework (user simulator + judge agent).
-- `tests/simulation/langfuse/` — dataset-driven experiments using [Langfuse](https://langfuse.com/) datasets. Dataset definitions are versioned under `tests/simulation/langfuse/datasets/` and synced idempotently to Langfuse on each run. Each run invokes the agent per dataset item, scores the output with a client-side LLM-as-judge, and records the run and scores in Langfuse for comparison over time. These tests skip automatically when `LANGFUSE_BASE_URL` (or the deprecated `LANGFUSE_HOST`), `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are not set.
+- `tests/simulation/langfuse/` — dataset-driven experiments using [Langfuse](https://langfuse.com/) datasets. Each run syncs the dataset definitions, invokes the agent per dataset item, scores the output with a client-side LLM-as-judge, and records the run and scores in Langfuse for comparison over time. These tests skip automatically when `LANGFUSE_BASE_URL` (or the deprecated `LANGFUSE_HOST`), `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are not set.
+- `tests/simulation/langwatch/` — the same dataset-driven experiments mirrored to [LangWatch](https://langwatch.ai/) via `langwatch.experiment`, logging the judge score per item. All definitions are synced idempotently into a single consolidated `simulations` dataset (a `dataset` column identifies the source definition) because the LangWatch free plan allows at most 3 datasets per project. These tests skip automatically when `LANGWATCH_ENDPOINT` and `LANGWATCH_API_KEY` are not set.
 
-Running `uv run python scripts/setup_langfuse_evals.py` additionally provisions the server-side evaluation setup (visible in the Langfuse Evaluations section): an LLM connection for the judge model, a `simulation_llm_as_judge` evaluator, and one evaluation rule per simulation dataset that scores every new experiment run. The script is idempotent and safe to re-run.
+Running `uv run python scripts/setup_simulation_evals.py` mirrors the dataset definitions to every configured platform and provisions the Langfuse server-side evaluation setup (visible in the Langfuse Evaluations section): an LLM connection for the judge model, a `simulation_llm_as_judge` evaluator, and one evaluation rule per simulation dataset that scores every new experiment run. The script is idempotent and safe to re-run.
 
 Both tracks use the same judge model configuration:
 

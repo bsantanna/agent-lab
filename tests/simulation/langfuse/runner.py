@@ -1,17 +1,8 @@
-import json
-from pathlib import Path
-
 from langfuse import Langfuse
 from langfuse.experiment import Evaluation
 
-from tests.simulation.langfuse.judge import evaluate
-
-DATASETS_DIR = Path(__file__).parent / "datasets"
-
-
-def load_definition(dataset_key: str) -> dict:
-    with open(DATASETS_DIR / f"{dataset_key}.json") as file:
-        return json.load(file)
+from tests.simulation.common.datasets import load_definition
+from tests.simulation.common.judge import evaluate
 
 
 def sync_dataset(langfuse: Langfuse, definition: dict) -> None:
