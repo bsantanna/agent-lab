@@ -438,4 +438,8 @@ class TestLanguageModelsEndpoint:
         # then
         assert update_response.status_code == 200
         assert "id" in update_response.json()
-        assert "bge-m3" == update_response.json()["lm_settings"][0]["setting_value"]
+        settings = {
+            setting["setting_key"]: setting["setting_value"]
+            for setting in update_response.json()["lm_settings"]
+        }
+        assert "bge-m3" == settings["embeddings"]

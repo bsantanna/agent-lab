@@ -15,7 +15,6 @@ from testcontainers.vault import VaultContainer
 os.environ["TESTING"] = "1"
 # the ollama test container doubles as an OpenAI-compatible embeddings server
 os.environ["EMBEDDINGS_ENDPOINT"] = "http://localhost:21434/v1"
-os.environ["EMBEDDINGS_API_KEY"] = "ollama"
 
 llm_tag = "bge-m3"
 

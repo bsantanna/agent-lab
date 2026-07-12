@@ -38,7 +38,7 @@ Key patterns:
 - `xai_api_v1` → `ChatXAI`
 - any other type → raises `ConfigurationError`
 
-Embeddings use `OpenAIEmbeddings`: `openai_api_v1` integrations use their own endpoint/key; all other integration types fall back to the OpenAI-compatible embeddings server configured via the `EMBEDDINGS_ENDPOINT` / `EMBEDDINGS_API_KEY` env vars. In tests, the Ollama container serves this endpoint (`/v1`), transparently mocking the OpenAI API.
+Embeddings use `OpenAIEmbeddings` with the integration's endpoint and API key; if the `EMBEDDINGS_ENDPOINT` env var is set, it overrides the endpoint (the integration's key is still sent). In tests, the Ollama container serves this endpoint (`/v1`), transparently mocking the OpenAI API.
 
 API keys and endpoints are stored in Vault under `integration_{id}` and retrieved via `get_integration_credentials()`.
 

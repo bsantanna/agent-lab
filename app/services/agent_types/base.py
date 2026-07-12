@@ -162,9 +162,8 @@ class AgentBase(ABC):
             setting.setting_key: setting.setting_value for setting in lm_settings
         }
 
-        if integration.integration_type != "openai_api_v1":
+        if os.getenv("EMBEDDINGS_ENDPOINT"):
             api_endpoint = os.getenv("EMBEDDINGS_ENDPOINT")
-            api_key = os.getenv("EMBEDDINGS_API_KEY")
 
         return OpenAIEmbeddings(
             model=lm_settings_dict["embeddings"],
@@ -183,23 +182,42 @@ class AgentBase(ABC):
         if language_model_tag is None:
             language_model_tag = language_model.language_model_tag
 
+        lm_settings = self.language_model_setting_service.get_language_model_settings(
+            language_model.id, schema
+        )
+
+        lm_settings_dict = {
+            setting.setting_key: setting.setting_value for setting in lm_settings
+        }
+
+        # generation guardrails, set as language model settings on creation;
+        # absent settings (pre-existing models) keep provider defaults
+        guardrail_kwargs = {}
+        if "max_tokens" in lm_settings_dict:
+            guardrail_kwargs["max_tokens"] = int(lm_settings_dict["max_tokens"])
+        if "timeout" in lm_settings_dict:
+            guardrail_kwargs["timeout"] = float(lm_settings_dict["timeout"])
+
         if integration.integration_type == "openai_api_v1":
             return ChatOpenAI(
                 model_name=language_model_tag,
                 openai_api_base=api_endpoint,
                 openai_api_key=api_key,
+                **guardrail_kwargs,
             )
         elif integration.integration_type == "xai_api_v1":
             return ChatXAI(
                 model=language_model_tag,
                 xai_api_base=api_endpoint,
                 xai_api_key=api_key,
+                **guardrail_kwargs,
             )
         elif integration.integration_type == "anthropic_api_v1":
             return ChatAnthropic(
                 model=language_model_tag,
                 anthropic_api_url=api_endpoint,
                 anthropic_api_key=api_key,
+                **guardrail_kwargs,
             )
         else:
             raise ConfigurationError(

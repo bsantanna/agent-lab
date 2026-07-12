@@ -56,6 +56,20 @@ class LanguageModelService:
                 schema=schema,
             )
 
+        # default generation guardrails: cap runaway generations and hung requests
+        self.setting_service.create_language_model_setting(
+            language_model_id=language_model.id,
+            setting_key="max_tokens",
+            setting_value="8192",
+            schema=schema,
+        )
+        self.setting_service.create_language_model_setting(
+            language_model_id=language_model.id,
+            setting_key="timeout",
+            setting_value="600",
+            schema=schema,
+        )
+
         return language_model
 
     def delete_language_model_by_id(self, language_model_id: str, schema: str) -> None:

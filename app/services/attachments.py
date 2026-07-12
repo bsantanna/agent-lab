@@ -118,9 +118,8 @@ class AttachmentService:
         api_endpoint = secrets["data"]["data"]["api_endpoint"]
         api_key = secrets["data"]["data"]["api_key"]
 
-        if integration.integration_type != "openai_api_v1":
+        if os.getenv("EMBEDDINGS_ENDPOINT"):
             api_endpoint = os.getenv("EMBEDDINGS_ENDPOINT")
-            api_key = os.getenv("EMBEDDINGS_API_KEY")
 
         embeddings_model = OpenAIEmbeddings(
             model=lm_settings_dict["embeddings"],
