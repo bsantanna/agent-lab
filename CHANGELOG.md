@@ -2,6 +2,30 @@
 
 <!-- version list -->
 
+## v1.7.1 (2026-07-12)
+
+### Bug Fixes
+
+- Langfuse simulations (1) ([#328](https://github.com/bsantanna/agent-lab/pull/328),
+  [`e257b08`](https://github.com/bsantanna/agent-lab/commit/e257b087369d3f26c4b15adfc1dc7ac6391c303c))
+
+- Langfuse simulations (2) ([#328](https://github.com/bsantanna/agent-lab/pull/328),
+  [`e257b08`](https://github.com/bsantanna/agent-lab/commit/e257b087369d3f26c4b15adfc1dc7ac6391c303c))
+
+- Langwatch evaluations ([#328](https://github.com/bsantanna/agent-lab/pull/328),
+  [`e257b08`](https://github.com/bsantanna/agent-lab/commit/e257b087369d3f26c4b15adfc1dc7ac6391c303c))
+
+- Q3 release 4 -> langwatch and langfuse improved integration
+  ([#328](https://github.com/bsantanna/agent-lab/pull/328),
+  [`e257b08`](https://github.com/bsantanna/agent-lab/commit/e257b087369d3f26c4b15adfc1dc7ac6391c303c))
+
+- Test model as env var ([#328](https://github.com/bsantanna/agent-lab/pull/328),
+  [`e257b08`](https://github.com/bsantanna/agent-lab/commit/e257b087369d3f26c4b15adfc1dc7ac6391c303c))
+
+- Test model setup ([#328](https://github.com/bsantanna/agent-lab/pull/328),
+  [`e257b08`](https://github.com/bsantanna/agent-lab/commit/e257b087369d3f26c4b15adfc1dc7ac6391c303c))
+
+
 ## v1.7.0 (2026-07-10)
 
 ### Bug Fixes
