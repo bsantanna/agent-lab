@@ -2,6 +2,20 @@
 
 <!-- version list -->
 
+## v1.7.2 (2026-07-12)
+
+### Bug Fixes
+
+- Q3 release 5 -> adjusts test env ([#329](https://github.com/bsantanna/agent-lab/pull/329),
+  [`ece7611`](https://github.com/bsantanna/agent-lab/commit/ece7611e654a1f645432c6f603a06d5a849669cf))
+
+- Removes unused env var ([#329](https://github.com/bsantanna/agent-lab/pull/329),
+  [`ece7611`](https://github.com/bsantanna/agent-lab/commit/ece7611e654a1f645432c6f603a06d5a849669cf))
+
+- Timeout guardrails ([#329](https://github.com/bsantanna/agent-lab/pull/329),
+  [`ece7611`](https://github.com/bsantanna/agent-lab/commit/ece7611e654a1f645432c6f603a06d5a849669cf))
+
+
 ## v1.7.1 (2026-07-12)
 
 ### Bug Fixes
