@@ -11,11 +11,15 @@ to the configured observability platforms:
   dataset (free-plan limit of 3 datasets per project), appending missing
   entries matched by item_id.
 
-Safe to re-run: everything is upserted or skipped when already present.
-Platforms without credentials are skipped.
+Safe to re-run: everything is upserted or skipped when already present, and
+the evaluator (plus its rules) is recreated when the judge model config
+drifts from the SIMULATION_JUDGE_* environment variables. Platforms without
+credentials are skipped.
 
 Usage:
     uv run python scripts/setup_simulation_evals.py
+
+The simulation make targets run this script before every suite execution.
 
 Langfuse needs LANGFUSE_BASE_URL (or LANGFUSE_HOST), LANGFUSE_PUBLIC_KEY and
 LANGFUSE_SECRET_KEY; LangWatch needs LANGWATCH_ENDPOINT and LANGWATCH_API_KEY.
@@ -112,14 +116,30 @@ def sync_llm_connection(langfuse: Langfuse) -> bool:
     return True
 
 
-def ensure_evaluator(langfuse: Langfuse) -> None:
-    evaluators = langfuse.api.unstable.evaluators.list(limit=100)
-    for evaluator in evaluators.data:
-        if evaluator.name == EVALUATOR_NAME and evaluator.scope == "project":
-            print(f"Evaluator '{EVALUATOR_NAME}' already exists")
-            return
-
+def ensure_evaluator(langfuse: Langfuse, dataset_names: list) -> None:
     provider, model = parse_judge_model()
+    existing = None
+    for evaluator in langfuse.api.unstable.evaluators.list(limit=100).data:
+        if evaluator.name == EVALUATOR_NAME and evaluator.scope == "project":
+            existing = evaluator
+            break
+
+    if existing is not None:
+        config = existing.model_config_
+        if config is None:
+            config = langfuse.api.unstable.evaluators.get(existing.id).model_config_
+        if config is not None and config.provider == provider and config.model == model:
+            print(f"Evaluator '{EVALUATOR_NAME}' already up to date")
+            return
+        # judge model drifted: rules reference the evaluator, recreate both
+        rule_names = {f"{name}_judge" for name in dataset_names}
+        for rule in langfuse.api.unstable.evaluation_rules.list().data:
+            if rule.name in rule_names:
+                langfuse.api.unstable.evaluation_rules.delete(rule.id)
+                print(f"Deleted evaluation rule '{rule.name}' (judge model changed)")
+        langfuse.api.unstable.evaluators.delete(existing.id)
+        print(f"Deleted evaluator '{EVALUATOR_NAME}' (judge model changed)")
+
     langfuse.api.unstable.evaluators.create(
         request=CreateEvaluatorRequest_LlmAsJudge(
             name=EVALUATOR_NAME,
@@ -202,7 +222,7 @@ def sync_langfuse() -> None:
         )
 
     if sync_llm_connection(langfuse):
-        ensure_evaluator(langfuse)
+        ensure_evaluator(langfuse, dataset_names)
         ensure_evaluation_rules(langfuse, dataset_names)
 
     langfuse.flush()

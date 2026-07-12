@@ -2,19 +2,22 @@ cleanup:
 	@rm agent_lab.db 2>/dev/null || true
 	@rm temp* 2>/dev/null || true
 
-scenario_simulation:
+sync_simulation_evals:
+	uv run python scripts/setup_simulation_evals.py
+
+scenario_simulation: sync_simulation_evals
 	uv run pytest tests/simulation/scenario -m agent_test; $(MAKE) cleanup
 
-langwatch_simulation:
+langwatch_simulation: sync_simulation_evals
 	uv run pytest tests/simulation/langwatch -m agent_test; $(MAKE) cleanup
 
-langfuse_simulation:
+langfuse_simulation: sync_simulation_evals
 	uv run pytest tests/simulation/langfuse -m agent_test; $(MAKE) cleanup
 
 test:
 	uv run pytest --cov=app --cov-report=xml; $(MAKE) cleanup
 
-test_simulations:
+test_simulations: sync_simulation_evals
 	uv run pytest tests/simulation -m agent_test; $(MAKE) cleanup
 
 lint:
