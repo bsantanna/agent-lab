@@ -162,9 +162,8 @@ class AgentBase(ABC):
             setting.setting_key: setting.setting_value for setting in lm_settings
         }
 
-        if integration.integration_type != "openai_api_v1":
+        if os.getenv("EMBEDDINGS_ENDPOINT"):
             api_endpoint = os.getenv("EMBEDDINGS_ENDPOINT")
-            api_key = os.getenv("EMBEDDINGS_API_KEY")
 
         return OpenAIEmbeddings(
             model=lm_settings_dict["embeddings"],

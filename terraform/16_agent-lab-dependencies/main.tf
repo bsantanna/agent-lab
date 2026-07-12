@@ -178,7 +178,6 @@ resource "kubernetes_secret_v1" "agent_lab_secret" {
     LANGFUSE_HOST       = var.langfuse_host
     LANGFUSE_PUBLIC_KEY = var.langfuse_public_key
     LANGFUSE_SECRET_KEY = var.langfuse_secret_key
-    EMBEDDINGS_API_KEY  = var.embeddings_api_key
   }
 
   type = "Opaque"

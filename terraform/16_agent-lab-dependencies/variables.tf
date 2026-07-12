@@ -78,8 +78,3 @@ variable "pg_image" {
   default     = "bsantanna/cloudnative-pg-vector:17.4"
   description = "PostgreSQL image with pgvector (adjust if needed)"
 }
-
-variable "embeddings_api_key" {
-  description = "API key of the OpenAI-compatible embeddings server"
-  type        = string
-}
