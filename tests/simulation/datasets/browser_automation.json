@@ -1,0 +1,21 @@
+{
+  "name": "simulation_browser_automation",
+  "description": "Summarize a wikipedia article using web browser.",
+  "items": [
+    {
+      "id": "browser_automation_001",
+      "input": {
+        "message": "Using the web browser, explain the first paragraph of https://en.wikipedia.org/wiki/Mathematical_finance. Acceptance criteria: a 12 year old would understand."
+      },
+      "expected_output": {
+        "criteria": [
+          "Agent should not ask follow-up questions.",
+          "Agent should match the given acceptance criteria in the query."
+        ]
+      },
+      "metadata": {
+        "agent_type": "coordinator_planner_supervisor"
+      }
+    }
+  ]
+}

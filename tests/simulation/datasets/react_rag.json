@@ -1,0 +1,22 @@
+{
+  "name": "simulation_react_rag",
+  "description": "Answer user question using react rag pattern, with <thinking> and <response> sections.",
+  "items": [
+    {
+      "id": "react_rag_001",
+      "input": {
+        "message": "What is the pinnacle of excellence?"
+      },
+      "expected_output": {
+        "criteria": [
+          "Agent should answer user question.",
+          "Agent must use knowledge base to answer the question.",
+          "Generated response must contain <thinking> and <response> sections."
+        ]
+      },
+      "metadata": {
+        "agent_type": "react_rag"
+      }
+    }
+  ]
+}

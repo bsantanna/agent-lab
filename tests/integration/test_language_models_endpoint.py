@@ -80,6 +80,18 @@ class TestLanguageModelsEndpoint:
         # then
         assert response.status_code == 201
 
+        # when (huggingface-style vendor-prefixed tag)
+        response = client.post(
+            url="/llms/create",
+            headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
+            json={
+                "integration_id": integration_id,
+                "language_model_tag": "vendor/model-3.1-4B-FP8",
+            },
+        )
+        # then
+        assert response.status_code == 201
+
     @pytest.mark.asyncio
     async def test_create_and_get_by_id_success(self, client):
         # when

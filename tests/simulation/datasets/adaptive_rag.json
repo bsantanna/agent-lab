@@ -1,0 +1,21 @@
+{
+  "name": "simulation_adaptive_rag",
+  "description": "Answer user question using adaptive rag pattern.",
+  "items": [
+    {
+      "id": "adaptive_rag_001",
+      "input": {
+        "message": "You have access to this book 'The Art of War - Sun Tzu' available at static_document_data, I want to ask you to summarize in one sentence what is the pinnacle of excellence."
+      },
+      "expected_output": {
+        "criteria": [
+          "Agent should answer user question",
+          "Answer should meet given criteria in the query"
+        ]
+      },
+      "metadata": {
+        "agent_type": "adaptive_rag"
+      }
+    }
+  ]
+}
