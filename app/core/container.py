@@ -24,7 +24,12 @@ from app.infrastructure.metrics.tracing_backends import (
     LangfuseTracingBackend,
     LangWatchTracingBackend,
 )
+from app.interface.mcp.coordinator_planner_supervisor_tool_registrar import (
+    CoordinatorPlannerSupervisorToolRegistrar,
+)
 from app.interface.mcp.default_tool_registrar import DefaultToolRegistrar
+from app.interface.mcp.prompt_registry import PromptRegistry
+from app.interface.mcp.user_prompt_resolver import UserPromptResolver
 from app.services.agent_settings import AgentSettingService
 from app.services.agent_types.adaptive_rag.agent import AdaptiveRagAgent
 from app.services.agent_types.base import AgentUtils
@@ -251,9 +256,29 @@ class Container(containers.DeclarativeContainer):
         fast_voice_memos_agent=fast_voice_memos_agent,
     )
 
-    default_tool_registrar = providers.Singleton(DefaultToolRegistrar)
+    user_prompt_resolver = providers.Singleton(
+        UserPromptResolver,
+        agent_service=agent_service,
+        agent_setting_service=agent_setting_service,
+    )
 
-    mcp_registrars = providers.List(default_tool_registrar)
+    prompt_registry = providers.Singleton(PromptRegistry)
+
+    default_tool_registrar = providers.Singleton(
+        DefaultToolRegistrar,
+        prompt_registry=prompt_registry,
+    )
+
+    coordinator_planner_supervisor_tool_registrar = providers.Singleton(
+        CoordinatorPlannerSupervisorToolRegistrar,
+        user_prompt_resolver=user_prompt_resolver,
+        prompt_registry=prompt_registry,
+    )
+
+    mcp_registrars = providers.List(
+        default_tool_registrar,
+        coordinator_planner_supervisor_tool_registrar,
+    )
 
     # Tracing frameworks are decoupled behind the TracingBackend abstraction and
     # composed here as a list (mirroring mcp_registrars). Adding a framework is a

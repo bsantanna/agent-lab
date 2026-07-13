@@ -61,6 +61,35 @@ Three PostgreSQL databases:
 
 OpenTelemetry is configured in `app/infrastructure/metrics/tracer.py`. Instrumented: FastAPI, HTTPx, LangChain, SQLAlchemy, Psycopg. Exports via OTLP to a collector that feeds Prometheus (metrics), Loki (logs), Tempo (traces), and Grafana (dashboards). Config in `otel/`.
 
+### MCP Server
+
+The MCP server lives in `app/interface/mcp/` and is mounted at `/mcp` in `app/main.py` (`http_app(path="/", stateless_http=True)`, lifespan shared with FastAPI). Auth is a Keycloak-backed `OAuthProxy` with persistent, Fernet-encrypted OAuth client storage in Redis (`server.py:_build_auth`).
+
+**Registrar composition.** Capabilities are contributed by `McpRegistrar` subclasses composed as `mcp_registrars = providers.List(...)` in the container (same idiom as `tracing_backends`). `build_mcp_server` iterates registrars calling `register_tools` → `register_prompts` → `register_resources`. Because `container.mcp_registrars()` eagerly constructs every singleton before `build_mcp_server` runs, side effects in registrar `__init__` (e.g. populating `PromptRegistry`) are always complete before any `register_*` hook executes — dynamic tool descriptions built from `prompt_registry.names()` are safe regardless of list order.
+
+**Prompt exposure triple.** Every pipeline prompt is exposed under three surfaces at once, because tools are the only MCP primitive reliably model-callable across all clients:
+1. the `read_prompt_mcp` tool (dispatches through the shared `PromptRegistry`; accepts an optional `parameters` dict),
+2. `prompts/get` (named arguments advertised as `PromptArgument`s — MCP arguments are strings; fastmcp converts them to the function signature's types),
+3. resources: one concrete `prompt://<name>` per prompt (`mime_type="text/plain"`) plus a single global template `prompt://{name}{?parameters}` on `DefaultToolRegistrar` where `parameters` is a JSON object query param. Concrete resources win on exact URI match; the template handles parameterized reads — never register a second template over the same URI space.
+
+**Adding a per-agent-type prompt registrar.** Subclass `PromptSetRegistrar`: declare `agent_type`, `role_setting_keys`, `role_prompt_names`, pass default templates to `__init__`. Override `_render(template, params)` for server-side Jinja and `_build_prompt_fn(role)` to accept named arguments (explicit signatures only — no dynamic-signature construction). Prompts whose templates contain Jinja control flow over server-side data (`SUPERVISED_AGENTS`, etc.) must be rendered server-side, never returned raw to the model. Wire the registrar into `mcp_registrars` in the container.
+
+**Multi-tenancy.** Every prompt surface funnels through `UserPromptResolver.resolve(agent_type, setting_key, default_template)`: the tenant schema is derived from the MCP access token (`_get_mcp_schema()`; no/anonymous token → `"public"`), a non-empty tenant `AgentSetting` overrides the packaged default, and tenant overrides pass through the same `_render` path as defaults.
+
+**MCP gotchas (cost real debugging time):**
+- FastAPI merges dependency-set headers (e.g. `cache_control()`) only into non-`Response` returns — endpoints returning `FileResponse` must set headers on the response directly.
+- Register closures in loops via a helper method called once per iteration (own stack frame) instead of `lambda x=x` default-arg tricks.
+- fastmcp resource templates support `{param}` path params and RFC 6570 `{?a,b}` query params; a function parameter matching a query param must have a default.
+- Verify MCP behavior at protocol level with an in-memory client (`async with Client(mcp)` from fastmcp): `list_prompts` argument advertising, `get_prompt` with arguments, `list_resource_templates`, `read_resource` with query params. Mock-based unit tests alone don't prove the decorators produce valid registrations.
+
+### Porting between Agent-Lab and downstream forks
+
+When syncing generic improvements (see CLAUDE.md for the boundary rules):
+- Diff both directions first — agent-lab evolves independently (dependency versions, tracing backends, test tooling are usually ahead of forks). Never assume the fork is strictly newer.
+- Port tests together with code, genericizing fork-specific fixture names (agent types, setting values).
+- Agent-lab is the canonical template for new downstream projects: prefer the cleanest generic API over byte-parity with an old fork, and note deliberate divergences so forks adopt the new version.
+- Check `fastmcp`/decorator API compatibility against the *installed* version in `.venv` when the fork pins an older release.
+
 ---
 
 ## Common Commands
@@ -174,7 +203,7 @@ Choose the method based on the operation's semantics, not implementation conveni
 
 ## Code Conventions
 
-- **Linting**: flake8 (ignores E203, E501, W201, W503) + ruff (auto-fix + format). Both run as pre-commit hooks.
+- **Linting**: ruff only (`make lint` runs `ruff check` + `ruff format --check`); ruff-check and ruff-format run as pre-commit hooks.
 - **Pre-commit hooks**: Also run `make test` as a local hook on every commit — tests must pass before commits succeed.
 - **Config files**: YAML-based (`config-*.yml`), loaded conditionally by env var in `Container`.
 - **Agent prompts**: Use Jinja2 templates stored in agent settings, rendered via `AgentBase.parse_prompt_template()`.
