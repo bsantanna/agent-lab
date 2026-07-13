@@ -2,6 +2,49 @@
 
 <!-- version list -->
 
+## v1.7.6 (2026-07-13)
+
+### Bug Fixes
+
+- Ownership migration 3 ([#338](https://github.com/btech-software/agent-lab/pull/338),
+  [`f0cfced`](https://github.com/btech-software/agent-lab/commit/f0cfced166e035b09d5d143ce36e48338792529e))
+
+- Q3 release 10 -> precommit /sonar adjusts
+  ([#338](https://github.com/btech-software/agent-lab/pull/338),
+  [`f0cfced`](https://github.com/btech-software/agent-lab/commit/f0cfced166e035b09d5d143ce36e48338792529e))
+
+- Repository ownership migration (2) ([#338](https://github.com/btech-software/agent-lab/pull/338),
+  [`f0cfced`](https://github.com/btech-software/agent-lab/commit/f0cfced166e035b09d5d143ce36e48338792529e))
+
+- Repository ownership migration (3) ([#338](https://github.com/btech-software/agent-lab/pull/338),
+  [`f0cfced`](https://github.com/btech-software/agent-lab/commit/f0cfced166e035b09d5d143ce36e48338792529e))
+
+- Repository ownership migration (4) ([#338](https://github.com/btech-software/agent-lab/pull/338),
+  [`f0cfced`](https://github.com/btech-software/agent-lab/commit/f0cfced166e035b09d5d143ce36e48338792529e))
+
+- Repository ownership migration (5) ([#341](https://github.com/btech-software/agent-lab/pull/341),
+  [`1d111d0`](https://github.com/btech-software/agent-lab/commit/1d111d0e4a62c952fd15b4d61494a0a1e0624a06))
+
+- Use logging.exception, tuple startswith, Optional type hints in repositories
+  ([#338](https://github.com/btech-software/agent-lab/pull/338),
+  [`f0cfced`](https://github.com/btech-software/agent-lab/commit/f0cfced166e035b09d5d143ce36e48338792529e))
+
+- **charts**: Resources, disable SA token automount, pin images, Helm 3 capabilities
+  ([#338](https://github.com/btech-software/agent-lab/pull/338),
+  [`f0cfced`](https://github.com/btech-software/agent-lab/commit/f0cfced166e035b09d5d143ce36e48338792529e))
+
+### Chores
+
+- Remove legacy static_document dag ([#338](https://github.com/btech-software/agent-lab/pull/338),
+  [`f0cfced`](https://github.com/btech-software/agent-lab/commit/f0cfced166e035b09d5d143ce36e48338792529e))
+
+### Continuous Integration
+
+- Pin GitHub Actions to full commit SHAs
+  ([#338](https://github.com/btech-software/agent-lab/pull/338),
+  [`f0cfced`](https://github.com/btech-software/agent-lab/commit/f0cfced166e035b09d5d143ce36e48338792529e))
+
+
 ## v1.7.5 (2026-07-13)
 
 ### Bug Fixes
