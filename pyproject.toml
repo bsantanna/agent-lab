@@ -58,8 +58,6 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "flake8~=7.3.0",
-    "isort~=8.0.1",
     "pre-commit~=4.6.0",
     "ruff~=0.15.10",
 ]
@@ -96,3 +94,10 @@ version_variables = [
 
 [tool.coverage.report]
 fail_under = 90
+
+[tool.ruff]
+extend-exclude = ["notebooks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = ["E203", "E501"]

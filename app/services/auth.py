@@ -68,9 +68,7 @@ class AuthService:
             refresh_token = token_data.get("refresh_token")
             if not access_token or not refresh_token:
                 raise AuthenticationError(_TOKEN_NOT_FOUND)
-            return AuthResponse(
-                access_token=access_token, refresh_token=refresh_token
-            )
+            return AuthResponse(access_token=access_token, refresh_token=refresh_token)
         except requests.exceptions.RequestException as exc:
             raise AuthenticationError(str(exc))
 
@@ -110,9 +108,7 @@ class AuthService:
             response.raise_for_status()
             token = response.json().get("access_token")
             if not token:
-                raise AuthenticationError(
-                    "Service account token not found in response"
-                )
+                raise AuthenticationError("Service account token not found in response")
             return token
         except requests.exceptions.RequestException as exc:
             raise AuthenticationError(str(exc))

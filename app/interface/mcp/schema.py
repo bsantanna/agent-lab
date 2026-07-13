@@ -11,8 +11,12 @@ class AgentItem(BaseModel):
 
     id: str = Field(description="Unique agent identifier")
     agent_name: str = Field(description="Human-readable agent name")
-    agent_type: str = Field(description="Agent type key (e.g. react_rag, vision_document)")
-    agent_summary: str = Field(description="Brief description of the agent's purpose and capabilities")
+    agent_type: str = Field(
+        description="Agent type key (e.g. react_rag, vision_document)"
+    )
+    agent_summary: str = Field(
+        description="Brief description of the agent's purpose and capabilities"
+    )
     language_model_id: Optional[str] = Field(
         default=None,
         description="ID of the language model powering this agent. "
@@ -28,8 +32,12 @@ class MessageItem(BaseModel):
     message_role: str = Field(description="Role: 'human' or 'assistant'")
     message_content: str = Field(description="Text content of the message")
     agent_id: str = Field(description="ID of the agent this message belongs to")
-    response_data: Optional[str] = Field(default=None, description="Structured response data, if any")
-    replies_to: Optional[str] = Field(default=None, description="ID of the message this replies to")
+    response_data: Optional[str] = Field(
+        default=None, description="Structured response data, if any"
+    )
+    replies_to: Optional[str] = Field(
+        default=None, description="ID of the message this replies to"
+    )
 
 
 class PostMessageResult(BaseModel):
@@ -38,7 +46,9 @@ class PostMessageResult(BaseModel):
     id: str = Field(description="ID of the assistant's response message")
     message_content: str = Field(description="The assistant's response text")
     agent_id: str = Field(description="ID of the agent that processed the message")
-    response_data: Optional[str] = Field(default=None, description="Structured response data, if any")
+    response_data: Optional[str] = Field(
+        default=None, description="Structured response data, if any"
+    )
 
 
 def _get_mcp_schema() -> str:

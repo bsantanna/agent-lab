@@ -27,5 +27,5 @@ test_simulations: sync_simulation_evals
 	uv run pytest tests/simulation -m agent_test --timeout=1800; $(MAKE) cleanup
 
 lint:
-	uv run python -m flake8 app tests --count --select=E9,F63,F7,F82 --show-source --statistics
-	uv run python -m flake8 app tests --count --exit-zero --statistics
+	uv run ruff check app tests
+	uv run ruff format --check app tests
