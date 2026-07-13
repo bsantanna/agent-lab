@@ -20,7 +20,7 @@ locals {
 
 resource "helm_release" "agent_lab" {
   name       = "agent-lab"
-  repository = "https://bsantanna.github.io/agent-lab"
+  repository = "https://btech-software.github.io/agent-lab"
   chart      = "agent-lab"
   version    = var.agent_lab_chart_version
   namespace  = var.agent_lab_namespace

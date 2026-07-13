@@ -39,7 +39,7 @@ jobs:
 
       - name: Generate index.yaml
         run: |
-          helm repo index . --url https://bsantanna.github.io/agent-lab/ --merge index.yaml
+          helm repo index . --url https://btech-software.github.io/agent-lab/ --merge index.yaml
 
       - name: Setup git config
         run: |
