@@ -83,4 +83,3 @@ export USER_TOKEN=$(curl -s -X POST https://<auth_fqdn>/realms/<realm_name>/prot
   -d "username=<username>" \
   -d "password=<user_password>" | jq -r '.access_token')
 ```
-
