@@ -1,5 +1,7 @@
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from app.interface.mcp.schema import (
     AgentItem,
     MessageItem,
@@ -154,3 +156,85 @@ class TestMcpRegistrar:
         mcp.prompt.assert_called_once_with(name="test_prompt")
         registrar.register_tools(mcp, container)
         registrar.register_resources(mcp)
+
+
+def _registered_tools(container):
+    """Register the default tools against a mock FastMCP and return the
+    captured tool coroutines keyed by registration order."""
+    mcp = MagicMock()
+    DefaultToolRegistrar().register_tools(mcp, container)
+    functions = [c.args[0] for c in mcp.tool.return_value.call_args_list]
+    return dict(zip(["get_agent_list", "get_message_list", "post_message"], functions))
+
+
+@patch("app.interface.mcp.default_tool_registrar._get_mcp_schema", return_value="test")
+class TestDefaultToolClosures:
+    @pytest.mark.asyncio
+    async def test_get_agent_list(self, _schema):
+        container = MagicMock()
+        container.agent_service.return_value.get_agents.return_value = [
+            MagicMock(
+                id="a1",
+                agent_name="Echo",
+                agent_type="test_echo",
+                agent_summary="echoes",
+                language_model_id="lm1",
+                is_active=True,
+            )
+        ]
+
+        result = await _registered_tools(container)["get_agent_list"]()
+
+        assert len(result) == 1
+        assert result[0].id == "a1"
+        assert result[0].agent_type == "test_echo"
+        container.agent_service.return_value.get_agents.assert_called_once_with("test")
+
+    @pytest.mark.asyncio
+    async def test_get_message_list(self, _schema):
+        container = MagicMock()
+        container.message_service.return_value.get_messages.return_value = [
+            MagicMock(
+                id="m1",
+                message_role="human",
+                message_content="hi",
+                agent_id="a1",
+                response_data=None,
+                replies_to=None,
+            )
+        ]
+
+        result = await _registered_tools(container)["get_message_list"]("a1")
+
+        assert len(result) == 1
+        assert result[0].message_content == "hi"
+        container.message_service.return_value.get_messages.assert_called_once_with(
+            "a1", "test"
+        )
+
+    @pytest.mark.asyncio
+    async def test_post_message(self, _schema):
+        container = MagicMock()
+        agent = MagicMock(agent_type="test_echo")
+        container.agent_service.return_value.get_agent_by_id.return_value = agent
+        matching_agent = container.agent_registry.return_value.get_agent.return_value
+        matching_agent.process_message.return_value = MagicMock(
+            message_content="echo: hi", response_data=None, agent_id="a1"
+        )
+        human_message = MagicMock(id="m1")
+        assistant_message = MagicMock(
+            id="m2", message_content="echo: hi", agent_id="a1", response_data=None
+        )
+        message_service = container.message_service.return_value
+        message_service.create_message.side_effect = [human_message, assistant_message]
+
+        result = await _registered_tools(container)["post_message"]("a1", "hi")
+
+        assert result.id == "m2"
+        assert result.message_content == "echo: hi"
+        assert message_service.create_message.call_count == 2
+        assert (
+            message_service.create_message.call_args_list[1].kwargs["replies_to"]
+            is human_message
+        )
+        matching_agent.process_message.assert_called_once()

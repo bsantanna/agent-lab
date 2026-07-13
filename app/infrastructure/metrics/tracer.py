@@ -65,7 +65,7 @@ class ExcludePathSampler(Sampler):
 
 tracer_provider = None
 
-if collector_endpoint is not None:
+if collector_endpoint is not None:  # pragma: no cover - import-time OTel wiring
     # traces
     tracer_provider = TracerProvider(
         resource=resource, sampler=ExcludePathSampler(excluded_paths)

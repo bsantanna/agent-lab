@@ -574,6 +574,7 @@ class ContactSupportAgentBase(WorkflowAgentBase, ABC):
                 parsed_content=parsed_ical_result,
                 file_name=f"{event_attachment_id}.ics",
                 attachment_id=event_attachment_id,
+                schema="public",
             )
 
             return f"{self.base_url}/attachments/download/{event_attachment_id}"
@@ -620,7 +621,7 @@ class WebAgentBase(WorkflowAgentBase, ABC):
         chat_model = self.get_browser_chat_model(agent_id, schema)
 
         @tool("browser_tool")
-        def browser_tool_call(
+        def browser_tool_call(  # pragma: no cover - drives a live browser session
             instruction: Annotated[str, "The instruction to use browser."],
         ):
             """
