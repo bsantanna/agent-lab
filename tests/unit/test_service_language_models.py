@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 import pytest
 
@@ -68,11 +68,28 @@ class TestLanguageModelService:
             language_model_tag="gpt-4",
             schema="test",
         )
-        setting_service.create_language_model_setting.assert_called_once_with(
-            language_model_id="lm-1",
-            setting_key="embeddings",
-            setting_value="text-embedding-3-large",
-            schema="test",
+        assert setting_service.create_language_model_setting.call_count == 3
+        setting_service.create_language_model_setting.assert_has_calls(
+            [
+                call(
+                    language_model_id="lm-1",
+                    setting_key="embeddings",
+                    setting_value="text-embedding-3-large",
+                    schema="test",
+                ),
+                call(
+                    language_model_id="lm-1",
+                    setting_key="max_tokens",
+                    setting_value="8192",
+                    schema="test",
+                ),
+                call(
+                    language_model_id="lm-1",
+                    setting_key="timeout",
+                    setting_value="600",
+                    schema="test",
+                ),
+            ]
         )
 
     def test_create_language_model_other_type(self, lm_service):
@@ -93,11 +110,28 @@ class TestLanguageModelService:
         )
 
         assert result == lm
-        setting_service.create_language_model_setting.assert_called_once_with(
-            language_model_id="lm-1",
-            setting_key="embeddings",
-            setting_value="bge-m3",
-            schema="test",
+        assert setting_service.create_language_model_setting.call_count == 3
+        setting_service.create_language_model_setting.assert_has_calls(
+            [
+                call(
+                    language_model_id="lm-1",
+                    setting_key="embeddings",
+                    setting_value="bge-m3",
+                    schema="test",
+                ),
+                call(
+                    language_model_id="lm-1",
+                    setting_key="max_tokens",
+                    setting_value="8192",
+                    schema="test",
+                ),
+                call(
+                    language_model_id="lm-1",
+                    setting_key="timeout",
+                    setting_value="600",
+                    schema="test",
+                ),
+            ]
         )
 
     def test_delete_language_model_by_id(self, lm_service):

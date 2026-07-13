@@ -1,7 +1,7 @@
 import re
 from datetime import datetime
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator
 from typing_extensions import List, Optional
 
 from app.domain.exceptions.base import InvalidFieldError
@@ -61,8 +61,7 @@ class AgentSetting(BaseModel):
             raise InvalidFieldError("setting_value", setting_value_too_long_description)
         return v
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class Agent(BaseModel):
@@ -74,8 +73,7 @@ class Agent(BaseModel):
     agent_summary: str
     language_model_id: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AgentExpanded(Agent):

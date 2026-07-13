@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 import requests
 from testcontainers.core.container import DockerContainer
-from testcontainers.core.waiting_utils import wait_for_logs
+from testcontainers.core.wait_strategies import LogMessageWaitStrategy
 from testcontainers.keycloak import KeycloakContainer
 from testcontainers.ollama import OllamaContainer
 from testcontainers.postgres import PostgresContainer
@@ -18,13 +18,17 @@ os.environ["EMBEDDINGS_ENDPOINT"] = "http://localhost:21434/v1"
 
 llm_tag = "bge-m3"
 
-keycloak = KeycloakContainer(username="admin", password="admin").with_bind_ports(
-    container=8080, host=18080
+keycloak = (
+    KeycloakContainer(username="admin", password="admin")
+    .with_bind_ports(container=8080, host=18080)
+    .waiting_for(LogMessageWaitStrategy("Listening on"))
 )
 
-ollama = OllamaContainer(
-    ollama_home=f"{Path.home()}/.ollama", image="ollama/ollama:latest"
-).with_bind_ports(container=11434, host=21434)
+ollama = (
+    OllamaContainer(ollama_home=f"{Path.home()}/.ollama", image="ollama/ollama:latest")
+    .with_bind_ports(container=11434, host=21434)
+    .waiting_for(LogMessageWaitStrategy("Listening on"))
+)
 
 postgres = (
     PostgresContainer(
@@ -32,19 +36,33 @@ postgres = (
     )
     .with_bind_ports(container=5432, host=15432)
     .with_volume_mapping(f"{Path.cwd()}/tests/integration", "/mnt/integration")
+    .waiting_for(
+        LogMessageWaitStrategy("database system is ready to accept connections")
+    )
 )
 
-redis = RedisContainer(image="redis:alpine").with_bind_ports(container=6379, host=16379)
+redis = (
+    RedisContainer(image="redis:alpine")
+    .with_bind_ports(container=6379, host=16379)
+    .waiting_for(LogMessageWaitStrategy("Ready to accept connections"))
+)
 
 vault = (
     VaultContainer("hashicorp/vault:1.18.1")
     .with_bind_ports(container=8200, host=18200)
     .with_env("VAULT_DEV_ROOT_TOKEN_ID", "dev-only-token")
     .with_env("VAULT_DEV_LISTEN_ADDRESS", "0.0.0.0:8200")
+    .waiting_for(
+        LogMessageWaitStrategy(
+            "Development mode should NOT be used in production installations!"
+        )
+    )
 )
 
-cdp = DockerContainer("chromedp/headless-shell:latest").with_bind_ports(
-    container=9222, host=19222
+cdp = (
+    DockerContainer("chromedp/headless-shell:latest")
+    .with_bind_ports(container=9222, host=19222)
+    .waiting_for(LogMessageWaitStrategy("DevTools listening on"))
 )
 
 
@@ -242,14 +260,6 @@ def test_config(request):
         cdp.stop()
 
     request.addfinalizer(remove_container)
-    wait_for_logs(keycloak, "Listening on")
-    wait_for_logs(ollama, "Listening on")
-    wait_for_logs(postgres, "database system is ready to accept connections")
-    wait_for_logs(redis, "Ready to accept connections")
-    wait_for_logs(
-        vault, "Development mode should NOT be used in production installations!"
-    )
-    wait_for_logs(cdp, "DevTools listening on")
 
     setup_keycloak()
     setup_ollama()
