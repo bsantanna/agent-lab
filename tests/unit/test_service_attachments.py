@@ -183,7 +183,7 @@ class TestCreateAttachmentWithFile:
 
 class TestCreateEmbeddings:
     @pytest.mark.asyncio
-    @patch("app.services.attachments.UnstructuredMarkdownLoader")
+    @patch("app.services.attachments.TextLoader")
     async def test_create_embeddings(self, loader_cls, attachment_service):
         (
             service,

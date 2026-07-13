@@ -5,7 +5,7 @@ import anyio
 
 import hvac
 from fastapi import File
-from langchain_community.document_loaders import UnstructuredMarkdownLoader
+from langchain_community.document_loaders import TextLoader
 from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
 from markitdown import MarkItDown
@@ -133,7 +133,7 @@ class AttachmentService:
         async with await anyio.open_file(temp_file_path, "wb") as buffer:
             await buffer.write(attachment.parsed_content.encode())
 
-        loader = UnstructuredMarkdownLoader(temp_file_path)
+        loader = TextLoader(temp_file_path)
         documents = loader.load_and_split(
             CharacterTextSplitter(chunk_size=512, chunk_overlap=64)
         )
