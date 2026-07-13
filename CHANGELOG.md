@@ -2,6 +2,21 @@
 
 <!-- version list -->
 
+## v1.7.3 (2026-07-13)
+
+### Bug Fixes
+
+- Q3 release 6 - unit tests updates and fixes
+  ([#330](https://github.com/bsantanna/agent-lab/pull/330),
+  [`1cad6ae`](https://github.com/bsantanna/agent-lab/commit/1cad6ae397c5772213bfe8c51985d8a6086fb3a8))
+
+- Unit tests adjusts ([#330](https://github.com/bsantanna/agent-lab/pull/330),
+  [`1cad6ae`](https://github.com/bsantanna/agent-lab/commit/1cad6ae397c5772213bfe8c51985d8a6086fb3a8))
+
+- Unit tests adjusts (2) ([#330](https://github.com/bsantanna/agent-lab/pull/330),
+  [`1cad6ae`](https://github.com/bsantanna/agent-lab/commit/1cad6ae397c5772213bfe8c51985d8a6086fb3a8))
+
+
 ## v1.7.2 (2026-07-12)
 
 ### Bug Fixes
