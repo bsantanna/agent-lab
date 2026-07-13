@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.7.4 (2026-07-13)
+
+### Bug Fixes
+
+- Unit tests adjusts (3) ([#336](https://github.com/btech-software/agent-lab/pull/336),
+  [`1e969d0`](https://github.com/btech-software/agent-lab/commit/1e969d0125b8da880f382302e64351cbb6edcb44))
+
+
 ## v1.7.3 (2026-07-13)
 
 ### Bug Fixes
