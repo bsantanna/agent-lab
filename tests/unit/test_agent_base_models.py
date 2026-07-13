@@ -109,7 +109,7 @@ class TestGetChatModel:
         chat_model = agent.get_chat_model("agent-1", "test", "gpt-4o")
 
         assert chat_model.max_tokens == 8192
-        assert chat_model.request_timeout == 600.0
+        assert chat_model.request_timeout == pytest.approx(600.0)
 
     def test_unsupported_integration_type_raises(self):
         agent = _make_agent("ollama_api_v1")
@@ -253,13 +253,13 @@ class TestAgentBaseHelpers:
 
 class _StubWorkflowAgent(WorkflowAgentBase):
     def create_default_settings(self, agent_id: str, schema: str):
-        pass
+        """Not needed for these tests."""
 
     def get_input_params(self, message_request: MessageRequest, schema: str) -> dict:
         return {"messages": []}
 
     def get_workflow_builder(self, agent_id: str):
-        pass
+        """Not needed for these tests."""
 
 
 class TestWorkflowAgentBase:
@@ -397,19 +397,19 @@ class TestShellAnalysis:
 
 class _StubContactAgent(ContactSupportAgentBase):
     def create_default_settings(self, agent_id: str, schema: str):
-        pass
+        """Not needed for these tests."""
 
     def get_input_params(self, message_request: MessageRequest, schema: str) -> dict:
         return {}
 
     def get_workflow_builder(self, agent_id: str):
-        pass
+        """Not needed for these tests."""
 
     def get_person_search_tool(self):
-        pass
+        """Not needed for these tests."""
 
     def get_person_details_tool(self):
-        pass
+        """Not needed for these tests."""
 
 
 class TestIcalAttachmentTool:
@@ -480,8 +480,9 @@ class TestWebAgentBase:
         assert chat_model.model == "claude-sonnet-5"
 
     def test_get_browser_chat_model_unsupported_raises(self):
+        agent = self._agent("ollama_api_v1")
         with pytest.raises(ConfigurationError):
-            self._agent("ollama_api_v1").get_browser_chat_model("agent-1", "test")
+            agent.get_browser_chat_model("agent-1", "test")
 
     def test_get_web_browser_tool_returns_tool(self):
         agent = self._agent("openai_api_v1")

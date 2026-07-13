@@ -67,7 +67,7 @@ class TestTracingHooks:
 
         backend = MinimalBackend()
         with backend.message_span("name"):
-            pass
+            pass  # default message_span is a no-op context manager
         assert backend.record_io(input_value=1, output_value=2, metadata={}) is None
 
 

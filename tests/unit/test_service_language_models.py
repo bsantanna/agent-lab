@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, call
 import pytest
 
 from app.domain.models import Integration, LanguageModel
+from app.domain.repositories.integrations import IntegrationNotFoundError
 from app.services.language_models import LanguageModelService
 
 
@@ -170,9 +171,11 @@ class TestLanguageModelService:
 
     def test_update_language_model_invalid_integration(self, lm_service):
         service, repo, _, integration_service = lm_service
-        integration_service.get_integration_by_id.side_effect = Exception("not found")
+        integration_service.get_integration_by_id.side_effect = (
+            IntegrationNotFoundError("bad-int")
+        )
 
-        with pytest.raises(Exception):
+        with pytest.raises(IntegrationNotFoundError):
             service.update_language_model(
                 language_model_id="lm-1",
                 language_model_tag="gpt-4-turbo",

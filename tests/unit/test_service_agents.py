@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from app.domain.models import Agent, LanguageModel
+from app.domain.repositories.language_models import LanguageModelNotFoundError
 from app.services.agents import AgentService
 
 
@@ -86,9 +87,11 @@ class TestAgentService:
 
     def test_create_agent_invalid_language_model(self, agent_service):
         service, repo, _, lm_service = agent_service
-        lm_service.get_language_model_by_id.side_effect = Exception("not found")
+        lm_service.get_language_model_by_id.side_effect = LanguageModelNotFoundError(
+            "bad-lm"
+        )
 
-        with pytest.raises(Exception):
+        with pytest.raises(LanguageModelNotFoundError):
             service.create_agent(
                 agent_name="Test",
                 agent_type="echo",
@@ -155,9 +158,11 @@ class TestAgentService:
 
     def test_update_agent_invalid_language_model(self, agent_service):
         service, repo, _, lm_service = agent_service
-        lm_service.get_language_model_by_id.side_effect = Exception("not found")
+        lm_service.get_language_model_by_id.side_effect = LanguageModelNotFoundError(
+            "bad-lm"
+        )
 
-        with pytest.raises(Exception):
+        with pytest.raises(LanguageModelNotFoundError):
             service.update_agent(
                 agent_id="agent-1",
                 agent_name="Updated",

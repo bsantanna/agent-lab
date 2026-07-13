@@ -156,10 +156,9 @@ class TestCreateAttachmentWithFile:
         service, *_ = attachment_service
         markitdown_cls.return_value.convert.side_effect = Exception("bad file")
 
+        upload = _upload_file("application/pdf", "doc.pdf")
         with pytest.raises(FileProcessingError):
-            await service.create_attachment_with_file(
-                file=_upload_file("application/pdf", "doc.pdf"), schema="test"
-            )
+            await service.create_attachment_with_file(file=upload, schema="test")
 
     @pytest.mark.asyncio
     async def test_audio_file_is_optimized(self, attachment_service):
