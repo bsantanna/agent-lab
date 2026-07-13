@@ -4,6 +4,8 @@ from IPython.display import Image, display
 import requests
 from langchain_core.runnables.graph import MermaidDrawMethod
 
+DEFAULT_AGENT_LAB_ENDPOINT = "http://localhost:18000"
+
 
 def print_graph(graph):
     display(
@@ -18,7 +20,7 @@ def print_graph(graph):
 def create_llm_with_integration(
     llm_tag: str,
     integration_params: dict,
-    agent_lab_endpoint: str = "http://localhost:18000",
+    agent_lab_endpoint: str = DEFAULT_AGENT_LAB_ENDPOINT,
     embeddings_tag: str = None,
 ):
     integration_response = requests.post(
@@ -61,7 +63,7 @@ def create_agent_with_integration(
     llm_tag: str,
     agent_type: str,
     integration_params: dict,
-    agent_lab_endpoint: str = "http://localhost:18000",
+    agent_lab_endpoint: str = DEFAULT_AGENT_LAB_ENDPOINT,
     embeddings_tag: str = None,
     rag_collection: str = None,
 ):
@@ -107,7 +109,7 @@ def create_agent_with_integration(
 def create_local_agent(
     llm_tag: str = "smollm2",
     agent_type: str = "test_echo",
-    agent_lab_endpoint: str = "http://localhost:18000",
+    agent_lab_endpoint: str = DEFAULT_AGENT_LAB_ENDPOINT,
     local_endpoint: str = "http://localhost:11434/v1",
 ) -> str:
     # local openai-compatible server (e.g. ollama) mocking the openai api
@@ -130,7 +132,7 @@ def create_local_agent(
 def create_openai_agent(
     llm_tag: str = "o1-mini",
     agent_type: str = "test_echo",
-    agent_lab_endpoint: str = "http://localhost:18000",
+    agent_lab_endpoint: str = DEFAULT_AGENT_LAB_ENDPOINT,
     api_key: str = "",
 ) -> str:
     integration_params = {
@@ -150,7 +152,7 @@ def create_openai_agent(
 def create_xai_agent(
     llm_tag: str = "grok-2-latest",
     agent_type: str = "test_echo",
-    agent_lab_endpoint: str = "http://localhost:18000",
+    agent_lab_endpoint: str = DEFAULT_AGENT_LAB_ENDPOINT,
     api_key: str = "",
 ) -> str:
     integration_params = {
@@ -170,7 +172,7 @@ def create_xai_agent(
 def create_anthropic_agent(
     llm_tag: str = "claude-3-5-haiku-latest",
     agent_type: str = "test_echo",
-    agent_lab_endpoint: str = "http://localhost:18000",
+    agent_lab_endpoint: str = DEFAULT_AGENT_LAB_ENDPOINT,
     api_key: str = "",
 ) -> str:
     integration_params = {
@@ -190,7 +192,7 @@ def create_anthropic_agent(
 def create_attachment(
     file_path: str,
     content_type: str,
-    agent_lab_endpoint: str = "http://localhost:18000",
+    agent_lab_endpoint: str = DEFAULT_AGENT_LAB_ENDPOINT,
 ) -> str:
     with open(file_path, "rb") as file:
         attachment_response = requests.post(
@@ -205,7 +207,7 @@ def create_embeddings(
     attachment_id: str,
     language_model_id: str,
     collection_name: str,
-    agent_lab_endpoint: str = "http://localhost:18000",
+    agent_lab_endpoint: str = DEFAULT_AGENT_LAB_ENDPOINT,
 ) -> dict:
     embeddings_response = requests.post(
         f"{agent_lab_endpoint}/attachments/embeddings",
@@ -223,7 +225,7 @@ def update_agent_setting(
     agent_id: str,
     setting_key: str,
     setting_value: str,
-    agent_lab_endpoint: str = "http://localhost:18000",
+    agent_lab_endpoint: str = DEFAULT_AGENT_LAB_ENDPOINT,
 ) -> dict:
     update_setting_response = requests.post(
         f"{agent_lab_endpoint}/agents/update_setting",

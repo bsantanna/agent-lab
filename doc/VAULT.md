@@ -28,4 +28,3 @@ If you intend to use Vault in production, following our principles, we recommend
 After Vault is up, you can access the Vault UI at [http://localhost:8200](http://localhost:8200) and use the following credentials to log in;
 
 - `dev-only-token`
-

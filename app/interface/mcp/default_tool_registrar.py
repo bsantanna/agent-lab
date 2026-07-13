@@ -56,7 +56,9 @@ class DefaultToolRegistrar(McpRegistrar):
         async def get_message_list(
             agent_id: Annotated[
                 str,
-                Field(description="The unique identifier of the agent whose messages to retrieve"),
+                Field(
+                    description="The unique identifier of the agent whose messages to retrieve"
+                ),
             ],
         ) -> list[MessageItem]:
             schema = _get_mcp_schema()
@@ -92,7 +94,9 @@ class DefaultToolRegistrar(McpRegistrar):
             ],
             attachment_id: Annotated[
                 Optional[str],
-                Field(description="Optional ID of a previously uploaded attachment to include"),
+                Field(
+                    description="Optional ID of a previously uploaded attachment to include"
+                ),
             ] = None,
         ) -> PostMessageResult:
             from app.interface.api.messages.schema import MessageRequest

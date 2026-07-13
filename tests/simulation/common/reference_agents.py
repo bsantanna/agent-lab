@@ -6,13 +6,17 @@ import scenario
 
 from tests.simulation.common.llm_factory import LanguageModelBuilder
 
+AGENTS_CREATE_URL = "/agents/create"
+AGENTS_UPDATE_SETTING_URL = "/agents/update_setting"
+MESSAGES_POST_URL = "/messages/post"
+
 
 def react_rag_agent(client, message_content) -> scenario.AgentReturnTypes:
     language_model_id = LanguageModelBuilder(client).build()
 
     # create agent
     response_3 = client.post(
-        url="/agents/create",
+        url=AGENTS_CREATE_URL,
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         json={
             "language_model_id": language_model_id,
@@ -24,7 +28,7 @@ def react_rag_agent(client, message_content) -> scenario.AgentReturnTypes:
 
     # update collection_name to match pgvector dump
     client.post(
-        url="/agents/update_setting",
+        url=AGENTS_UPDATE_SETTING_URL,
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         json={
             "agent_id": agent_id,
@@ -35,7 +39,7 @@ def react_rag_agent(client, message_content) -> scenario.AgentReturnTypes:
 
     # post message
     response_4 = client.post(
-        "/messages/post",
+        MESSAGES_POST_URL,
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         json={
             "message_role": "human",
@@ -52,7 +56,7 @@ def adaptive_rag_agent(client, message_content) -> scenario.AgentReturnTypes:
     # create agent
     response_3 = client.post(
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
-        url="/agents/create",
+        url=AGENTS_CREATE_URL,
         json={
             "language_model_id": language_model_id,
             "agent_type": "adaptive_rag",
@@ -63,7 +67,7 @@ def adaptive_rag_agent(client, message_content) -> scenario.AgentReturnTypes:
 
     # update collection_name to match pgvector dump
     client.post(
-        url="/agents/update_setting",
+        url=AGENTS_UPDATE_SETTING_URL,
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         json={
             "agent_id": agent_id,
@@ -74,7 +78,7 @@ def adaptive_rag_agent(client, message_content) -> scenario.AgentReturnTypes:
 
     # post message
     response_4 = client.post(
-        "/messages/post",
+        MESSAGES_POST_URL,
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         json={
             "message_role": "human",
@@ -90,7 +94,7 @@ def supervised_agent(client, message_content) -> scenario.AgentReturnTypes:
 
     # create agent
     response_3 = client.post(
-        url="/agents/create",
+        url=AGENTS_CREATE_URL,
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         json={
             "language_model_id": language_model_id,
@@ -102,7 +106,7 @@ def supervised_agent(client, message_content) -> scenario.AgentReturnTypes:
 
     # update collection_name to match pgvector dump
     client.post(
-        url="/agents/update_setting",
+        url=AGENTS_UPDATE_SETTING_URL,
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         json={
             "agent_id": agent_id,
@@ -113,7 +117,7 @@ def supervised_agent(client, message_content) -> scenario.AgentReturnTypes:
 
     # post message
     response_4 = client.post(
-        "/messages/post",
+        MESSAGES_POST_URL,
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         json={
             "message_role": "human",
@@ -130,7 +134,7 @@ def web_browser_agent(client, message_content) -> scenario.AgentReturnTypes:
 
     # create agent
     response_3 = client.post(
-        url="/agents/create",
+        url=AGENTS_CREATE_URL,
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         json={
             "language_model_id": language_model_id,
@@ -142,7 +146,7 @@ def web_browser_agent(client, message_content) -> scenario.AgentReturnTypes:
 
     # post message
     response_4 = client.post(
-        "/messages/post",
+        MESSAGES_POST_URL,
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         json={
             "message_role": "human",
@@ -171,7 +175,7 @@ def audio_voice_memos_agent(
 
     # create agent
     response_3 = client.post(
-        url="/agents/create",
+        url=AGENTS_CREATE_URL,
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         json={
             "language_model_id": language_model_id,
@@ -198,7 +202,7 @@ def audio_voice_memos_agent(
 
     # post message
     response_5 = client.post(
-        "/messages/post",
+        MESSAGES_POST_URL,
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         json={
             "message_role": "human",
@@ -216,7 +220,7 @@ def image_vision_document_agent(client, message_content) -> scenario.AgentReturn
 
     # create agent
     response_3 = client.post(
-        url="/agents/create",
+        url=AGENTS_CREATE_URL,
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         json={
             "language_model_id": language_model_id,
@@ -242,7 +246,7 @@ def image_vision_document_agent(client, message_content) -> scenario.AgentReturn
 
     # post message
     response_5 = client.post(
-        "/messages/post",
+        MESSAGES_POST_URL,
         headers={"Authorization": f"Bearer {os.getenv('ACCESS_TOKEN')}"},
         json={
             "message_role": "human",

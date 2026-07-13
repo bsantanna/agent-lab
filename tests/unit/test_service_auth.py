@@ -155,7 +155,9 @@ class TestAuthService:
         mock_post.return_value = mock_response
 
         result = auth_service.exchange(
-            code="auth-code", code_verifier="verifier", redirect_uri="http://localhost/cb"
+            code="auth-code",
+            code_verifier="verifier",
+            redirect_uri="http://localhost/cb",
         )
 
         assert isinstance(result, AuthResponse)
@@ -182,7 +184,9 @@ class TestAuthService:
 
         with pytest.raises(AuthenticationError):
             auth_service.exchange(
-                code="auth-code", code_verifier="verifier", redirect_uri="http://localhost/cb"
+                code="auth-code",
+                code_verifier="verifier",
+                redirect_uri="http://localhost/cb",
             )
 
     @patch("app.services.auth.requests.post")
@@ -194,7 +198,9 @@ class TestAuthService:
 
         with pytest.raises(AuthenticationError):
             auth_service.exchange(
-                code="auth-code", code_verifier="verifier", redirect_uri="http://localhost/cb"
+                code="auth-code",
+                code_verifier="verifier",
+                redirect_uri="http://localhost/cb",
             )
 
     @patch("app.services.auth.requests.post")
@@ -203,7 +209,9 @@ class TestAuthService:
 
         with pytest.raises(AuthenticationError):
             auth_service.exchange(
-                code="auth-code", code_verifier="verifier", redirect_uri="http://localhost/cb"
+                code="auth-code",
+                code_verifier="verifier",
+                redirect_uri="http://localhost/cb",
             )
 
     @patch("app.services.auth.requests.post")
@@ -216,7 +224,9 @@ class TestAuthService:
 
         with pytest.raises(AuthenticationError):
             auth_service.exchange(
-                code="bad-code", code_verifier="verifier", redirect_uri="http://localhost/cb"
+                code="bad-code",
+                code_verifier="verifier",
+                redirect_uri="http://localhost/cb",
             )
 
     # -- _get_service_account_token --
@@ -285,7 +295,9 @@ class TestAuthService:
 
     @patch("app.services.auth.requests.get")
     @patch.object(AuthService, "_get_service_account_token", return_value="sa-token")
-    def test_get_user_profile_request_exception(self, mock_sa_token, mock_get, auth_service):
+    def test_get_user_profile_request_exception(
+        self, mock_sa_token, mock_get, auth_service
+    ):
         mock_get.side_effect = requests.exceptions.ConnectionError("Connection failed")
 
         with pytest.raises(AuthenticationError):
@@ -340,7 +352,9 @@ class TestAuthService:
 
     @patch("app.services.auth.requests.put")
     @patch.object(AuthService, "_get_service_account_token", return_value="sa-token")
-    def test_update_user_profile_conflict_409(self, mock_sa_token, mock_put, auth_service):
+    def test_update_user_profile_conflict_409(
+        self, mock_sa_token, mock_put, auth_service
+    ):
         mock_response = MagicMock()
         mock_response.status_code = 409
         http_error = requests.exceptions.HTTPError("409 Conflict")
@@ -359,7 +373,9 @@ class TestAuthService:
 
     @patch("app.services.auth.requests.put")
     @patch.object(AuthService, "_get_service_account_token", return_value="sa-token")
-    def test_update_user_profile_http_error_non_409(self, mock_sa_token, mock_put, auth_service):
+    def test_update_user_profile_http_error_non_409(
+        self, mock_sa_token, mock_put, auth_service
+    ):
         mock_response = MagicMock()
         mock_response.status_code = 500
         http_error = requests.exceptions.HTTPError("500 Internal Server Error")
@@ -378,7 +394,9 @@ class TestAuthService:
 
     @patch("app.services.auth.requests.put")
     @patch.object(AuthService, "_get_service_account_token", return_value="sa-token")
-    def test_update_user_profile_request_exception(self, mock_sa_token, mock_put, auth_service):
+    def test_update_user_profile_request_exception(
+        self, mock_sa_token, mock_put, auth_service
+    ):
         mock_put.side_effect = requests.exceptions.ConnectionError("Connection failed")
 
         with pytest.raises(AuthenticationError):
