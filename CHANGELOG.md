@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.7.5 (2026-07-13)
+
+### Bug Fixes
+
+- Repository ownership migration (1) ([#337](https://github.com/btech-software/agent-lab/pull/337),
+  [`7481218`](https://github.com/btech-software/agent-lab/commit/748121843a277a322e450e37c5daae5287c2de31))
+
+
 ## v1.7.4 (2026-07-13)
 
 ### Bug Fixes
