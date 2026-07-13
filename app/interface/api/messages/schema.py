@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator
 from typing_extensions import Optional
 
 from app.domain.exceptions.base import InvalidFieldError
@@ -35,8 +35,7 @@ class Message(MessageBase):
     response_data: Optional[dict] = None
     replies_to: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MessageExpanded(Message):

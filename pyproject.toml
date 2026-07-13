@@ -93,3 +93,6 @@ version_variables = [
     "terraform/17_agent-lab-instance/variables.tf:default",
     "pyproject.toml:version",
 ]
+
+[tool.coverage.report]
+fail_under = 90

@@ -1,7 +1,7 @@
 import re
 from datetime import datetime
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator
 from typing_extensions import List, Optional
 
 from app.domain.exceptions.base import InvalidFieldError
@@ -38,8 +38,7 @@ class LanguageModelSetting(BaseModel):
             raise InvalidFieldError("setting_value", invalid_characters_description)
         return v
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class LanguageModel(BaseModel):
@@ -49,8 +48,7 @@ class LanguageModel(BaseModel):
     language_model_tag: str
     integration_id: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class LanguageModelExpanded(LanguageModel):

@@ -1,7 +1,7 @@
 from datetime import datetime
 from urllib.parse import urlparse
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from app.domain.exceptions.base import InvalidFieldError
 
@@ -41,5 +41,4 @@ class Integration(BaseModel):
     is_active: bool
     integration_type: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

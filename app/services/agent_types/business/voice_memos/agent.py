@@ -552,7 +552,7 @@ class FastVoiceMemosAgent(VoiceMemosAgent):
         original_command = super().get_coordinator(state)
 
         return Command(
-            goto="__end__" if original_command == "__end__" else "content_analyst",
+            goto="__end__" if original_command.goto == END else "content_analyst",
             update=original_command.update,
         )
 

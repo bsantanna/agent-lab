@@ -1,7 +1,9 @@
-from unittest.mock import MagicMock
+import subprocess
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from app.domain.exceptions.base import AudioOptimizationError, FileProcessingError
 from app.domain.models import Attachment
 from app.services.attachments import AttachmentService
 
@@ -112,3 +114,141 @@ class TestAttachmentService:
         service.delete_attachment_by_id(attachment_id="att-1", schema="test")
 
         repo.delete_by_id.assert_called_once_with("att-1", "test")
+
+
+def _upload_file(content_type: str, filename: str) -> MagicMock:
+    file = MagicMock()
+    file.read = AsyncMock(return_value=b"raw-bytes")
+    file.content_type = content_type
+    file.filename = filename
+    return file
+
+
+class TestCreateAttachmentWithFile:
+    @pytest.mark.asyncio
+    @patch("app.services.attachments.MarkItDown")
+    async def test_non_audio_file_is_parsed(self, markitdown_cls, attachment_service):
+        service, repo, *_ = attachment_service
+        markitdown_cls.return_value.convert.return_value.text_content = "parsed text"
+        attachment = MagicMock(spec=Attachment)
+        repo.add.return_value = attachment
+
+        result = await service.create_attachment_with_file(
+            file=_upload_file("application/pdf", "doc.pdf"), schema="test"
+        )
+
+        assert result == attachment
+        repo.add.assert_called_once_with(
+            file_name="doc.pdf",
+            raw_content=b"raw-bytes",
+            parsed_content="parsed text",
+            attachment_id=None,
+            schema="test",
+        )
+
+    @pytest.mark.asyncio
+    @patch("app.services.attachments.uuid4", return_value="test-uuid")
+    @patch("app.services.attachments.MarkItDown")
+    async def test_non_audio_parse_failure_raises(
+        self, markitdown_cls, _uuid, attachment_service, tmp_path, monkeypatch
+    ):
+        monkeypatch.chdir(tmp_path)
+        service, *_ = attachment_service
+        markitdown_cls.return_value.convert.side_effect = Exception("bad file")
+
+        with pytest.raises(FileProcessingError):
+            await service.create_attachment_with_file(
+                file=_upload_file("application/pdf", "doc.pdf"), schema="test"
+            )
+
+    @pytest.mark.asyncio
+    async def test_audio_file_is_optimized(self, attachment_service):
+        service, repo, *_ = attachment_service
+        service.optimize_audio = MagicMock(return_value=b"mp3-bytes")
+        attachment = MagicMock(spec=Attachment)
+        repo.add.return_value = attachment
+
+        result = await service.create_attachment_with_file(
+            file=_upload_file("audio/wav", "memo.wav"), schema="test"
+        )
+
+        assert result == attachment
+        repo.add.assert_called_once_with(
+            file_name="memo.mp3",
+            raw_content=b"mp3-bytes",
+            parsed_content="",
+            attachment_id=None,
+            schema="test",
+        )
+
+
+class TestCreateEmbeddings:
+    @pytest.mark.asyncio
+    @patch("app.services.attachments.UnstructuredMarkdownLoader")
+    async def test_create_embeddings(self, loader_cls, attachment_service):
+        (
+            service,
+            repo,
+            document_repo,
+            lm_service,
+            lm_setting_service,
+            integration_service,
+            vault_client,
+        ) = attachment_service
+        language_model = MagicMock(id="lm-1", integration_id="int-1")
+        lm_service.get_language_model_by_id.return_value = language_model
+        lm_setting_service.get_language_model_settings.return_value = [
+            MagicMock(setting_key="embeddings", setting_value="bge-m3")
+        ]
+        integration_service.get_integration_by_id.return_value = MagicMock(id="int-1")
+        vault_client.secrets.kv.read_secret_version.return_value = {
+            "data": {"data": {"api_endpoint": "http://e", "api_key": "k"}}
+        }
+        attachment = MagicMock()
+        attachment.parsed_content = "parsed markdown"
+        repo.get_by_id.return_value = attachment
+        documents = [MagicMock()]
+        loader_cls.return_value.load_and_split.return_value = documents
+        updated = MagicMock(spec=Attachment)
+        repo.update_attachment.return_value = updated
+
+        result = await service.create_embeddings(
+            attachment_id="att-1",
+            language_model_id="lm-1",
+            collection_name="kb",
+            schema="test",
+        )
+
+        assert result == updated
+        document_repo.add.assert_called_once()
+        assert document_repo.add.call_args.args[1] == "kb"
+        assert document_repo.add.call_args.args[2] == documents
+        repo.update_attachment.assert_called_once_with("att-1", "kb", "test")
+
+
+class TestOptimizeAudio:
+    @patch("app.services.attachments.subprocess.run")
+    def test_optimize_audio_success(self, subprocess_run, attachment_service, tmp_path):
+        service, *_ = attachment_service
+        audio_file = tmp_path / "memo.wav"
+        audio_file.write_bytes(b"optimized-audio")
+
+        result = service.optimize_audio(str(audio_file))
+
+        assert result == b"optimized-audio"
+        assert subprocess_run.call_count == 2
+        ffmpeg_args = subprocess_run.call_args_list[0].args[0]
+        mv_args = subprocess_run.call_args_list[1].args[0]
+        assert ffmpeg_args[0] == "ffmpeg"
+        assert ffmpeg_args[2] == str(audio_file)
+        temp_output = ffmpeg_args[-1]
+        assert temp_output.startswith("temp-") and temp_output.endswith(".mp3")
+        assert mv_args == ["mv", temp_output, str(audio_file)]
+
+    @patch("app.services.attachments.subprocess.run")
+    def test_optimize_audio_failure_raises(self, subprocess_run, attachment_service):
+        service, *_ = attachment_service
+        subprocess_run.side_effect = subprocess.CalledProcessError(1, "ffmpeg")
+
+        with pytest.raises(AudioOptimizationError):
+            service.optimize_audio("missing.wav")
