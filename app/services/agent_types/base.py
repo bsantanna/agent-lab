@@ -392,7 +392,7 @@ class WorkflowAgentBase(AgentBase, ABC):
             parts = token.split("=", 1)
             if parts[0].isidentifier():
                 return "variable"
-        if token.startswith("$(") or token.startswith("`"):
+        if token.startswith(("$(", "`")):
             return "subshell"
         return "command"
 
