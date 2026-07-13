@@ -14,6 +14,12 @@ langwatch_simulation: sync_simulation_evals
 langfuse_simulation: sync_simulation_evals
 	uv run pytest tests/simulation/langfuse -m agent_test --timeout=1800; $(MAKE) cleanup
 
+test_unit:
+	uv run pytest tests/unit; status=$$?; $(MAKE) cleanup; exit $$status
+
+test_integration:
+	uv run pytest tests/integration; status=$$?; $(MAKE) cleanup; exit $$status
+
 test:
 	uv run pytest --cov=app --cov-report=xml; $(MAKE) cleanup
 
