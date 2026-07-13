@@ -3,7 +3,7 @@ cleanup:
 	@rm temp* 2>/dev/null || true
 
 sync_simulation_evals:
-	uv run python scripts/setup_simulation_evals.py
+	uv run python tests/setup_simulation_evals.py
 
 scenario_simulation: sync_simulation_evals
 	uv run pytest tests/simulation/scenario -m agent_test --timeout=1800; $(MAKE) cleanup
