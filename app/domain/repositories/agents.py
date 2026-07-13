@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import uuid4
 
-from typing_extensions import Iterator
+from typing_extensions import Iterator, Optional
 
 from app.domain.exceptions.base import NotFoundError
 from app.domain.models import Agent, AgentSetting
@@ -55,7 +55,7 @@ class AgentRepository:
         agent_name: str,
         language_model_id: str,
         schema: str,
-        agent_summary: str = None,
+        agent_summary: Optional[str] = None,
     ) -> Agent:
         with self.db.session(schema_name=schema) as session:
             entity: Agent = (

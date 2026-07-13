@@ -7,9 +7,19 @@ metadata:
   annotations:
     "helm.sh/hook": test
 spec:
+  automountServiceAccountToken: false
   containers:
     - name: wget
-      image: busybox
+      image: busybox:1.37.0
       command: ['wget']
       args: ['{{ include "agent-lab.fullname" . }}:{{ .Values.service.port }}']
+      resources:
+        limits:
+          cpu: 100m
+          memory: 64Mi
+          ephemeral-storage: 128Mi
+        requests:
+          cpu: 50m
+          memory: 32Mi
+          ephemeral-storage: 64Mi
   restartPolicy: Never

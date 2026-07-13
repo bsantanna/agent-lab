@@ -24,7 +24,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
         except Exception as e:
             # Log exception as error
-            logger.error("An error occurred during request processing", exc_info=True)
+            logger.exception("An error occurred during request processing")
             raise e
 
         process_time = (time.time() - start_time) * 1000

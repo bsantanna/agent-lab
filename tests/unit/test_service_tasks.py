@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pydantic import ValidationError
 
 from app.services.tasks import TaskNotificationService, TaskProgress
 
@@ -32,7 +33,7 @@ class TestTaskProgress:
         assert tp.status == "failed"
 
     def test_invalid_status(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             TaskProgress(agent_id="agent-1", status="invalid_status")
 
     def test_model_dump_json(self):

@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import uuid4
 
-from typing_extensions import Iterator
+from typing_extensions import Iterator, Optional
 
 from app.domain.exceptions.base import NotFoundError
 from app.domain.models import Message
@@ -37,9 +37,9 @@ class MessageRepository:
         message_role: str,
         agent_id: str,
         schema: str,
-        response_data: dict = None,
-        attachment_id: str = None,
-        replies_to: Message = None,
+        response_data: Optional[dict] = None,
+        attachment_id: Optional[str] = None,
+        replies_to: Optional[Message] = None,
     ) -> Message:
         gen_id = uuid4()
         with self.db.session(schema_name=schema) as session:
