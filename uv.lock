@@ -114,7 +114,7 @@ requires-dist = [
     { name = "langgraph", specifier = "~=1.2.5" },
     { name = "langgraph-checkpoint-postgres", specifier = "~=3.0.5" },
     { name = "langgraph-prebuilt", specifier = "~=1.1.0" },
-    { name = "langwatch", specifier = "~=0.16.0" },
+    { name = "langwatch", specifier = "~=0.26.0" },
     { name = "langwatch-scenario", specifier = "~=0.7.26" },
     { name = "litellm", specifier = "~=1.84.0" },
     { name = "markitdown", extras = ["all"], specifier = "~=0.1.5" },
@@ -2921,14 +2921,13 @@ wheels = [
 
 [[package]]
 name = "langwatch"
-version = "0.16.0"
+version = "0.26.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
     { name = "coolname" },
     { name = "deprecated" },
     { name = "httpx" },
-    { name = "langchain-core" },
     { name = "nanoid" },
     { name = "openinference-instrumentation-haystack" },
     { name = "openinference-instrumentation-langchain" },
@@ -2943,11 +2942,12 @@ dependencies = [
     { name = "python-liquid" },
     { name = "pyyaml" },
     { name = "retry" },
+    { name = "tenacity" },
     { name = "termcolor" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f1/88/71f318506d14168e0f9718258c0374f4b07fb98be6cb7caa9191e0d91861/langwatch-0.16.0.tar.gz", hash = "sha256:b49e67788e2adeb0e3e68673493d79c0b428131b55f8427e60a14ae6ec84301f", size = 1502360, upload-time = "2026-03-13T13:04:33.585Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/65/67/e69c07f6eb282e45398196be9cf50cab019904ac7233875d9c61e51a89a4/langwatch-0.26.0.tar.gz", hash = "sha256:b605689edf7fafec26da8adbfeaadbd560d2e460e117a463f6836c8dbaea2166", size = 1677248, upload-time = "2026-06-12T14:17:23.613Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a5/91/cd1a1eba23a48a6b3c6fa938d744075c3a0d8c8af28756f86f7eda1cd6ce/langwatch-0.16.0-py3-none-any.whl", hash = "sha256:3ce0ddf4316554794358a9ee219af5390c66fa0051d7fa063daecd41281b7d26", size = 798238, upload-time = "2026-03-13T13:04:32.161Z" },
+    { url = "https://files.pythonhosted.org/packages/3e/ca/ff17ce1e7d737c3492667f5e6a02891d655f845de30f327d9b7887888786/langwatch-0.26.0-py3-none-any.whl", hash = "sha256:5f18fad5e93ab2c67b2411f0cd9240665c26d47d8c9e3340b6e1ad4789ed9944", size = 1302154, upload-time = "2026-06-12T14:17:21.968Z" },
 ]
 
 [[package]]
@@ -4278,7 +4278,7 @@ name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ptyprocess" },
+    { name = "ptyprocess", marker = "sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450, upload-time = "2023-11-25T09:07:26.339Z" }
 wheels = [
@@ -8825,8 +8825,8 @@ name = "secretstorage"
 version = "3.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cryptography" },
-    { name = "jeepney" },
+    { name = "cryptography", marker = "sys_platform != 'win32'" },
+    { name = "jeepney", marker = "sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/1c/03/e834bcd866f2f8a49a85eaff47340affa3bfa391ee9912a952a1faa68c7b/secretstorage-3.5.0.tar.gz", hash = "sha256:f04b8e4689cbce351744d5537bf6b1329c6fc68f91fa666f60a380edddcd11be", size = 19884, upload-time = "2025-11-23T19:02:53.191Z" }
 wheels = [
@@ -8995,8 +8995,8 @@ name = "standard-aifc"
 version = "3.13.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "audioop-lts" },
-    { name = "standard-chunk" },
+    { name = "audioop-lts", marker = "python_full_version >= '3.13'" },
+    { name = "standard-chunk", marker = "python_full_version >= '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/c4/53/6050dc3dde1671eb3db592c13b55a8005e5040131f7509cef0215212cb84/standard_aifc-3.13.0.tar.gz", hash = "sha256:64e249c7cb4b3daf2fdba4e95721f811bde8bdfc43ad9f936589b7bb2fae2e43", size = 15240, upload-time = "2024-10-30T16:01:31.772Z" }
 wheels = [
