@@ -1,11 +1,11 @@
-<h2 align="center"><a href="https://github.com/bsantanna/agent-lab">Agent-Lab | 🤖🧪</a></h2>
+<h2 align="center"><a href="https://github.com/btech-software/agent-lab">Agent-Lab | 🤖🧪</a></h2>
 <h3 align="center">LLM Agent Development and Testing Toolkit</h3>
 
 <div align="center">
 
-[![Continuous Integration](https://github.com/bsantanna/agent-lab/actions/workflows/build.yml/badge.svg)](https://github.com/bsantanna/agent-lab/actions/workflows/build.yml)
-[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=bsantanna_agent-lab&metric=alert_status)](https://sonarcloud.io/dashboard?id=bsantanna_agent-lab)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=bsantanna_agent-lab&metric=coverage)](https://sonarcloud.io/component_measures?metric=coverage&selected=bsantanna_agent-lab%3Aapp&id=bsantanna_agent-lab)
+[![Continuous Integration](https://github.com/btech-software/agent-lab/actions/workflows/build.yml/badge.svg)](https://github.com/btech-software/agent-lab/actions/workflows/build.yml)
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=btech-software_agent-lab&metric=alert_status)](https://sonarcloud.io/dashboard?id=btech-software_agent-lab)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=btech-software_agent-lab&metric=coverage)](https://sonarcloud.io/component_measures?metric=coverage&selected=btech-software_agent-lab%3Aapp&id=btech-software_agent-lab)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009485.svg?logo=fastapi&logoColor=white)](#key-features)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](doc/LICENSE.md)
@@ -116,7 +116,7 @@ Please consult these guides for detailed instructions on getting started with Ag
 
 ## Contributing
 
-Community support is greatly appreciated. If you encounter any issues or have suggestions for enhancements, please report them by creating an issue on our [GitHub Issues](https://github.com/bsantanna/agent-lab/issues) page.
+Community support is greatly appreciated. If you encounter any issues or have suggestions for enhancements, please report them by creating an issue on our [GitHub Issues](https://github.com/btech-software/agent-lab/issues) page.
 
 Refer to our [developer's guide](doc/DEV_GUIDE.md) for instructions on how to contribute to the project.
 
