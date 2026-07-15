@@ -238,9 +238,7 @@ def _setup_spa_fallback(container: Container, application: FastAPI):
         return
 
     directory = static_config["directory"]
-    index_file = os.path.join(
-        directory, static_config.get("index_file", "index.html")
-    )
+    index_file = os.path.join(directory, static_config.get("index_file", "index.html"))
 
     @application.middleware("http")
     async def spa_fallback(request: Request, call_next):

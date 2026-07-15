@@ -23,9 +23,9 @@ _EXPECTED_PROMPT_NAMES = [
 
 def _make_registrar(prompt_registry=None, override=None):
     resolver = MagicMock()
-    resolver.resolve.side_effect = lambda **kwargs: override or kwargs[
-        "default_template"
-    ]
+    resolver.resolve.side_effect = lambda **kwargs: (
+        override or kwargs["default_template"]
+    )
     registrar = CoordinatorPlannerSupervisorToolRegistrar(
         user_prompt_resolver=resolver,
         prompt_registry=prompt_registry or PromptRegistry(),

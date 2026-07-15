@@ -118,7 +118,9 @@ class TestPromptSetRegistrar:
         registrar.register_prompts(mcp)
         names = sorted(call.kwargs["name"] for call in mcp.prompt.call_args_list)
         assert names == ["sample_agent_coordinator", "sample_agent_reporter"]
-        descriptions = [call.kwargs["description"] for call in mcp.prompt.call_args_list]
+        descriptions = [
+            call.kwargs["description"] for call in mcp.prompt.call_args_list
+        ]
         assert all("sample_agent" in d for d in descriptions)
 
     def test_register_resources_registers_each_role_with_prompt_uri(self):
