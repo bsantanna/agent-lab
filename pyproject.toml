@@ -87,7 +87,7 @@ version_variables = [
     "docker/app/Dockerfile:SERVICE_VERSION",
     "charts/agent-lab/Chart.yaml:version",
     "charts/agent-lab/Chart.yaml:appVersion",
-    "terraform/17_agent-lab-instance/variables.tf:default",
+    "terraform/16_agent-lab-instance/variables.tf:default",
     "pyproject.toml:version",
 ]
 
