@@ -31,7 +31,7 @@ jobs:
         run: |
           TAG="$(git describe --tags --abbrev=0)"
           VERSION="${TAG#v}"
-          test -f "dist/agent_lab-${VERSION}-py3-none-any.whl" \
+          test -f "dist/btech_agent_lab-${VERSION}-py3-none-any.whl" \
             || { echo "::error::wheel for version ${VERSION} (tag ${TAG}) not found"; ls -l dist; exit 1; }
 
       - name: Upload distribution artifacts
@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-24.04
     environment:
       name: pypi
-      url: https://pypi.org/project/agent-lab/
+      url: https://pypi.org/project/btech-agent-lab/
     permissions:
       id-token: write   # OIDC — mandatory for Trusted Publishing
     steps:
