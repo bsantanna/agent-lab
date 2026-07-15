@@ -2,8 +2,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.domain.models import Message
-from app.domain.repositories.messages import (
+from agent_lab.domain.models import Message
+from agent_lab.domain.repositories.messages import (
     MessageNotFoundError,
     MessageRepository,
 )
@@ -47,7 +47,7 @@ class TestMessageRepository:
         with pytest.raises(MessageNotFoundError):
             repo.get_by_id(message_id="nonexistent", schema="test_schema")
 
-    @patch("app.domain.repositories.messages.uuid4")
+    @patch("agent_lab.domain.repositories.messages.uuid4")
     def test_add_basic(self, mock_uuid, mock_db):
         db, session = mock_db
         repo = MessageRepository(db=db)
@@ -64,7 +64,7 @@ class TestMessageRepository:
         session.commit.assert_called_once()
         session.refresh.assert_called_once()
 
-    @patch("app.domain.repositories.messages.uuid4")
+    @patch("agent_lab.domain.repositories.messages.uuid4")
     def test_add_with_replies_to(self, mock_uuid, mock_db):
         db, session = mock_db
         repo = MessageRepository(db=db)
@@ -83,7 +83,7 @@ class TestMessageRepository:
         added = session.add.call_args[0][0]
         assert added.replies_to == "parent-msg-id"
 
-    @patch("app.domain.repositories.messages.uuid4")
+    @patch("agent_lab.domain.repositories.messages.uuid4")
     def test_add_without_replies_to(self, mock_uuid, mock_db):
         db, session = mock_db
         repo = MessageRepository(db=db)
@@ -100,7 +100,7 @@ class TestMessageRepository:
         added = session.add.call_args[0][0]
         assert added.replies_to is None
 
-    @patch("app.domain.repositories.messages.uuid4")
+    @patch("agent_lab.domain.repositories.messages.uuid4")
     def test_add_with_response_data_and_attachment(self, mock_uuid, mock_db):
         db, session = mock_db
         repo = MessageRepository(db=db)

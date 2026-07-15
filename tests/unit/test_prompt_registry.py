@@ -1,6 +1,6 @@
 import pytest
 
-from app.interface.mcp.prompt_registry import PromptRegistry
+from agent_lab.interface.mcp.prompt_registry import PromptRegistry
 
 
 class TestPromptRegistry:

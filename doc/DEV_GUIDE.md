@@ -68,7 +68,7 @@ Observability dashboards can be accessed at:
 For development and debugging with an IDE, you can run the application using Uvicorn:
 
 ```bash
-uvicorn app.main:app --reload
+uvicorn agent_lab.main:app --reload
 ```
 
 Access the interactive documentation (OpenAPI):
@@ -83,7 +83,7 @@ Access the interactive documentation (OpenAPI):
 
 The application uses [Dependency Injector](https://python-dependency-injector.ets-labs.org/) for dependency injection. This allows for better separation of concerns and easier testing.
 
-The dependency injection container is defined in `app/core/container.py`. Please use this container to register your dependencies and services.
+The dependency injection container is defined in `agent_lab/core/container.py`. Please use this container to register your dependencies and services.
 
 ### Application configuration for development and testing
 
@@ -103,7 +103,7 @@ Please refer to the [Entity Domain Model](DOMAIN.md) for details on the data mod
 
 ### Logging and Observability
 
-The application uses [OpenTelemetry](https://opentelemetry.io/) for logging and observability. The configuration is defined in `app/infrastructure/metrics/tracer.py`.
+The application uses [OpenTelemetry](https://opentelemetry.io/) for logging and observability. The configuration is defined in `agent_lab/infrastructure/metrics/tracer.py`.
 
 Please refer to the [OpenTelemetry documentation](OTEL.md) for more details on the implementation.
 
@@ -172,13 +172,13 @@ Multiple agents with the same reference implementation can be created and furthe
 
 Adapt the dependency injection container to register the new agent class. This allows the application to manage the agent's lifecycle and dependencies and use factory methods to build the workflow with customized prompts and settings recovered from database.
 
-The dependency injection container is defined in `app/core/container.py`, please include new agent implementation there.
+The dependency injection container is defined in `agent_lab/core/container.py`, please include new agent implementation there.
 
-As an additional requirement, the agent class should be registered in the `app/services/agent_types/registry.py` class, this way agents can be resolved by a key called `agent_type` which is used to identify the agent implementation.
+As an additional requirement, the agent class should be registered in the `agent_lab/services/agent_types/registry.py` class, this way agents can be resolved by a key called `agent_type` which is used to identify the agent implementation.
 
 ### Add agent type to Pydantic validation schema
 
-The agent type should be added to Pydantic validation schema in `app/interface/api/agents/schema.py`. This allows the API to validate the agent type when creating or updating agents.
+The agent type should be added to Pydantic validation schema in `agent_lab/interface/api/agents/schema.py`. This allows the API to validate the agent type when creating or updating agents.
 
 
 ### Experimenting the agent implementation

@@ -2,8 +2,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.domain.models import LanguageModel, LanguageModelSetting
-from app.domain.repositories.language_models import (
+from agent_lab.domain.models import LanguageModel, LanguageModelSetting
+from agent_lab.domain.repositories.language_models import (
     LanguageModelNotFoundError,
     LanguageModelRepository,
     LanguageModelSettingNotFoundError,
@@ -49,7 +49,7 @@ class TestLanguageModelRepository:
         with pytest.raises(LanguageModelNotFoundError):
             repo.get_by_id(language_model_id="nonexistent", schema="test_schema")
 
-    @patch("app.domain.repositories.language_models.uuid4")
+    @patch("agent_lab.domain.repositories.language_models.uuid4")
     def test_add(self, mock_uuid, mock_db):
         db, session = mock_db
         repo = LanguageModelRepository(db=db)
@@ -127,7 +127,7 @@ class TestLanguageModelSettingRepository:
 
         assert result == expected
 
-    @patch("app.domain.repositories.language_models.uuid4")
+    @patch("agent_lab.domain.repositories.language_models.uuid4")
     def test_add(self, mock_uuid, mock_db):
         db, session = mock_db
         repo = LanguageModelSettingRepository(db=db)

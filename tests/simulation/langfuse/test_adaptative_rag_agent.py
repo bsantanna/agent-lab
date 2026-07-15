@@ -3,7 +3,7 @@ import os
 import pytest
 from starlette.testclient import TestClient
 
-from app.main import app
+from agent_lab.main import app
 from tests.simulation.common.reference_agents import adaptive_rag_agent
 from tests.simulation.langfuse.runner import run_simulation
 

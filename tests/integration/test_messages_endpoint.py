@@ -5,7 +5,7 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
-from app.main import app
+from agent_lab.main import app
 
 
 @pytest.fixture

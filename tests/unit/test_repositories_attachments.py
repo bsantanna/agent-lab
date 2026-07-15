@@ -2,8 +2,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.domain.models import Attachment
-from app.domain.repositories.attachments import (
+from agent_lab.domain.models import Attachment
+from agent_lab.domain.repositories.attachments import (
     AttachmentNotFoundError,
     AttachmentRepository,
 )
@@ -58,7 +58,7 @@ class TestAttachmentRepository:
         with pytest.raises(AttachmentNotFoundError):
             repo.get_by_id(attachment_id="nonexistent", schema="test_schema")
 
-    @patch("app.domain.repositories.attachments.uuid4")
+    @patch("agent_lab.domain.repositories.attachments.uuid4")
     def test_add_without_id(self, mock_uuid, mock_db):
         db, session = mock_db
         repo = AttachmentRepository(db=db)

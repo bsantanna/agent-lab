@@ -44,9 +44,9 @@ It features relational persistence with PostgreSQL, secure secrets management us
 - **Domain** — SQLAlchemy models, repository interfaces
 - **Infrastructure** — DB, auth, metrics (OpenTelemetry)
 
-All wiring lives in `app/core/container.py` via `dependency-injector`.
+All wiring lives in `agent_lab/core/container.py` via `dependency-injector`.
 
-**Agent system** — Agents extend `WorkflowAgentBase` (which uses LangGraph state graphs). Each agent type lives under `app/services/agent_types/` and is registered in a registry. The hierarchy goes from simple (echo, adaptive RAG) to complex (coordinator-planner-supervisor multi-agent). Agents process messages, have configurable settings (Jinja2-templated prompts), and persist state in the checkpoints database.
+**Agent system** — Agents extend `WorkflowAgentBase` (which uses LangGraph state graphs). Each agent type lives under `agent_lab/services/agent_types/` and is registered in a registry. The hierarchy goes from simple (echo, adaptive RAG) to complex (coordinator-planner-supervisor multi-agent). Agents process messages, have configurable settings (Jinja2-templated prompts), and persist state in the checkpoints database.
 
 **Testing** — Two layers:
 - **Integration tests** spin up real infrastructure via testcontainers (Postgres, Redis, Keycloak, Ollama as an OpenAI-compatible embeddings mock, headless Chrome).

@@ -11,29 +11,29 @@ from langgraph.constants import END
 from langgraph.types import Command
 from openai import OpenAI
 
-from app.domain.exceptions.base import ConfigurationError, ResourceNotFoundError
-from app.interface.api.messages.schema import Message, MessageRequest
-from app.services.agent_types.adaptive_rag.agent import AdaptiveRagAgent
-from app.services.agent_types.azure import AzureEntraIdOrganizationWorkflowBase
-from app.services.agent_types.base import (
+from agent_lab.domain.exceptions.base import ConfigurationError, ResourceNotFoundError
+from agent_lab.interface.api.messages.schema import Message, MessageRequest
+from agent_lab.services.agent_types.adaptive_rag.agent import AdaptiveRagAgent
+from agent_lab.services.agent_types.azure import AzureEntraIdOrganizationWorkflowBase
+from agent_lab.services.agent_types.base import (
     AgentUtils,
     ContactSupportAgentBase,
     WorkflowAgentBase,
     join_messages,
 )
-from app.services.agent_types.business.voice_memos.agent import (
+from agent_lab.services.agent_types.business.voice_memos.agent import (
     AzureEntraIdVoiceMemosAgent,
     FastVoiceMemosAgent,
     VoiceMemosAgent,
 )
-from app.services.agent_types.coordinator_planner_supervisor.agent import (
+from agent_lab.services.agent_types.coordinator_planner_supervisor.agent import (
     CoordinatorPlannerSupervisorAgent,
 )
-from app.services.agent_types.react_rag.agent import ReactRagAgent
-from app.services.agent_types.test_echo.test_echo_agent import (
+from agent_lab.services.agent_types.react_rag.agent import ReactRagAgent
+from agent_lab.services.agent_types.test_echo.test_echo_agent import (
     TestEchoAgent as EchoAgent,
 )
-from app.services.agent_types.vision_document.agent import VisionDocumentAgent
+from agent_lab.services.agent_types.vision_document.agent import VisionDocumentAgent
 
 
 def _make_agent(integration_type: str) -> EchoAgent:
@@ -493,7 +493,7 @@ class TestWebAgentBase:
         assert tool.name == "browser_tool"
         agent.get_browser_chat_model.assert_called_once_with("agent-1", "test")
 
-    @patch("app.services.agent_types.base.MarkItDown")
+    @patch("agent_lab.services.agent_types.base.MarkItDown")
     def test_get_web_crawl_tool(self, markitdown_cls):
         markitdown_cls.return_value.convert.return_value.text_content = "content"
         agent = self._agent("openai_api_v1")
@@ -502,7 +502,7 @@ class TestWebAgentBase:
 
         assert '"content": "content"' in output
 
-    @patch("app.services.agent_types.base.MarkItDown")
+    @patch("agent_lab.services.agent_types.base.MarkItDown")
     def test_get_web_crawl_tool_error(self, markitdown_cls):
         markitdown_cls.return_value.convert.side_effect = Exception("boom")
         agent = self._agent("openai_api_v1")
@@ -717,7 +717,7 @@ class TestCoordinatorPlannerSupervisorAgent:
 
     @pytest.mark.parametrize("deep_search", [True, False])
     @patch(
-        "app.services.agent_types.coordinator_planner_supervisor.agent.create_react_agent"
+        "agent_lab.services.agent_types.coordinator_planner_supervisor.agent.create_react_agent"
     )
     def test_get_researcher(self, create_react_agent_mock, deep_search):
         agent = self._agent()
@@ -769,7 +769,7 @@ class TestCoordinatorPlannerSupervisorAgent:
         assert "Invalid input" in output
 
     @patch(
-        "app.services.agent_types.coordinator_planner_supervisor.agent.create_react_agent"
+        "agent_lab.services.agent_types.coordinator_planner_supervisor.agent.create_react_agent"
     )
     def test_get_coder(self, create_react_agent_mock):
         agent = self._agent()
@@ -783,7 +783,7 @@ class TestCoordinatorPlannerSupervisorAgent:
         assert command.goto == "supervisor"
 
     @patch(
-        "app.services.agent_types.coordinator_planner_supervisor.agent.create_react_agent"
+        "agent_lab.services.agent_types.coordinator_planner_supervisor.agent.create_react_agent"
     )
     def test_get_browser(self, create_react_agent_mock):
         agent = self._agent()
@@ -798,7 +798,7 @@ class TestCoordinatorPlannerSupervisorAgent:
         assert command.goto == "supervisor"
 
     @patch(
-        "app.services.agent_types.coordinator_planner_supervisor.agent.create_react_agent"
+        "agent_lab.services.agent_types.coordinator_planner_supervisor.agent.create_react_agent"
     )
     def test_get_reporter(self, create_react_agent_mock):
         agent = self._agent()
@@ -1095,7 +1095,9 @@ class TestVoiceMemosAgent:
     def test_get_content_analyst_tools(self):
         assert self._agent().get_content_analyst_tools() == []
 
-    @patch("app.services.agent_types.business.voice_memos.agent.create_react_agent")
+    @patch(
+        "agent_lab.services.agent_types.business.voice_memos.agent.create_react_agent"
+    )
     def test_get_coordinator_without_attachment(self, create_react_agent_mock):
         agent = self._agent()
         create_react_agent_mock.return_value.invoke.return_value = {
@@ -1174,7 +1176,9 @@ class TestVoiceMemosAgent:
         assert command.goto == "supervisor"
         assert command.update["structured_report"] == {"main_topic": "t"}
 
-    @patch("app.services.agent_types.business.voice_memos.agent.create_react_agent")
+    @patch(
+        "agent_lab.services.agent_types.business.voice_memos.agent.create_react_agent"
+    )
     def test_get_content_analyst(self, create_react_agent_mock):
         agent = self._agent()
         create_react_agent_mock.return_value.invoke.return_value = {
@@ -1257,7 +1261,9 @@ class TestFastVoiceMemosAgent:
 
         assert command.goto == "__end__"
 
-    @patch("app.services.agent_types.business.voice_memos.agent.create_react_agent")
+    @patch(
+        "agent_lab.services.agent_types.business.voice_memos.agent.create_react_agent"
+    )
     def test_get_content_analyst(self, create_react_agent_mock):
         agent = self._agent()
         create_react_agent_mock.return_value.invoke.return_value = {
@@ -1282,7 +1288,7 @@ class TestAzureWorkflowBase:
         agent.get_token = MagicMock(return_value="token")
         return agent
 
-    @patch("app.services.agent_types.azure.ConfidentialClientApplication")
+    @patch("agent_lab.services.agent_types.azure.ConfidentialClientApplication")
     def test_get_token_success(self, msal_app, monkeypatch):
         monkeypatch.setenv("AZURE_CLIENT_ID", "cid")
         monkeypatch.setenv("AZURE_CLIENT_SECRET", "secret")
@@ -1294,7 +1300,7 @@ class TestAzureWorkflowBase:
 
         assert agent.get_token() == "the-token"
 
-    @patch("app.services.agent_types.azure.ConfidentialClientApplication")
+    @patch("agent_lab.services.agent_types.azure.ConfidentialClientApplication")
     def test_get_token_failure_returns_empty(self, msal_app):
         msal_app.return_value.acquire_token_for_client.return_value = {
             "error": "denied"
@@ -1303,7 +1309,7 @@ class TestAzureWorkflowBase:
 
         assert agent.get_token() == ""
 
-    @patch("app.services.agent_types.azure.requests.get")
+    @patch("agent_lab.services.agent_types.azure.requests.get")
     def test_person_search_returns_users(self, requests_get):
         requests_get.return_value.status_code = 200
         requests_get.return_value.json.return_value = {
@@ -1314,7 +1320,7 @@ class TestAzureWorkflowBase:
 
         assert output == "John Doe (john@x.com)"
 
-    @patch("app.services.agent_types.azure.requests.get")
+    @patch("agent_lab.services.agent_types.azure.requests.get")
     def test_person_search_no_users(self, requests_get):
         requests_get.return_value.status_code = 200
         requests_get.return_value.json.return_value = {"value": []}
@@ -1323,7 +1329,7 @@ class TestAzureWorkflowBase:
 
         assert output == "No users found"
 
-    @patch("app.services.agent_types.azure.requests.get")
+    @patch("agent_lab.services.agent_types.azure.requests.get")
     def test_person_search_error(self, requests_get):
         requests_get.return_value.status_code = 500
         requests_get.return_value.text = "boom"
@@ -1332,7 +1338,7 @@ class TestAzureWorkflowBase:
 
         assert output == "Error: 500 - boom"
 
-    @patch("app.services.agent_types.azure.requests.get")
+    @patch("agent_lab.services.agent_types.azure.requests.get")
     def test_person_details_found(self, requests_get):
         requests_get.return_value.status_code = 200
         requests_get.return_value.json.return_value = {"displayName": "John Doe"}
@@ -1341,7 +1347,7 @@ class TestAzureWorkflowBase:
 
         assert '"displayName": "John Doe"' in output
 
-    @patch("app.services.agent_types.azure.requests.get")
+    @patch("agent_lab.services.agent_types.azure.requests.get")
     def test_person_details_not_found(self, requests_get):
         requests_get.return_value.status_code = 404
 
@@ -1349,7 +1355,7 @@ class TestAzureWorkflowBase:
 
         assert output == "User not found"
 
-    @patch("app.services.agent_types.azure.requests.get")
+    @patch("agent_lab.services.agent_types.azure.requests.get")
     def test_person_details_error(self, requests_get):
         requests_get.return_value.status_code = 503
         requests_get.return_value.text = "unavailable"
@@ -1371,7 +1377,7 @@ class TestReactRagAgent:
 
         assert agent.agent_setting_service.create_agent_setting.call_count == 2
 
-    @patch("app.services.agent_types.react_rag.agent.create_react_agent")
+    @patch("agent_lab.services.agent_types.react_rag.agent.create_react_agent")
     def test_get_workflow(self, create_react_agent_mock):
         agent = self._agent()
         agent.get_chat_model = MagicMock()

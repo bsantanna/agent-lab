@@ -3,9 +3,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.domain.exceptions.base import AudioOptimizationError, FileProcessingError
-from app.domain.models import Attachment
-from app.services.attachments import AttachmentService
+from agent_lab.domain.exceptions.base import AudioOptimizationError, FileProcessingError
+from agent_lab.domain.models import Attachment
+from agent_lab.services.attachments import AttachmentService
 
 
 @pytest.fixture
@@ -126,7 +126,7 @@ def _upload_file(content_type: str, filename: str) -> MagicMock:
 
 class TestCreateAttachmentWithFile:
     @pytest.mark.asyncio
-    @patch("app.services.attachments.MarkItDown")
+    @patch("agent_lab.services.attachments.MarkItDown")
     async def test_non_audio_file_is_parsed(self, markitdown_cls, attachment_service):
         service, repo, *_ = attachment_service
         markitdown_cls.return_value.convert.return_value.text_content = "parsed text"
@@ -147,8 +147,8 @@ class TestCreateAttachmentWithFile:
         )
 
     @pytest.mark.asyncio
-    @patch("app.services.attachments.uuid4", return_value="test-uuid")
-    @patch("app.services.attachments.MarkItDown")
+    @patch("agent_lab.services.attachments.uuid4", return_value="test-uuid")
+    @patch("agent_lab.services.attachments.MarkItDown")
     async def test_non_audio_parse_failure_raises(
         self, markitdown_cls, _uuid, attachment_service, tmp_path, monkeypatch
     ):
@@ -183,7 +183,7 @@ class TestCreateAttachmentWithFile:
 
 class TestCreateEmbeddings:
     @pytest.mark.asyncio
-    @patch("app.services.attachments.TextLoader")
+    @patch("agent_lab.services.attachments.TextLoader")
     async def test_create_embeddings(self, loader_cls, attachment_service):
         (
             service,
@@ -226,7 +226,7 @@ class TestCreateEmbeddings:
 
 
 class TestOptimizeAudio:
-    @patch("app.services.attachments.subprocess.run")
+    @patch("agent_lab.services.attachments.subprocess.run")
     def test_optimize_audio_success(self, subprocess_run, attachment_service, tmp_path):
         service, *_ = attachment_service
         audio_file = tmp_path / "memo.wav"
@@ -244,7 +244,7 @@ class TestOptimizeAudio:
         assert temp_output.startswith("temp-") and temp_output.endswith(".mp3")
         assert mv_args == ["mv", temp_output, str(audio_file)]
 
-    @patch("app.services.attachments.subprocess.run")
+    @patch("agent_lab.services.attachments.subprocess.run")
     def test_optimize_audio_failure_raises(self, subprocess_run, attachment_service):
         service, *_ = attachment_service
         subprocess_run.side_effect = subprocess.CalledProcessError(1, "ffmpeg")

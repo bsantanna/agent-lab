@@ -2,8 +2,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.domain.models import LanguageModelSetting
-from app.services.language_model_settings import LanguageModelSettingService
+from agent_lab.domain.models import LanguageModelSetting
+from agent_lab.services.language_model_settings import LanguageModelSettingService
 
 
 @pytest.fixture

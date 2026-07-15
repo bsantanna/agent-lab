@@ -3,7 +3,7 @@ import os
 import pytest
 from starlette.testclient import TestClient
 
-from app.main import app
+from agent_lab.main import app
 from tests.simulation.common.reference_agents import image_vision_document_agent
 from tests.simulation.langwatch.runner import run_simulation
 

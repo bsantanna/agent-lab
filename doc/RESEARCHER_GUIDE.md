@@ -49,7 +49,7 @@ Quick steps to get started locally:
 
 Notes:
 - Notebooks are written to be mostly self-contained. Some notebooks demonstrate integrations requiring API keys or local services. Each notebook contains a header explaining any environment variables or external services required.
-- If you prefer running individual scripts, see `app/` and `core/` for runnable modules and small CLI entry points.
+- If you prefer running individual scripts, see `agent_lab/` and `agent_lab/core/` for runnable modules and small CLI entry points.
 
 ---
 
@@ -58,16 +58,16 @@ Notes:
 High level folders to know as a researcher:
 
 - `notebooks/` — Collection of interactive examples that demonstrate agent types, evaluation, and integrations. This is the best place to start.
-- `app/` — Application package containing all source code, organized as follows:
-  - `app/core/` — Core runtime components (container, shared abstractions).
-  - `app/domain/` — Domain models and repository interfaces used by agents.
-  - `app/services/` — Agent implementations and business logic.
-  - `app/infrastructure/` — Implementations for storage, auth, metrics, and other infra concerns.
-  - `app/interface/api/` — HTTP API definitions and adapters.
+- `agent_lab/` — Application package containing all source code, organized as follows:
+  - `agent_lab/core/` — Core runtime components (container, shared abstractions).
+  - `agent_lab/domain/` — Domain models and repository interfaces used by agents.
+  - `agent_lab/services/` — Agent implementations and business logic.
+  - `agent_lab/infrastructure/` — Implementations for storage, auth, metrics, and other infra concerns.
+  - `agent_lab/interface/api/` — HTTP API definitions and adapters.
 - `tests/` — Unit and integration tests. See `tests/integration` for heavier examples.
 - `doc/` — Project documentation and guides (this file lives here).
 
-Understanding these layers helps you pick where to change behavior: examples live in `notebooks`, core logic in `app/core` and `app/domain`, and infra adapters in `app/infrastructure`.
+Understanding these layers helps you pick where to change behavior: examples live in `notebooks`, core logic in `agent_lab/core` and `agent_lab/domain`, and infra adapters in `agent_lab/infrastructure`.
 
 ---
 
@@ -98,11 +98,11 @@ Pro tip: run notebooks in order for an incremental learning curve. Use smaller d
 
 Key abstractions you'll encounter in the codebase:
 
-- Agent: the central actor implementing a strategy (RAG, ReAct, multi-agent coordination, etc.). Look under `services/` and `app/` for agents and entrypoints.
-- Tools: discrete abilities an agent can call (search, web browsing, code execution, TTS/ASR). Tools are implemented as adapters in `infrastructure/` or `interface/`.
-- Container: a lightweight orchestration object (see `core/container.py`) used to compose agents with their dependencies for experiments.
-- Repositories: domain data access interfaces in `domain/repositories` (persistence, retrieval).
-- Models: data classes and DTOs for passing structured data between components (`domain/models.py`).
+- Agent: the central actor implementing a strategy (RAG, ReAct, multi-agent coordination, etc.). Look under `agent_lab/services/agent_types/` for agents and `agent_lab/main.py` for the entrypoint.
+- Tools: discrete abilities an agent can call (search, web browsing, code execution, TTS/ASR). Tools are implemented as adapters in `agent_lab/infrastructure/` or `agent_lab/interface/`.
+- Container: a lightweight orchestration object (see `agent_lab/core/container.py`) used to compose agents with their dependencies for experiments.
+- Repositories: domain data access interfaces in `agent_lab/domain/repositories` (persistence, retrieval).
+- Models: data classes and DTOs for passing structured data between components (`agent_lab/domain/models.py`).
 
 When you want to modify behavior, decide whether the change is:
 - Experimental (change in a notebook only)
@@ -130,9 +130,9 @@ For repeatable runs consider:
 ## Extending Agent-Lab: practical recipes
 
 1. Add a new agent type:
-   - Create the agent class under `services/` or `app/` following existing patterns.
-   - Implement any new tool interfaces under `infrastructure/`.
-   - Add a notebook in `notebooks/` that mounts your agent through the `core/container` and exercises it with a small scenario.
+   - Create the agent class under `agent_lab/services/agent_types/` following existing patterns, and decorate it with `@RegisterAgent("your_type")` so it is discovered.
+   - Implement any new tool interfaces under `agent_lab/infrastructure/`.
+   - Add a notebook in `notebooks/` that mounts your agent through `agent_lab/core/container` and exercises it with a small scenario.
 
 2. Swap an embeddings provider:
    - Implement a compatible adapter in `infrastructure` that matches the project's expected `embed(text)` interface.
