@@ -2,8 +2,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.domain.models import AgentSetting
-from app.services.agent_settings import AgentSettingService
+from agent_lab.domain.models import AgentSetting
+from agent_lab.services.agent_settings import AgentSettingService
 
 
 @pytest.fixture

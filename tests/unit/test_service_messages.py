@@ -2,10 +2,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.domain.exceptions.base import InvalidFieldError
-from app.domain.models import Agent, Message
-from app.domain.repositories.agents import AgentNotFoundError
-from app.services.messages import MessageService
+from agent_lab.domain.exceptions.base import InvalidFieldError
+from agent_lab.domain.models import Agent, Message
+from agent_lab.domain.repositories.agents import AgentNotFoundError
+from agent_lab.services.messages import MessageService
 
 
 @pytest.fixture

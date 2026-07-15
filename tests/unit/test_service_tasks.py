@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from pydantic import ValidationError
 
-from app.services.tasks import TaskNotificationService, TaskProgress
+from agent_lab.services.tasks import TaskNotificationService, TaskProgress
 
 
 class TestTaskProgress:
@@ -49,7 +49,7 @@ class TestTaskProgress:
 
 
 class TestTaskNotificationService:
-    @patch("app.services.tasks.redis.StrictRedis.from_url")
+    @patch("agent_lab.services.tasks.redis.StrictRedis.from_url")
     def test_init_default_channel(self, mock_redis_from_url):
         mock_client = MagicMock()
         mock_redis_from_url.return_value = mock_client
@@ -59,7 +59,7 @@ class TestTaskNotificationService:
         assert service.channel == "task_updates"
         mock_redis_from_url.assert_called_once_with("redis://localhost:6379")
 
-    @patch("app.services.tasks.redis.StrictRedis.from_url")
+    @patch("agent_lab.services.tasks.redis.StrictRedis.from_url")
     def test_init_custom_channel(self, mock_redis_from_url):
         mock_client = MagicMock()
         mock_redis_from_url.return_value = mock_client
@@ -70,7 +70,7 @@ class TestTaskNotificationService:
 
         assert service.channel == "custom_channel"
 
-    @patch("app.services.tasks.redis.StrictRedis.from_url")
+    @patch("agent_lab.services.tasks.redis.StrictRedis.from_url")
     def test_publish_update(self, mock_redis_from_url):
         mock_client = MagicMock()
         mock_redis_from_url.return_value = mock_client
@@ -84,7 +84,7 @@ class TestTaskNotificationService:
             "task_updates", tp.model_dump_json()
         )
 
-    @patch("app.services.tasks.redis.StrictRedis.from_url")
+    @patch("agent_lab.services.tasks.redis.StrictRedis.from_url")
     def test_subscribe(self, mock_redis_from_url):
         mock_client = MagicMock()
         mock_pubsub = MagicMock()
@@ -96,7 +96,7 @@ class TestTaskNotificationService:
 
         mock_pubsub.subscribe.assert_called_once_with("task_updates")
 
-    @patch("app.services.tasks.redis.StrictRedis.from_url")
+    @patch("agent_lab.services.tasks.redis.StrictRedis.from_url")
     def test_listen(self, mock_redis_from_url):
         mock_client = MagicMock()
         mock_pubsub = MagicMock()
@@ -109,7 +109,7 @@ class TestTaskNotificationService:
 
         assert result is not None
 
-    @patch("app.services.tasks.redis.StrictRedis.from_url")
+    @patch("agent_lab.services.tasks.redis.StrictRedis.from_url")
     def test_close(self, mock_redis_from_url):
         mock_client = MagicMock()
         mock_pubsub = MagicMock()

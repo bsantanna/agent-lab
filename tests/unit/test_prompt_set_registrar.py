@@ -1,8 +1,8 @@
 from unittest.mock import MagicMock
 
-from app.interface.mcp.prompt_registry import PromptRegistry
-from app.interface.mcp.prompt_set_registrar import PromptSetRegistrar
-from app.interface.mcp.registrar import McpRegistrar
+from agent_lab.interface.mcp.prompt_registry import PromptRegistry
+from agent_lab.interface.mcp.prompt_set_registrar import PromptSetRegistrar
+from agent_lab.interface.mcp.registrar import McpRegistrar
 
 
 class SampleRegistrar(PromptSetRegistrar):

@@ -1,11 +1,13 @@
 from datetime import datetime
 from unittest.mock import MagicMock
 
-from app.interface.mcp.coordinator_planner_supervisor_tool_registrar import (
+from agent_lab.interface.mcp.coordinator_planner_supervisor_tool_registrar import (
     CoordinatorPlannerSupervisorToolRegistrar,
 )
-from app.interface.mcp.prompt_registry import PromptRegistry
-from app.services.agent_types.coordinator_planner_supervisor import SUPERVISED_AGENTS
+from agent_lab.interface.mcp.prompt_registry import PromptRegistry
+from agent_lab.services.agent_types.coordinator_planner_supervisor import (
+    SUPERVISED_AGENTS,
+)
 
 _EXPECTED_PROMPT_NAMES = [
     f"coordinator_planner_supervisor_{role}"

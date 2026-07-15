@@ -3,9 +3,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 import requests
 
-from app.domain.exceptions.base import AuthenticationError
-from app.interface.api.auth.schema import AuthResponse
-from app.services.auth import AuthService
+from agent_lab.domain.exceptions.base import AuthenticationError
+from agent_lab.interface.api.auth.schema import AuthResponse
+from agent_lab.services.auth import AuthService
 
 
 @pytest.fixture
@@ -31,7 +31,7 @@ class TestAuthService:
             == "http://keycloak:8080/realms/test-realm/protocol/openid-connect/token"
         )
 
-    @patch("app.services.auth.requests.post")
+    @patch("agent_lab.services.auth.requests.post")
     def test_login_success(self, mock_post, auth_service):
         mock_response = MagicMock()
         mock_response.json.return_value = {
@@ -58,7 +58,7 @@ class TestAuthService:
             },
         )
 
-    @patch("app.services.auth.requests.post")
+    @patch("agent_lab.services.auth.requests.post")
     def test_login_missing_access_token(self, mock_post, auth_service):
         mock_response = MagicMock()
         mock_response.json.return_value = {
@@ -70,7 +70,7 @@ class TestAuthService:
         with pytest.raises(AuthenticationError):
             auth_service.login(username="user", password="pass")
 
-    @patch("app.services.auth.requests.post")
+    @patch("agent_lab.services.auth.requests.post")
     def test_login_missing_refresh_token(self, mock_post, auth_service):
         mock_response = MagicMock()
         mock_response.json.return_value = {
@@ -82,14 +82,14 @@ class TestAuthService:
         with pytest.raises(AuthenticationError):
             auth_service.login(username="user", password="pass")
 
-    @patch("app.services.auth.requests.post")
+    @patch("agent_lab.services.auth.requests.post")
     def test_login_request_exception(self, mock_post, auth_service):
         mock_post.side_effect = requests.exceptions.ConnectionError("Connection failed")
 
         with pytest.raises(AuthenticationError):
             auth_service.login(username="user", password="pass")
 
-    @patch("app.services.auth.requests.post")
+    @patch("agent_lab.services.auth.requests.post")
     def test_login_http_error(self, mock_post, auth_service):
         mock_response = MagicMock()
         mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError(
@@ -100,7 +100,7 @@ class TestAuthService:
         with pytest.raises(AuthenticationError):
             auth_service.login(username="user", password="wrong")
 
-    @patch("app.services.auth.requests.post")
+    @patch("agent_lab.services.auth.requests.post")
     def test_renew_success(self, mock_post, auth_service):
         mock_response = MagicMock()
         mock_response.json.return_value = {
@@ -125,7 +125,7 @@ class TestAuthService:
             },
         )
 
-    @patch("app.services.auth.requests.post")
+    @patch("agent_lab.services.auth.requests.post")
     def test_renew_missing_access_token(self, mock_post, auth_service):
         mock_response = MagicMock()
         mock_response.json.return_value = {}
@@ -135,7 +135,7 @@ class TestAuthService:
         with pytest.raises(AuthenticationError):
             auth_service.renew(refresh_token="old-refresh")
 
-    @patch("app.services.auth.requests.post")
+    @patch("agent_lab.services.auth.requests.post")
     def test_renew_request_exception(self, mock_post, auth_service):
         mock_post.side_effect = requests.exceptions.ConnectionError("Connection failed")
 
@@ -144,7 +144,7 @@ class TestAuthService:
 
     # -- exchange --
 
-    @patch("app.services.auth.requests.post")
+    @patch("agent_lab.services.auth.requests.post")
     def test_exchange_success(self, mock_post, auth_service):
         mock_response = MagicMock()
         mock_response.json.return_value = {
@@ -175,7 +175,7 @@ class TestAuthService:
             },
         )
 
-    @patch("app.services.auth.requests.post")
+    @patch("agent_lab.services.auth.requests.post")
     def test_exchange_missing_access_token(self, mock_post, auth_service):
         mock_response = MagicMock()
         mock_response.json.return_value = {"refresh_token": "refresh-def"}
@@ -189,7 +189,7 @@ class TestAuthService:
                 redirect_uri="http://localhost/cb",
             )
 
-    @patch("app.services.auth.requests.post")
+    @patch("agent_lab.services.auth.requests.post")
     def test_exchange_missing_refresh_token(self, mock_post, auth_service):
         mock_response = MagicMock()
         mock_response.json.return_value = {"access_token": "access-abc"}
@@ -203,7 +203,7 @@ class TestAuthService:
                 redirect_uri="http://localhost/cb",
             )
 
-    @patch("app.services.auth.requests.post")
+    @patch("agent_lab.services.auth.requests.post")
     def test_exchange_request_exception(self, mock_post, auth_service):
         mock_post.side_effect = requests.exceptions.ConnectionError("Connection failed")
 
@@ -214,7 +214,7 @@ class TestAuthService:
                 redirect_uri="http://localhost/cb",
             )
 
-    @patch("app.services.auth.requests.post")
+    @patch("agent_lab.services.auth.requests.post")
     def test_exchange_http_error(self, mock_post, auth_service):
         mock_response = MagicMock()
         mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError(
@@ -231,7 +231,7 @@ class TestAuthService:
 
     # -- _get_service_account_token --
 
-    @patch("app.services.auth.requests.post")
+    @patch("agent_lab.services.auth.requests.post")
     def test_get_service_account_token_success(self, mock_post, auth_service):
         mock_response = MagicMock()
         mock_response.json.return_value = {"access_token": "sa-token-123"}
@@ -250,7 +250,7 @@ class TestAuthService:
             },
         )
 
-    @patch("app.services.auth.requests.post")
+    @patch("agent_lab.services.auth.requests.post")
     def test_get_service_account_token_missing(self, mock_post, auth_service):
         mock_response = MagicMock()
         mock_response.json.return_value = {}
@@ -260,7 +260,7 @@ class TestAuthService:
         with pytest.raises(AuthenticationError):
             auth_service._get_service_account_token()
 
-    @patch("app.services.auth.requests.post")
+    @patch("agent_lab.services.auth.requests.post")
     def test_get_service_account_token_request_exception(self, mock_post, auth_service):
         mock_post.side_effect = requests.exceptions.ConnectionError("Connection failed")
 
@@ -269,7 +269,7 @@ class TestAuthService:
 
     # -- get_user_profile --
 
-    @patch("app.services.auth.requests.get")
+    @patch("agent_lab.services.auth.requests.get")
     @patch.object(AuthService, "_get_service_account_token", return_value="sa-token")
     def test_get_user_profile_success(self, mock_sa_token, mock_get, auth_service):
         mock_response = MagicMock()
@@ -293,7 +293,7 @@ class TestAuthService:
             headers={"Authorization": "Bearer sa-token"},
         )
 
-    @patch("app.services.auth.requests.get")
+    @patch("agent_lab.services.auth.requests.get")
     @patch.object(AuthService, "_get_service_account_token", return_value="sa-token")
     def test_get_user_profile_request_exception(
         self, mock_sa_token, mock_get, auth_service
@@ -303,7 +303,7 @@ class TestAuthService:
         with pytest.raises(AuthenticationError):
             auth_service.get_user_profile(user_id="id_abc-def-123")
 
-    @patch("app.services.auth.requests.get")
+    @patch("agent_lab.services.auth.requests.get")
     @patch.object(AuthService, "_get_service_account_token", return_value="sa-token")
     def test_get_user_profile_http_error(self, mock_sa_token, mock_get, auth_service):
         mock_response = MagicMock()
@@ -317,7 +317,7 @@ class TestAuthService:
 
     # -- update_user_profile --
 
-    @patch("app.services.auth.requests.put")
+    @patch("agent_lab.services.auth.requests.put")
     @patch.object(AuthService, "_get_service_account_token", return_value="sa-token")
     def test_update_user_profile_success(self, mock_sa_token, mock_put, auth_service):
         mock_response = MagicMock()
@@ -350,7 +350,7 @@ class TestAuthService:
             },
         )
 
-    @patch("app.services.auth.requests.put")
+    @patch("agent_lab.services.auth.requests.put")
     @patch.object(AuthService, "_get_service_account_token", return_value="sa-token")
     def test_update_user_profile_conflict_409(
         self, mock_sa_token, mock_put, auth_service
@@ -371,7 +371,7 @@ class TestAuthService:
                 last_name="B",
             )
 
-    @patch("app.services.auth.requests.put")
+    @patch("agent_lab.services.auth.requests.put")
     @patch.object(AuthService, "_get_service_account_token", return_value="sa-token")
     def test_update_user_profile_http_error_non_409(
         self, mock_sa_token, mock_put, auth_service
@@ -392,7 +392,7 @@ class TestAuthService:
                 last_name="B",
             )
 
-    @patch("app.services.auth.requests.put")
+    @patch("agent_lab.services.auth.requests.put")
     @patch.object(AuthService, "_get_service_account_token", return_value="sa-token")
     def test_update_user_profile_request_exception(
         self, mock_sa_token, mock_put, auth_service

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from app.interface.api.cache_control import cache_control
+from agent_lab.interface.api.cache_control import cache_control
 
 
 def test_cache_control_default():

@@ -20,7 +20,7 @@ RUN --mount=from=ghcr.io/astral-sh/uv:latest,source=/uv,target=/bin/uv \
     && chown -R agent-lab:agent-lab /agent-lab
 
 USER agent-lab
-COPY app /agent-lab/app/
+COPY agent_lab /agent-lab/agent_lab/
 COPY config-docker.yml /agent-lab/
 
-CMD ["/bin/bash", "-c", "/agent-lab/.venv/bin/python -m uvicorn app.main:app --host ${HOST} --port ${PORT} --workers ${WORKERS}"]
+CMD ["/bin/bash", "-c", "/agent-lab/.venv/bin/python -m uvicorn agent_lab.main:app --host ${HOST} --port ${PORT} --workers ${WORKERS}"]

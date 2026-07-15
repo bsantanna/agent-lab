@@ -1,14 +1,14 @@
 from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
-from app.infrastructure.metrics import tracing
-from app.infrastructure.metrics.tracer import ExcludePathSampler, Tracer
-from app.infrastructure.metrics.tracing import (
+from agent_lab.infrastructure.metrics import tracing
+from agent_lab.infrastructure.metrics.tracer import ExcludePathSampler, Tracer
+from agent_lab.infrastructure.metrics.tracing import (
     register_active_backends,
     set_current_trace_io,
     trace_agent_message,
 )
-from app.infrastructure.metrics.tracing_backends import (
+from agent_lab.infrastructure.metrics.tracing_backends import (
     LangfuseTracingBackend,
     LangWatchTracingBackend,
     TracingBackend,
@@ -78,8 +78,8 @@ class TestLangfuseTracingBackend:
 
         assert LangfuseTracingBackend().configure(MagicMock()) is False
 
-    @patch("app.infrastructure.metrics.tracing_backends.BatchSpanProcessor")
-    @patch("app.infrastructure.metrics.tracing_backends.OTLPSpanExporter")
+    @patch("agent_lab.infrastructure.metrics.tracing_backends.BatchSpanProcessor")
+    @patch("agent_lab.infrastructure.metrics.tracing_backends.OTLPSpanExporter")
     def test_configure_enabled(self, exporter_cls, processor_cls, monkeypatch):
         monkeypatch.setenv("LANGFUSE_HOST", "http://langfuse")
         monkeypatch.setenv("LANGFUSE_PUBLIC_KEY", "pk")
@@ -94,7 +94,7 @@ class TestLangfuseTracingBackend:
         )
         provider.add_span_processor.assert_called_once_with(processor_cls.return_value)
 
-    @patch("app.infrastructure.metrics.tracing_backends.trace.get_current_span")
+    @patch("agent_lab.infrastructure.metrics.tracing_backends.trace.get_current_span")
     def test_record_io_sets_span_attributes(self, get_current_span):
         span = get_current_span.return_value
 
@@ -121,7 +121,7 @@ class TestLangWatchTracingBackend:
 
         assert self._backend().configure(MagicMock()) is False
 
-    @patch("app.infrastructure.metrics.tracing_backends.langwatch")
+    @patch("agent_lab.infrastructure.metrics.tracing_backends.langwatch")
     def test_configure_enabled(self, langwatch_mock, monkeypatch):
         monkeypatch.setenv("LANGWATCH_ENDPOINT", "http://langwatch")
         monkeypatch.setenv("LANGWATCH_API_KEY", "key")
@@ -134,14 +134,14 @@ class TestLangWatchTracingBackend:
         assert setup_kwargs["tracer_provider"] is provider
         assert len(setup_kwargs["span_exclude_rules"]) == 1
 
-    @patch("app.infrastructure.metrics.tracing_backends.langwatch")
+    @patch("agent_lab.infrastructure.metrics.tracing_backends.langwatch")
     def test_message_span(self, langwatch_mock):
         result = self._backend().message_span("handler")
 
         langwatch_mock.trace.assert_called_once_with(name="handler")
         assert result is langwatch_mock.trace.return_value
 
-    @patch("app.infrastructure.metrics.tracing_backends.langwatch")
+    @patch("agent_lab.infrastructure.metrics.tracing_backends.langwatch")
     def test_record_io(self, langwatch_mock):
         self._backend().record_io(
             input_value="in", output_value="out", metadata={"k": "v"}
@@ -172,12 +172,12 @@ class TestExcludePathSampler:
 
 
 class TestTracer:
-    @patch("app.infrastructure.metrics.tracer.register_active_backends")
-    @patch("app.infrastructure.metrics.tracer.OpenAIInstrumentor")
-    @patch("app.infrastructure.metrics.tracer.SQLAlchemyInstrumentor")
-    @patch("app.infrastructure.metrics.tracer.LangchainInstrumentor")
-    @patch("app.infrastructure.metrics.tracer.HTTPXClientInstrumentor")
-    @patch("app.infrastructure.metrics.tracer.FastAPIInstrumentor")
+    @patch("agent_lab.infrastructure.metrics.tracer.register_active_backends")
+    @patch("agent_lab.infrastructure.metrics.tracer.OpenAIInstrumentor")
+    @patch("agent_lab.infrastructure.metrics.tracer.SQLAlchemyInstrumentor")
+    @patch("agent_lab.infrastructure.metrics.tracer.LangchainInstrumentor")
+    @patch("agent_lab.infrastructure.metrics.tracer.HTTPXClientInstrumentor")
+    @patch("agent_lab.infrastructure.metrics.tracer.FastAPIInstrumentor")
     def test_setup_filters_active_backends(
         self,
         fastapi_instr,

@@ -4,9 +4,11 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
-from app.core.container import Container
-from app.main import app
-from app.services.tasks import TaskProgress
+from agent_lab.app_factory import bind_agent_registry
+from agent_lab.core.config import default_config_source, load_config
+from agent_lab.core.container import Container
+from agent_lab.main import app
+from agent_lab.services.tasks import TaskProgress
 
 
 @pytest.fixture
@@ -17,6 +19,8 @@ def client():
 @pytest.fixture
 def container():
     cont = Container()
+    load_config(cont, default_config_source())
+    bind_agent_registry(cont)
     cont.init_resources()
     yield cont
 

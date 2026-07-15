@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from app.interface.mcp.user_prompt_resolver import UserPromptResolver
+from agent_lab.interface.mcp.user_prompt_resolver import UserPromptResolver
 
 
 def _agent(agent_id="a1", agent_type="coordinator_planner_supervisor"):
@@ -25,7 +25,7 @@ def _make_resolver(agents=None, settings=None):
 
 class TestUserPromptResolver:
     @patch(
-        "app.interface.mcp.user_prompt_resolver._get_mcp_schema",
+        "agent_lab.interface.mcp.user_prompt_resolver._get_mcp_schema",
         return_value="public",
     )
     def test_public_schema_returns_default(self, _mock_schema):
@@ -39,7 +39,7 @@ class TestUserPromptResolver:
         agent_service.get_agents.assert_not_called()
 
     @patch(
-        "app.interface.mcp.user_prompt_resolver._get_mcp_schema",
+        "agent_lab.interface.mcp.user_prompt_resolver._get_mcp_schema",
         return_value="id_tenant",
     )
     def test_no_matching_agent_returns_default(self, _mock_schema):
@@ -55,7 +55,7 @@ class TestUserPromptResolver:
         setting_service.get_agent_settings.assert_not_called()
 
     @patch(
-        "app.interface.mcp.user_prompt_resolver._get_mcp_schema",
+        "agent_lab.interface.mcp.user_prompt_resolver._get_mcp_schema",
         return_value="id_tenant",
     )
     def test_matching_agent_with_setting_returns_user_template(self, _mock_schema):
@@ -71,7 +71,7 @@ class TestUserPromptResolver:
         assert result == "USER_PROMPT"
 
     @patch(
-        "app.interface.mcp.user_prompt_resolver._get_mcp_schema",
+        "agent_lab.interface.mcp.user_prompt_resolver._get_mcp_schema",
         return_value="id_tenant",
     )
     def test_empty_setting_value_falls_back_to_default(self, _mock_schema):
@@ -87,7 +87,7 @@ class TestUserPromptResolver:
         assert result == "DEFAULT"
 
     @patch(
-        "app.interface.mcp.user_prompt_resolver._get_mcp_schema",
+        "agent_lab.interface.mcp.user_prompt_resolver._get_mcp_schema",
         return_value="id_tenant",
     )
     def test_missing_setting_key_falls_back_to_default(self, _mock_schema):
@@ -103,7 +103,7 @@ class TestUserPromptResolver:
         assert result == "DEFAULT"
 
     @patch(
-        "app.interface.mcp.user_prompt_resolver._get_mcp_schema",
+        "agent_lab.interface.mcp.user_prompt_resolver._get_mcp_schema",
         return_value="id_tenant",
     )
     def test_first_matching_agent_wins_when_multiple(self, _mock_schema):

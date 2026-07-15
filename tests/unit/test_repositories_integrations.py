@@ -2,8 +2,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.domain.models import Integration
-from app.domain.repositories.integrations import (
+from agent_lab.domain.models import Integration
+from agent_lab.domain.repositories.integrations import (
     IntegrationNotFoundError,
     IntegrationRepository,
 )
@@ -52,7 +52,7 @@ class TestIntegrationRepository:
         with pytest.raises(IntegrationNotFoundError):
             repo.get_by_id(integration_id="nonexistent", schema="test_schema")
 
-    @patch("app.domain.repositories.integrations.uuid4")
+    @patch("agent_lab.domain.repositories.integrations.uuid4")
     def test_add(self, mock_uuid, mock_db, mock_vault):
         db, session = mock_db
         repo = IntegrationRepository(db=db, vault_client=mock_vault)

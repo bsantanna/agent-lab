@@ -3,29 +3,29 @@ cleanup:
 	@rm temp* 2>/dev/null || true
 
 sync_simulation_evals:
-	uv run python tests/setup_simulation_evals.py
+	uv run --group test python tests/setup_simulation_evals.py
 
 scenario_simulation: sync_simulation_evals
-	uv run pytest tests/simulation/scenario -m agent_test --timeout=1800; $(MAKE) cleanup
+	uv run --group test pytest tests/simulation/scenario -m agent_test --timeout=1800; $(MAKE) cleanup
 
 langwatch_simulation: sync_simulation_evals
-	uv run pytest tests/simulation/langwatch -m agent_test --timeout=1800; $(MAKE) cleanup
+	uv run --group test pytest tests/simulation/langwatch -m agent_test --timeout=1800; $(MAKE) cleanup
 
 langfuse_simulation: sync_simulation_evals
-	uv run pytest tests/simulation/langfuse -m agent_test --timeout=1800; $(MAKE) cleanup
+	uv run --group test pytest tests/simulation/langfuse -m agent_test --timeout=1800; $(MAKE) cleanup
 
 test_unit:
-	uv run pytest tests/unit; status=$$?; $(MAKE) cleanup; exit $$status
+	uv run --group test pytest tests/unit; status=$$?; $(MAKE) cleanup; exit $$status
 
 test_integration:
-	uv run pytest tests/integration; status=$$?; $(MAKE) cleanup; exit $$status
+	uv run --group test pytest tests/integration; status=$$?; $(MAKE) cleanup; exit $$status
 
 test:
-	uv run pytest --cov=app --cov-report=xml; $(MAKE) cleanup
+	uv run --group test pytest --cov=agent_lab --cov-report=xml; $(MAKE) cleanup
 
 test_simulations: sync_simulation_evals
-	uv run pytest tests/simulation -m agent_test --timeout=1800; $(MAKE) cleanup
+	uv run --group test pytest tests/simulation -m agent_test --timeout=1800; $(MAKE) cleanup
 
 lint:
-	uv run ruff check app tests
-	uv run ruff format --check app tests
+	uv run ruff check agent_lab tests
+	uv run ruff format --check agent_lab tests

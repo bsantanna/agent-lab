@@ -9,7 +9,7 @@ description: Use when the user asks about architecture, running, testing, lintin
 
 ### Dependency Injection
 
-All wiring is in `app/core/container.py` using `dependency-injector`. The `Container` class declares every service, repository, and agent as a provider. FastAPI endpoints receive dependencies via container wiring (configured in `wiring_config`). To add a new service, register it as a provider in the Container and add the endpoint module to wiring.
+All wiring is in `agent_lab/core/container.py` using `dependency-injector`. The `Container` class declares every service, repository, and agent as a provider. FastAPI endpoints receive dependencies via container wiring (configured in `wiring_config`). To add a new service, register it as a provider in the Container and add the endpoint module to wiring.
 
 ### Agent System
 
@@ -25,8 +25,8 @@ AgentBase (ABC)
 ```
 
 Key patterns:
-- **AgentBase** (`app/services/agent_types/base.py`): Defines `create_default_settings`, `get_input_params`, `process_message` abstract methods. Also houses `AgentUtils` which bundles all shared dependencies (services, repos, config).
-- **AgentRegistry** (`app/services/agent_types/registry.py`): Maps string type keys (e.g. `"test_echo"`) to agent instances. To register a new agent: add it to the registry dict, create a factory in `Container`, and wire it into `AgentRegistry.__init__`.
+- **AgentBase** (`agent_lab/services/agent_types/base.py`): Defines `create_default_settings`, `get_input_params`, `process_message` abstract methods. Also houses `AgentUtils` which bundles all shared dependencies (services, repos, config).
+- **AgentRegistry** (`agent_lab/services/agent_types/registry.py`): Lazily maps string type keys (e.g. `"test_echo"`) to agent instances, resolved from the live `Container`. To register a new agent: decorate the `AgentBase` subclass with `@RegisterAgent("your_type")` from `agent_lab.services.agent_types.registration`, then make sure its module is discovered — either list its package in the `scan_packages=[...]` passed to `create_app()`, or advertise it via an `agent_lab.agents` entry point. If the agent needs dependencies beyond `agent_utils`, add providers for them to your `Container` and name them in `@RegisterAgent(..., extra_deps=("provider_name", ...))`; each name must match both the container provider attribute and the constructor kwarg.
 - **WorkflowAgentBase**: Provides `get_workflow_builder()` → compiles LangGraph `StateGraph` with a PostgreSQL checkpointer. Handles `process_message` by invoking the graph and publishing progress via Redis (`TaskNotificationService`).
 - **SupervisedWorkflowAgentBase**: Implements multi-role orchestration with abstract methods for `get_coordinator`, `get_planner`, `get_supervisor`, `get_reporter`.
 
@@ -44,7 +44,7 @@ API keys and endpoints are stored in Vault under `integration_{id}` and retrieve
 
 ### Request Flow
 
-1. HTTP request hits a FastAPI router in `app/interface/api/`
+1. HTTP request hits a FastAPI router in `agent_lab/interface/api/`
 2. Router calls a service (e.g., `MessageService.process_message`)
 3. Service resolves the agent type via `AgentRegistry.get_agent()`
 4. Agent builds a LangGraph workflow, invokes it with PostgreSQL checkpointing
@@ -59,11 +59,11 @@ Three PostgreSQL databases:
 
 ### Observability
 
-OpenTelemetry is configured in `app/infrastructure/metrics/tracer.py`. Instrumented: FastAPI, HTTPx, LangChain, SQLAlchemy, Psycopg. Exports via OTLP to a collector that feeds Prometheus (metrics), Loki (logs), Tempo (traces), and Grafana (dashboards). Config in `otel/`.
+OpenTelemetry is configured in `agent_lab/infrastructure/metrics/tracer.py`. Instrumented: FastAPI, HTTPx, LangChain, SQLAlchemy, Psycopg. Exports via OTLP to a collector that feeds Prometheus (metrics), Loki (logs), Tempo (traces), and Grafana (dashboards). Config in `otel/`.
 
 ### MCP Server
 
-The MCP server lives in `app/interface/mcp/` and is mounted at `/mcp` in `app/main.py` (`http_app(path="/", stateless_http=True)`, lifespan shared with FastAPI). Auth is a Keycloak-backed `OAuthProxy` with persistent, Fernet-encrypted OAuth client storage in Redis (`server.py:_build_auth`).
+The MCP server lives in `agent_lab/interface/mcp/` and is mounted at `/mcp` in `agent_lab/app_factory.py` (`http_app(path="/", stateless_http=True)`, lifespan shared with FastAPI). Auth is a Keycloak-backed `OAuthProxy` with persistent, Fernet-encrypted OAuth client storage in Redis (`server.py:_build_auth`).
 
 **Registrar composition.** Capabilities are contributed by `McpRegistrar` subclasses composed as `mcp_registrars = providers.List(...)` in the container (same idiom as `tracing_backends`). `build_mcp_server` iterates registrars calling `register_tools` → `register_prompts` → `register_resources`. Because `container.mcp_registrars()` eagerly constructs every singleton before `build_mcp_server` runs, side effects in registrar `__init__` (e.g. populating `PromptRegistry`) are always complete before any `register_*` hook executes — dynamic tool descriptions built from `prompt_registry.names()` are safe regardless of list order.
 
@@ -135,7 +135,7 @@ docker compose logs -f app
 docker compose build app && docker compose up -d app
 ```
 
-**Note:** The backend runs inside a Docker container (`compose.yml`). Local changes to Python files in `app/` are NOT reflected until the container is rebuilt. Always rebuild after modifying backend code.
+**Note:** The backend runs inside a Docker container. Local changes to Python files in `agent_lab/` are NOT reflected until the container is rebuilt. Always rebuild after modifying backend code.
 
 ## Agent Simulations
 
@@ -183,7 +183,7 @@ Choose the method based on the operation's semantics, not implementation conveni
 
 ### Caching
 
-- Use the `cache_control(max_age)` dependency from `app/interface/api/cache_control.py`.
+- Use the `cache_control(max_age)` dependency from `agent_lab/interface/api/cache_control.py`.
 - Read-heavy, infrequently-changing data (e.g., market caps, EOD stats): `cache_control(86400)` (24h).
 - Frequently-changing data (e.g., news, real-time prices): `cache_control(3600)` (1h) or less.
 - Caching only works with GET — never rely on cache headers for POST endpoints.

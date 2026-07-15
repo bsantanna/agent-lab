@@ -5,7 +5,8 @@ import pytest
 from fastapi import FastAPI, HTTPException
 from fastapi.testclient import TestClient
 
-from app.main import _setup_spa_fallback, app
+from agent_lab.app_factory import _setup_spa_fallback
+from agent_lab.main import app
 
 
 @pytest.fixture

@@ -2,9 +2,9 @@ from unittest.mock import MagicMock, call
 
 import pytest
 
-from app.domain.models import Integration, LanguageModel
-from app.domain.repositories.integrations import IntegrationNotFoundError
-from app.services.language_models import LanguageModelService
+from agent_lab.domain.models import Integration, LanguageModel
+from agent_lab.domain.repositories.integrations import IntegrationNotFoundError
+from agent_lab.services.language_models import LanguageModelService
 
 
 @pytest.fixture

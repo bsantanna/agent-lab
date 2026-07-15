@@ -4,20 +4,20 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.interface.mcp.coordinator_planner_supervisor_tool_registrar import (
+from agent_lab.interface.mcp.coordinator_planner_supervisor_tool_registrar import (
     CoordinatorPlannerSupervisorToolRegistrar,
 )
-from app.interface.mcp.schema import (
+from agent_lab.interface.mcp.schema import (
     AgentItem,
     MessageItem,
     PostMessageResult,
     _get_mcp_schema,
 )
-from app.interface.mcp.server import _build_auth, build_mcp_server
-from app.interface.mcp.registrar import McpRegistrar
-from app.interface.mcp.default_tool_registrar import DefaultToolRegistrar
-from app.interface.mcp.prompt_registry import PromptRegistry
-from app.interface.mcp.user_prompt_resolver import UserPromptResolver
+from agent_lab.interface.mcp.server import _build_auth, build_mcp_server
+from agent_lab.interface.mcp.registrar import McpRegistrar
+from agent_lab.interface.mcp.default_tool_registrar import DefaultToolRegistrar
+from agent_lab.interface.mcp.prompt_registry import PromptRegistry
+from agent_lab.interface.mcp.user_prompt_resolver import UserPromptResolver
 
 
 class TestMcpModels:
@@ -134,18 +134,18 @@ class TestBuildMcpServer:
 
 
 class TestGetMcpSchema:
-    @patch("app.interface.mcp.schema.get_access_token", return_value=None)
+    @patch("agent_lab.interface.mcp.schema.get_access_token", return_value=None)
     def test_get_mcp_schema_no_token(self, mock_token):
         result = _get_mcp_schema()
         assert result == "public"
 
-    @patch("app.interface.mcp.schema.get_access_token")
+    @patch("agent_lab.interface.mcp.schema.get_access_token")
     def test_get_mcp_schema_with_token(self, mock_token):
         mock_token.return_value = MagicMock(claims={"sub": "abc-def-123"})
         result = _get_mcp_schema()
         assert result == "id_abc_def_123"
 
-    @patch("app.interface.mcp.schema.get_access_token")
+    @patch("agent_lab.interface.mcp.schema.get_access_token")
     def test_get_mcp_schema_token_no_sub(self, mock_token):
         mock_token.return_value = MagicMock(claims={})
         result = _get_mcp_schema()
@@ -210,7 +210,10 @@ def _registered_tools(container, prompt_registry=None):
     )
 
 
-@patch("app.interface.mcp.default_tool_registrar._get_mcp_schema", return_value="test")
+@patch(
+    "agent_lab.interface.mcp.default_tool_registrar._get_mcp_schema",
+    return_value="test",
+)
 class TestDefaultToolClosures:
     @pytest.mark.asyncio
     async def test_get_agent_list(self, _schema):
@@ -411,7 +414,7 @@ class TestPromptTenancy:
         return registry
 
     @patch(
-        "app.interface.mcp.user_prompt_resolver._get_mcp_schema",
+        "agent_lab.interface.mcp.user_prompt_resolver._get_mcp_schema",
         return_value="public",
     )
     def test_public_schema_serves_rendered_default(self, _schema):
@@ -421,7 +424,7 @@ class TestPromptTenancy:
         assert "{{" not in rendered
 
     @patch(
-        "app.interface.mcp.user_prompt_resolver._get_mcp_schema",
+        "agent_lab.interface.mcp.user_prompt_resolver._get_mcp_schema",
         return_value="id_tenant",
     )
     def test_tenant_override_is_served_and_rendered(self, _schema):
@@ -438,7 +441,7 @@ class TestPromptTenancy:
         assert "{{" not in rendered
 
     @patch(
-        "app.interface.mcp.user_prompt_resolver._get_mcp_schema",
+        "agent_lab.interface.mcp.user_prompt_resolver._get_mcp_schema",
         return_value="id_tenant",
     )
     def test_tenant_override_honors_client_parameters(self, _schema):

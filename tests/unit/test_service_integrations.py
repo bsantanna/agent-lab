@@ -2,8 +2,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.domain.models import Integration
-from app.services.integrations import IntegrationService
+from agent_lab.domain.models import Integration
+from agent_lab.services.integrations import IntegrationService
 
 
 @pytest.fixture

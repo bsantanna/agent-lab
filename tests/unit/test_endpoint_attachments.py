@@ -3,9 +3,9 @@ from unittest.mock import MagicMock, AsyncMock
 
 import pytest
 
-from app.interface.api.attachments.endpoints import get_list, upload_attachment
-from app.interface.api.attachments.schema import Attachment as AttachmentSchema
-from app.domain.exceptions.base import FileToLargeError
+from agent_lab.interface.api.attachments.endpoints import get_list, upload_attachment
+from agent_lab.interface.api.attachments.schema import Attachment as AttachmentSchema
+from agent_lab.domain.exceptions.base import FileToLargeError
 
 
 def _make_attachment_orm(

@@ -2,8 +2,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.domain.models import Agent, AgentSetting
-from app.domain.repositories.agents import (
+from agent_lab.domain.models import Agent, AgentSetting
+from agent_lab.domain.repositories.agents import (
     AgentNotFoundError,
     AgentRepository,
     AgentSettingNotFoundError,
@@ -50,7 +50,7 @@ class TestAgentRepository:
         with pytest.raises(AgentNotFoundError):
             repo.get_by_id(agent_id="nonexistent", schema="test_schema")
 
-    @patch("app.domain.repositories.agents.uuid4")
+    @patch("agent_lab.domain.repositories.agents.uuid4")
     def test_add(self, mock_uuid, mock_db):
         db, session = mock_db
         repo = AgentRepository(db=db)
@@ -148,7 +148,7 @@ class TestAgentSettingRepository:
 
         assert result == expected
 
-    @patch("app.domain.repositories.agents.uuid4")
+    @patch("agent_lab.domain.repositories.agents.uuid4")
     def test_add(self, mock_uuid, mock_db):
         db, session = mock_db
         repo = AgentSettingRepository(db=db)
