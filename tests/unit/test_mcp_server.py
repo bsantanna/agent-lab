@@ -1,16 +1,23 @@
+import json
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
 
+from app.interface.mcp.coordinator_planner_supervisor_tool_registrar import (
+    CoordinatorPlannerSupervisorToolRegistrar,
+)
 from app.interface.mcp.schema import (
     AgentItem,
     MessageItem,
     PostMessageResult,
     _get_mcp_schema,
 )
-from app.interface.mcp.server import _build_auth
+from app.interface.mcp.server import _build_auth, build_mcp_server
 from app.interface.mcp.registrar import McpRegistrar
 from app.interface.mcp.default_tool_registrar import DefaultToolRegistrar
+from app.interface.mcp.prompt_registry import PromptRegistry
+from app.interface.mcp.user_prompt_resolver import UserPromptResolver
 
 
 class TestMcpModels:
@@ -76,9 +83,13 @@ class TestBuildAuth:
         result = _build_auth(config)
         assert result is None
 
+    @patch("key_value.aio.wrappers.encryption.FernetEncryptionWrapper")
+    @patch("key_value.aio.stores.redis.RedisStore")
     @patch("fastmcp.server.auth.providers.jwt.JWTVerifier")
     @patch("fastmcp.server.auth.OAuthProxy")
-    def test_build_auth_enabled(self, mock_oauth, mock_jwt):
+    def test_build_auth_enabled(
+        self, mock_oauth, mock_jwt, mock_redis_store, mock_fernet_wrapper
+    ):
         config = {
             "auth": {
                 "enabled": True,
@@ -95,11 +106,31 @@ class TestBuildAuth:
 
         mock_jwt.assert_called_once()
         mock_oauth.assert_called_once()
+        mock_redis_store.assert_called_once_with(url="redis://localhost:6379")
+        mock_fernet_wrapper.assert_called_once()
+        wrapper_kwargs = mock_fernet_wrapper.call_args[1]
+        assert wrapper_kwargs["key_value"] is mock_redis_store.return_value
+        assert wrapper_kwargs["raise_on_decryption_error"] is False
         call_kwargs = mock_oauth.call_args[1]
         assert "test-realm" in call_kwargs["upstream_authorization_endpoint"]
         assert "test-realm" in call_kwargs["upstream_token_endpoint"]
         assert call_kwargs["upstream_client_id"] == "test-client"
         assert call_kwargs["base_url"] == "http://localhost:8000/mcp"
+        assert call_kwargs["client_storage"] is mock_fernet_wrapper.return_value
+
+
+class TestBuildMcpServer:
+    def test_server_icon_points_at_branding_logo(self):
+        container = MagicMock()
+        container.config.return_value = {
+            "auth": {"enabled": False},
+            "api_base_url": "http://localhost:8000",
+        }
+
+        mcp = build_mcp_server(container, [])
+
+        assert mcp.icons[0].src == "http://localhost:8000/static/logo.svg"
+        assert mcp.icons[0].mimeType == "image/svg+xml"
 
 
 class TestGetMcpSchema:
@@ -137,12 +168,17 @@ class TestMcpRegistrar:
         assert issubclass(DefaultToolRegistrar, McpRegistrar)
 
     def test_default_tool_registrar_registers_tools(self):
-        registrar = DefaultToolRegistrar()
+        registrar = DefaultToolRegistrar(prompt_registry=PromptRegistry())
         mcp = MagicMock()
         container = MagicMock()
         registrar.register_tools(mcp, container)
         tool_names = sorted(call[1]["name"] for call in mcp.tool.call_args_list)
-        assert tool_names == ["get_agent_list", "get_message_list", "post_message"]
+        assert tool_names == [
+            "get_agent_list",
+            "get_message_list",
+            "post_message",
+            "read_prompt_mcp",
+        ]
 
     def test_custom_registrar_overrides(self):
         class CustomRegistrar(McpRegistrar):
@@ -158,13 +194,20 @@ class TestMcpRegistrar:
         registrar.register_resources(mcp)
 
 
-def _registered_tools(container):
+def _registered_tools(container, prompt_registry=None):
     """Register the default tools against a mock FastMCP and return the
     captured tool coroutines keyed by registration order."""
     mcp = MagicMock()
-    DefaultToolRegistrar().register_tools(mcp, container)
+    DefaultToolRegistrar(
+        prompt_registry=prompt_registry or PromptRegistry()
+    ).register_tools(mcp, container)
     functions = [c.args[0] for c in mcp.tool.return_value.call_args_list]
-    return dict(zip(["get_agent_list", "get_message_list", "post_message"], functions))
+    return dict(
+        zip(
+            ["get_agent_list", "get_message_list", "post_message", "read_prompt_mcp"],
+            functions,
+        )
+    )
 
 
 @patch("app.interface.mcp.default_tool_registrar._get_mcp_schema", return_value="test")
@@ -238,3 +281,177 @@ class TestDefaultToolClosures:
             is human_message
         )
         matching_agent.process_message.assert_called_once()
+
+
+class TestReadPromptMcp:
+    @pytest.mark.asyncio
+    async def test_resolves_registered_prompt(self):
+        registry = PromptRegistry()
+        registry.register("sample_prompt", lambda: "PROMPT_TEXT")
+
+        result = await _registered_tools(MagicMock(), registry)["read_prompt_mcp"](
+            "sample_prompt"
+        )
+
+        assert result == "PROMPT_TEXT"
+
+    @pytest.mark.asyncio
+    async def test_unknown_prompt_raises_value_error_with_available_names(self):
+        registry = PromptRegistry()
+        registry.register("known_prompt", lambda: "")
+
+        with pytest.raises(ValueError, match="known_prompt"):
+            await _registered_tools(MagicMock(), registry)["read_prompt_mcp"](
+                "unknown_prompt"
+            )
+
+    def test_description_lists_registered_prompt_names(self):
+        registry = PromptRegistry()
+        registry.register("alpha_prompt", lambda: "")
+        mcp = MagicMock()
+
+        DefaultToolRegistrar(prompt_registry=registry).register_tools(mcp, MagicMock())
+
+        read_prompt_call = next(
+            call
+            for call in mcp.tool.call_args_list
+            if call.kwargs["name"] == "read_prompt_mcp"
+        )
+        assert "alpha_prompt" in read_prompt_call.kwargs["description"]
+
+    def test_description_with_empty_registry(self):
+        mcp = MagicMock()
+
+        DefaultToolRegistrar(prompt_registry=PromptRegistry()).register_tools(
+            mcp, MagicMock()
+        )
+
+        read_prompt_call = next(
+            call
+            for call in mcp.tool.call_args_list
+            if call.kwargs["name"] == "read_prompt_mcp"
+        )
+        assert "<none currently registered>" in read_prompt_call.kwargs["description"]
+
+    @pytest.mark.asyncio
+    async def test_parameters_are_forwarded_to_resolver(self):
+        registry = PromptRegistry()
+        captured: dict = {}
+
+        def resolver(**params):
+            captured.update(params)
+            return "ok"
+
+        registry.register("sample_prompt", resolver)
+
+        result = await _registered_tools(MagicMock(), registry)["read_prompt_mcp"](
+            "sample_prompt", parameters={"deep_search_mode": "true"}
+        )
+
+        assert result == "ok"
+        assert captured == {"deep_search_mode": "true"}
+
+
+class TestGlobalPromptResource:
+    def _resource_fn(self, registry):
+        mcp = MagicMock()
+        DefaultToolRegistrar(prompt_registry=registry).register_resources(mcp)
+        call = mcp.resource.call_args
+        assert call.kwargs["uri"] == "prompt://{name}{?parameters}"
+        assert call.kwargs["mime_type"] == "text/plain"
+        return mcp.resource.return_value.call_args.args[0]
+
+    def test_resolves_prompt_with_json_parameters(self):
+        registry = PromptRegistry()
+        captured: dict = {}
+
+        def resolver(**params):
+            captured.update(params)
+            return "resolved-text"
+
+        registry.register("sample_prompt", resolver)
+        read_prompt = self._resource_fn(registry)
+
+        result = read_prompt(
+            "sample_prompt", parameters=json.dumps({"current_time": "T"})
+        )
+
+        assert result == "resolved-text"
+        assert captured == {"current_time": "T"}
+
+    def test_resolves_prompt_without_parameters(self):
+        registry = PromptRegistry()
+        registry.register("sample_prompt", lambda **_: "default-text")
+        read_prompt = self._resource_fn(registry)
+        assert read_prompt("sample_prompt") == "default-text"
+
+    def test_unknown_name_raises_value_error(self):
+        registry = PromptRegistry()
+        registry.register("known_prompt", lambda **_: "")
+        read_prompt = self._resource_fn(registry)
+        with pytest.raises(ValueError, match="known_prompt"):
+            read_prompt("unknown_prompt")
+
+
+class TestPromptTenancy:
+    """End-to-end tenancy through the real UserPromptResolver: the access
+    token's schema decides between the tenant's stored override and the
+    packaged default template, on every prompt surface."""
+
+    def _registry(self, agents=None, settings=None):
+        agent_service = MagicMock()
+        setting_service = MagicMock()
+        agent_service.get_agents.return_value = agents or []
+        setting_service.get_agent_settings.return_value = settings or []
+        registry = PromptRegistry()
+        CoordinatorPlannerSupervisorToolRegistrar(
+            user_prompt_resolver=UserPromptResolver(agent_service, setting_service),
+            prompt_registry=registry,
+        )
+        return registry
+
+    @patch(
+        "app.interface.mcp.user_prompt_resolver._get_mcp_schema",
+        return_value="public",
+    )
+    def test_public_schema_serves_rendered_default(self, _schema):
+        registry = self._registry()
+        rendered = registry.resolve("coordinator_planner_supervisor_coordinator")
+        assert rendered
+        assert "{{" not in rendered
+
+    @patch(
+        "app.interface.mcp.user_prompt_resolver._get_mcp_schema",
+        return_value="id_tenant",
+    )
+    def test_tenant_override_is_served_and_rendered(self, _schema):
+        agent = SimpleNamespace(
+            id="a1", agent_type="coordinator_planner_supervisor", is_active=True
+        )
+        setting = SimpleNamespace(
+            setting_key="coordinator_system_prompt",
+            setting_value="TENANT OVERRIDE {{ CURRENT_TIME }}",
+        )
+        registry = self._registry(agents=[agent], settings=[setting])
+        rendered = registry.resolve("coordinator_planner_supervisor_coordinator")
+        assert rendered.startswith("TENANT OVERRIDE ")
+        assert "{{" not in rendered
+
+    @patch(
+        "app.interface.mcp.user_prompt_resolver._get_mcp_schema",
+        return_value="id_tenant",
+    )
+    def test_tenant_override_honors_client_parameters(self, _schema):
+        agent = SimpleNamespace(
+            id="a1", agent_type="coordinator_planner_supervisor", is_active=True
+        )
+        setting = SimpleNamespace(
+            setting_key="coordinator_system_prompt",
+            setting_value="TENANT {{ CURRENT_TIME }}",
+        )
+        registry = self._registry(agents=[agent], settings=[setting])
+        rendered = registry.resolve(
+            "coordinator_planner_supervisor_coordinator",
+            current_time="Mon Jan 05 2026 09:00:00",
+        )
+        assert rendered == "TENANT Mon Jan 05 2026 09:00:00"

@@ -15,3 +15,5 @@ db:
 vault:
   url: "http://localhost:18200"
   token: "dev-only-token"
+static:
+  enabled: false

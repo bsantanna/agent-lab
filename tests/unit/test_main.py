@@ -1,10 +1,11 @@
 import os
+from unittest.mock import MagicMock
 
 import pytest
-from fastapi import HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.testclient import TestClient
 
-from app.main import app
+from app.main import _setup_spa_fallback, app
 
 
 @pytest.fixture
@@ -62,6 +63,75 @@ class TestMcpSlashRewrite:
         """GET /mcp/ should work directly."""
         response = client.get("/mcp/")
         assert response.status_code != 404
+
+
+class TestStaticBranding:
+    def test_logo_served_with_svg_content_type(self, client):
+        response = client.get("/static/logo.svg")
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("image/svg+xml")
+
+    def test_logo_has_cache_control_header(self, client):
+        response = client.get("/static/logo.svg")
+        assert "max-age" in response.headers.get("cache-control", "")
+
+
+def _spa_app(static_config):
+    container = MagicMock()
+    container.config.return_value = (
+        {"static": static_config} if static_config is not None else {}
+    )
+    application = FastAPI()
+    _setup_spa_fallback(container, application)
+    return application
+
+
+class TestSpaFallback:
+    def test_no_static_config_is_a_no_op(self):
+        application = _spa_app(None)
+        client = TestClient(application)
+        assert client.get("/anything").status_code == 404
+
+    def test_disabled_is_a_no_op(self, tmp_path):
+        application = _spa_app({"enabled": False, "directory": str(tmp_path)})
+        client = TestClient(application)
+        assert client.get("/anything").status_code == 404
+
+    def test_serves_static_files_when_enabled(self, tmp_path):
+        (tmp_path / "asset.txt").write_text("asset-content")
+        application = _spa_app({"enabled": True, "directory": str(tmp_path)})
+        client = TestClient(application)
+        response = client.get("/asset.txt")
+        assert response.status_code == 200
+        assert response.text == "asset-content"
+
+    def test_html_404_falls_back_to_index(self, tmp_path):
+        (tmp_path / "index.html").write_text("<html>spa-shell</html>")
+        application = _spa_app({"enabled": True, "directory": str(tmp_path)})
+        client = TestClient(application)
+        response = client.get("/client/route", headers={"accept": "text/html"})
+        assert response.status_code == 200
+        assert "spa-shell" in response.text
+
+    def test_non_html_404_stays_404(self, tmp_path):
+        (tmp_path / "index.html").write_text("<html>spa-shell</html>")
+        application = _spa_app({"enabled": True, "directory": str(tmp_path)})
+        client = TestClient(application)
+        response = client.get("/missing.json", headers={"accept": "application/json"})
+        assert response.status_code == 404
+
+    def test_custom_index_file(self, tmp_path):
+        (tmp_path / "index.csr.html").write_text("<html>csr-shell</html>")
+        application = _spa_app(
+            {
+                "enabled": True,
+                "directory": str(tmp_path),
+                "index_file": "index.csr.html",
+            }
+        )
+        client = TestClient(application)
+        response = client.get("/client/route", headers={"accept": "text/html"})
+        assert "csr-shell" in response.text
 
 
 class TestResourceMetadata:

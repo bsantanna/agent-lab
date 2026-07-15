@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING, Annotated, Optional
 
 from fastmcp import FastMCP
 from pydantic import Field
 
+from app.interface.mcp.prompt_registry import PromptRegistry
 from app.interface.mcp.registrar import McpRegistrar
 from app.interface.mcp.schema import (
     AgentItem,
@@ -19,6 +21,9 @@ if TYPE_CHECKING:
 
 class DefaultToolRegistrar(McpRegistrar):
     """Registers the default Agent-Lab MCP tools."""
+
+    def __init__(self, prompt_registry: PromptRegistry) -> None:
+        self._prompt_registry = prompt_registry
 
     def register_tools(self, mcp: FastMCP, container: Container) -> None:
 
@@ -141,3 +146,59 @@ class DefaultToolRegistrar(McpRegistrar):
                 agent_id=assistant_message.agent_id,
                 response_data=assistant_message.response_data,
             )
+
+        registry = self._prompt_registry
+        available = ", ".join(registry.names()) or "<none currently registered>"
+
+        @mcp.tool(
+            name="read_prompt_mcp",
+            description="Load an Agent-Lab workflow system prompt by name. "
+            "Tool-based equivalent of reading the MCP resource at "
+            "prompt://<name> or calling prompts/get for the same name — use "
+            "whichever path your runtime exposes. Returns the prompt text "
+            "with any per-tenant override applied when available; optional "
+            "parameters are rendered into the template server-side. "
+            f"Available prompt names: {available}.",
+            annotations={"readOnlyHint": True, "openWorldHint": False},
+        )
+        async def read_prompt_mcp(
+            name: Annotated[
+                str,
+                Field(
+                    description="Prompt identifier, matching the name segment "
+                    "of the corresponding prompt:// resource URI."
+                ),
+            ],
+            parameters: Annotated[
+                Optional[dict[str, str]],
+                Field(
+                    description="Optional template parameters rendered "
+                    "server-side (e.g. {'deep_search_mode': 'true'}); the "
+                    "prompt's advertised arguments list which keys apply."
+                ),
+            ] = None,
+        ) -> str:
+            try:
+                return registry.resolve(name, **(parameters or {}))
+            except KeyError as exc:
+                raise ValueError(str(exc)) from exc
+
+    def register_resources(self, mcp: FastMCP) -> None:
+        registry = self._prompt_registry
+
+        @mcp.resource(
+            uri="prompt://{name}{?parameters}",
+            name="read_prompt",
+            description="Read any registered workflow system prompt by name — "
+            "the resource-flavored alternative to the read_prompt_mcp tool. "
+            "Per-tenant overrides apply. The optional 'parameters' query "
+            "argument is a JSON object of template parameters rendered "
+            "server-side.",
+            mime_type="text/plain",
+        )
+        def read_prompt(name: str, parameters: str = "") -> str:
+            params = json.loads(parameters) if parameters else {}
+            try:
+                return registry.resolve(name, **params)
+            except KeyError as exc:
+                raise ValueError(str(exc)) from exc

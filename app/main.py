@@ -6,7 +6,8 @@ from urllib.parse import urlencode
 from fastapi import FastAPI, HTTPException, Request
 from fastapi_keycloak_middleware import KeycloakConfiguration, setup_keycloak_middleware
 from starlette.middleware.cors import CORSMiddleware
-from starlette.responses import JSONResponse
+from starlette.responses import FileResponse, JSONResponse
+from starlette.staticfiles import StaticFiles
 
 from app.core.container import Container
 from app.interface.mcp.server import build_mcp_server
@@ -48,6 +49,7 @@ def create_app():
     setup_middleware(application)
     setup_mcp_slash_rewrite(application)
     setup_mcp_authorize_resource_rewrite(container, application)
+    setup_static(container, application)
 
     return application
 
@@ -73,6 +75,7 @@ def setup_auth(container, application):
                 "/status/",
                 ".*well-known/",
                 "/mcp(/.*)?$",
+                "/static/",
             ],
             user_mapper=map_user,
         )
@@ -215,6 +218,53 @@ def setup_mcp_authorize_resource_rewrite(container: Container, application: Fast
                 ]
                 request.scope["query_string"] = urlencode(rewritten).encode("ascii")
         return await call_next(request)
+
+
+def setup_static(container: Container, application: FastAPI):
+    _setup_branding(application)
+    _setup_spa_fallback(container, application)
+
+
+def _setup_spa_fallback(container: Container, application: FastAPI):
+    """Serves a static site (e.g. a SPA build) from a configured directory.
+
+    Gated behind the optional ``static.enabled`` config key and a no-op by
+    default. The 404→index fallback fires on any HTML-accepting 404 site-wide,
+    which is only correct for ``mount_path: "/"`` (the default). A configured
+    but missing directory fails fast at boot.
+    """
+    static_config = container.config().get("static") or {}
+    if not static_config.get("enabled", False):
+        return
+
+    directory = static_config["directory"]
+    index_file = os.path.join(directory, static_config.get("index_file", "index.html"))
+
+    @application.middleware("http")
+    async def spa_fallback(request: Request, call_next):
+        response = await call_next(request)
+        accept = request.headers.get("accept", "")
+        if response.status_code == 404 and "text/html" in accept:
+            return FileResponse(index_file)
+        return response
+
+    application.mount(
+        path=static_config.get("mount_path", "/"),
+        app=StaticFiles(directory=directory, html=True),
+        name="static",
+    )
+
+
+def _setup_branding(application: FastAPI):
+    # Cache-Control is set on the FileResponse directly: FastAPI only merges
+    # dependency-set headers (e.g. cache_control()) into non-Response returns.
+    @application.get("/static/logo.svg")
+    async def logo() -> FileResponse:
+        return FileResponse(
+            "app/static/logo.svg",
+            media_type="image/svg+xml",
+            headers={"Cache-Control": "public, max-age=86400, s-maxage=86400"},
+        )
 
 
 app = create_app()
