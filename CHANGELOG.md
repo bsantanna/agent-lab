@@ -2,6 +2,34 @@
 
 <!-- version list -->
 
+## v1.8.0 (2026-07-15)
+
+### Bug Fixes
+
+- Linting adjusts ([#342](https://github.com/btech-software/agent-lab/pull/342),
+  [`1f27d4c`](https://github.com/btech-software/agent-lab/commit/1f27d4c19af8a082f106d4c8b1cefd551854e0d4))
+
+- Mcp interface updates (1) ([#342](https://github.com/btech-software/agent-lab/pull/342),
+  [`1f27d4c`](https://github.com/btech-software/agent-lab/commit/1f27d4c19af8a082f106d4c8b1cefd551854e0d4))
+
+- Q3 release 13 adjusts ([#348](https://github.com/btech-software/agent-lab/pull/348),
+  [`a06a639`](https://github.com/btech-software/agent-lab/commit/a06a639a8f7d31dc5e6db85eeaba3523dadc0397))
+
+- Release adjusts ([#348](https://github.com/btech-software/agent-lab/pull/348),
+  [`a06a639`](https://github.com/btech-software/agent-lab/commit/a06a639a8f7d31dc5e6db85eeaba3523dadc0397))
+
+- Release version updates ([#348](https://github.com/btech-software/agent-lab/pull/348),
+  [`a06a639`](https://github.com/btech-software/agent-lab/commit/a06a639a8f7d31dc5e6db85eeaba3523dadc0397))
+
+- Repository ownership migration (6) ([#342](https://github.com/btech-software/agent-lab/pull/342),
+  [`1f27d4c`](https://github.com/btech-software/agent-lab/commit/1f27d4c19af8a082f106d4c8b1cefd551854e0d4))
+
+### Features
+
+- Improved mcp interface ([#342](https://github.com/btech-software/agent-lab/pull/342),
+  [`1f27d4c`](https://github.com/btech-software/agent-lab/commit/1f27d4c19af8a082f106d4c8b1cefd551854e0d4))
+
+
 ## v1.7.6 (2026-07-13)
 
 ### Bug Fixes
