@@ -25,22 +25,9 @@ Tool-local files such as `.claude/settings.local.json` are not part of the share
 
 Use the adapter that matches the current tool:
 
-- Codex:
-  Read `.codex/AGENTS.md` for the Codex-specific behavior.
-  Use `./codex-skill <name>` for skill-scoped sessions.
-  Use `.codex/skills/<name>/AGENTS.md` for progressive context loading.
-  Use `.codex/agents/<name>.toml` for specialist agents.
-
 - Claude Code:
   Read `.claude/CLAUDE.md`.
   Treat `.claude/skills/*/SKILL.md` as the skill system.
-
-- Gemini CLI:
-  Read `GEMINI.md`.
-  Use `.gemini/skills/<name>/SKILL.md` for skill activation.
-  Follow behavioral mandates in `GEMINI.md` for tool-specific alignment.
-
-- another future CLI:
 
 ## Adapter Policy
 
