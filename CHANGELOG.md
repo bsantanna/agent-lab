@@ -2,6 +2,25 @@
 
 <!-- version list -->
 
+## v1.10.0 (2026-07-16)
+
+### Bug Fixes
+
+- Documentation and notebooks adjusts ([#350](https://github.com/btech-software/agent-lab/pull/350),
+  [`f9edc3a`](https://github.com/btech-software/agent-lab/commit/f9edc3a4fd3c7e5568af7986b4c10bee3da5bef9))
+
+### Features
+
+- Library refactoring (5) ([#350](https://github.com/btech-software/agent-lab/pull/350),
+  [`f9edc3a`](https://github.com/btech-software/agent-lab/commit/f9edc3a4fd3c7e5568af7986b4c10bee3da5bef9))
+
+- Library refactoring (6) ([#350](https://github.com/btech-software/agent-lab/pull/350),
+  [`f9edc3a`](https://github.com/btech-software/agent-lab/commit/f9edc3a4fd3c7e5568af7986b4c10bee3da5bef9))
+
+- Library refactoring (7) ([#350](https://github.com/btech-software/agent-lab/pull/350),
+  [`f9edc3a`](https://github.com/btech-software/agent-lab/commit/f9edc3a4fd3c7e5568af7986b4c10bee3da5bef9))
+
+
 ## v1.9.0 (2026-07-15)
 
 ### Features
