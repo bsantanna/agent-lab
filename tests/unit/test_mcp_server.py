@@ -15,7 +15,12 @@ from agent_lab.interface.mcp.schema import (
 )
 from agent_lab.interface.mcp.server import _build_auth, build_mcp_server
 from agent_lab.interface.mcp.registrar import McpRegistrar
-from agent_lab.interface.mcp.default_tool_registrar import DefaultToolRegistrar
+from agent_lab.interface.mcp.default_tool_registrar import (
+    DefaultToolRegistrar,
+    get_agent_list,
+    get_message_list,
+    post_message,
+)
 from agent_lab.interface.mcp.prompt_registry import PromptRegistry
 from agent_lab.interface.mcp.user_prompt_resolver import UserPromptResolver
 
@@ -173,12 +178,7 @@ class TestMcpRegistrar:
         container = MagicMock()
         registrar.register_tools(mcp, container)
         tool_names = sorted(call[1]["name"] for call in mcp.tool.call_args_list)
-        assert tool_names == [
-            "get_agent_list",
-            "get_message_list",
-            "post_message",
-            "read_prompt_mcp",
-        ]
+        assert tool_names == ["read_prompt_mcp"]
 
     def test_custom_registrar_overrides(self):
         class CustomRegistrar(McpRegistrar):
@@ -194,27 +194,21 @@ class TestMcpRegistrar:
         registrar.register_resources(mcp)
 
 
-def _registered_tools(container, prompt_registry=None):
-    """Register the default tools against a mock FastMCP and return the
-    captured tool coroutines keyed by registration order."""
+def _read_prompt_mcp_fn(container, prompt_registry=None):
+    """Register DefaultToolRegistrar's tools against a mock FastMCP and return
+    the captured read_prompt_mcp coroutine."""
     mcp = MagicMock()
     DefaultToolRegistrar(
         prompt_registry=prompt_registry or PromptRegistry()
     ).register_tools(mcp, container)
-    functions = [c.args[0] for c in mcp.tool.return_value.call_args_list]
-    return dict(
-        zip(
-            ["get_agent_list", "get_message_list", "post_message", "read_prompt_mcp"],
-            functions,
-        )
-    )
+    return mcp.tool.return_value.call_args.args[0]
 
 
 @patch(
     "agent_lab.interface.mcp.default_tool_registrar._get_mcp_schema",
     return_value="test",
 )
-class TestDefaultToolClosures:
+class TestDefaultTools:
     @pytest.mark.asyncio
     async def test_get_agent_list(self, _schema):
         container = MagicMock()
@@ -229,7 +223,7 @@ class TestDefaultToolClosures:
             )
         ]
 
-        result = await _registered_tools(container)["get_agent_list"]()
+        result = await get_agent_list(container)
 
         assert len(result) == 1
         assert result[0].id == "a1"
@@ -250,7 +244,7 @@ class TestDefaultToolClosures:
             )
         ]
 
-        result = await _registered_tools(container)["get_message_list"]("a1")
+        result = await get_message_list(container, "a1")
 
         assert len(result) == 1
         assert result[0].message_content == "hi"
@@ -274,7 +268,7 @@ class TestDefaultToolClosures:
         message_service = container.message_service.return_value
         message_service.create_message.side_effect = [human_message, assistant_message]
 
-        result = await _registered_tools(container)["post_message"]("a1", "hi")
+        result = await post_message(container, "a1", "hi")
 
         assert result.id == "m2"
         assert result.message_content == "echo: hi"
@@ -292,9 +286,7 @@ class TestReadPromptMcp:
         registry = PromptRegistry()
         registry.register("sample_prompt", lambda: "PROMPT_TEXT")
 
-        result = await _registered_tools(MagicMock(), registry)["read_prompt_mcp"](
-            "sample_prompt"
-        )
+        result = await _read_prompt_mcp_fn(MagicMock(), registry)("sample_prompt")
 
         assert result == "PROMPT_TEXT"
 
@@ -304,9 +296,7 @@ class TestReadPromptMcp:
         registry.register("known_prompt", lambda: "")
 
         with pytest.raises(ValueError, match="known_prompt"):
-            await _registered_tools(MagicMock(), registry)["read_prompt_mcp"](
-                "unknown_prompt"
-            )
+            await _read_prompt_mcp_fn(MagicMock(), registry)("unknown_prompt")
 
     def test_description_lists_registered_prompt_names(self):
         registry = PromptRegistry()
@@ -347,7 +337,7 @@ class TestReadPromptMcp:
 
         registry.register("sample_prompt", resolver)
 
-        result = await _registered_tools(MagicMock(), registry)["read_prompt_mcp"](
+        result = await _read_prompt_mcp_fn(MagicMock(), registry)(
             "sample_prompt", parameters={"deep_search_mode": "true"}
         )
 

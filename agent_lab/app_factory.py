@@ -16,6 +16,7 @@ from agent_lab.core.config import ConfigSource, default_config_source, load_conf
 from agent_lab.core.container import Container
 from agent_lab.infrastructure.auth.user import map_user
 from agent_lab.infrastructure.metrics.logging_middleware import LoggingMiddleware
+from agent_lab.interface.mcp import bootstrap as mcp_bootstrap
 from agent_lab.interface.mcp.server import build_mcp_server
 from agent_lab.services.agent_types import discovery
 from agent_lab.services.agent_types.registry import AgentRegistry
@@ -63,7 +64,8 @@ def create_app(
 
     mounts = _builtin_router_mounts() + list(extra_routers)
 
-    mcp_registrars = container.mcp_registrars()
+    mcp_bootstrap.load_builtin_registrars()
+    mcp_registrars = mcp_bootstrap.build_registrars(container)
     mcp_server = build_mcp_server(
         container, mcp_registrars, extra_instructions=tuple(mcp_instructions)
     )

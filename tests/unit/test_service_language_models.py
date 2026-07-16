@@ -81,7 +81,7 @@ class TestLanguageModelService:
                 call(
                     language_model_id="lm-1",
                     setting_key="max_tokens",
-                    setting_value="8192",
+                    setting_value="16384",
                     schema="test",
                 ),
                 call(
@@ -123,7 +123,7 @@ class TestLanguageModelService:
                 call(
                     language_model_id="lm-1",
                     setting_key="max_tokens",
-                    setting_value="8192",
+                    setting_value="16384",
                     schema="test",
                 ),
                 call(

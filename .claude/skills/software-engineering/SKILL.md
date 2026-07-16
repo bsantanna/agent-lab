@@ -1,6 +1,6 @@
 ---
 name: software-engineering
-description: Use when the user asks about architecture, running, testing, linting, or building the project, about code conventions, or about the agent simulation suites (scenario, Langfuse, LangWatch) and their observability platform integrations.
+description: Use when the user asks about architecture, running, testing, linting, or building the project, about code conventions, about adding or registering agents, MCP tools, prompts, or registrars (the @RegisterAgent / @RegisterMcp* decorator framework and its discovery/bootstrap path), or about the agent simulation suites (scenario, Langfuse, LangWatch) and their observability platform integrations.
 ---
 
 # Software Engineering
@@ -65,20 +65,26 @@ OpenTelemetry is configured in `agent_lab/infrastructure/metrics/tracer.py`. Ins
 
 The MCP server lives in `agent_lab/interface/mcp/` and is mounted at `/mcp` in `agent_lab/app_factory.py` (`http_app(path="/", stateless_http=True)`, lifespan shared with FastAPI). Auth is a Keycloak-backed `OAuthProxy` with persistent, Fernet-encrypted OAuth client storage in Redis (`server.py:_build_auth`).
 
-**Registrar composition.** Capabilities are contributed by `McpRegistrar` subclasses composed as `mcp_registrars = providers.List(...)` in the container (same idiom as `tracing_backends`). `build_mcp_server` iterates registrars calling `register_tools` → `register_prompts` → `register_resources`. Because `container.mcp_registrars()` eagerly constructs every singleton before `build_mcp_server` runs, side effects in registrar `__init__` (e.g. populating `PromptRegistry`) are always complete before any `register_*` hook executes — dynamic tool descriptions built from `prompt_registry.names()` are safe regardless of list order.
+**Registrar composition.** Capabilities are contributed by `McpRegistrar` subclasses decorated with `@RegisterMcpRegistrar(extra_deps=(...))` — no container edits. `agent_lab/interface/mcp/bootstrap.py` fires the built-in registrars' decorators (`load_builtin_registrars`) and instantiates every registered class off the live container (`build_registrars`), resolving each `extra_deps` name as a container provider kwarg (the shared `agent_lab/core/extra_deps.py` convention, same as `@RegisterAgent`). `build_mcp_server` then iterates registrars calling `register_tools` → `register_prompts` → `register_resources`. Because `build_registrars` eagerly constructs every registrar before `build_mcp_server` runs, side effects in registrar `__init__` (e.g. populating `PromptRegistry`) are always complete before any `register_*` hook executes — dynamic tool descriptions built from `prompt_registry.names()` are safe regardless of order.
+
+**Simple decorator surfaces.** For one-off capabilities there are function-level decorators, discovered through the same `scan_packages` / `agent_lab.agents` entry-point pass as `@RegisterAgent`: `@RegisterMcpTool("name", ...)` on an **async** function whose leading `container` parameter is bound and hidden from the client-facing schema (leave `container` unannotated — a TYPE_CHECKING-only annotation breaks fastmcp's `get_type_hints`), and `@RegisterMcpPrompt("name", ...)` on a **sync** function (`PromptRegistry.resolve` is synchronous) exposed on the full prompt triple; its optional `agent_type`/`setting_key` pair opts into tenant overrides that replace the output verbatim (params affect only the default path). Collected by `DecoratedToolRegistrar` / `DecoratedPromptRegistrar`.
+
+**Registration decorator conventions.** When adding the next decorator, follow the shared contract so the framework stays uniform: the registration key is the first positional argument (`RegisterAgent("type")`, `RegisterMcpTool("name")`, `RegisterMcpPrompt("name")`); a duplicate key pointing at a *different* target raises at import time while re-decorating the *same* target is a no-op (module re-imports must stay safe); invalid targets fail at decoration time with the reason (e.g. async prompt fns are rejected because `PromptRegistry.resolve` is synchronous). Each registration module keeps a module-level `_registry` dict plus a `_reset_registry_for_tests()` hook, and `tests/unit/test_framework_registration.py` snapshots/restores every registry via autouse fixtures — extend that file (not a new per-module test file) when the framework grows.
 
 **Prompt exposure triple.** Every pipeline prompt is exposed under three surfaces at once, because tools are the only MCP primitive reliably model-callable across all clients:
 1. the `read_prompt_mcp` tool (dispatches through the shared `PromptRegistry`; accepts an optional `parameters` dict),
 2. `prompts/get` (named arguments advertised as `PromptArgument`s — MCP arguments are strings; fastmcp converts them to the function signature's types),
 3. resources: one concrete `prompt://<name>` per prompt (`mime_type="text/plain"`) plus a single global template `prompt://{name}{?parameters}` on `DefaultToolRegistrar` where `parameters` is a JSON object query param. Concrete resources win on exact URI match; the template handles parameterized reads — never register a second template over the same URI space.
 
-**Adding a per-agent-type prompt registrar.** Subclass `PromptSetRegistrar`: declare `agent_type`, `role_setting_keys`, `role_prompt_names`, pass default templates to `__init__`. Override `_render(template, params)` for server-side Jinja and `_build_prompt_fn(role)` to accept named arguments (explicit signatures only — no dynamic-signature construction). Prompts whose templates contain Jinja control flow over server-side data (`SUPERVISED_AGENTS`, etc.) must be rendered server-side, never returned raw to the model. Wire the registrar into `mcp_registrars` in the container.
+**Adding a per-agent-type prompt registrar.** Subclass `PromptSetRegistrar`: declare `agent_type`, `role_setting_keys`, `role_prompt_names`, pass default templates to `__init__`. Override `_render(template, params)` for server-side Jinja and `_build_prompt_fn(role)` to accept named arguments (explicit signatures only — no dynamic-signature construction). Prompts whose templates contain Jinja control flow over server-side data (`SUPERVISED_AGENTS`, etc.) must be rendered server-side, never returned raw to the model. Register it with `@RegisterMcpRegistrar(extra_deps=("user_prompt_resolver", "prompt_registry"))`.
 
 **Multi-tenancy.** Every prompt surface funnels through `UserPromptResolver.resolve(agent_type, setting_key, default_template)`: the tenant schema is derived from the MCP access token (`_get_mcp_schema()`; no/anonymous token → `"public"`), a non-empty tenant `AgentSetting` overrides the packaged default, and tenant overrides pass through the same `_render` path as defaults.
 
 **MCP gotchas (cost real debugging time):**
 - FastAPI merges dependency-set headers (e.g. `cache_control()`) only into non-`Response` returns — endpoints returning `FileResponse` must set headers on the response directly.
 - Register closures in loops via a helper method called once per iteration (own stack frame) instead of `lambda x=x` default-arg tricks.
+- fastmcp's `@mcp.tool` rejects `functools.partial` objects outright ("First argument to @tool must be a function..."). To bind a server-side value (e.g. `container`) into a tool function, wrap it instead: `functools.wraps(fn)` around a passthrough, then slice the bound parameter off `wrapper.__signature__` — fastmcp builds the client-facing schema from the remaining params. Reference implementation: `tool_registration.bind_container`.
+- Never call `inspect.signature(..., eval_str=True)` on (or annotate injected params of) functions whose annotations name TYPE_CHECKING-only imports — annotation resolution raises `NameError` at registration time. Leave injected params unannotated; client-facing string annotations (`from __future__ import annotations`) resolve fine because fastmcp follows `__wrapped__` back to the function's own module globals.
 - fastmcp resource templates support `{param}` path params and RFC 6570 `{?a,b}` query params; a function parameter matching a query param must have a default.
 - Verify MCP behavior at protocol level with an in-memory client (`async with Client(mcp)` from fastmcp): `list_prompts` argument advertising, `get_prompt` with arguments, `list_resource_templates`, `read_resource` with query params. Mock-based unit tests alone don't prove the decorators produce valid registrations.
 
@@ -124,6 +130,8 @@ make lint
 uv run ruff format .
 uv run ruff check --fix .
 ```
+
+**Pytest boot cost:** every pytest invocation — including pure unit-test files — pays the full testcontainers session-fixture boot (~2 min for Postgres, Redis, Vault, Keycloak, Ollama, chromedp) before the first test runs. Batch all files you need into a single invocation instead of running them one by one, and run `make lint` (instant) before tests so trivial failures don't cost a container boot.
 
 ### Backend Debugging
 
