@@ -4,7 +4,26 @@ from IPython.display import Image, display
 import requests
 from langchain_core.runnables.graph import MermaidDrawMethod
 
+from agent_lab.app_factory import bind_agent_registry
+from agent_lab.core.config import default_config_source, load_config
+from agent_lab.core.container import Container
+from agent_lab.services.agent_types import discovery
+
 DEFAULT_AGENT_LAB_ENDPOINT = "http://localhost:18000"
+DEFAULT_SCAN_PACKAGES = ("agent_lab.services.agent_types",)
+
+
+def bootstrap_container(modules, scan_packages=DEFAULT_SCAN_PACKAGES):
+    # mirrors create_app()'s composition root for use outside the app factory;
+    # config-*.yml paths are relative, so call this after chdir to the repo root
+    discovery.scan_packages(scan_packages)
+    discovery.load_entry_point_agents()
+    container = Container()
+    load_config(container, default_config_source())
+    bind_agent_registry(container)
+    container.init_resources()
+    container.wire(modules=modules)
+    return container
 
 
 def print_graph(graph):
@@ -23,6 +42,11 @@ def create_llm_with_integration(
     agent_lab_endpoint: str = DEFAULT_AGENT_LAB_ENDPOINT,
     embeddings_tag: str = None,
 ):
+    # pin embeddings to the model served by EMBEDDINGS_ENDPOINT (openai_api_v1
+    # integrations default to text-embedding-3-large, which Ollama lacks)
+    if embeddings_tag is None and os.getenv("EMBEDDINGS_ENDPOINT"):
+        embeddings_tag = "bge-m3"
+
     integration_response = requests.post(
         f"{agent_lab_endpoint}/integrations/create",
         json=integration_params,
@@ -92,8 +116,6 @@ def create_agent_with_integration(
     if agent_type in rag_agent_types:
         if rag_collection is not None:
             collection = rag_collection
-        elif integration_params["integration_type"] == "openai_api_v1":
-            collection = "static_document_data_openai_embeddings"
         else:
             collection = "static_document_data_ollama_embeddings"
         update_agent_setting(
@@ -107,7 +129,7 @@ def create_agent_with_integration(
 
 
 def create_local_agent(
-    llm_tag: str = "smollm2",
+    llm_tag: str = "phi4-mini:latest",
     agent_type: str = "test_echo",
     agent_lab_endpoint: str = DEFAULT_AGENT_LAB_ENDPOINT,
     local_endpoint: str = "http://localhost:11434/v1",
@@ -130,7 +152,7 @@ def create_local_agent(
 
 
 def create_openai_agent(
-    llm_tag: str = "o1-mini",
+    llm_tag: str = "gpt-5-nano",
     agent_type: str = "test_echo",
     agent_lab_endpoint: str = DEFAULT_AGENT_LAB_ENDPOINT,
     api_key: str = "",
@@ -150,7 +172,7 @@ def create_openai_agent(
 
 
 def create_xai_agent(
-    llm_tag: str = "grok-2-latest",
+    llm_tag: str = "grok-4.5",
     agent_type: str = "test_echo",
     agent_lab_endpoint: str = DEFAULT_AGENT_LAB_ENDPOINT,
     api_key: str = "",
@@ -170,7 +192,7 @@ def create_xai_agent(
 
 
 def create_anthropic_agent(
-    llm_tag: str = "claude-3-5-haiku-latest",
+    llm_tag: str = "claude-haiku-4-5-20251001",
     agent_type: str = "test_echo",
     agent_lab_endpoint: str = DEFAULT_AGENT_LAB_ENDPOINT,
     api_key: str = "",
