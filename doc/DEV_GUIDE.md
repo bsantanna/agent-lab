@@ -4,76 +4,143 @@
 ---
 
 #### Table of Contents
+- [Two ways to develop](#two-ways-to-develop)
 - [Setup](#setup)
+- [Reference Implementation](#reference-implementation)
 - [Running the Application](#running-the-application)
 - [Development Practices](#development-practices)
 - [Building agentic workflows](#building-agentic-workflows)
+- [Extending the framework](#extending-the-framework)
 - [Contributing](#contributing)
 - [Production deployment](#production-deployment)
 
 ---
 
+## Two ways to develop
+
+Agent-Lab is a framework you consume as a library, and it is also a repository you
+can work in directly. Both are supported:
+
+- **As a library (recommended for products).** Add `btech-agent-lab` to your own
+  project, define agents by extending the base classes, and assemble the app with
+  `create_app()`. You extend the framework through its public API — subclassing,
+  decorators and configuration — and never edit framework code. Start with the
+  [Quickstart](../README.md#quickstart) and [Extending the framework](#extending-the-framework).
+- **In-repo (for contributors and the reference implementation).** Clone the
+  repository and add agents under `agent_lab/services/agent_types/`, run the bundled
+  reference app, and use the notebooks and integration tests. This is how the
+  built-in agents are developed. See [Building agentic workflows](#building-agentic-workflows).
+
+Both paths use the same building blocks; the difference is only *where* your code
+lives. Pick whichever fits your project.
+
+---
+
 ## Setup
 
-### Install dependencies
+### Install
 
-After setting up python environment, install the dependencies with pip package manager. It is recommended to use a virtual environment to avoid conflicts with other projects.:
+Agent-Lab targets **Python 3.12+** and uses [uv](https://docs.astral.sh/uv/) for
+dependency management.
+
+**Consuming Agent-Lab as a library** — install it into your own project:
 
 ```bash
-pip install -r requirements.txt
+pip install btech-agent-lab
+# or
+uv add btech-agent-lab
 ```
 
-Make sure **Docker** or another container runtime is installed and running as the application uses docker for integration tests and docker compose for application dependencies.
+**Working in the repository** — clone it and sync the environment:
+
+```bash
+git clone https://github.com/btech-software/agent-lab.git
+cd agent-lab
+uv sync                 # runtime dependencies
+uv sync --group test    # add the test/simulation dependencies
+```
+
+Make sure **Docker** or another container runtime is installed and running — the
+integration tests use it (via testcontainers) and the bundled Docker Compose files
+provide the application's dependencies.
 
 ### Copy the example environment file
+
 Copy the example environment file to `.env` and adjust the settings as needed:
 
 ```bash
 cp .env.example .env
 ```
 
-This file contains api keys for various AI suppliers.
+This file contains API keys for various AI suppliers and the endpoints used by the
+[agent simulations](TESTS.md#agent-simulations).
+
+---
+
+## Reference Implementation
+
+The repository ships a complete reference application (`agent_lab.main`) that registers
+every built-in agent — RAG, browser automation, voice memos, vision, and multi-agent
+supervisors. It is both a deployable product and the canonical example of how to
+consume the framework: it is nothing more than a `create_app()` call over the built-in
+agent packages.
+
+```python
+# agent_lab/main.py
+from agent_lab.app_factory import create_app
+
+app = create_app(scan_packages=["agent_lab.services.agent_types"])
+```
+
+Use it as a live reference while building your own app, and as the fastest way to try
+Agent-Lab end-to-end. Provisioning its infrastructure (the three PostgreSQL databases,
+Redis, Keycloak, Vault) in development or production is covered in the
+[Setup guide](SETUP.md). The next section shows how to run it locally.
 
 ---
 
 ## Running the Application
 
-### Start the application with Docker Compose
-
-At this time, there are two pre-configured docker compose files:
-
-- `compose-grafana.yaml`: Starts the application with Grafana for observability.
-- `compose-opensearch.yaml`: Starts the application with OpenSearch Dashboards for observability.
-
-The following example starts application with Grafana:
-
-```bash
-docker compose -f compose-grafana.yaml up --build
-```
-
-The following example starts application with OpenSearch Dashboards:
-
-```bash
-docker compose -f compose-opensearch.yaml up --build
-```
-
-After the application is started, you can access the API at [http://localhost:18000/docs](http://localhost:18000/docs).
-
-Observability dashboards can be accessed at:
-- Grafana: [http://localhost:3000](http://localhost:3000) (default credentials: `admin`/`admin`). Please refer to the [Grafana example](otel/GRAFANA.md) for more details.
-- OpenSearch Dashboards: [http://localhost:5601](http://localhost:5601). Please refer to the [OpenSearch example](otel/OPENSEARCH.md) for more details.
+The repository ships a reference application (`agent_lab.main`) that registers every
+built-in agent. It is both a deployable product and a worked example of consuming the
+framework.
 
 ### Start the application with Uvicorn
 
-For development and debugging with an IDE, you can run the application using Uvicorn:
+For development and debugging with an IDE, run the reference app directly:
 
 ```bash
 uvicorn agent_lab.main:app --reload
 ```
 
-Access the interactive documentation (OpenAPI):
+Access the interactive OpenAPI documentation at
+[http://localhost:8000/docs](http://127.0.0.1:8000/docs).
 
-- Swagger UI: [http://localhost:8000/docs](http://127.0.0.1:8000/docs)
+When you consume Agent-Lab as a library, you run *your* app the same way — point
+uvicorn at the module that calls `create_app()`:
+
+```bash
+uvicorn app:app --reload    # where app.py defines `app = create_app(scan_packages=[...])`
+```
+
+### Start the application with Docker Compose
+
+Two pre-configured Docker Compose files run the reference app together with an
+observability stack:
+
+- `compose-grafana.yml`: Starts the application with Grafana for observability.
+- `compose-opensearch.yml`: Starts the application with OpenSearch Dashboards for observability.
+
+```bash
+docker compose -f compose-grafana.yml up --build       # Grafana
+docker compose -f compose-opensearch.yml up --build     # OpenSearch Dashboards
+```
+
+After the application starts, the API is available at
+[http://localhost:18000/docs](http://localhost:18000/docs). Observability dashboards:
+
+- Grafana: [http://localhost:3000](http://localhost:3000) (default credentials: `admin`/`admin`). See the [Grafana example](otel/GRAFANA.md).
+- OpenSearch Dashboards: [http://localhost:5601](http://localhost:5601). See the [OpenSearch example](otel/OPENSEARCH.md).
 
 ---
 
@@ -81,72 +148,81 @@ Access the interactive documentation (OpenAPI):
 
 ### Dependency Injection
 
-The application uses [Dependency Injector](https://python-dependency-injector.ets-labs.org/) for dependency injection. This allows for better separation of concerns and easier testing.
+The application uses [Dependency Injector](https://python-dependency-injector.ets-labs.org/)
+for dependency injection, which keeps concerns separated and makes testing easier.
 
-The dependency injection container is defined in `agent_lab/core/container.py`. Please use this container to register your dependencies and services.
+The container is defined in `agent_lab/core/container.py`. When consuming Agent-Lab as
+a library, **subclass `Container`** to add your own providers and pass the instance to
+`create_app(container=...)`. When working in-repo, register additional framework
+services directly on the container.
 
-### Application configuration for development and testing
+### Application configuration
 
-The application configuration is managed using [Dependency Injector](https://python-dependency-injector.ets-labs.org/). Configuration is defined in YAML files located at project root directory.
+Configuration is loaded through a `ConfigSource` (see `agent_lab/core/config.py`) and
+bound to the DI container. The framework ships three YAML sources for development and
+testing, selected automatically by environment variable:
 
-- `config-dev.yaml`: Configuration file used for development environment, activated when environment variable `DEVELOPING` is defined, intended to be used with IDE execution for debugging.
-- `config-test.yaml`: Configuration file used for testing environment, activated when environment variable `TESTING` is defined, it is used with integration test setup.
-- `config-docker.yaml`: Configuration file used with docker compose environment, activated when environment variable `DOCKER` is defined, intended to be used with docker compose execution.
+- `config-dev.yml`: development environment, activated when `DEVELOPING` is set — intended for IDE debugging.
+- `config-test.yml`: testing environment, activated when `TESTING` is set — used by the integration test setup.
+- `config-docker.yml`: Docker Compose environment, activated when `DOCKER` is set.
 
-These configuration files define various settings such as database connections, API keys, and other application-specific settings, however they are meant to be used only for development and testing purposes. In production, it is recommended to use [Vault](VAULT.md) to configure the application, please refer to the [Setup documentation](SETUP.md) for more details on how to deploy the application in production.
-
+These files define settings such as database connections and auth, and are meant for
+development and testing only. In production, use [Vault](VAULT.md) via
+`VaultConfigSource` (the default when no environment flag is set); see the
+[Setup documentation](SETUP.md). To supply configuration from a different backend,
+implement your own `ConfigSource` and pass it to `create_app(config_source=...)`.
 
 ### Entity Domain Model
 
-Please refer to the [Entity Domain Model](DOMAIN.md) for details on the data model used in the application. This model is used to define the entities and their relationships in the application.
-
+See the [Entity Domain Model](DOMAIN.md) for the data model — the entities and their
+relationships used across the application.
 
 ### Logging and Observability
 
-The application uses [OpenTelemetry](https://opentelemetry.io/) for logging and observability. The configuration is defined in `agent_lab/infrastructure/metrics/tracer.py`.
-
-Please refer to the [OpenTelemetry documentation](OTEL.md) for more details on the implementation.
-
+The application uses [OpenTelemetry](https://opentelemetry.io/) for logging and
+observability; the setup lives in `agent_lab/infrastructure/metrics/tracer.py`. See the
+[OpenTelemetry documentation](OTEL.md) for details.
 
 ### Testing
 
-The application uses [pytest](https://docs.pytest.org/en/stable/) for testing, with a focus on integration testing practices, with goal of 90%+ coverage.
-
-Test dependencies are supported by [Testcontainers](https://testcontainers-python.readthedocs.io/en/latest/), which allows for running tests against real services in Docker containers.
-
-The tests are located in the `tests/integration` directory.
-
-Use the following command to run the tests:
+The project uses [pytest](https://docs.pytest.org/en/stable/) with a focus on
+integration testing (target: 90%+ coverage), backed by
+[Testcontainers](https://testcontainers-python.readthedocs.io/en/latest/) so tests run
+against real services in Docker containers. A separate simulation suite evaluates agent
+behavior end-to-end with an LLM-as-judge.
 
 ```bash
-make test
+make test               # unit + integration with coverage
+make test_simulations   # end-to-end agent simulations (calls live LLMs)
 ```
 
-**Note:** The first execution can take several minutes as it will download the required resources like docker images and embedding models.
+The first execution can take several minutes as it downloads Docker images and
+embedding models. See the [testing guide](TESTS.md) for the full picture.
 
 ### Initialize pre-commit
 
-If you plan to contribute to the codebase or build new agents on top of Agent-Lab, it is recommended to install the pre-commit hooks:
+If you plan to contribute to the codebase or build new agents on top of Agent-Lab,
+install the pre-commit hooks:
 
 ```bash
 pre-commit install
 ```
 
-This will ensure that your code follows the project's coding standards and runs the tests before committing.
+This ensures your code follows the project's coding standards before committing.
 
 ---
 
 ## Building agentic workflows
 
-Agent-Lab is built on top of the [LangGraph](https://www.langchain.com) framework, which provides a powerful way to build agentic workflows using LLMs.
-
-Building agentic workflows is a straightforward process in Agent-Lab, thanks to its modular architecture and the use of LangGraph.
+Agent-Lab is built on top of [LangGraph](https://www.langchain.com), which provides a
+powerful way to build agentic workflows using LLMs. Building one is a straightforward
+process thanks to the modular architecture and the agent base classes.
 
 ### Define a new Agent implementation
 
-**Agent** is a core concept in Agent-Lab, representing an autonomous entity that can perform tasks, make decisions, and interact with other agents or external systems.
-
-An **agent** is also a concrete implementation of the following base classes:
+**Agent** is a core concept in Agent-Lab, representing an autonomous entity that can
+perform tasks, make decisions, and interact with other agents or external systems. An
+agent is a concrete implementation of one of the base classes:
 
 <div align="center">
 
@@ -154,11 +230,17 @@ An **agent** is also a concrete implementation of the following base classes:
 
 </div>
 
-A class that extends `WorkflowAgentBase` should define:
-- a [workflow](https://langchain-ai.github.io/langgraph/how-tos/graph-api/) that represents the agent's behavior. This workflow can include various tasks, decision-making processes, and interactions with other agents or external systems.
-- initialization parameters for the agent such as the prompts (defined as jynja2 templates) and other settings that can be used to customize the agent's behavior, such as vector store collections, temperature or other setting that support the agent functionality.
+A class that extends `WorkflowAgentBase` defines:
 
-Here is an example of a set of persisted initialization parameters for an agent that performs voice transcription and analysis after an agent is created and stored in the database:
+- a [workflow](https://langchain-ai.github.io/langgraph/how-tos/graph-api/) representing
+  the agent's behavior — tasks, decision-making, and interactions with other agents or
+  external systems.
+- initialization parameters such as the prompts (Jinja2 templates) and other settings
+  that customize the agent's behavior (vector store collections, temperature, and so
+  on).
+
+Here is an example of persisted initialization parameters for an agent that performs
+voice transcription and analysis, after the agent is created and stored in the database:
 
 <div align="center">
 
@@ -166,40 +248,113 @@ Here is an example of a set of persisted initialization parameters for an agent 
 
 </div>
 
-Multiple agents with the same reference implementation can be created and further refined via the REST API.
+Multiple agents backed by the same implementation can be created and refined via the
+REST API.
 
-### Register the Agent in dependency injection container
+### Register the agent with `@RegisterAgent`
 
-Adapt the dependency injection container to register the new agent class. This allows the application to manage the agent's lifecycle and dependencies and use factory methods to build the workflow with customized prompts and settings recovered from database.
+Decorate your `AgentBase` subclass with `@RegisterAgent("<agent_type>")`. That single
+decorator is all the registration an agent needs — it makes the agent:
 
-The dependency injection container is defined in `agent_lab/core/container.py`, please include new agent implementation there.
+- **discoverable** by the agent registry (`agent_lab/services/agent_types/registry.py`),
+- **resolvable** through the DI container, which lazily instantiates it and injects any
+  declared `extra_deps`,
+- **valid at the API**, because the agent creation schema validates `agent_type` against
+  the registry dynamically.
 
-As an additional requirement, the agent class should be registered in the `agent_lab/services/agent_types/registry.py` class, this way agents can be resolved by a key called `agent_type` which is used to identify the agent implementation.
-
-### Add agent type to Pydantic validation schema
-
-The agent type should be added to Pydantic validation schema in `agent_lab/interface/api/agents/schema.py`. This allows the API to validate the agent type when creating or updating agents.
+```python
+from agent_lab import AgentBase, AgentUtils, RegisterAgent
 
 
-### Experimenting the agent implementation
+@RegisterAgent("my_agent", extra_deps=("my_service",))
+class MyAgent(AgentBase):
+    def __init__(self, agent_utils: AgentUtils, my_service):
+        super().__init__(agent_utils)
+        self.my_service = my_service
+    ...
+```
 
-Please refer to the [notebooks](/notebooks) for examples of how to test the agent implementation using Jupyter notebooks. These notebooks provide a convenient way to interact with the agents and test their behavior in a controlled environment leveraging over the same dependency injection mechanism.
+> **Note (migration):** earlier versions required manually wiring each agent into
+> `container.py`, adding it to `registry.py`, and extending the Pydantic schema in
+> `agents/schema.py`. Those steps are **obsolete** — `@RegisterAgent` handles all of
+> them. Any `extra_deps` you declare are resolved by name off the (possibly
+> subclassed) container at instantiation time.
 
+If an agent needs collaborators beyond `AgentUtils`, expose them as providers on the
+container (subclass `Container` when consuming the library) and name them in
+`extra_deps`.
+
+### Make the agent discoverable
+
+The framework only imports agent modules it is told about, so the decorator fires:
+
+- **In-repo:** place the agent under `agent_lab/services/agent_types/` — the reference
+  app scans that package (`create_app(scan_packages=["agent_lab.services.agent_types"])`).
+- **As a library:** pass your package to `create_app(scan_packages=["my_agents"])`, or
+  publish it from an installed package through the `agent_lab.agents` entry point group
+  so consumers pick it up automatically:
+
+  ```toml
+  # pyproject.toml of the package that ships the agents
+  [project.entry-points."agent_lab.agents"]
+  my_agents = "my_agents"
+  ```
+
+### Experimenting with the agent implementation
+
+See the [notebooks](/notebooks) for examples of testing an agent interactively with
+Jupyter, using the same dependency injection mechanism. This is a convenient way to
+prototype and validate behavior in a controlled environment.
 
 ### REST API agent interface
 
-While experimenting with Jupyter notebooks is a great way to quickly prototype and validate agent implementations, the main way to interact with agents in Agent-Lab and configured **agent** implementations is through the REST API.
-Assuming the agent implementation is properly registered and validation schema is updated, you can create multiple agent instances of given implementation using the REST API.
-Please refer to the [API documentation](http://localhost:18000/docs) for details on how to create, update, and delete agents.
-A overall introduction can be found in this repository [REST API section](REST_API.md).
+Once an agent is registered, create and manage instances of it through the REST API —
+you can run several configured instances of the same implementation, each with its own
+prompts and settings. See the [API documentation](http://localhost:18000/docs) and the
+overview in the [REST API section](REST_API.md).
 
-### Integration testing
+### Testing the agent
 
-Please refer to the [integration tests](/tests/integration) for examples of how to test the agent implementation using pytest. These tests provide a way to ensure that the agent behaves as expected.
+- **Integration tests** (`/tests/integration`) validate the agent against real
+  infrastructure with pytest and testcontainers.
+- **Simulations** (`/tests/simulation`) evaluate behavior end-to-end with an
+  LLM-as-judge. See the [testing guide](TESTS.md).
 
 ### MCP Server
 
-Please refer to the [MCP Server documentation](MCP.md) for more details on how to use the MCP server to configure agent discovery, dialog history, and agent-to-agent communication.
+See the [MCP Server documentation](MCP.md) for using the MCP server for agent
+discovery, dialog history, and agent-to-agent communication.
+
+---
+
+## Extending the framework
+
+When consuming Agent-Lab as a library, you shape the application entirely through
+`create_app()` and the public API exported from the top-level `agent_lab` package —
+never by editing framework code:
+
+| Extension point | How |
+|---|---|
+| **Agents** | Subclass a base class, decorate with `@RegisterAgent`, and register via `scan_packages=[...]` or the `agent_lab.agents` entry point. |
+| **Services & dependencies** | Subclass `Container`, add providers, and pass it as `create_app(container=...)`. |
+| **Configuration** | Implement a `ConfigSource` (or use `YamlConfigSource` / `VaultConfigSource`) and pass `create_app(config_source=...)`. |
+| **Extra HTTP routes** | Build an `APIRouter`, wrap it in a `RouterMount` (with its auth policy), and pass `create_app(extra_routers=[...])`. |
+| **MCP tools** | Provide an `McpRegistrar` on the container and add MCP instruction fragments via `create_app(mcp_instructions=[...])`. |
+
+```python
+from agent_lab import Container, RouterMount, YamlConfigSource, create_app
+
+class MyContainer(Container):
+    my_service = ...  # providers.Factory(MyService, ...)
+
+app = create_app(
+    container=MyContainer(),
+    scan_packages=["my_agents"],
+    config_source=YamlConfigSource("config.yml"),
+    extra_routers=[RouterMount(my_router, "/custom", ["custom"])],
+    mcp_instructions=["Extra guidance for MCP clients."],
+)
+```
 
 ---
 
@@ -223,4 +378,5 @@ Thank you for your contributions and support!
 
 ## Production deployment
 
-Please refer to the [Setup documentation](SETUP.md) for more details on how to deploy the application in production using Terraform scripts.
+See the [Setup documentation](SETUP.md) for deploying the reference application in
+production using the bundled Helm charts and Terraform scripts.

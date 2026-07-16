@@ -10,7 +10,7 @@ readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Bruno Sant'Anna", email = "mail@bsantanna.me" }]
-keywords = ["llm", "agents", "langchain", "langgraph", "fastapi", "mcp", "rag", "ai"]
+keywords = ["llm", "agents", "langchain", "langgraph", "fastapi", "mcp", "rag", "ai", "simulation", "testing", "framework"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
