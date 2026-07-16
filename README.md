@@ -1,5 +1,5 @@
 <h2 align="center"><a href="https://github.com/btech-software/agent-lab">Agent-Lab | 🤖🧪</a></h2>
-<h3 align="center">LLM Agent Development and Testing Toolkit</h3>
+<h3 align="center">Cloud-native framework for building, simulating and testing LLM agents</h3>
 
 <div align="center">
 
@@ -17,11 +17,14 @@
 
 ### Table of Contents
 - [What is Agent-Lab?](#what-is-agent-lab)
-- [Overview](#overview)
+- [Install](#install)
+- [Quickstart](#quickstart)
+- [How it works](#how-it-works)
 - [Project Principles](#project-principles)
 - [Key Features](#key-features)
 - [MCP Server](#mcp-server)
-- [Getting Started](#getting-started)
+- [Reference Implementation](#reference-implementation)
+- [Documentation](#documentation)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -29,15 +32,87 @@
 
 ## What is Agent-Lab?
 
-Agent-Lab is a cloud-native toolkit for building, testing, and deploying LLM-powered autonomous agents. Think of it as a platform where you wire up different AI agent types (RAG, browser automation, voice memos, vision, multi-agent supervisors) and interact with them via a REST API.
+**Agent-Lab is a cloud-native Python framework for building, simulating and testing LLM agents on top of FastAPI, LangChain/LangGraph and PostgreSQL.**
 
-It features relational persistence with PostgreSQL, secure secrets management using Vault, observability through OpenTelemetry, and PgVector for vector storage and similarity search.
+You `pip install` it as a library, define your agents by extending its base classes, and assemble a production-ready FastAPI application with a single `create_app()` call — no need to fork or edit the framework. Everything an agent needs is included: a REST API, an MCP server, relational and vector persistence, agent memory (LangGraph checkpoints), OpenTelemetry observability, and a batteries-included simulation and testing harness with LLM-as-judge evaluation.
+
+Agent-Lab covers three things well:
+
+- **🏗️ Build** — Define agents by subclassing `WorkflowAgentBase` (LangGraph state graphs) and registering them with a decorator. `create_app()` wires up the REST API, MCP server, persistence, auth and observability around them. Extend via subclassing and configuration, never by editing framework code.
+- **🧪 Simulate** — Exercise agents end-to-end against live LLMs with conversational scenarios (a user simulator + judge agent) and dataset-driven experiments, scored by an LLM-as-judge and tracked over time in [Langfuse](https://langfuse.com/) and [LangWatch](https://langwatch.ai/).
+- **✅ Test** — Validate every change with an integration suite that spins up real infrastructure (Postgres, Redis, Keycloak, embeddings, headless Chrome) via testcontainers.
+
+The repository also ships a complete **reference implementation** — a standalone, deployable app with a set of ready-to-use agents (RAG, browser automation, voice memos, vision, multi-agent supervisors) — that doubles as a working example of how to consume the framework. See [Reference Implementation](#reference-implementation).
 
 ---
 
-## Overview
+## Install
 
-**Tech stack:** Python 3.12, FastAPI, LangChain/LangGraph, PostgreSQL (3 databases: relational, vectors via pgvector, LangGraph checkpoints), Redis for pub/sub, Keycloak for auth, Docker Compose for orchestration.
+```bash
+pip install btech-agent-lab
+```
+
+Requires **Python 3.12+**. Agents are served through FastAPI and persist to PostgreSQL (relational data, pgvector embeddings, and LangGraph checkpoints); see the [Setup guide](https://github.com/btech-software/agent-lab/blob/main/doc/SETUP.md) for provisioning those in development or production.
+
+---
+
+## Quickstart
+
+Define an agent, register it with a decorator, and build the FastAPI app around it:
+
+```python
+# my_agents/echo.py
+from langchain_core.messages import AIMessage
+from langgraph.graph import MessagesState
+
+from agent_lab import AgentBase, AgentUtils, RegisterAgent
+from agent_lab.interface.api.messages.schema import Message, MessageRequest
+
+
+@RegisterAgent("echo")
+class EchoAgent(AgentBase):
+    def __init__(self, agent_utils: AgentUtils):
+        super().__init__(agent_utils)
+
+    def create_default_settings(self, agent_id: str, schema: str):
+        ...  # persist any per-agent settings on creation
+
+    def get_input_params(self, message_request: MessageRequest, schema: str) -> dict:
+        return message_request.to_dict()
+
+    def process_message(self, message_request: MessageRequest, schema: str) -> Message:
+        content, response_data = self.format_response(
+            MessagesState(messages=[AIMessage(content=f"Echo: {message_request.message_content}")])
+        )
+        return Message(
+            message_role="assistant",
+            message_content=content,
+            response_data=response_data,
+            agent_id=message_request.agent_id,
+        )
+```
+
+```python
+# app.py
+from agent_lab import create_app
+
+# Scans your package for @RegisterAgent classes and assembles the app.
+app = create_app(scan_packages=["my_agents"])
+```
+
+```bash
+uvicorn app:app --reload
+```
+
+`create_app()` returns a standard FastAPI application: your agents are reachable over the REST API (`/agents`, `/messages`, ...), exposed through the MCP server at `/mcp`, and the interactive OpenAPI docs live at [http://localhost:8000/docs](http://localhost:8000/docs).
+
+Agents can also be published from an installed package via the `agent_lab.agents` entry point group, so consumers pick them up without listing `scan_packages` explicitly. See the [Developer's Guide](https://github.com/btech-software/agent-lab/blob/main/doc/DEV_GUIDE.md) for extending configuration, the DI container, and routers.
+
+---
+
+## How it works
+
+**Tech stack:** Python 3.12, FastAPI, LangChain/LangGraph, PostgreSQL (3 databases: relational, vectors via pgvector, LangGraph checkpoints), Redis for pub/sub, Keycloak for auth, OpenTelemetry for observability.
 
 **Architecture** — Clean Architecture with Dependency Injection:
 - **Interface** — FastAPI routers + MCP server
@@ -45,41 +120,46 @@ It features relational persistence with PostgreSQL, secure secrets management us
 - **Domain** — SQLAlchemy models, repository interfaces
 - **Infrastructure** — DB, auth, metrics (OpenTelemetry)
 
-All wiring lives in `agent_lab/core/container.py` via `dependency-injector`.
+**The public API** — everything you need to consume Agent-Lab as a library is exported from the top-level `agent_lab` package and designed to be extended without editing framework code:
 
-**Agent system** — Agents extend `WorkflowAgentBase` (which uses LangGraph state graphs). Each agent type lives under `agent_lab/services/agent_types/` and is registered in a registry. The hierarchy goes from simple (echo, adaptive RAG) to complex (coordinator-planner-supervisor multi-agent). Agents process messages, have configurable settings (Jinja2-templated prompts), and persist state in the checkpoints database.
+| Export | Purpose |
+|---|---|
+| `create_app(...)` | Composition root — builds the FastAPI app from your agents, container, config and routers. |
+| `RegisterAgent` | Decorator that registers an `AgentBase` subclass under an `agent_type`. |
+| `AgentBase`, `WorkflowAgentBase`, `SupervisedWorkflowAgentBase`, `WebAgentBase`, `ContactSupportAgentBase` | Base classes to extend, from simple message handlers to multi-agent supervisors. |
+| `Container` | Subclass to add your own providers (services, MCP registrars, tracing backends). |
+| `ConfigSource`, `YamlConfigSource`, `VaultConfigSource` | Supply configuration from YAML, Vault, or a custom source. |
+| `RouterMount` | Mount extra FastAPI routers with their auth policy. |
+| `McpRegistrar` | Extend the MCP server with additional tools. |
 
-**Testing** — Two layers:
-- **Integration tests** spin up real infrastructure via testcontainers (Postgres, Redis, Keycloak, Ollama as an OpenAI-compatible embeddings mock, headless Chrome).
-- **Simulation tests** use `langwatch-scenario` with LLM judges to evaluate agent behavior end-to-end.
-
-**Deployment** — Ships with Helm charts (`charts/`) for Kubernetes and Terraform scripts (`terraform/`) for provisioning cloud infrastructure including databases, auth realms, and secrets. See [Setup guide](https://github.com/btech-software/agent-lab/blob/main/doc/SETUP.md) for details.
+**Agent system** — Agents extend `WorkflowAgentBase` (which uses LangGraph state graphs). The hierarchy goes from simple (echo, adaptive RAG) to complex (coordinator-planner-supervisor multi-agent). Agents process messages, have configurable settings (Jinja2-templated prompts), and persist state in the checkpoints database. Registering an agent with `@RegisterAgent` makes it discoverable, resolvable through the DI container, and valid at the API — no manual registry or schema edits required.
 
 ---
 
 ## Project Principles
 
-- Give researchers and developers everything they need to build, test, and experiment with LLM agents, with ready-to-use reference implementations.
+- Give researchers and developers a framework with everything they need to build, test, and experiment with LLM agents, plus ready-to-use reference implementations.
+- Extend through the public API — subclassing, decorators and configuration — never by editing framework code.
 - Expose an MCP server for agent discovery, conversation history, and agent-to-agent communication.
 - Ship with integration and simulation test suites so every agent change is validated automatically.
 - Provide full observability through logs, metrics, and traces for explainability and evaluation.
-- Make it easy to create new custom agents by extending base classes and registering them in the agent registry.
 - Run anywhere with a cloud-native architecture built for containerized deployment and horizontal scaling.
 
 ---
 
 ## Key Features
 
-- **REST API**: Manage integrations with AI suppliers, LLMs settings, agents, and conversation histories with our [REST API](https://github.com/btech-software/agent-lab/blob/main/doc/REST_API.md).
-- **MCP Server**: Utilize the [Model Control Protocol (MCP) server](https://github.com/btech-software/agent-lab/blob/main/doc/MCP.md) for agent discovery, dialog history, and agent-to-agent communication.
-- **Observability**: Obtain detailed insights through logs, metrics, and traces powered by [OpenTelemetry](https://github.com/btech-software/agent-lab/blob/main/doc/OTEL.md).
-  - Includes reference implementations for [Grafana](https://github.com/btech-software/agent-lab/blob/main/doc/otel/GRAFANA.md) and [OpenSearch Dashboards](https://github.com/btech-software/agent-lab/blob/main/doc/otel/OPENSEARCH.md).
-- **Cloud-Native**: Optimized for cloud environments with Docker, Kubernetes, and [Terraform scripts](https://github.com/btech-software/agent-lab/blob/main/doc/SETUP.md) for streamlined deployment.
+- **Agent Framework**: Build agents by extending base classes and assembling the app with `create_app()`; discover them via package scanning or [entry points](https://github.com/btech-software/agent-lab/blob/main/doc/DEV_GUIDE.md).
+- **Agent Simulations**: Evaluate agent behavior end-to-end with `langwatch-scenario` conversational simulations and dataset-driven experiments, scored by an LLM-as-judge and tracked in [Langfuse](https://langfuse.com/) and [LangWatch](https://langwatch.ai/). See the [testing guide](https://github.com/btech-software/agent-lab/blob/main/doc/TESTS.md).
+- **Integration Testing**: Ensure reliability and correctness with a comprehensive [integration test suite](https://github.com/btech-software/agent-lab/blob/main/doc/TESTS.md) backed by testcontainers.
+- **REST API**: Manage integrations with AI suppliers, LLM settings, agents, and conversation histories through the built-in [REST API](https://github.com/btech-software/agent-lab/blob/main/doc/REST_API.md).
+- **MCP Server**: Utilize the [Model Context Protocol (MCP) server](https://github.com/btech-software/agent-lab/blob/main/doc/MCP.md) for agent discovery, dialog history, and agent-to-agent communication.
+- **Observability**: Obtain detailed insights through logs, metrics, and traces powered by [OpenTelemetry](https://github.com/btech-software/agent-lab/blob/main/doc/OTEL.md), with reference implementations for [Grafana](https://github.com/btech-software/agent-lab/blob/main/doc/otel/GRAFANA.md) and [OpenSearch Dashboards](https://github.com/btech-software/agent-lab/blob/main/doc/otel/OPENSEARCH.md).
 - **Relational Persistence**: Store data reliably using PostgreSQL to support the [entity domain model](https://github.com/btech-software/agent-lab/blob/main/doc/DOMAIN.md) for prompts, agent-specific settings, conversations, and more.
 - **Secrets Management**: Securely store and retrieve secrets with [Vault](https://github.com/btech-software/agent-lab/blob/main/doc/VAULT.md).
 - **Vector Storage and Search**: Efficiently manage vector data using PgVector for similarity search and retrieval.
-- **Agent Memory**: Using PostgreSQL checkpointer to store and retrieve agent memory, enabling agents to maintain context across interactions.
-- **Integration Testing**: Ensure reliability and correctness with a comprehensive [integration test suite](https://github.com/btech-software/agent-lab/blob/main/doc/TESTS.md).
+- **Agent Memory**: Use the PostgreSQL checkpointer to store and retrieve agent memory, enabling agents to maintain context across interactions.
+- **Cloud-Native**: Optimized for cloud environments with Docker, Kubernetes, and [Terraform scripts](https://github.com/btech-software/agent-lab/blob/main/doc/SETUP.md) for streamlined deployment.
 
 ---
 
@@ -102,16 +182,36 @@ Please refer to [MCP guide](https://github.com/btech-software/agent-lab/blob/mai
 
 ---
 
-## Getting Started
+## Reference Implementation
 
-Agent-Lab is designed for ease of setup and use, whether you're a developer building LLM agents or a researcher experimenting with agentic workflows.
+The repository ships a complete, deployable reference application (`agent_lab.main`) that registers every built-in agent — RAG, browser automation, voice memos, vision, and multi-agent supervisors. It's both a product you can run and the canonical example of how to consume the framework.
 
-Documentation in this repository is divided into two main sections:
+You can run it in two ways:
 
-- **Developer's Guide**: Tailored for developers who want to customize Agent-Lab or build agentic workflows. It includes setup instructions and development practices. Please refer to our [developer's guide](https://github.com/btech-software/agent-lab/blob/main/doc/DEV_GUIDE.md).
-- **Researcher's Guide**: Provides detailed instructions for researchers on setting up and using Agent-Lab, including how to run the MCP server, manage agents, conduct experiments, tune prompts, and prototype new agents. Please refer to our [researcher's guide](https://github.com/btech-software/agent-lab/blob/main/doc/RESEARCHER_GUIDE.md).
+```bash
+# As a standalone app (the reference implementation)
+uvicorn agent_lab.main:app --reload
+```
 
-Please consult these guides for detailed instructions on getting started with Agent-Lab.
+```bash
+# Or with the bundled observability stack
+docker compose -f compose-grafana.yml up --build      # Grafana
+docker compose -f compose-opensearch.yml up --build    # OpenSearch Dashboards
+```
+
+It ships with Helm charts (`charts/`) for Kubernetes and Terraform scripts (`terraform/`) for provisioning cloud infrastructure — databases, auth realms, and secrets. See the [Setup guide](https://github.com/btech-software/agent-lab/blob/main/doc/SETUP.md) for details.
+
+> Agent-Lab is the **generic base** for downstream reference implementations. Only generic, reusable capabilities belong in the framework; product-specific agents and services live in the apps that consume it.
+
+---
+
+## Documentation
+
+Documentation is organized around how you use Agent-Lab:
+
+- **Developer's Guide** — for developers building agents and applications on Agent-Lab (as a library or in-repo): setup, the extension model, and development practices. See the [Developer's Guide](https://github.com/btech-software/agent-lab/blob/main/doc/DEV_GUIDE.md).
+- **Researcher's Guide** — for researchers running experiments: the MCP server, managing agents, tuning prompts, and prototyping new agents in Jupyter. See the [Researcher's Guide](https://github.com/btech-software/agent-lab/blob/main/doc/RESEARCHER_GUIDE.md).
+- **Testing & Simulations** — the integration and simulation suites and LLM-as-judge evaluation. See the [testing guide](https://github.com/btech-software/agent-lab/blob/main/doc/TESTS.md).
 
 ---
 
@@ -119,7 +219,7 @@ Please consult these guides for detailed instructions on getting started with Ag
 
 Community support is greatly appreciated. If you encounter any issues or have suggestions for enhancements, please report them by creating an issue on our [GitHub Issues](https://github.com/btech-software/agent-lab/issues) page.
 
-Refer to our [developer's guide](https://github.com/btech-software/agent-lab/blob/main/doc/DEV_GUIDE.md) for instructions on how to contribute to the project.
+Refer to our [Developer's Guide](https://github.com/btech-software/agent-lab/blob/main/doc/DEV_GUIDE.md) for instructions on how to contribute to the project.
 
 ---
 

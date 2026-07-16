@@ -26,30 +26,27 @@ This project keeps its notebooks in the `notebooks/` folder. Each notebook is an
 
 Minimum requirements:
 
-- Python 3.11+ (the project is developed with modern Python; check `pyproject.toml` / `requirements.txt` for exact pins)
+- Python 3.12+ (see `pyproject.toml` for exact dependency pins)
 - A working Jupyter environment (JupyterLab or Notebook)
 - Optional: local Docker for infra (OpenSearch/Grafana) if you plan to run end-to-end integrations
 
-Quick steps to get started locally:
+Quick steps to get started locally, working in a clone of the repository with [uv](https://docs.astral.sh/uv/):
 
-1. Create and activate a virtualenv (recommended):
+1. Sync the environment (creates a virtualenv and installs the runtime plus notebook
+   dependencies):
 
-   python -m venv .venv
-   source .venv/bin/activate
+   uv sync --group notebooks
 
-2. Install dependencies:
-
-   pip install -r requirements.txt
-
-3. Start Jupyter in the repository root:
+2. Start Jupyter in the repository root:
 
    jupyter lab
 
-4. Open the `notebooks/` folder in Jupyter and run the notebooks prefixed with a number (e.g., `01_setup_embeddings_service.ipynb`). Start with `01_...` and progress through the ones that interest you.
+3. Open the `notebooks/` folder in Jupyter and run the notebooks prefixed with a number (e.g., `01_setup_embeddings_service.ipynb`). Start with `01_...` and progress through the ones that interest you.
 
 Notes:
 - Notebooks are written to be mostly self-contained. Some notebooks demonstrate integrations requiring API keys or local services. Each notebook contains a header explaining any environment variables or external services required.
 - If you prefer running individual scripts, see `agent_lab/` and `agent_lab/core/` for runnable modules and small CLI entry points.
+- To experiment against Agent-Lab from your own project instead of the repository, `pip install btech-agent-lab` and assemble the app with `create_app()`; see the [Developer's Guide](DEV_GUIDE.md#extending-the-framework).
 
 ---
 
@@ -173,7 +170,7 @@ Export logs and metrics to CSV/JSON for analysis and plotting in notebooks.
 ## Troubleshooting common issues
 
 - Notebook stalls on an external call: check API key env vars and service availability. Many notebooks print required env var names at the top.
-- Dependency conflicts: create a fresh virtualenv and `pip install -r requirements.txt`.
+- Dependency conflicts: recreate the environment from scratch with `uv sync --group notebooks`.
 - Long runs: reduce dataset size and sampling parameters. Add failsafes for timeouts when calling LLM APIs.
 
 If you hit obscure errors, search the repo for the failing symbol and run the relevant unit tests to localize the issue.

@@ -60,7 +60,7 @@ class LanguageModelService:
         self.setting_service.create_language_model_setting(
             language_model_id=language_model.id,
             setting_key="max_tokens",
-            setting_value="8192",
+            setting_value="16384",
             schema=schema,
         )
         self.setting_service.create_language_model_setting(

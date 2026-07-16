@@ -1,9 +1,14 @@
 <h2 align="center"><a href="https://github.com/btech-software/agent-lab">Agent-Lab | 🤖🧪</a></h2>
-<h3 align="center">Integration tests</h3>
+<h3 align="center">Testing &amp; Simulations</h3>
 
 ---
 
-Agent-Lab provides a set of integration tests to ensure the functionality and reliability of the system over time and adapt to changes on libraries and AI services used in the project. These tests are designed to cover various aspects of the application, including interactions with external services, database operations, vector search, and API endpoints.
+Testing agents is a first-class capability of the framework, not an afterthought. Agent-Lab ships two complementary harnesses you can use both to validate the framework itself and to validate the agents you build on top of it:
+
+- **Integration tests** exercise the system against real infrastructure (Postgres, Redis, Keycloak, embeddings, headless Chrome) spun up on demand with testcontainers — covering external services, database operations, vector search, and API endpoints.
+- **Agent simulations** evaluate agent behavior end-to-end against live LLMs, scored by an LLM-as-judge and tracked over time in Langfuse and LangWatch.
+
+These suites ensure functionality and reliability over time and adapt to changes in the libraries and AI services the project depends on.
 
 The main configuration file for integration tests is located at `tests/conftest.py`, which contains the necessary settings and parameters for running the tests. This file can be customized to suit your testing environment.
 

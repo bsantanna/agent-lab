@@ -10,7 +10,7 @@ readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Bruno Sant'Anna", email = "mail@bsantanna.me" }]
-keywords = ["llm", "agents", "langchain", "langgraph", "fastapi", "mcp", "rag", "ai"]
+keywords = ["llm", "agents", "langchain", "langgraph", "fastapi", "mcp", "rag", "ai", "simulation", "testing", "framework"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -71,6 +71,7 @@ dependencies = [
     "starlette~=1.3.1",
     "typing_extensions~=4.16.0",
     "uvicorn~=0.51.0",
+    "ipykernel>=7.3.0",
 ]
 
 [project.urls]
