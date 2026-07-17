@@ -1,0 +1,12 @@
+api_base_url: "http://localhost"
+auth:
+  enabled: false
+broker:
+  url: "redis://localhost:16379/0"
+db:
+  url: "postgresql://postgres:postgres@localhost:15432/{{ cookiecutter.package_name }}"
+  vectors: "postgresql://postgres:postgres@localhost:15432/{{ cookiecutter.package_name }}_vectors"
+  checkpoints: "postgresql://postgres:postgres@localhost:15432/{{ cookiecutter.package_name }}_checkpoints"
+vault:
+  url: "http://localhost:18200"
+  token: "dev-only-token"

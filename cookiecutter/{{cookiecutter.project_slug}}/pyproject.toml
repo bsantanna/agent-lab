@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "{{ cookiecutter.project_slug }}"
+version = "0.1.0"
+description = "{{ cookiecutter.description }}"
+readme = "README.md"
+authors = [{ name = "{{ cookiecutter.author_name }}", email = "{{ cookiecutter.author_email }}" }]
+requires-python = ">=3.12"
+dependencies = [
+    "btech-agent-lab>={{ cookiecutter.agent_lab_version }},<{{ cookiecutter.agent_lab_version.split('.')[0]|int + 1 }}.0.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["{{ cookiecutter.package_name }}"]
+
+[dependency-groups]
+dev = [
+    "pre-commit~=4.6.0",
+    "ruff~=0.15.10",
+]
+test = [
+    "pytest~=9.0.3",
+{%- if cookiecutter.include_testcontainers %}
+    "testcontainers[postgres]~=4.14.2",
+    "testcontainers[redis]~=4.14.2",
+    "testcontainers[vault]~=4.14.2",
+{%- endif %}
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = ["E203", "E501"]

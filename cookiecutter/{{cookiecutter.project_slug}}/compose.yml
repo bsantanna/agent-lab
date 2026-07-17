@@ -1,0 +1,78 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    networks:
+      - {{ cookiecutter.project_slug }}
+    ports:
+      - "18000:8000"
+    environment:
+      DOCKER: 1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      postgres-setup:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    networks:
+      - {{ cookiecutter.project_slug }}
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-setup:
+    image: pgvector/pgvector:pg16
+    networks:
+      - {{ cookiecutter.project_slug }}
+    environment:
+      PGPASSWORD: postgres
+    command: >
+      bash -c '
+        echo "CREATE DATABASE {{ cookiecutter.package_name }};" | psql -h postgres -U postgres
+        echo "CREATE DATABASE {{ cookiecutter.package_name }}_checkpoints;" | psql -h postgres -U postgres
+        echo "CREATE DATABASE {{ cookiecutter.package_name }}_vectors;" | psql -h postgres -U postgres
+      '
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  redis:
+    image: redis:alpine
+    networks:
+      - {{ cookiecutter.project_slug }}
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  vault:
+    image: hashicorp/vault:1.18
+    networks:
+      - {{ cookiecutter.project_slug }}
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: "dev-only-token"
+      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
+    cap_add:
+      - IPC_LOCK
+    entrypoint: vault server -dev
+
+networks:
+  {{ cookiecutter.project_slug }}:
+    name: {{ cookiecutter.project_slug }}

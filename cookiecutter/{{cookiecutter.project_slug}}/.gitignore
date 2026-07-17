@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+.coverage
+coverage.xml
+.pytest_cache/
+.ruff_cache/
+
+# Environment
+.env
+
+# Project artifacts
+*.db
+tmp/
+temp-*
+docker-volumes/

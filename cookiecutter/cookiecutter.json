@@ -1,0 +1,15 @@
+{
+    "project_name": "My Agent App",
+    "project_slug": "{{ cookiecutter.project_name.lower().replace('_', '-').replace(' ', '-') }}",
+    "package_name": "{{ cookiecutter.project_slug.replace('-', '_') }}",
+    "description": "An Agent-Lab powered application",
+    "author_name": "Your Name",
+    "author_email": "you@example.com",
+    "agent_lab_version": "1.10.0",
+    "include_docker": true,
+    "include_github_actions": true,
+    "include_testcontainers": true,
+    "_copy_without_render": [
+        "{{cookiecutter.package_name}}/agents/react_agent/default_execution_system_prompt.txt"
+    ]
+}
