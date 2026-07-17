@@ -58,58 +58,40 @@ Requires **Python 3.12+**. Agents are served through FastAPI and persist to Post
 
 ## Quickstart
 
-Define an agent, register it with a decorator, and build the FastAPI app around it:
-
-```python
-# my_agents/echo.py
-from langchain_core.messages import AIMessage
-from langgraph.graph import MessagesState
-
-from agent_lab import AgentBase, AgentUtils, discoverable_agent
-from agent_lab.interface.api.messages.schema import Message, MessageRequest
-
-
-@discoverable_agent("echo")
-class EchoAgent(AgentBase):
-    def __init__(self, agent_utils: AgentUtils):
-        super().__init__(agent_utils)
-
-    def create_default_settings(self, agent_id: str, schema: str):
-        ...  # persist any per-agent settings on creation
-
-    def get_input_params(self, message_request: MessageRequest, schema: str) -> dict:
-        return message_request.to_dict()
-
-    def process_message(self, message_request: MessageRequest, schema: str) -> Message:
-        content, response_data = self.format_response(
-            MessagesState(messages=[AIMessage(content=f"Echo: {message_request.message_content}")])
-        )
-        return Message(
-            message_role="assistant",
-            message_content=content,
-            response_data=response_data,
-            agent_id=message_request.agent_id,
-        )
-```
-
-```python
-# app.py
-from agent_lab import DEFAULT_SCAN_PACKAGES, create_app
-
-# Scans your package for discoverable capabilities (agents, MCP tools,
-# prompts, registrars) alongside the built-ins. The list replaces
-# DEFAULT_SCAN_PACKAGES, so leave defaults out to exclude built-in
-# capabilities you don't want.
-app = create_app(scan_packages=[*DEFAULT_SCAN_PACKAGES, "my_agents"])
-```
+Scaffold a complete, runnable project from the bundled [project template](https://github.com/btech-software/agent-lab/tree/main/cookiecutter):
 
 ```bash
-uvicorn app:app --reload
+uvx cookiecutter gh:btech-software/agent-lab --directory cookiecutter
 ```
 
-`create_app()` returns a standard FastAPI application: your agents are reachable over the REST API (`/agents`, `/messages`, ...), exposed through the MCP server at `/mcp`, and the interactive OpenAPI docs live at [http://localhost:8000/docs](http://localhost:8000/docs).
+Answer the prompts (project name, optional docker / GitHub Actions / testcontainers support) and you get a ready-made thin consumer of the framework:
 
-Agents can also be published from an installed package via the `agent_lab.agents` entry point group, so consumers pick them up without listing `scan_packages` explicitly. See the [Developer's Guide](https://github.com/btech-software/agent-lab/blob/main/doc/DEV_GUIDE.md) for extending configuration, the DI container, and routers.
+```
+my-agent-app/
+├── my_agent_app/
+│   ├── main.py              # app = create_app(container=..., scan_packages=[...])
+│   ├── core/container.py    # your DI container — add providers here
+│   ├── agents/              # example echo agent + single-node ReAct workflow agent
+│   └── mcp/                 # example MCP tool and prompt, exposed at /mcp
+├── config-dev.yml / config-test.yml / config-docker.yml
+├── tests/                   # no-container smoke tests (+ optional testcontainers suite)
+├── compose.yml              # app + postgres (pgvector) + redis + vault
+└── docker/, .github/, Makefile, pyproject.toml
+```
+
+Run it:
+
+```bash
+cd my-agent-app
+uv lock && uv sync --group dev --group test
+make test_unit                  # boots the app with no infrastructure needed
+docker compose up --build -d    # full local stack
+curl http://localhost:18000/status/liveness
+```
+
+Your agents are reachable over the REST API (`/agents`, `/messages`, ...), exposed through the MCP server at `/mcp`, and the interactive OpenAPI docs live at `/docs`.
+
+Prefer wiring the app by hand? Add `btech-agent-lab` to any project, subclass the agent base classes, register them with `@discoverable_agent`, and call `create_app()` — the [Developer's Guide](https://github.com/btech-software/agent-lab/blob/main/doc/DEV_GUIDE.md) walks through the manual path, configuration, the DI container, and routers.
 
 ---
 

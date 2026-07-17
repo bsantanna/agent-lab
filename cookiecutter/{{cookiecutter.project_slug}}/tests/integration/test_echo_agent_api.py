@@ -3,26 +3,22 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
-from agent_lab import create_app
+from {{ cookiecutter.package_name }}.main import app
 
-from {{ cookiecutter.package_name }}.core.container import Container
+# Every route carries an HTTPBearer dependency even with auth disabled, so
+# any bearer value satisfies it.
+AUTH_HEADERS = {"Authorization": "Bearer dummy"}
 
 
 @pytest.fixture(scope="module")
 def client():
-    app = create_app(
-        container=Container(),
-        scan_packages=[
-            "{{ cookiecutter.package_name }}.agents",
-            "{{ cookiecutter.package_name }}.mcp",
-        ],
-    )
     yield TestClient(app)
 
 
 def create_agent(client) -> dict:
     integration = client.post(
         "/integrations/create",
+        headers=AUTH_HEADERS,
         json={
             "api_endpoint": "https://example.com",
             "api_key": "an_invalid_key",
@@ -31,6 +27,7 @@ def create_agent(client) -> dict:
     ).json()
     language_model = client.post(
         "/llms/create",
+        headers=AUTH_HEADERS,
         json={
             "integration_id": integration["id"],
             "language_model_tag": "an_invalid_tag",
@@ -38,6 +35,7 @@ def create_agent(client) -> dict:
     ).json()
     return client.post(
         "/agents/create",
+        headers=AUTH_HEADERS,
         json={
             "language_model_id": language_model["id"],
             "agent_type": "{{ cookiecutter.package_name }}_echo",
@@ -51,6 +49,7 @@ def test_echo_agent_replies_through_the_api(client):
 
     response = client.post(
         "/messages/post",
+        headers=AUTH_HEADERS,
         json={
             "message_role": "human",
             "message_content": "hello",

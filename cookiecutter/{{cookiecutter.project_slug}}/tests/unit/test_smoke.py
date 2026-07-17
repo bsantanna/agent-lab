@@ -7,19 +7,11 @@ valid URLs — these tests run in seconds with no containers.
 
 from fastapi.testclient import TestClient
 
-from agent_lab import create_app
 from agent_lab.interface.mcp import prompt_registration, tool_registration
 from agent_lab.services.agent_types import registration
 
-from {{ cookiecutter.package_name }}.core.container import Container
+from {{ cookiecutter.package_name }}.main import app
 
-app = create_app(
-    container=Container(),
-    scan_packages=[
-        "{{ cookiecutter.package_name }}.agents",
-        "{{ cookiecutter.package_name }}.mcp",
-    ],
-)
 client = TestClient(app)
 
 

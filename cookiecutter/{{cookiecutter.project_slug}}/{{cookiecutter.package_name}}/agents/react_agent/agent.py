@@ -1,6 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 
+from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.constants import START, END
 from langgraph.graph import MessagesState, StateGraph
 from langgraph.prebuilt import create_react_agent
@@ -22,8 +23,9 @@ class ReactAgent(WorkflowAgentBase):
 
     The node runs a ReAct agent over the query and the persisted
     chain-of-thought history; ``messages`` in the checkpointed state stores
-    one thought chain per turn (via ``create_thought_chain``), so past turns
-    feed the next invocation as conversation memory.
+    one human/AI pair per turn (the AI side holds a ``create_thought_chain``
+    summary), so past turns feed the next invocation as conversation memory
+    while keeping strict role alternation for providers that require it.
     """
 
     def __init__(self, agent_utils: AgentUtils):
@@ -64,27 +66,29 @@ class ReactAgent(WorkflowAgentBase):
         )
 
         # No inner checkpointer: the outer WorkflowAgentBase graph owns
-        # persistence for this thread. Prior thought chains in state
-        # ``messages`` provide the conversation memory.
+        # persistence for this thread. Prior turns in state ``messages``
+        # provide the conversation memory.
         react_agent = create_react_agent(
             model=self.get_chat_model(agent_id, schema),
             tools=[],
             prompt=execution_system_prompt,
         )
-        response = react_agent.invoke(
-            {
-                "messages": [
-                    *state["messages"],
-                    ("human", self.QUERY_FORMAT.format(query=query)),
-                ]
-            }
-        )
+        human_message = HumanMessage(content=self.QUERY_FORMAT.format(query=query))
+        response = react_agent.invoke({"messages": [*state["messages"], human_message]})
         generation = response["messages"][-1].content
 
+        # Persist an explicit human/AI pair: a bare string would be coerced
+        # to a HumanMessage by the messages reducer, breaking role
+        # alternation on the next turn.
         return {
             "generation": generation,
             "messages": [
-                self.create_thought_chain(human_input=query, ai_response=generation)
+                human_message,
+                AIMessage(
+                    content=self.create_thought_chain(
+                        human_input=query, ai_response=generation
+                    )
+                ),
             ],
         }
 

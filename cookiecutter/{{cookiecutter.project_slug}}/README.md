@@ -42,11 +42,13 @@ curl http://localhost:18000/status/liveness
   chain-of-thought per turn{% endif %}.
 - `{{ cookiecutter.package_name }}/mcp/` — one example MCP tool and prompt, exposed at `/mcp`.
 
+{% if cookiecutter.include_docker %}
 ## Prompt templates
 
 Agent prompts stored in agent settings are Jinja2 templates rendered at
 runtime, e.g. {% raw %}`Today is {{ CURRENT_TIME }}.`{% endraw %} — see
 `agents/react_agent/default_execution_system_prompt.txt`.
+{% endif %}
 {% if cookiecutter.include_testcontainers %}
 ## Integration tests
 

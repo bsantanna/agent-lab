@@ -26,6 +26,9 @@ can work in directly. Both are supported:
   `create_app()`. You extend the framework through its public API — subclassing,
   decorators and configuration — and never edit framework code. Start with the
   [Quickstart](../README.md#quickstart) and [Extending the framework](#extending-the-framework).
+  To skip the boilerplate, scaffold a ready-made consumer project with
+  `uvx cookiecutter gh:btech-software/agent-lab --directory cookiecutter`
+  (see [cookiecutter/README.md](../cookiecutter/README.md)).
 - **In-repo (for contributors and the reference implementation).** Clone the
   repository and add agents under `agent_lab/services/agent_types/`, run the bundled
   reference app, and use the notebooks and integration tests. This is how the
