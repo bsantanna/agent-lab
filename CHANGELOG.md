@@ -2,6 +2,35 @@
 
 <!-- version list -->
 
+## v1.12.0 (2026-07-17)
+
+### Features
+
+- Cookiecutter template engine (1) ([#352](https://github.com/btech-software/agent-lab/pull/352),
+  [`3f98096`](https://github.com/btech-software/agent-lab/commit/3f98096f59c1451884068bd4bb6872891ba2a965))
+
+- Cookiecutter template engine (2) ([#352](https://github.com/btech-software/agent-lab/pull/352),
+  [`3f98096`](https://github.com/btech-software/agent-lab/commit/3f98096f59c1451884068bd4bb6872891ba2a965))
+
+- Cookiecutter template engine (3) ([#352](https://github.com/btech-software/agent-lab/pull/352),
+  [`3f98096`](https://github.com/btech-software/agent-lab/commit/3f98096f59c1451884068bd4bb6872891ba2a965))
+
+- Cookiecutter template engine (4) ([#352](https://github.com/btech-software/agent-lab/pull/352),
+  [`3f98096`](https://github.com/btech-software/agent-lab/commit/3f98096f59c1451884068bd4bb6872891ba2a965))
+
+- Cookiecutter template engine (5) ([#352](https://github.com/btech-software/agent-lab/pull/352),
+  [`3f98096`](https://github.com/btech-software/agent-lab/commit/3f98096f59c1451884068bd4bb6872891ba2a965))
+
+- Cookiecutter template engine (6) ([#352](https://github.com/btech-software/agent-lab/pull/352),
+  [`3f98096`](https://github.com/btech-software/agent-lab/commit/3f98096f59c1451884068bd4bb6872891ba2a965))
+
+- Cookiecutter template engine (7) ([#352](https://github.com/btech-software/agent-lab/pull/352),
+  [`3f98096`](https://github.com/btech-software/agent-lab/commit/3f98096f59c1451884068bd4bb6872891ba2a965))
+
+- Library template 1 ([#352](https://github.com/btech-software/agent-lab/pull/352),
+  [`3f98096`](https://github.com/btech-software/agent-lab/commit/3f98096f59c1451884068bd4bb6872891ba2a965))
+
+
 ## v1.11.0 (2026-07-17)
 
 ### Bug Fixes

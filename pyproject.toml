@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "btech-agent-lab"
-version = "1.11.0"
+version = "1.12.0"
 description = "Cloud-native LLM Agent Development and Testing Toolkit"
 readme = "README.md"
 license = "MIT"
