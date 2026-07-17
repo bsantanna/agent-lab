@@ -5,7 +5,7 @@ def resolve_extra_deps(container, extra_deps, owner: str) -> dict:
     """Resolves declared extra dependencies off a live container instance.
 
     The single convention behind every registration decorator
-    (``@RegisterAgent``, ``@RegisterMcpRegistrar``): each name in
+    (``@discoverable_agent``, ``@discoverable_mcp_registrar``): each name in
     ``extra_deps`` is looked up as a provider attribute on the (possibly
     downstream-subclassed) container and passed as a constructor kwarg of the
     same name. ``owner`` names the declaring component in the error message.

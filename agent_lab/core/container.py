@@ -163,7 +163,7 @@ class Container(containers.DeclarativeContainer):
         task_notification_service=task_notification_service,
     )
 
-    # Agents register themselves via @RegisterAgent and are discovered through
+    # Agents register themselves via @discoverable_agent and are discovered through
     # scan-packages/entry points. The registry needs the live container
     # instance to resolve each agent's extra_deps, so create_app() binds it
     # via container.agent_registry.override(...) right after instantiation
@@ -179,10 +179,10 @@ class Container(containers.DeclarativeContainer):
 
     prompt_registry = providers.Singleton(PromptRegistry)
 
-    # MCP registrars are contributed via @RegisterMcpRegistrar and instantiated
+    # MCP registrars are contributed via @discoverable_mcp_registrar and instantiated
     # from this container in agent_lab.interface.mcp.bootstrap.build_registrars,
     # resolving each registrar's extra_deps (e.g. prompt_registry,
-    # user_prompt_resolver) by provider name — the @RegisterAgent convention.
+    # user_prompt_resolver) by provider name — the @discoverable_agent convention.
 
     # Tracing frameworks are decoupled behind the TracingBackend abstraction and
     # composed here as a list. Adding a framework is a

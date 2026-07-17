@@ -6,15 +6,15 @@ from fastmcp import FastMCP
 
 from agent_lab.interface.mcp import tool_registration
 from agent_lab.interface.mcp.registrar import McpRegistrar
-from agent_lab.interface.mcp.registrar_registration import RegisterMcpRegistrar
+from agent_lab.interface.mcp.registrar_registration import discoverable_mcp_registrar
 
 if TYPE_CHECKING:
     from agent_lab.core.container import Container
 
 
-@RegisterMcpRegistrar()
+@discoverable_mcp_registrar()
 class DecoratedToolRegistrar(McpRegistrar):
-    """Registers every ``@RegisterMcpTool``-decorated function as an MCP tool.
+    """Registers every ``@discoverable_mcp_tool``-decorated function as an MCP tool.
 
     Container is bound into each function and hidden from the client-facing
     schema, so a tool author writes a plain async function instead of a full

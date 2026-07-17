@@ -10,29 +10,32 @@ if TYPE_CHECKING:
     from agent_lab.core.container import Container
     from agent_lab.interface.mcp.registrar import McpRegistrar
 
-# Built-in registrar modules whose @RegisterMcpRegistrar decorators must fire
-# regardless of the app's scan_packages — they live in agent_lab, not in a
-# scanned agent package, so no downstream scan would import them.
-_BUILTIN_REGISTRAR_MODULES = (
+# Framework bridge registrars, loaded unconditionally: they expose whatever
+# the @discoverable_mcp_tool / @discoverable_mcp_prompt registries contain and
+# nothing of their own, so they must never depend on the app's scan_packages —
+# excluding built-in capabilities from the scan must not silently disable a
+# downstream app's own decorated tools and prompts. Capability modules
+# (default_tool_registrar, coordinator_planner_supervisor_tool_registrar) are
+# discovered via the scan instead.
+_FRAMEWORK_REGISTRAR_MODULES = (
     "agent_lab.interface.mcp.decorated_tool_registrar",
     "agent_lab.interface.mcp.decorated_prompt_registrar",
-    "agent_lab.interface.mcp.default_tool_registrar",
-    "agent_lab.interface.mcp.coordinator_planner_supervisor_tool_registrar",
 )
 
 
-def load_builtin_registrars() -> None:
-    """Imports Agent-Lab's built-in registrar modules so their decorators fire.
+def load_framework_registrars() -> None:
+    """Imports the framework bridge registrar modules so their decorators fire.
 
-    Idempotent via ``sys.modules``; the registrar counterpart to
-    ``discovery.scan_packages`` for the library's own registrars.
+    Idempotent via ``sys.modules``. Everything else — agents, MCP tools,
+    prompts, capability registrars — is discovered through
+    ``discovery.scan_packages``.
     """
-    for module_name in _BUILTIN_REGISTRAR_MODULES:
+    for module_name in _FRAMEWORK_REGISTRAR_MODULES:
         import_module(module_name)
 
 
 def build_registrars(container: Container) -> list[McpRegistrar]:
-    """Instantiates every ``@RegisterMcpRegistrar``-registered registrar.
+    """Instantiates every ``@discoverable_mcp_registrar``-registered registrar.
 
     Each registrar's ``extra_deps`` are resolved by provider-attribute name off
     the live (possibly downstream-subclassed) container — the ``AgentRegistry``

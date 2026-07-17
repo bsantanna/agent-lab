@@ -17,7 +17,7 @@ class AgentDescriptor:
 _registry: dict = {}
 
 
-def RegisterAgent(agent_type: str, *, extra_deps: Sequence[str] = ()):
+def discoverable_agent(agent_type: str, *, extra_deps: Sequence[str] = ()):
     """Registers an AgentBase subclass under ``agent_type``.
 
     Decoration only records metadata; instantiation happens lazily in
@@ -30,7 +30,7 @@ def RegisterAgent(agent_type: str, *, extra_deps: Sequence[str] = ()):
 
         if not issubclass(cls, AgentBase):
             raise TypeError(
-                f"@RegisterAgent requires an AgentBase subclass, got {cls!r}"
+                f"@discoverable_agent requires an AgentBase subclass, got {cls!r}"
             )
         existing = _registry.get(agent_type)
         if existing is not None and existing.agent_cls is not cls:

@@ -17,7 +17,7 @@ class ToolDescriptor:
 _registry: dict = {}  # keyed by tool name, preserving decoration order
 
 
-def RegisterMcpTool(
+def discoverable_mcp_tool(
     name: str,
     *,
     description: Optional[str] = None,
@@ -28,18 +28,20 @@ def RegisterMcpTool(
     The decorated function's first parameter must be ``container``; it is bound
     at registration time and hidden from the client-facing schema (see
     ``bind_container``). Discovered via the same ``scan_packages`` /
-    ``agent_lab.agents`` entry-point pass as ``@RegisterAgent`` and registered
+    ``agent_lab.agents`` entry-point pass as ``@discoverable_agent`` and registered
     by ``DecoratedToolRegistrar`` — the simple alternative to writing a full
     ``McpRegistrar`` subclass.
     """
 
     def decorator(fn):
         if not inspect.iscoroutinefunction(fn):
-            raise TypeError(f"@RegisterMcpTool requires an async function, got {fn!r}")
+            raise TypeError(
+                f"@discoverable_mcp_tool requires an async function, got {fn!r}"
+            )
         params = list(inspect.signature(fn).parameters)
         if not params or params[0] != "container":
             raise TypeError(
-                f"@RegisterMcpTool function for tool '{name}' must take "
+                f"@discoverable_mcp_tool function for tool '{name}' must take "
                 f"'container' as its first parameter"
             )
         existing = _registry.get(name)

@@ -9,13 +9,13 @@ from agent_lab.interface.mcp import prompt_registration
 from agent_lab.interface.mcp.prompt_registration import PromptDescriptor
 from agent_lab.interface.mcp.prompt_registry import PromptRegistry
 from agent_lab.interface.mcp.registrar import McpRegistrar
-from agent_lab.interface.mcp.registrar_registration import RegisterMcpRegistrar
+from agent_lab.interface.mcp.registrar_registration import discoverable_mcp_registrar
 from agent_lab.interface.mcp.user_prompt_resolver import UserPromptResolver
 
 
-@RegisterMcpRegistrar(extra_deps=("prompt_registry", "user_prompt_resolver"))
+@discoverable_mcp_registrar(extra_deps=("prompt_registry", "user_prompt_resolver"))
 class DecoratedPromptRegistrar(McpRegistrar):
-    """Exposes every ``@RegisterMcpPrompt``-decorated function over MCP.
+    """Exposes every ``@discoverable_mcp_prompt``-decorated function over MCP.
 
     Each decorated prompt lands on the full prompt triple: the shared
     ``PromptRegistry`` is populated in ``__init__`` (before any ``register_*``
@@ -50,7 +50,7 @@ class DecoratedPromptRegistrar(McpRegistrar):
         if descriptor.agent_type is None:
             return text
         # Tenant overrides replace the output verbatim; params only affect the
-        # default path (see RegisterMcpPrompt docstring).
+        # default path (see discoverable_mcp_prompt docstring).
         return self._user_prompt_resolver.resolve(
             agent_type=descriptor.agent_type,
             setting_key=descriptor.setting_key,

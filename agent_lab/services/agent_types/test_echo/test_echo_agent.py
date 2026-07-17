@@ -4,10 +4,10 @@ from langgraph.graph import MessagesState
 from agent_lab.interface.api.messages.schema import MessageRequest, Message
 from agent_lab.services.agent_types.base import AgentBase, AgentUtils
 from agent_lab.services.tasks import TaskProgress
-from agent_lab.services.agent_types.registration import RegisterAgent
+from agent_lab.services.agent_types.registration import discoverable_agent
 
 
-@RegisterAgent("test_echo")
+@discoverable_agent("test_echo")
 class TestEchoAgent(AgentBase):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)

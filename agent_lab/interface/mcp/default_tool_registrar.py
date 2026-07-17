@@ -8,14 +8,14 @@ from pydantic import Field
 
 from agent_lab.interface.mcp.prompt_registry import PromptRegistry
 from agent_lab.interface.mcp.registrar import McpRegistrar
-from agent_lab.interface.mcp.registrar_registration import RegisterMcpRegistrar
+from agent_lab.interface.mcp.registrar_registration import discoverable_mcp_registrar
 from agent_lab.interface.mcp.schema import (
     AgentItem,
     MessageItem,
     PostMessageResult,
     _get_mcp_schema,
 )
-from agent_lab.interface.mcp.tool_registration import RegisterMcpTool
+from agent_lab.interface.mcp.tool_registration import discoverable_mcp_tool
 
 if TYPE_CHECKING:
     from agent_lab.core.container import Container
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 # The leading ``container`` parameter is injected by DecoratedToolRegistrar and
 # hidden from the client-facing schema; it is intentionally left unannotated so
 # fastmcp's get_type_hints never tries to resolve the TYPE_CHECKING-only import.
-@RegisterMcpTool(
+@discoverable_mcp_tool(
     name="get_agent_list",
     description="List all AI agents registered on the Agent-Lab platform. "
     "Returns each agent's ID, name, type, capabilities summary, "
@@ -49,7 +49,7 @@ async def get_agent_list(container) -> list[AgentItem]:
     ]
 
 
-@RegisterMcpTool(
+@discoverable_mcp_tool(
     name="get_message_list",
     description="Retrieve conversation history for a specific agent. "
     "Returns all messages (human and assistant) in chronological order. "
@@ -81,7 +81,7 @@ async def get_message_list(
     ]
 
 
-@RegisterMcpTool(
+@discoverable_mcp_tool(
     name="post_message",
     description="Send a message to an agent and receive the assistant's response. "
     "The message is routed to the appropriate agent processor based on agent type. "
@@ -147,12 +147,12 @@ async def post_message(
     )
 
 
-@RegisterMcpRegistrar(extra_deps=("prompt_registry",))
+@discoverable_mcp_registrar(extra_deps=("prompt_registry",))
 class DefaultToolRegistrar(McpRegistrar):
     """Registers the ``read_prompt_mcp`` tool and the ``prompt://`` resource.
 
     The platform's stateless CRUD tools (``get_agent_list``,
-    ``get_message_list``, ``post_message``) are ``@RegisterMcpTool`` functions
+    ``get_message_list``, ``post_message``) are ``@discoverable_mcp_tool`` functions
     above; this registrar covers the two surfaces that need the shared
     ``PromptRegistry`` — the tool-based prompt reader and its resource-flavored
     equivalent.

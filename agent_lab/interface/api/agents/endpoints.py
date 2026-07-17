@@ -97,7 +97,7 @@ async def get_list(
     description="""
     Returns the agent types registered in this deployment.
 
-    Agent types self-register at startup via @RegisterAgent discovery, so the
+    Agent types self-register at startup via @discoverable_agent discovery, so the
     list reflects both built-in and application-specific agents.
     """,
     response_description="List of registered agent types",

@@ -17,7 +17,7 @@ class PromptDescriptor:
 _registry: dict = {}  # keyed by prompt name, preserving decoration order
 
 
-def RegisterMcpPrompt(
+def discoverable_mcp_prompt(
     name: str,
     *,
     description: Optional[str] = None,
@@ -40,19 +40,19 @@ def RegisterMcpPrompt(
     belong in a ``PromptSetRegistrar`` subclass instead.
 
     Discovered via the same ``scan_packages`` / ``agent_lab.agents``
-    entry-point pass as ``@RegisterAgent`` — the simple alternative to writing
+    entry-point pass as ``@discoverable_agent`` — the simple alternative to writing
     a full ``McpRegistrar`` subclass.
     """
     if (agent_type is None) != (setting_key is None):
         raise TypeError(
-            f"@RegisterMcpPrompt for prompt '{name}' must set agent_type and "
+            f"@discoverable_mcp_prompt for prompt '{name}' must set agent_type and "
             f"setting_key together (or neither)"
         )
 
     def decorator(fn):
         if inspect.iscoroutinefunction(fn):
             raise TypeError(
-                f"@RegisterMcpPrompt requires a synchronous function "
+                f"@discoverable_mcp_prompt requires a synchronous function "
                 f"(PromptRegistry resolution is synchronous), got async {fn!r}"
             )
         existing = _registry.get(name)

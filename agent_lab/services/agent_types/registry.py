@@ -6,7 +6,7 @@ from agent_lab.services.agent_types.base import AgentBase
 
 
 class AgentRegistry:
-    """Lazily instantiates @RegisterAgent-registered agents from the container.
+    """Lazily instantiates @discoverable_agent-registered agents from the container.
 
     Each agent's declared ``extra_deps`` are resolved by provider attribute
     name off the live (possibly downstream-subclassed) container instance.

@@ -9,7 +9,7 @@ from jinja2 import DictLoader, Environment, select_autoescape
 import agent_lab.services.agent_types.coordinator_planner_supervisor as _cps_package
 from agent_lab.interface.mcp.prompt_registry import PromptRegistry
 from agent_lab.interface.mcp.prompt_set_registrar import PromptSetRegistrar
-from agent_lab.interface.mcp.registrar_registration import RegisterMcpRegistrar
+from agent_lab.interface.mcp.registrar_registration import discoverable_mcp_registrar
 from agent_lab.interface.mcp.user_prompt_resolver import UserPromptResolver
 from agent_lab.services.agent_types.coordinator_planner_supervisor import (
     SUPERVISED_AGENT_CONFIGURATION,
@@ -33,7 +33,7 @@ def _load_default_template(role: str) -> str:
     return (_TEMPLATES_DIR / f"default_{role}_system_prompt.txt").read_text().strip()
 
 
-@RegisterMcpRegistrar(extra_deps=("user_prompt_resolver", "prompt_registry"))
+@discoverable_mcp_registrar(extra_deps=("user_prompt_resolver", "prompt_registry"))
 class CoordinatorPlannerSupervisorToolRegistrar(PromptSetRegistrar):
     """Exposes the coordinator_planner_supervisor role prompts over MCP.
 
