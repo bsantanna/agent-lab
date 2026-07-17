@@ -41,6 +41,8 @@ jobs:
           LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
           LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
           BUILD_WORKFLOW: "True"
+      - name: Template deep bake
+        run: uv run --group test pytest --noconftest tests/template -m cookiecutter_bake
       - name: SonarQube
         uses: SonarSource/sonarqube-scan-action@713881670b6b3676cda39549040e2d88c70d582e # v8.2.0
         with:

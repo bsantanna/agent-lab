@@ -96,6 +96,7 @@ dev = [
     "ruff~=0.15.10",
 ]
 test = [
+    "cookiecutter~=2.6.0",
     "langfuse>=4.14.0",
     "pytest~=9.0.3",
     "pytest-asyncio~=1.3.0",
@@ -119,6 +120,7 @@ notebooks = [
 [tool.semantic_release]
 build_command = "uv lock && git add uv.lock"
 version_variables = [
+    "cookiecutter/cookiecutter.json:agent_lab_version",
     "docker/app/Dockerfile:SERVICE_VERSION",
     "charts/agent-lab/Chart.yaml:version",
     "charts/agent-lab/Chart.yaml:appVersion",
@@ -130,7 +132,9 @@ version_variables = [
 fail_under = 90
 
 [tool.ruff]
-extend-exclude = ["notebooks"]
+# cookiecutter/ payload files contain Jinja and are not valid Python before
+# rendering; the baked output is ruff-checked in tests/template instead.
+extend-exclude = ["notebooks", "cookiecutter"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W"]

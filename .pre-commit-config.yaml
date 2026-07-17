@@ -1,5 +1,10 @@
 fail_fast: true
 
+# The cookiecutter payload contains Jinja placeholders, so its files are not
+# valid Python/YAML/TOML before rendering; the baked output is checked in
+# tests/template instead.
+exclude: ^cookiecutter/\{\{cookiecutter\.project_slug\}\}/
+
 default_language_version:
   python: python3.12
 
