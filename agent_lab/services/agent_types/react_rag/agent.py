@@ -9,10 +9,10 @@ from agent_lab.infrastructure.metrics.tracing import (
 )
 from agent_lab.interface.api.messages.schema import MessageRequest, Message
 from agent_lab.services.agent_types.base import AgentUtils, AgentBase
-from agent_lab.services.agent_types.registration import RegisterAgent
+from agent_lab.services.agent_types.registration import discoverable_agent
 
 
-@RegisterAgent("react_rag")
+@discoverable_agent("react_rag")
 class ReactRagAgent(AgentBase):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)

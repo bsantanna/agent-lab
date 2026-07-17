@@ -89,7 +89,7 @@ agent packages.
 # agent_lab/main.py
 from agent_lab.app_factory import create_app
 
-app = create_app(scan_packages=["agent_lab.services.agent_types"])
+app = create_app()  # scans DEFAULT_SCAN_PACKAGES: all built-in capabilities
 ```
 
 Use it as a live reference while building your own app, and as the fastest way to try
@@ -251,9 +251,9 @@ voice transcription and analysis, after the agent is created and stored in the d
 Multiple agents backed by the same implementation can be created and refined via the
 REST API.
 
-### Register the agent with `@RegisterAgent`
+### Register the agent with `@discoverable_agent`
 
-Decorate your `AgentBase` subclass with `@RegisterAgent("<agent_type>")`. That single
+Decorate your `AgentBase` subclass with `@discoverable_agent("<agent_type>")`. That single
 decorator is all the registration an agent needs — it makes the agent:
 
 - **discoverable** by the agent registry (`agent_lab/services/agent_types/registry.py`),
@@ -263,10 +263,10 @@ decorator is all the registration an agent needs — it makes the agent:
   the registry dynamically.
 
 ```python
-from agent_lab import AgentBase, AgentUtils, RegisterAgent
+from agent_lab import AgentBase, AgentUtils, discoverable_agent
 
 
-@RegisterAgent("my_agent", extra_deps=("my_service",))
+@discoverable_agent("my_agent", extra_deps=("my_service",))
 class MyAgent(AgentBase):
     def __init__(self, agent_utils: AgentUtils, my_service):
         super().__init__(agent_utils)
@@ -276,7 +276,7 @@ class MyAgent(AgentBase):
 
 > **Note (migration):** earlier versions required manually wiring each agent into
 > `container.py`, adding it to `registry.py`, and extending the Pydantic schema in
-> `agents/schema.py`. Those steps are **obsolete** — `@RegisterAgent` handles all of
+> `agents/schema.py`. Those steps are **obsolete** — `@discoverable_agent` handles all of
 > them. Any `extra_deps` you declare are resolved by name off the (possibly
 > subclassed) container at instantiation time.
 
@@ -289,8 +289,10 @@ container (subclass `Container` when consuming the library) and name them in
 The framework only imports agent modules it is told about, so the decorator fires:
 
 - **In-repo:** place the agent under `agent_lab/services/agent_types/` — the reference
-  app scans that package (`create_app(scan_packages=["agent_lab.services.agent_types"])`).
-- **As a library:** pass your package to `create_app(scan_packages=["my_agents"])`, or
+  app scans that package as part of `DEFAULT_SCAN_PACKAGES` (`create_app()`).
+- **As a library:** pass your package to
+  `create_app(scan_packages=[*DEFAULT_SCAN_PACKAGES, "my_agents"])` — an explicit list
+  replaces the defaults, which is also how you exclude built-in capabilities — or
   publish it from an installed package through the `agent_lab.agents` entry point group
   so consumers pick it up automatically:
 
@@ -335,21 +337,27 @@ never by editing framework code:
 
 | Extension point | How |
 |---|---|
-| **Agents** | Subclass a base class, decorate with `@RegisterAgent`, and register via `scan_packages=[...]` or the `agent_lab.agents` entry point. |
+| **Agents** | Subclass a base class, decorate with `@discoverable_agent`, and register via `scan_packages=[...]` or the `agent_lab.agents` entry point. |
 | **Services & dependencies** | Subclass `Container`, add providers, and pass it as `create_app(container=...)`. |
 | **Configuration** | Implement a `ConfigSource` (or use `YamlConfigSource` / `VaultConfigSource`) and pass `create_app(config_source=...)`. |
 | **Extra HTTP routes** | Build an `APIRouter`, wrap it in a `RouterMount` (with its auth policy), and pass `create_app(extra_routers=[...])`. |
-| **MCP tools** | Provide an `McpRegistrar` on the container and add MCP instruction fragments via `create_app(mcp_instructions=[...])`. |
+| **MCP tools** | Decorate with `@discoverable_mcp_tool` / `@discoverable_mcp_prompt` / `@discoverable_mcp_registrar`, register via the same `scan_packages` / entry-point pass as agents, and add MCP instruction fragments via `create_app(mcp_instructions=[...])`. |
 
 ```python
-from agent_lab import Container, RouterMount, YamlConfigSource, create_app
+from agent_lab import (
+    DEFAULT_SCAN_PACKAGES,
+    Container,
+    RouterMount,
+    YamlConfigSource,
+    create_app,
+)
 
 class MyContainer(Container):
     my_service = ...  # providers.Factory(MyService, ...)
 
 app = create_app(
     container=MyContainer(),
-    scan_packages=["my_agents"],
+    scan_packages=[*DEFAULT_SCAN_PACKAGES, "my_agents"],
     config_source=YamlConfigSource("config.yml"),
     extra_routers=[RouterMount(my_router, "/custom", ["custom"])],
     mcp_instructions=["Extra guidance for MCP clients."],

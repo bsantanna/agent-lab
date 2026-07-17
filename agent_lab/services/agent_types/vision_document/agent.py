@@ -9,7 +9,7 @@ from langgraph.graph import StateGraph, MessagesState
 from agent_lab.interface.api.messages.schema import MessageRequest
 from agent_lab.services.agent_types.base import WorkflowAgentBase, AgentUtils
 from agent_lab.services.tasks import TaskProgress
-from agent_lab.services.agent_types.registration import RegisterAgent
+from agent_lab.services.agent_types.registration import discoverable_agent
 
 
 class AgentState(MessagesState):
@@ -22,7 +22,7 @@ class AgentState(MessagesState):
     execution_system_prompt: str
 
 
-@RegisterAgent("vision_document")
+@discoverable_agent("vision_document")
 class VisionDocumentAgent(WorkflowAgentBase):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)

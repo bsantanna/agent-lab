@@ -28,7 +28,7 @@ from agent_lab.services.agent_types.coordinator_planner_supervisor.schema import
 )
 from agent_lab.services.agent_types.schema import SolutionPlan
 from agent_lab.services.tasks import TaskProgress
-from agent_lab.services.agent_types.registration import RegisterAgent
+from agent_lab.services.agent_types.registration import discoverable_agent
 
 
 class AgentState(MessagesState):
@@ -50,7 +50,7 @@ class AgentState(MessagesState):
     remaining_steps: RemainingSteps
 
 
-@RegisterAgent("coordinator_planner_supervisor")
+@discoverable_agent("coordinator_planner_supervisor")
 class CoordinatorPlannerSupervisorAgent(SupervisedWorkflowAgentBase):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)

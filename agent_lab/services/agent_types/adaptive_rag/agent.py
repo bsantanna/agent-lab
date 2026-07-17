@@ -20,7 +20,7 @@ from agent_lab.services.agent_types.base import (
     WebAgentBase,
 )
 from agent_lab.services.tasks import TaskProgress
-from agent_lab.services.agent_types.registration import RegisterAgent
+from agent_lab.services.agent_types.registration import discoverable_agent
 
 
 class AgentState(MessagesState):
@@ -39,7 +39,7 @@ class AgentState(MessagesState):
     retrieval_grader_system_prompt: str
 
 
-@RegisterAgent("adaptive_rag")
+@discoverable_agent("adaptive_rag")
 class AdaptiveRagAgent(WebAgentBase):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)

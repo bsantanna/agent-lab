@@ -65,11 +65,11 @@ Define an agent, register it with a decorator, and build the FastAPI app around 
 from langchain_core.messages import AIMessage
 from langgraph.graph import MessagesState
 
-from agent_lab import AgentBase, AgentUtils, RegisterAgent
+from agent_lab import AgentBase, AgentUtils, discoverable_agent
 from agent_lab.interface.api.messages.schema import Message, MessageRequest
 
 
-@RegisterAgent("echo")
+@discoverable_agent("echo")
 class EchoAgent(AgentBase):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
@@ -94,10 +94,13 @@ class EchoAgent(AgentBase):
 
 ```python
 # app.py
-from agent_lab import create_app
+from agent_lab import DEFAULT_SCAN_PACKAGES, create_app
 
-# Scans your package for @RegisterAgent classes and assembles the app.
-app = create_app(scan_packages=["my_agents"])
+# Scans your package for discoverable capabilities (agents, MCP tools,
+# prompts, registrars) alongside the built-ins. The list replaces
+# DEFAULT_SCAN_PACKAGES, so leave defaults out to exclude built-in
+# capabilities you don't want.
+app = create_app(scan_packages=[*DEFAULT_SCAN_PACKAGES, "my_agents"])
 ```
 
 ```bash
@@ -125,14 +128,14 @@ Agents can also be published from an installed package via the `agent_lab.agents
 | Export | Purpose |
 |---|---|
 | `create_app(...)` | Composition root — builds the FastAPI app from your agents, container, config and routers. |
-| `RegisterAgent` | Decorator that registers an `AgentBase` subclass under an `agent_type`. |
+| `discoverable_agent` | Decorator that registers an `AgentBase` subclass under an `agent_type`. |
 | `AgentBase`, `WorkflowAgentBase`, `SupervisedWorkflowAgentBase`, `WebAgentBase`, `ContactSupportAgentBase` | Base classes to extend, from simple message handlers to multi-agent supervisors. |
 | `Container` | Subclass to add your own providers (services, MCP registrars, tracing backends). |
 | `ConfigSource`, `YamlConfigSource`, `VaultConfigSource` | Supply configuration from YAML, Vault, or a custom source. |
 | `RouterMount` | Mount extra FastAPI routers with their auth policy. |
 | `McpRegistrar` | Extend the MCP server with additional tools. |
 
-**Agent system** — Agents extend `WorkflowAgentBase` (which uses LangGraph state graphs). The hierarchy goes from simple (echo, adaptive RAG) to complex (coordinator-planner-supervisor multi-agent). Agents process messages, have configurable settings (Jinja2-templated prompts), and persist state in the checkpoints database. Registering an agent with `@RegisterAgent` makes it discoverable, resolvable through the DI container, and valid at the API — no manual registry or schema edits required.
+**Agent system** — Agents extend `WorkflowAgentBase` (which uses LangGraph state graphs). The hierarchy goes from simple (echo, adaptive RAG) to complex (coordinator-planner-supervisor multi-agent). Agents process messages, have configurable settings (Jinja2-templated prompts), and persist state in the checkpoints database. Registering an agent with `@discoverable_agent` makes it discoverable, resolvable through the DI container, and valid at the API — no manual registry or schema edits required.
 
 ---
 

@@ -34,7 +34,7 @@ from agent_lab.services.agent_types.business.voice_memos.schema import (
 )
 from agent_lab.services.agent_types.schema import SolutionPlan
 from agent_lab.services.tasks import TaskProgress
-from agent_lab.services.agent_types.registration import RegisterAgent
+from agent_lab.services.agent_types.registration import discoverable_agent
 
 CURRENT_TIME_PATTERN = "%a %b %d %Y %H:%M:%S %z"
 
@@ -58,7 +58,7 @@ class AgentState(MessagesState):
     remaining_steps: RemainingSteps
 
 
-@RegisterAgent("voice_memos")
+@discoverable_agent("voice_memos")
 class VoiceMemosAgent(SupervisedWorkflowAgentBase):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
@@ -466,7 +466,7 @@ class VoiceMemosAgent(SupervisedWorkflowAgentBase):
         )
 
 
-@RegisterAgent("azure_entra_id_voice_memos")
+@discoverable_agent("azure_entra_id_voice_memos")
 class AzureEntraIdVoiceMemosAgent(
     AzureEntraIdOrganizationWorkflowBase, VoiceMemosAgent
 ):
@@ -504,7 +504,7 @@ class AzureEntraIdVoiceMemosAgent(
         return [self.get_person_search_tool(), self.get_person_details_tool()]
 
 
-@RegisterAgent("fast_voice_memos")
+@discoverable_agent("fast_voice_memos")
 class FastVoiceMemosAgent(VoiceMemosAgent):
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)

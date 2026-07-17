@@ -16,12 +16,22 @@ from agent_lab.core.config import ConfigSource, default_config_source, load_conf
 from agent_lab.core.container import Container
 from agent_lab.infrastructure.auth.user import map_user
 from agent_lab.infrastructure.metrics.logging_middleware import LoggingMiddleware
+from agent_lab.interface.mcp import bootstrap as mcp_bootstrap
 from agent_lab.interface.mcp.server import build_mcp_server
 from agent_lab.services.agent_types import discovery
 from agent_lab.services.agent_types.registry import AgentRegistry
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+# Scanned when create_app() is called without scan_packages: Agent-Lab's own
+# agents and MCP capabilities. An explicit scan_packages list *replaces* these
+# defaults — include them (e.g. [*DEFAULT_SCAN_PACKAGES, "myapp.agents"]) to
+# keep the built-ins, or list individual modules to cherry-pick.
+DEFAULT_SCAN_PACKAGES: Sequence[str] = (
+    "agent_lab.services.agent_types",
+    "agent_lab.interface.mcp",
+)
 
 
 @dataclass(frozen=True)
@@ -42,7 +52,7 @@ class RouterMount:
 def create_app(
     *,
     container: Optional[Container] = None,
-    scan_packages: Sequence[str] = (),
+    scan_packages: Optional[Sequence[str]] = None,
     config_source: Optional[ConfigSource] = None,
     extra_routers: Sequence[RouterMount] = (),
     mcp_instructions: Sequence[str] = (),
@@ -50,10 +60,17 @@ def create_app(
     """Builds the FastAPI application (composition root).
 
     Downstream apps pass their own container subclass instance, the packages
-    to scan for @RegisterAgent classes, a config source, extra RouterMounts,
-    and MCP instruction fragments — extension happens through these
-    parameters, never by editing library code.
+    to scan for discoverable capabilities (agents, MCP tools, prompts, and
+    registrars), a config source, extra RouterMounts, and MCP instruction
+    fragments — extension happens through these parameters, never by editing
+    library code.
+
+    Omitting ``scan_packages`` scans ``DEFAULT_SCAN_PACKAGES`` (all built-in
+    capabilities); an explicit list replaces the defaults, so a capability not
+    reachable from the scan is simply absent from the app.
     """
+    if scan_packages is None:
+        scan_packages = DEFAULT_SCAN_PACKAGES
     discovery.scan_packages(scan_packages)
     discovery.load_entry_point_agents()
 
@@ -63,7 +80,8 @@ def create_app(
 
     mounts = _builtin_router_mounts() + list(extra_routers)
 
-    mcp_registrars = container.mcp_registrars()
+    mcp_bootstrap.load_framework_registrars()
+    mcp_registrars = mcp_bootstrap.build_registrars(container)
     mcp_server = build_mcp_server(
         container, mcp_registrars, extra_instructions=tuple(mcp_instructions)
     )

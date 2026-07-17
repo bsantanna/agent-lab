@@ -1,12 +1,12 @@
 import threading
 
-from agent_lab.domain.exceptions.base import ConfigurationError
+from agent_lab.core.extra_deps import resolve_extra_deps
 from agent_lab.services.agent_types import registration
 from agent_lab.services.agent_types.base import AgentBase
 
 
 class AgentRegistry:
-    """Lazily instantiates @RegisterAgent-registered agents from the container.
+    """Lazily instantiates @discoverable_agent-registered agents from the container.
 
     Each agent's declared ``extra_deps`` are resolved by provider attribute
     name off the live (possibly downstream-subclassed) container instance.
@@ -33,12 +33,11 @@ class AgentRegistry:
     def _instantiate(self, agent_type: str) -> AgentBase:
         descriptor = registration.get_descriptor(agent_type)
         kwargs = {"agent_utils": self._container.agent_utils()}
-        for dep_name in descriptor.extra_deps:
-            provider = getattr(self._container, dep_name, None)
-            if provider is None:
-                raise ConfigurationError(
-                    f"agent '{agent_type}' declares extra dependency '{dep_name}' "
-                    f"but {type(self._container).__name__} has no such provider"
-                )
-            kwargs[dep_name] = provider()
+        kwargs.update(
+            resolve_extra_deps(
+                self._container,
+                descriptor.extra_deps,
+                owner=f"agent '{agent_type}'",
+            )
+        )
         return descriptor.agent_cls(**kwargs)

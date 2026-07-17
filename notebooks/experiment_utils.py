@@ -4,13 +4,12 @@ from IPython.display import Image, display
 import requests
 from langchain_core.runnables.graph import MermaidDrawMethod
 
-from agent_lab.app_factory import bind_agent_registry
+from agent_lab.app_factory import DEFAULT_SCAN_PACKAGES, bind_agent_registry
 from agent_lab.core.config import default_config_source, load_config
 from agent_lab.core.container import Container
 from agent_lab.services.agent_types import discovery
 
 DEFAULT_AGENT_LAB_ENDPOINT = "http://localhost:18000"
-DEFAULT_SCAN_PACKAGES = ("agent_lab.services.agent_types",)
 
 
 def bootstrap_container(modules, scan_packages=DEFAULT_SCAN_PACKAGES):

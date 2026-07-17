@@ -127,7 +127,7 @@ For repeatable runs consider:
 ## Extending Agent-Lab: practical recipes
 
 1. Add a new agent type:
-   - Create the agent class under `agent_lab/services/agent_types/` following existing patterns, and decorate it with `@RegisterAgent("your_type")` so it is discovered.
+   - Create the agent class under `agent_lab/services/agent_types/` following existing patterns, and decorate it with `@discoverable_agent("your_type")` so it is discovered.
    - Implement any new tool interfaces under `agent_lab/infrastructure/`.
    - Add a notebook in `notebooks/` that mounts your agent through `agent_lab/core/container` and exercises it with a small scenario.
 

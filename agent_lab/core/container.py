@@ -22,10 +22,6 @@ from agent_lab.infrastructure.metrics.tracing_backends import (
     LangfuseTracingBackend,
     LangWatchTracingBackend,
 )
-from agent_lab.interface.mcp.coordinator_planner_supervisor_tool_registrar import (
-    CoordinatorPlannerSupervisorToolRegistrar,
-)
-from agent_lab.interface.mcp.default_tool_registrar import DefaultToolRegistrar
 from agent_lab.interface.mcp.prompt_registry import PromptRegistry
 from agent_lab.interface.mcp.user_prompt_resolver import UserPromptResolver
 from agent_lab.services.agent_settings import AgentSettingService
@@ -167,7 +163,7 @@ class Container(containers.DeclarativeContainer):
         task_notification_service=task_notification_service,
     )
 
-    # Agents register themselves via @RegisterAgent and are discovered through
+    # Agents register themselves via @discoverable_agent and are discovered through
     # scan-packages/entry points. The registry needs the live container
     # instance to resolve each agent's extra_deps, so create_app() binds it
     # via container.agent_registry.override(...) right after instantiation
@@ -183,24 +179,13 @@ class Container(containers.DeclarativeContainer):
 
     prompt_registry = providers.Singleton(PromptRegistry)
 
-    default_tool_registrar = providers.Singleton(
-        DefaultToolRegistrar,
-        prompt_registry=prompt_registry,
-    )
-
-    coordinator_planner_supervisor_tool_registrar = providers.Singleton(
-        CoordinatorPlannerSupervisorToolRegistrar,
-        user_prompt_resolver=user_prompt_resolver,
-        prompt_registry=prompt_registry,
-    )
-
-    mcp_registrars = providers.List(
-        default_tool_registrar,
-        coordinator_planner_supervisor_tool_registrar,
-    )
+    # MCP registrars are contributed via @discoverable_mcp_registrar and instantiated
+    # from this container in agent_lab.interface.mcp.bootstrap.build_registrars,
+    # resolving each registrar's extra_deps (e.g. prompt_registry,
+    # user_prompt_resolver) by provider name — the @discoverable_agent convention.
 
     # Tracing frameworks are decoupled behind the TracingBackend abstraction and
-    # composed here as a list (mirroring mcp_registrars). Adding a framework is a
+    # composed here as a list. Adding a framework is a
     # new backend class + one entry below — the Tracer coordinator, the
     # @trace_agent_message decorator and the agent call sites stay untouched.
     langfuse_tracing_backend = providers.Singleton(LangfuseTracingBackend)
