@@ -21,7 +21,7 @@ class TestEchoAgent(AgentBase):
         )
 
     def get_input_params(self, message_request: MessageRequest, schema: str) -> dict:
-        return message_request.to_dict()
+        return message_request.model_dump()
 
     def process_message(self, message_request: MessageRequest, schema: str) -> Message:
         message_content, response_data = self.format_response(
