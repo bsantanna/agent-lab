@@ -75,6 +75,7 @@ def create_app(
     discovery.load_entry_point_agents()
 
     container = container or Container()
+    wire_framework_modules(container)
     load_config(container, config_source or default_config_source())
     bind_agent_registry(container)
 
@@ -107,6 +108,18 @@ def create_app(
     setup_static(container, application)
 
     return application
+
+
+def wire_framework_modules(container: Container) -> None:
+    """Wires the framework endpoint modules to a live container instance.
+
+    dependency-injector does not inherit ``wiring_config`` on container
+    subclasses (a subclass gets a fresh, empty configuration), so a downstream
+    ``Container`` subclass would silently lose endpoint injection and every
+    DI-injected endpoint would 500. Like ``bind_agent_registry``, the binding
+    happens at the composition root so any container instance works.
+    """
+    container.wire(modules=Container.wiring_config.modules)
 
 
 def bind_agent_registry(container: Container) -> None:

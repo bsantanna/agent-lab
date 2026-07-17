@@ -32,6 +32,14 @@ def test_example_agents_are_registered():
     assert registration.is_registered("{{ cookiecutter.package_name }}_echo")
 
 
+def test_agent_types_endpoint_resolves_dependency_injection():
+    # Exercises a DI-injected endpoint (no database needed): fails if the
+    # framework endpoint modules are not wired to this project's Container.
+    response = client.get("/agents/types", headers={"Authorization": "Bearer dummy"})
+    assert response.status_code == 200
+    assert "{{ cookiecutter.package_name }}_echo" in response.json()
+
+
 def test_example_mcp_tool_is_registered():
     tool_names = {tool.name for tool in tool_registration.registered_tools()}
     assert "{{ cookiecutter.package_name }}_hello_tool" in tool_names
