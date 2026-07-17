@@ -2,6 +2,26 @@
 
 <!-- version list -->
 
+## v1.11.0 (2026-07-17)
+
+### Bug Fixes
+
+- Library adjusts 2 -> additional decorators for dynamic registration
+  ([#351](https://github.com/btech-software/agent-lab/pull/351),
+  [`70064a2`](https://github.com/btech-software/agent-lab/commit/70064a27b189f27c38f53f1a8f3c3490510ce70e))
+
+### Features
+
+- Library refactoring (10) ([#351](https://github.com/btech-software/agent-lab/pull/351),
+  [`70064a2`](https://github.com/btech-software/agent-lab/commit/70064a27b189f27c38f53f1a8f3c3490510ce70e))
+
+- Library refactoring (8) ([#351](https://github.com/btech-software/agent-lab/pull/351),
+  [`70064a2`](https://github.com/btech-software/agent-lab/commit/70064a27b189f27c38f53f1a8f3c3490510ce70e))
+
+- Library refactoring (9) ([#351](https://github.com/btech-software/agent-lab/pull/351),
+  [`70064a2`](https://github.com/btech-software/agent-lab/commit/70064a27b189f27c38f53f1a8f3c3490510ce70e))
+
+
 ## v1.10.0 (2026-07-16)
 
 ### Bug Fixes
