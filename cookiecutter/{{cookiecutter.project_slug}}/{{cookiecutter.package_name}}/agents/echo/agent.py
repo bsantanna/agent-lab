@@ -1,24 +1,20 @@
 from langchain_core.messages import AIMessage
 from langgraph.graph import MessagesState
 
-from agent_lab.interface.api.messages.schema import MessageRequest, Message
-from agent_lab.services.agent_types.base import AgentBase, AgentUtils
+from agent_lab import AgentBase, AgentUtils, discoverable_agent
+from agent_lab.interface.api.messages.schema import Message, MessageRequest
 from agent_lab.services.tasks import TaskProgress
-from agent_lab.services.agent_types.registration import discoverable_agent
 
 
-@discoverable_agent("test_echo")
-class TestEchoAgent(AgentBase):
+@discoverable_agent("{{ cookiecutter.package_name }}_echo")
+class EchoAgent(AgentBase):
+    """Minimal agent: echoes the incoming message without calling an LLM."""
+
     def __init__(self, agent_utils: AgentUtils):
         super().__init__(agent_utils)
 
     def create_default_settings(self, agent_id: str, schema: str):
-        self.agent_setting_service.create_agent_setting(
-            agent_id=agent_id,
-            setting_key="dummy_setting",
-            setting_value="dummy_value",
-            schema=schema,
-        )
+        pass
 
     def get_input_params(self, message_request: MessageRequest, schema: str) -> dict:
         return message_request.model_dump()
@@ -33,8 +29,9 @@ class TestEchoAgent(AgentBase):
         self.task_notification_service.publish_update(
             task_progress=TaskProgress(
                 agent_id=message_request.agent_id,
-                status="in_progress",
-                message_content=f"echo: {message_request.message_content}",
+                status="completed",
+                message_content=message_content,
+                response_data=response_data,
             )
         )
 
