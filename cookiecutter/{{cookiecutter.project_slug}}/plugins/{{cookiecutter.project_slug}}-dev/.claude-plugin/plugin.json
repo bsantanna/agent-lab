@@ -1,0 +1,9 @@
+{
+  "name": "{{ cookiecutter.project_slug }}-dev",
+  "version": "0.1.0",
+  "description": "Comprehensive feature development workflow with specialized agents for codebase exploration, architecture design, and quality review",
+  "author": {
+    "name": "{{ cookiecutter.author_name }}",
+    "email": "{{ cookiecutter.author_email }}"
+  }
+}

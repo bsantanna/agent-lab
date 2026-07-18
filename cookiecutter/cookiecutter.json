@@ -9,7 +9,11 @@
     "include_docker": true,
     "include_github_actions": true,
     "include_testcontainers": true,
+    "include_claude_plugin": true,
+    "include_release_pipeline": true,
     "_copy_without_render": [
-        "{{cookiecutter.package_name}}/agents/react_agent/default_execution_system_prompt.txt"
+        "{{cookiecutter.package_name}}/agents/react_agent/default_execution_system_prompt.txt",
+        ".github/workflows/release.yml",
+        ".github/workflows/docker-image.yml"
     ]
 }
