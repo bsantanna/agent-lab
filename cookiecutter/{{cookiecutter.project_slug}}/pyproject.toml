@@ -30,6 +30,22 @@ test = [
 {%- endif %}
 ]
 
+{% if cookiecutter.include_release_pipeline -%}
+[tool.semantic_release]
+build_command = "uv lock && git add uv.lock"
+version_variables = [
+    "pyproject.toml:version",
+{%- if cookiecutter.include_docker %}
+    "docker/app/Dockerfile:SERVICE_VERSION",
+{%- endif %}
+{%- if cookiecutter.include_claude_plugin %}
+    ".claude-plugin/marketplace.json:version",
+    "plugins/{{ cookiecutter.project_slug }}-dev/.claude-plugin/plugin.json:version",
+    "plugins/{{ cookiecutter.project_slug }}-dev/README.md:Version",
+{%- endif %}
+]
+
+{% endif -%}
 [tool.ruff.lint]
 select = ["E", "F", "W"]
 ignore = ["E203", "E501"]

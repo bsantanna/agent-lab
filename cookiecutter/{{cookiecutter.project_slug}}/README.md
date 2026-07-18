@@ -56,3 +56,33 @@ runtime, e.g. {% raw %}`Today is {{ CURRENT_TIME }}.`{% endraw %} — see
 make test_integration   # boots Postgres, Redis, and Vault via testcontainers
 ```
 {% endif %}
+{% if cookiecutter.include_claude_plugin %}
+## Claude Code plugin marketplace
+
+`.claude-plugin/marketplace.json` publishes the plugins under `plugins/` as a
+Claude Code marketplace. The included `{{ cookiecutter.project_slug }}-dev`
+plugin ships a guided feature-development workflow (`/{{ cookiecutter.project_slug }}-dev`); replace or
+extend it with your own plugins. Once the repo is on GitHub:
+
+```
+/plugin marketplace add <your-org>/{{ cookiecutter.project_slug }}
+/plugin install {{ cookiecutter.project_slug }}-dev@{{ cookiecutter.project_slug }}
+```
+{% endif %}
+{% if cookiecutter.include_release_pipeline %}
+## Releases
+
+`.github/workflows/release.yml` runs [python-semantic-release](https://python-semantic-release.readthedocs.io/)
+after each successful CI run on `main`: commit messages following
+[Conventional Commits](https://www.conventionalcommits.org/) drive the version
+bump, and every version-bearing file listed in `[tool.semantic_release]`
+`version_variables` (in `pyproject.toml`) is updated in the release commit.
+
+Setup: add a `GH_TOKEN` repository secret — a personal access token with push
+access to `main` — so the release commit and tag can be pushed back and
+trigger downstream workflows.
+{%- if cookiecutter.include_docker %}
+After each release, `docker-image.yml` builds a multi-arch image, pushes it to
+`ghcr.io/<your-org>/{{ cookiecutter.project_slug }}`, and signs it with cosign.
+{%- endif %}
+{% endif %}

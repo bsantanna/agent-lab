@@ -1,0 +1,23 @@
+{
+  "name": "{{ cookiecutter.project_slug }}",
+  "owner": {
+    "name": "{{ cookiecutter.author_name }}",
+    "email": "{{ cookiecutter.author_email }}"
+  },
+  "metadata": {
+    "description": "{{ cookiecutter.project_name }} plugin marketplace",
+    "version": "0.1.0",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "{{ cookiecutter.project_slug }}-dev",
+      "source": "./plugins/{{ cookiecutter.project_slug }}-dev",
+      "description": "Comprehensive feature development workflow with specialized agents for codebase exploration, architecture design, and quality review",
+      "version": "0.1.0",
+      "category": "development",
+      "tags": ["feature-development", "workflow"],
+      "keywords": ["feature development", "architecture", "code review"]
+    }
+  ]
+}

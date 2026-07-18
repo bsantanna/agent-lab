@@ -24,6 +24,8 @@ uvx cookiecutter /path/to/agent-lab --directory cookiecutter
 | `include_docker` | `true` | `docker/`, `compose.yml`, `config-docker.yml`, and the ReAct workflow example agent |
 | `include_github_actions` | `true` | `.github/workflows/ci.yml` (lint + tests) |
 | `include_testcontainers` | `true` | `tests/integration/` harness (Postgres, Redis, Vault) |
+| `include_claude_plugin` | `true` | `.claude-plugin/marketplace.json` + `plugins/<slug>-dev/` (feature-dev workflow plugin) |
+| `include_release_pipeline` | `true` | `.github/workflows/release.yml` (python-semantic-release) and `[tool.semantic_release]` in `pyproject.toml`; with `include_docker` also `docker-image.yml` (ghcr.io + cosign). Requires `include_github_actions` |
 
 ## Maintenance invariants
 
@@ -33,16 +35,23 @@ uvx cookiecutter /path/to/agent-lab --directory cookiecutter
   `hooks/post_gen_project.py` stays trivially safe only while no `__init__.py`
   imports its siblings.
 - **Each toggle owns a disjoint path set** in `post_gen_project.py` — never
-  make one deletion rule depend on another toggle's value.
+  make one deletion rule depend on another toggle's value. One documented
+  exception: `.github/workflows/docker-image.yml` needs both
+  `include_release_pipeline` and `include_docker`, so both rules remove it
+  (`remove()` tolerates already-deleted paths). Invalid toggle combinations
+  (`include_release_pipeline` without `include_github_actions`) are rejected
+  in `pre_gen_project.py` instead of being patched up after generation.
 - **Runtime Jinja must not pass through cookiecutter's renderer.** Files
-  containing runtime `{{ ... }}` templates (agent prompt files) are listed in
-  `_copy_without_render` in `cookiecutter.json`; README snippets use
-  `{% raw %}` blocks.
+  containing runtime `{{ ... }}` templates (agent prompt files) or GitHub
+  Actions `${{ ... }}` expressions (release.yml, docker-image.yml) are listed
+  in `_copy_without_render` in `cookiecutter.json`; README snippets and the
+  single expression in ci.yml use `{% raw %}` blocks.
 - **Template `.py` payload files are not valid Python before rendering** —
   they are excluded from the host repo's ruff/pre-commit AST hooks. The hooks
   in `hooks/` ARE valid Python (Jinja only inside string literals) and stay
   lint-clean.
-- The bake matrix (all 8 toggle combinations) is tested in
+- The bake matrix (all 32 toggle combinations, including the invalid ones,
+  which assert the `pre_gen` rejection) is tested in
   `tests/template/test_bake_structural.py`; a deeper opt-in test
   (`-m cookiecutter_bake`) installs a baked project against this repo's
   working tree and runs its smoke tests. Adding a new toggle means updating

@@ -11,6 +11,8 @@ import sys
 PROJECT_SLUG = "{{ cookiecutter.project_slug }}"
 PACKAGE_NAME = "{{ cookiecutter.package_name }}"
 AGENT_LAB_VERSION = "{{ cookiecutter.agent_lab_version }}"
+INCLUDE_GITHUB_ACTIONS = "{{ cookiecutter.include_github_actions }}" == "True"
+INCLUDE_RELEASE_PIPELINE = "{{ cookiecutter.include_release_pipeline }}" == "True"
 
 # Names that would shadow the framework package or the generated project's
 # own test-suite convention.
@@ -42,4 +44,10 @@ if not re.match(r"^\d+\.\d+\.\d+$", AGENT_LAB_VERSION):
         f"agent_lab_version '{AGENT_LAB_VERSION}' must be a plain semantic "
         "version (e.g. '1.10.0') — the dependency range is built in "
         "pyproject.toml."
+    )
+
+if INCLUDE_RELEASE_PIPELINE and not INCLUDE_GITHUB_ACTIONS:
+    fail(
+        "include_release_pipeline requires include_github_actions: release.yml "
+        "is triggered by the CI workflow completing and lives in .github/."
     )

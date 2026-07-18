@@ -16,7 +16,13 @@ from cookiecutter.main import cookiecutter
 
 REPO_ROOT = Path(__file__).parents[2]
 TEMPLATE_DIR = str(REPO_ROOT / "cookiecutter")
-TOGGLES = ("include_docker", "include_github_actions", "include_testcontainers")
+TOGGLES = (
+    "include_docker",
+    "include_github_actions",
+    "include_testcontainers",
+    "include_claude_plugin",
+    "include_release_pipeline",
+)
 
 
 def bake(output_dir: Path, **extra_context) -> Path:
@@ -44,6 +50,11 @@ def toggle_combinations():
     ),
 )
 def test_bake_produces_expected_tree(tmp_path, toggles):
+    if toggles["include_release_pipeline"] and not toggles["include_github_actions"]:
+        with pytest.raises(FailedHookException):
+            bake(tmp_path, **toggles)
+        return
+
     root = bake(tmp_path, **toggles)
 
     assert (root / "docker").exists() == toggles["include_docker"]
@@ -56,6 +67,39 @@ def test_bake_produces_expected_tree(tmp_path, toggles):
     assert (root / "tests" / "integration").exists() == toggles[
         "include_testcontainers"
     ]
+    assert (root / ".claude-plugin" / "marketplace.json").exists() == toggles[
+        "include_claude_plugin"
+    ]
+    plugin_dir = root / "plugins" / "test-app-dev"
+    assert (plugin_dir / ".claude-plugin" / "plugin.json").exists() == toggles[
+        "include_claude_plugin"
+    ]
+    assert (plugin_dir / "commands" / "test-app-dev.md").exists() == toggles[
+        "include_claude_plugin"
+    ]
+    if toggles["include_claude_plugin"]:
+        plugin_readme = (plugin_dir / "README.md").read_text()
+        assert "/test-app-dev" in plugin_readme
+        assert "/feature-dev" not in plugin_readme
+    workflows = root / ".github" / "workflows"
+    assert (workflows / "release.yml").exists() == toggles["include_release_pipeline"]
+    assert (workflows / "docker-image.yml").exists() == (
+        toggles["include_release_pipeline"] and toggles["include_docker"]
+    )
+
+    pyproject_text = (root / "pyproject.toml").read_text()
+    assert ("[tool.semantic_release]" in pyproject_text) == toggles[
+        "include_release_pipeline"
+    ]
+    if toggles["include_release_pipeline"]:
+        version_variables = tomllib.loads(pyproject_text)["tool"]["semantic_release"][
+            "version_variables"
+        ]
+        for version_variable in version_variables:
+            versioned_file = version_variable.rsplit(":", 1)[0]
+            assert (root / versioned_file).exists(), (
+                f"version_variables references missing file {versioned_file}"
+            )
 
     for py_file in root.rglob("*.py"):
         compile(py_file.read_text(), str(py_file), "exec")
