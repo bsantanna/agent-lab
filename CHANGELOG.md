@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.13.0 (2026-07-18)
+
+### Features
+
+- Release and claude marketplace ([#353](https://github.com/btech-software/agent-lab/pull/353),
+  [`fecda0f`](https://github.com/btech-software/agent-lab/commit/fecda0f896ecae9269d98c7b9ece99e911864c55))
+
+
 ## v1.12.0 (2026-07-17)
 
 ### Features
