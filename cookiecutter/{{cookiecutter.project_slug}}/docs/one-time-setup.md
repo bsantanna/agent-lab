@@ -1,13 +1,27 @@
 # One-Time Cluster Setup
 
-Out-of-band steps required once per environment when bootstrapping the AKS +
-GitOps stack under `terraform/aks/`. Everything else is reconciled from git by
-Flux; the steps below are the only manual interventions.
+Bootstraps the AKS + GitOps stack under `terraform/aks/`. Everything runtime is
+reconciled from git by Flux; the only manual interventions are applying the three
+Terraform stages in order and creating DNS records once the load balancer exists.
+
+Apply order: `01_aks` -> `02_gitops` -> **DNS** -> `03_vault_config`.
+
+## Prerequisites
+
+- `az` CLI logged in to the target subscription (`az login`), plus `kubectl`,
+  `jq`, and `curl` on the machine running Terraform.
+- Two GitHub PATs:
+  - fine-grained, read-only **Contents** on this repo (Flux git sync, `02_gitops`);
+  - classic/fine-grained with **read:packages** for pulling the private GHCR
+    image (`03_vault_config` creates the `ghcr-pull` secret).
+- Environment values supplied via an untracked `<env>.tfvars` file (never
+  committed) or `TF_VAR_*` env vars. Secrets (`github_pat`) must not be
+  committed.
 
 ## 1. Provision the cluster (`terraform/aks/01_aks`)
 
-Runs on the node holding Terraform state. Environment-specific values are
-supplied via an untracked tfvars file, never committed.
+Creates the AKS cluster and the Key Vault used for Vault auto-unseal and for
+storing the Vault root token.
 
 ```bash
 cd terraform/aks/01_aks
@@ -17,13 +31,26 @@ terraform apply -var-file=<env>.tfvars
 
 Required tfvars without defaults: `subscription_id`, `location`.
 
+This stage is idempotent across cluster recreations. Azure Key Vault soft-deletes
+rather than removes the unseal vault, so a prior cluster torn down by deleting its
+resource group (or by losing Terraform state) leaves the vault — and its active
+`vault-unseal` key — behind, which previously broke the key create with an
+"already exists" error. The provider is configured to purge (not soft-delete) on
+`terraform destroy`, and a pre-create step purges any soft-deleted remnant of the
+vault name before recreating it, so every `apply` starts from a clean slate with
+no manual Key Vault steps. Recreating the cluster mints a fresh unseal key and a
+fresh `vault-init` payload; Vault is re-initialized cleanly by `03_vault_config`.
+
+Configure `kubectl` for the cluster (used by the DNS lookup and verify steps):
+
+```bash
+terraform -chdir=terraform/aks/01_aks output -raw get_credentials_command | sh
+```
+
 ## 2. Install Flux + GitOps sync (`terraform/aks/02_gitops`)
 
-Prerequisites:
-
-- The `gitops/` directory is present on the branch Flux tracks (`main`).
-- A fine-grained GitHub PAT with read-only **Contents** access to this
-  repository (git sync auth).
+Deploys the Flux extension and configuration; Flux then reconciles traefik,
+cert-manager, CNPG, Redis, Vault, Postgres, and the app from `gitops/`.
 
 ```bash
 cd terraform/aks/02_gitops
@@ -31,42 +58,52 @@ terraform init
 terraform apply -var-file=<env>.tfvars
 ```
 
-Required tfvars without defaults: `subscription_id`, `github_pat`,
-`cert_manager_email`, `vault_hostname` (plus any name overrides matching the
-01_aks apply).
+Required tfvars without defaults: `subscription_id`, `github_pat` (Contents
+read), `cert_manager_email`, `vault_hostname`, `app_hostname` (plus any name
+overrides matching the `01_aks` apply).
 
-Provisioning waits for the first successful sync; the `infra-controllers` and
-`infra-configs` layers must turn healthy before the `apps` layer applies.
+Reconciliation is asynchronous and continues after `apply` returns. The private
+app image stays in `ImagePullBackOff` until `03_vault_config` creates the pull
+secret — expected at this stage.
 
-## 3. DNS record for Vault
+## 3. DNS records
 
-After traefik is up, point the Vault hostname (the `vault_hostname` tfvar) at
-the traefik load balancer's public IP:
-
-```bash
-kubectl get svc -n traefik traefik -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
-```
-
-Create an `A` record `<vault_hostname> -> <that IP>`. cert-manager then
-completes the HTTP-01 challenge and issues the Let's Encrypt certificate.
-
-## 4. Initialize Vault
-
-Vault starts sealed and reports NotReady until initialized — this is expected.
+Once traefik has a LoadBalancer IP, read it:
 
 ```bash
-kubectl exec -n vault vault-0 -- vault operator init
+terraform -chdir=terraform/aks/02_gitops output -raw get_traefik_ip_command | sh
 ```
 
-Store the recovery keys and root token securely (not in this repository). The
-azurekeyvault seal provisioned by `01_aks` auto-unseals Vault on every restart
-after initialization — no manual unsealing needed.
+Create an `A` record pointing **each** hostname at that IP:
 
-## 5. Configure Vault and app secrets (`terraform/aks/03_vault_config`)
+- `vault_hostname -> <IP>`
+- `app_hostname   -> <IP>`
 
-Provisions the KV mount, the read policy, the Kubernetes auth role the app
-logs in with, the GHCR image pull secret, and the `app_secrets` payload read
-by agent_lab's `KubernetesVaultConfigSource` at startup.
+cert-manager completes the HTTP-01 challenge and issues Let's Encrypt
+certificates automatically once the records resolve. DNS must be in place before
+the next stage, which reaches Vault over its hostname.
+
+## 4. Initialize and configure Vault (`terraform/aks/03_vault_config`)
+
+A single apply that bootstraps and configures everything in dependency order:
+
+1. Waits for the Vault endpoint, runs `operator init` over the public ingress,
+   and stores the root token + recovery keys in the Key Vault (secret
+   `vault-init`). Auto-unseal (the azurekeyvault seal) handles every restart
+   afterward, so there is no manual unseal step. Idempotent — an
+   already-initialized Vault is left untouched.
+2. Reads that root token back and waits for the CNPG secrets to converge.
+3. Creates the `ghcr-pull` image pull secret, the Vault KV secret, and the
+   Kubernetes auth role the app logs in with. Once the pull secret exists the
+   app pulls its image and comes up, loading all config from Vault KV
+   (`secret/app_secrets`) via agent_lab's `KubernetesVaultConfigSource`.
+
+Vault starts sealed and uninitialized until step 1 runs. Its readiness probe
+tolerates the uninitialized state (returns 204 for `uninitcode`), so the pod is
+Ready and reachable through the traefik ingress before init — this is what lets
+`operator init` run over the public hostname. Auto-unseal keeps it Ready across
+restarts afterward; an initialized-but-sealed Vault (e.g. an auto-unseal
+failure) still reports NotReady.
 
 ```bash
 cd terraform/aks/03_vault_config
@@ -74,9 +111,14 @@ terraform init
 terraform apply -var-file=<env>.tfvars
 ```
 
-Required tfvars without defaults: `subscription_id`, `vault_hostname`,
-`vault_token` (the root token from step 4, or an admin token derived from it),
-`github_pat` (needs `read:packages`; distinct from the git-sync PAT).
+Required tfvars without defaults: `subscription_id`, `github_pat`
+(read:packages), `vault_hostname`, `app_hostname`.
+
+To retrieve the root token later for manual `vault` CLI access:
+
+```bash
+terraform -chdir=terraform/aks/03_vault_config output -raw get_root_token_command | sh
+```
 
 ## Verify
 
@@ -86,7 +128,7 @@ az k8s-configuration flux show --resource-group rg-{{ cookiecutter.project_slug 
   --name {{ cookiecutter.project_slug }}
 
 kubectl get kustomizations -n flux-system      # all Ready
-kubectl get helmreleases -A                    # all Ready (vault: see step 4)
+kubectl get helmreleases -A                    # all Ready
 kubectl get clusters.postgresql.cnpg.io -n {{ cookiecutter.project_slug }}
-kubectl get pods -n {{ cookiecutter.project_slug }}
+kubectl get pods -n {{ cookiecutter.project_slug }}   # app + cdp Running
 ```

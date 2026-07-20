@@ -5,6 +5,9 @@ resources:
   - serviceaccount.yaml
   - deployment.yaml
   - service.yaml
+  - ingress.yaml
+  - cdp-deployment.yaml
+  - cdp-service.yaml
 # newTag is bumped automatically by python-semantic-release on release
 # (see version_variables in pyproject.toml)
 images:

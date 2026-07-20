@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cdp
+  labels:
+    app: cdp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cdp
+  template:
+    metadata:
+      labels:
+        app: cdp
+    spec:
+      containers:
+        # Headless Chrome exposing the DevTools Protocol on 9222; the browser
+        # agents reach it through cdp_url (Vault app_secrets, set in 03_vault_config).
+        - name: cdp
+          image: chromedp/headless-shell:152.0.7939.3
+          ports:
+            - name: cdp
+              containerPort: 9222
+          livenessProbe:
+            httpGet:
+              path: /json/version
+              port: cdp
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /json/version
+              port: cdp
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+              ephemeral-storage: 256Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+              ephemeral-storage: 512Mi

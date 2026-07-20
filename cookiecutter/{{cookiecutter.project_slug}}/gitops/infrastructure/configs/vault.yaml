@@ -21,9 +21,10 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: hashicorp
-  # Vault reports NotReady until initialized (a one-time `vault operator init`
-  # per fresh install; auto-unseal covers every restart after that), so helm
-  # must not wait for pod readiness or this release would never turn Ready.
+  # A fresh Vault needs a one-time `vault operator init` (auto-unseal covers
+  # every restart after that). disableWait keeps Flux from blocking on that
+  # one-time bootstrap; the readinessProbe override below makes the pod Ready
+  # while still uninitialized so it is reachable through the ingress for init.
   install:
     disableWait: true
     remediation:
@@ -32,6 +33,17 @@ spec:
     disableWait: true
   values:
     server:
+      # Make the readiness probe tolerate an *uninitialized* Vault (return 204
+      # for uninitcode) so the pod is Ready — and therefore routable through the
+      # traefik ingress — before `vault operator init` has ever run. Without
+      # this a fresh Vault is sealed/NotReady, traefik refuses to route to it
+      # ("no available server"), and 03_vault_config cannot initialize it over
+      # the public ingress (chicken-and-egg). sealedcode is left at its default
+      # (503) so an initialized-but-sealed Vault — e.g. an auto-unseal failure —
+      # is still marked NotReady and kept out of rotation.
+      readinessProbe:
+        enabled: true
+        path: "/v1/sys/health?uninitcode=204"
       standalone:
         # Chart default config plus the azurekeyvault seal; ${...} values are
         # substituted by Flux postBuild from terraform/aks/02_gitops vars.

@@ -16,14 +16,20 @@ variable "cluster_name" {
 }
 
 variable "vault_hostname" {
-  description = "Public hostname of the Vault ingress (same value as 02_gitops); the vault provider connects to https://<hostname>"
+  description = "Public hostname of the Vault ingress (same value as 02_gitops); used by the vault_init step and the vault provider via https://<hostname>"
   type        = string
 }
 
-variable "vault_token" {
-  description = "Vault token with rights to manage mounts, policies, and auth backends (the initial root token, or an admin token derived from it). Supply via TF_VAR_vault_token or a local tfvars file; never commit it."
+variable "unseal_key_vault_name" {
+  description = "Name of the Azure Key Vault (managed by 01_aks) holding the Vault init payload; must match the 01_aks value"
   type        = string
-  sensitive   = true
+  default     = "kv-{{ cookiecutter.project_slug }}-unseal"
+}
+
+variable "init_secret_name" {
+  description = "Key Vault secret name written by this stage's vault_init step; its JSON value provides the Vault root token"
+  type        = string
+  default     = "vault-init"
 }
 
 variable "github_user" {
@@ -38,8 +44,7 @@ variable "github_pat" {
   sensitive   = true
 }
 
-variable "api_base_url" {
-  description = "Base URL the app advertises; cluster-internal service URL until an app ingress exists"
+variable "app_hostname" {
+  description = "Public hostname of the app ingress (same value as 02_gitops); used for api_base_url"
   type        = string
-  default     = "http://{{ cookiecutter.project_slug }}.{{ cookiecutter.project_slug }}.svc.cluster.local"
 }

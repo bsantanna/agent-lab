@@ -67,6 +67,11 @@ variable "pg_image" {
   default     = "bsantanna/cloudnative-pg-vector:17.4"
 }
 
+variable "app_hostname" {
+  description = "Public hostname for the app ingress (DNS must point at the traefik load balancer); substituted into gitops manifests via Flux postBuild"
+  type        = string
+}
+
 variable "unseal_key_vault_name" {
   description = "Name of the Azure Key Vault holding the Vault auto-unseal key, managed by 01_aks; substituted into gitops manifests via Flux postBuild"
   type        = string

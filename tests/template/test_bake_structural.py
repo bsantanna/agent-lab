@@ -93,6 +93,12 @@ def test_bake_produces_expected_tree(tmp_path, toggles):
             root / "gitops" / "apps" / "test-app" / "kustomization.yaml"
         ).read_text()
         assert "ghcr.io/your-org/test-app" in app_kustomization
+        app_ingress = (
+            root / "gitops" / "apps" / "test-app" / "ingress.yaml"
+        ).read_text()
+        assert "${app_hostname}" in app_ingress
+        assert (root / "gitops" / "apps" / "test-app" / "cdp-deployment.yaml").exists()
+        assert (root / "terraform" / "aks" / "03_vault_config" / "outputs.tf").exists()
         aks_variables = (
             root / "terraform" / "aks" / "01_aks" / "variables.tf"
         ).read_text()
