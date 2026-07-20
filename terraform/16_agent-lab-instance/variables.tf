@@ -7,7 +7,7 @@ variable "agent_lab_namespace" {
 variable "agent_lab_chart_version" {
   description = "Helm chart version for agent-lab"
   type        = string
-  default     = "1.14.0"
+  default     = "1.15.0"
 }
 
 variable "agent_lab_fqdn" {

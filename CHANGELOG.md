@@ -2,6 +2,25 @@
 
 <!-- version list -->
 
+## v1.15.0 (2026-07-20)
+
+### Bug Fixes
+
+- Adjusts in cookiecutter library release (1)
+  ([#355](https://github.com/btech-software/agent-lab/pull/355),
+  [`ac024bf`](https://github.com/btech-software/agent-lab/commit/ac024bf04528d8e9a24f6938c58a595cca78160f))
+
+- Adjusts in cookiecutter library release (2)
+  ([#355](https://github.com/btech-software/agent-lab/pull/355),
+  [`ac024bf`](https://github.com/btech-software/agent-lab/commit/ac024bf04528d8e9a24f6938c58a595cca78160f))
+
+### Features
+
+- Terraform aks gitops setup in cookiecutter
+  ([#355](https://github.com/btech-software/agent-lab/pull/355),
+  [`ac024bf`](https://github.com/btech-software/agent-lab/commit/ac024bf04528d8e9a24f6938c58a595cca78160f))
+
+
 ## v1.14.0 (2026-07-20)
 
 ### Features
