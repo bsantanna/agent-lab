@@ -2,6 +2,15 @@
 
 <!-- version list -->
 
+## v1.14.0 (2026-07-20)
+
+### Features
+
+- Add AKS GitOps infrastructure and configurations
+  ([#354](https://github.com/btech-software/agent-lab/pull/354),
+  [`081afb8`](https://github.com/btech-software/agent-lab/commit/081afb87bd903384485b182f3228fed5229e459b))
+
+
 ## v1.13.0 (2026-07-18)
 
 ### Features
