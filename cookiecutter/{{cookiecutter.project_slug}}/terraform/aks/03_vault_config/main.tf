@@ -226,11 +226,19 @@ resource "vault_kv_secret_v2" "app_secrets" {
   data_json = jsonencode({
     api_base_url       = "https://${var.app_hostname}"
     cdp_url            = "http://cdp.${local.app_namespace}.svc.cluster.local:9222"
+{%- if cookiecutter.auth_enabled %}
+    auth_enabled       = true
+    auth_url           = var.auth_url
+    auth_realm         = var.auth_realm
+    auth_client_id     = var.auth_client_id
+    auth_client_secret = var.auth_client_secret
+{%- else %}
     auth_enabled       = false
     auth_url           = ""
     auth_realm         = ""
     auth_client_id     = ""
     auth_client_secret = ""
+{%- endif %}
     broker_url         = "redis://redis.${local.app_namespace}.svc.cluster.local:6379/0"
     db_url             = data.kubernetes_secret.pg_app.data["uri"]
     db_vectors         = data.kubernetes_secret.pg_vectors.data["uri"]

@@ -15,8 +15,8 @@ Apply order: `01_aks` -> `02_gitops` -> **DNS** -> `03_vault_config`.
   - classic/fine-grained with **read:packages** for pulling the private GHCR
     image (`03_vault_config` creates the `ghcr-pull` secret).
 - Environment values supplied via an untracked `<env>.tfvars` file (never
-  committed) or `TF_VAR_*` env vars. Secrets (`github_pat`) must not be
-  committed.
+  committed) or `TF_VAR_*` env vars. Secrets (`github_pat`{% if cookiecutter.auth_enabled %},
+  `auth_client_secret`{% endif %}) must not be committed.
 
 ## 1. Provision the cluster (`terraform/aks/01_aks`)
 
@@ -112,7 +112,9 @@ terraform apply -var-file=<env>.tfvars
 ```
 
 Required tfvars without defaults: `subscription_id`, `github_pat`
-(read:packages), `vault_hostname`, `app_hostname`.
+(read:packages), `vault_hostname`, `app_hostname`{% if cookiecutter.auth_enabled %}, `auth_url`,
+`auth_client_secret` (`auth_realm` and `auth_client_id` default to
+`{{ cookiecutter.project_slug }}`){% endif %}.
 
 To retrieve the root token later for manual `vault` CLI access:
 

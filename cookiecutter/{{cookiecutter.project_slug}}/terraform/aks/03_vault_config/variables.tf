@@ -48,3 +48,28 @@ variable "app_hostname" {
   description = "Public hostname of the app ingress (same value as 02_gitops); used for api_base_url"
   type        = string
 }
+{%- if cookiecutter.auth_enabled %}
+
+variable "auth_url" {
+  description = "Base URL of the OIDC provider the app authenticates against (e.g. https://auth.example.com)"
+  type        = string
+}
+
+variable "auth_realm" {
+  description = "Realm on the OIDC provider"
+  type        = string
+  default     = "{{ cookiecutter.project_slug }}"
+}
+
+variable "auth_client_id" {
+  description = "OIDC client id the app uses"
+  type        = string
+  default     = "{{ cookiecutter.project_slug }}"
+}
+
+variable "auth_client_secret" {
+  description = "OIDC client secret for the app. Supply via TF_VAR_auth_client_secret or a local tfvars file; never commit it."
+  type        = string
+  sensitive   = true
+}
+{%- endif %}

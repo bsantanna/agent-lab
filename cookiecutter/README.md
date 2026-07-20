@@ -28,6 +28,7 @@ uvx cookiecutter /path/to/agent-lab --directory cookiecutter
 | `include_claude_plugin` | `true` | `.claude-plugin/marketplace.json` + `plugins/<slug>-dev/` (feature-dev workflow plugin) |
 | `include_release_pipeline` | `true` | `.github/workflows/release.yml` (python-semantic-release) and `[tool.semantic_release]` in `pyproject.toml`; with `include_docker` also `docker-image.yml` (ghcr.io + cosign). Requires `include_github_actions` |
 | `include_aks_gitops` | `false` | `terraform/aks/` (AKS cluster + Flux + Vault config), `gitops/` manifests, and `docs/one-time-setup.md`. Requires `include_docker` |
+| `auth_enabled` | `false` | Wires real `auth_*` values into the Vault `app_secrets` payload in `terraform/aks/03_vault_config`: declares `auth_url`/`auth_realm`/`auth_client_id`/`auth_client_secret` (sensitive) terraform variables supplied per environment at apply time. Requires `include_aks_gitops` |
 
 ## Maintenance invariants
 
@@ -42,7 +43,8 @@ uvx cookiecutter /path/to/agent-lab --directory cookiecutter
   `include_release_pipeline` and `include_docker`, so both rules remove it
   (`remove()` tolerates already-deleted paths). Invalid toggle combinations
   (`include_release_pipeline` without `include_github_actions`,
-  `include_aks_gitops` without `include_docker`) are rejected
+  `include_aks_gitops` without `include_docker`, `auth_enabled` without
+  `include_aks_gitops`) are rejected
   in `pre_gen_project.py` instead of being patched up after generation.
 - **Runtime Jinja must not pass through cookiecutter's renderer.** Files
   containing runtime `{{ ... }}` templates (agent prompt files) or GitHub
@@ -53,7 +55,7 @@ uvx cookiecutter /path/to/agent-lab --directory cookiecutter
   they are excluded from the host repo's ruff/pre-commit AST hooks. The hooks
   in `hooks/` ARE valid Python (Jinja only inside string literals) and stay
   lint-clean.
-- The bake matrix (all 64 toggle combinations, including the invalid ones,
+- The bake matrix (all 128 toggle combinations, including the invalid ones,
   which assert the `pre_gen` rejection) is tested in
   `tests/template/test_bake_structural.py`; a deeper opt-in test
   (`-m cookiecutter_bake`) installs a baked project against this repo's
