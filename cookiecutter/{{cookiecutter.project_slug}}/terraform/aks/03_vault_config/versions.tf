@@ -31,5 +31,6 @@ provider "kubernetes" {
 
 provider "vault" {
   address = "https://${var.vault_hostname}"
-  token   = var.vault_token
+  # Root token produced by the vault_init step and stored in the unseal Key Vault.
+  token = jsondecode(data.azurerm_key_vault_secret.vault_init.value).root_token
 }

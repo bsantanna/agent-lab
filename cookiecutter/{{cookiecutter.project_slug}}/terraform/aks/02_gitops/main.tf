@@ -63,6 +63,12 @@ resource "azurerm_kubernetes_flux_configuration" "this" {
     path                       = "${var.gitops_path}/apps"
     garbage_collection_enabled = true
     depends_on                 = ["infra-configs"]
+
+    post_build {
+      substitute = {
+        app_hostname = var.app_hostname
+      }
+    }
   }
 
   depends_on = [azurerm_kubernetes_cluster_extension.flux]

@@ -92,7 +92,9 @@ After each release, `docker-image.yml` builds a multi-arch image, pushes it to
 `terraform/aks/` provisions an AKS cluster (with Azure Key Vault-backed Vault
 auto-unseal), installs Flux, and syncs the `gitops/` manifests: traefik,
 cert-manager, CloudNativePG, Redis, Vault, and this app — deployed from
-`ghcr.io/{{ cookiecutter.github_repository }}` and configured entirely from
-Vault via its ServiceAccount. See
+`ghcr.io/{{ cookiecutter.github_repository }}`, served over HTTPS at the
+configured `app_hostname` (with a headless-Chrome CDP sidecar for browser
+agents), and configured entirely from Vault via its ServiceAccount. Vault
+initialization is automated; the root token lands in the Azure Key Vault. See
 [docs/one-time-setup.md](docs/one-time-setup.md) for the bootstrap steps.
 {% endif %}

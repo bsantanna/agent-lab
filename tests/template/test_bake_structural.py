@@ -23,6 +23,7 @@ TOGGLES = (
     "include_claude_plugin",
     "include_release_pipeline",
     "include_aks_gitops",
+    "auth_enabled",
 )
 
 
@@ -52,8 +53,10 @@ def toggle_combinations():
 )
 def test_bake_produces_expected_tree(tmp_path, toggles):
     invalid = (
-        toggles["include_release_pipeline"] and not toggles["include_github_actions"]
-    ) or (toggles["include_aks_gitops"] and not toggles["include_docker"])
+        (toggles["include_release_pipeline"] and not toggles["include_github_actions"])
+        or (toggles["include_aks_gitops"] and not toggles["include_docker"])
+        or (toggles["auth_enabled"] and not toggles["include_aks_gitops"])
+    )
     if invalid:
         with pytest.raises(FailedHookException):
             bake(tmp_path, **toggles)
@@ -93,12 +96,30 @@ def test_bake_produces_expected_tree(tmp_path, toggles):
             root / "gitops" / "apps" / "test-app" / "kustomization.yaml"
         ).read_text()
         assert "ghcr.io/your-org/test-app" in app_kustomization
+        app_ingress = (
+            root / "gitops" / "apps" / "test-app" / "ingress.yaml"
+        ).read_text()
+        assert "${app_hostname}" in app_ingress
+        assert (root / "gitops" / "apps" / "test-app" / "cdp-deployment.yaml").exists()
+        assert (root / "terraform" / "aks" / "03_vault_config" / "outputs.tf").exists()
         aks_variables = (
             root / "terraform" / "aks" / "01_aks" / "variables.tf"
         ).read_text()
         assert '"rg-test-app"' in aks_variables
         assert '"aks-test-app"' in aks_variables
         assert '"kv-test-app-unseal"' in aks_variables
+        vault_config = root / "terraform" / "aks" / "03_vault_config"
+        vault_variables = (vault_config / "variables.tf").read_text()
+        assert ('variable "auth_client_secret"' in vault_variables) == toggles[
+            "auth_enabled"
+        ]
+        vault_main = (vault_config / "main.tf").read_text()
+        if toggles["auth_enabled"]:
+            assert "auth_enabled       = true" in vault_main
+            assert "auth_client_secret = var.auth_client_secret" in vault_main
+        else:
+            assert "auth_enabled       = false" in vault_main
+            assert 'auth_client_secret = ""' in vault_main
     workflows = root / ".github" / "workflows"
     assert (workflows / "release.yml").exists() == toggles["include_release_pipeline"]
     assert (workflows / "docker-image.yml").exists() == (

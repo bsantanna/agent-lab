@@ -15,6 +15,7 @@ INCLUDE_DOCKER = "{{ cookiecutter.include_docker }}" == "True"
 INCLUDE_GITHUB_ACTIONS = "{{ cookiecutter.include_github_actions }}" == "True"
 INCLUDE_RELEASE_PIPELINE = "{{ cookiecutter.include_release_pipeline }}" == "True"
 INCLUDE_AKS_GITOPS = "{{ cookiecutter.include_aks_gitops }}" == "True"
+AUTH_ENABLED = "{{ cookiecutter.auth_enabled }}" == "True"
 
 # Names that would shadow the framework package or the generated project's
 # own test-suite convention.
@@ -58,4 +59,10 @@ if INCLUDE_AKS_GITOPS and not INCLUDE_DOCKER:
     fail(
         "include_aks_gitops requires include_docker: the gitops deployment "
         "runs the app image built from docker/app/Dockerfile."
+    )
+
+if AUTH_ENABLED and not INCLUDE_AKS_GITOPS:
+    fail(
+        "auth_enabled requires include_aks_gitops: the auth_* values are only "
+        "wired into Vault app_secrets by terraform/aks/03_vault_config."
     )

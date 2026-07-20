@@ -13,6 +13,7 @@
     "include_claude_plugin": true,
     "include_release_pipeline": true,
     "include_aks_gitops": false,
+    "auth_enabled": false,
     "_copy_without_render": [
         "{{cookiecutter.package_name}}/agents/react_agent/default_execution_system_prompt.txt",
         ".github/workflows/release.yml",
