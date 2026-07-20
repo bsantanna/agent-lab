@@ -34,6 +34,7 @@ from agent_lab.app_factory import (
 )
 from agent_lab.core.config import (
     ConfigSource,
+    KubernetesVaultConfigSource,
     VaultConfigSource,
     YamlConfigSource,
     default_config_source,
@@ -63,6 +64,7 @@ __all__ = [
     "ConfigSource",
     "ContactSupportAgentBase",
     "Container",
+    "KubernetesVaultConfigSource",
     "DEFAULT_SCAN_PACKAGES",
     "McpRegistrar",
     "PromptSetRegistrar",

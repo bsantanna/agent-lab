@@ -67,7 +67,47 @@ class VaultConfigSource(ConfigSource):
         }
 
 
+SERVICE_ACCOUNT_TOKEN_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+
+
+class KubernetesVaultConfigSource(VaultConfigSource):
+    """VaultConfigSource that authenticates through Vault's Kubernetes auth
+    method with the pod's projected ServiceAccount token, so no static
+    VAULT_TOKEN has to be provisioned or rotated.
+    """
+
+    def __init__(
+        self,
+        url: str,
+        role: str,
+        engine_path: str = "secret",
+        secret_path: str = "app_secrets",
+        jwt_path: str = SERVICE_ACCOUNT_TOKEN_PATH,
+    ):
+        super().__init__(
+            url=url, token=None, engine_path=engine_path, secret_path=secret_path
+        )
+        self.role = role
+        self.jwt_path = jwt_path
+
+    def load(self) -> dict:
+        import hvac
+
+        client = hvac.Client(url=self.url, verify=False)
+        with open(self.jwt_path) as jwt_file:
+            client.auth.kubernetes.login(role=self.role, jwt=jwt_file.read())
+        self.token = client.token
+        return super().load()
+
+
 def default_config_source() -> ConfigSource:
+    if os.getenv("VAULT_K8S_ROLE"):
+        return KubernetesVaultConfigSource(
+            url=os.getenv("VAULT_URL"),
+            role=os.getenv("VAULT_K8S_ROLE"),
+            engine_path=os.getenv("VAULT_ENGINE_PATH", "secret"),
+            secret_path=os.getenv("VAULT_SECRET_PATH", "app_secrets"),
+        )
     if os.getenv("DOCKER"):
         return YamlConfigSource("config-docker.yml")
     if os.getenv("TESTING"):

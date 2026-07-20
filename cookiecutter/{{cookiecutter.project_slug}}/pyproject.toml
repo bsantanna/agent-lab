@@ -43,6 +43,9 @@ version_variables = [
     "plugins/{{ cookiecutter.project_slug }}-dev/.claude-plugin/plugin.json:version",
     "plugins/{{ cookiecutter.project_slug }}-dev/README.md:Version",
 {%- endif %}
+{%- if cookiecutter.include_aks_gitops %}
+    "gitops/apps/{{ cookiecutter.project_slug }}/kustomization.yaml:newTag",
+{%- endif %}
 ]
 
 {% endif -%}
