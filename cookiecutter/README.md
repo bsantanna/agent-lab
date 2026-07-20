@@ -21,11 +21,13 @@ uvx cookiecutter /path/to/agent-lab --directory cookiecutter
 |---|---|---|
 | `project_name` | `My Agent App` | Human-readable name; `project_slug` (kebab) and `package_name` (snake) derive from it |
 | `agent_lab_version` | current release | Lower bound of the generated `btech-agent-lab>=X.Y.Z,<X+1.0.0` dependency range; bumped automatically by semantic-release |
+| `github_repository` | `your-org/<slug>` | GitHub `owner/repo` of the generated project; used for the Flux git URL and the `ghcr.io/<owner>/<repo>` image reference |
 | `include_docker` | `true` | `docker/`, `compose.yml`, `config-docker.yml`, and the ReAct workflow example agent |
 | `include_github_actions` | `true` | `.github/workflows/ci.yml` (lint + tests) |
 | `include_testcontainers` | `true` | `tests/integration/` harness (Postgres, Redis, Vault) |
 | `include_claude_plugin` | `true` | `.claude-plugin/marketplace.json` + `plugins/<slug>-dev/` (feature-dev workflow plugin) |
 | `include_release_pipeline` | `true` | `.github/workflows/release.yml` (python-semantic-release) and `[tool.semantic_release]` in `pyproject.toml`; with `include_docker` also `docker-image.yml` (ghcr.io + cosign). Requires `include_github_actions` |
+| `include_aks_gitops` | `false` | `terraform/aks/` (AKS cluster + Flux + Vault config), `gitops/` manifests, and `docs/one-time-setup.md`. Requires `include_docker` |
 
 ## Maintenance invariants
 
@@ -39,7 +41,8 @@ uvx cookiecutter /path/to/agent-lab --directory cookiecutter
   exception: `.github/workflows/docker-image.yml` needs both
   `include_release_pipeline` and `include_docker`, so both rules remove it
   (`remove()` tolerates already-deleted paths). Invalid toggle combinations
-  (`include_release_pipeline` without `include_github_actions`) are rejected
+  (`include_release_pipeline` without `include_github_actions`,
+  `include_aks_gitops` without `include_docker`) are rejected
   in `pre_gen_project.py` instead of being patched up after generation.
 - **Runtime Jinja must not pass through cookiecutter's renderer.** Files
   containing runtime `{{ ... }}` templates (agent prompt files) or GitHub
@@ -50,7 +53,7 @@ uvx cookiecutter /path/to/agent-lab --directory cookiecutter
   they are excluded from the host repo's ruff/pre-commit AST hooks. The hooks
   in `hooks/` ARE valid Python (Jinja only inside string literals) and stay
   lint-clean.
-- The bake matrix (all 32 toggle combinations, including the invalid ones,
+- The bake matrix (all 64 toggle combinations, including the invalid ones,
   which assert the `pre_gen` rejection) is tested in
   `tests/template/test_bake_structural.py`; a deeper opt-in test
   (`-m cookiecutter_bake`) installs a baked project against this repo's

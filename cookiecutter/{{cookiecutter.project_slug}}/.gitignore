@@ -18,3 +18,10 @@ coverage.xml
 tmp/
 temp-*
 docker-volumes/
+{% if cookiecutter.include_aks_gitops %}
+# Terraform (tfvars carry per-environment secrets — never commit them)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+{% endif %}

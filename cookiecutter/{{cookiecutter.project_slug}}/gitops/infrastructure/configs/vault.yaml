@@ -1,0 +1,68 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: hashicorp
+  namespace: vault
+spec:
+  interval: 1h
+  url: https://helm.releases.hashicorp.com
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: vault
+  namespace: vault
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: vault
+      version: "0.34.0"
+      sourceRef:
+        kind: HelmRepository
+        name: hashicorp
+  # Vault reports NotReady until initialized (a one-time `vault operator init`
+  # per fresh install; auto-unseal covers every restart after that), so helm
+  # must not wait for pod readiness or this release would never turn Ready.
+  install:
+    disableWait: true
+    remediation:
+      retries: 3
+  upgrade:
+    disableWait: true
+  values:
+    server:
+      standalone:
+        # Chart default config plus the azurekeyvault seal; ${...} values are
+        # substituted by Flux postBuild from terraform/aks/02_gitops vars.
+        config: |
+          ui = true
+
+          listener "tcp" {
+            tls_disable = 1
+            address = "[::]:8200"
+            cluster_address = "[::]:8201"
+          }
+          storage "file" {
+            path = "/vault/data"
+          }
+          seal "azurekeyvault" {
+            tenant_id  = "${azure_tenant_id}"
+            client_id  = "${unseal_client_id}"
+            vault_name = "${unseal_key_vault_name}"
+            key_name   = "${unseal_key_name}"
+          }
+      ingress:
+        enabled: true
+        ingressClassName: traefik
+        annotations:
+          cert-manager.io/cluster-issuer: letsencrypt-prod
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/router.tls: "true"
+        hosts:
+          - host: ${vault_hostname}
+            paths: ["/"]
+        tls:
+          - secretName: vault-tls-secret
+            hosts:
+              - ${vault_hostname}

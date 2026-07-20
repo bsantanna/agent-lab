@@ -22,6 +22,7 @@ TOGGLES = (
     "include_testcontainers",
     "include_claude_plugin",
     "include_release_pipeline",
+    "include_aks_gitops",
 )
 
 
@@ -50,7 +51,10 @@ def toggle_combinations():
     ),
 )
 def test_bake_produces_expected_tree(tmp_path, toggles):
-    if toggles["include_release_pipeline"] and not toggles["include_github_actions"]:
+    invalid = (
+        toggles["include_release_pipeline"] and not toggles["include_github_actions"]
+    ) or (toggles["include_aks_gitops"] and not toggles["include_docker"])
+    if invalid:
         with pytest.raises(FailedHookException):
             bake(tmp_path, **toggles)
         return
@@ -81,6 +85,20 @@ def test_bake_produces_expected_tree(tmp_path, toggles):
         plugin_readme = (plugin_dir / "README.md").read_text()
         assert "/test-app-dev" in plugin_readme
         assert "/feature-dev" not in plugin_readme
+    assert (root / "terraform").exists() == toggles["include_aks_gitops"]
+    assert (root / "gitops").exists() == toggles["include_aks_gitops"]
+    assert (root / "docs").exists() == toggles["include_aks_gitops"]
+    if toggles["include_aks_gitops"]:
+        app_kustomization = (
+            root / "gitops" / "apps" / "test-app" / "kustomization.yaml"
+        ).read_text()
+        assert "ghcr.io/your-org/test-app" in app_kustomization
+        aks_variables = (
+            root / "terraform" / "aks" / "01_aks" / "variables.tf"
+        ).read_text()
+        assert '"rg-test-app"' in aks_variables
+        assert '"aks-test-app"' in aks_variables
+        assert '"kv-test-app-unseal"' in aks_variables
     workflows = root / ".github" / "workflows"
     assert (workflows / "release.yml").exists() == toggles["include_release_pipeline"]
     assert (workflows / "docker-image.yml").exists() == (
@@ -92,6 +110,9 @@ def test_bake_produces_expected_tree(tmp_path, toggles):
         "include_release_pipeline"
     ]
     if toggles["include_release_pipeline"]:
+        assert ("kustomization.yaml:newTag" in pyproject_text) == toggles[
+            "include_aks_gitops"
+        ]
         version_variables = tomllib.loads(pyproject_text)["tool"]["semantic_release"][
             "version_variables"
         ]

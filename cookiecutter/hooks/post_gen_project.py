@@ -17,6 +17,7 @@ INCLUDE_GITHUB_ACTIONS = "{{ cookiecutter.include_github_actions }}" == "True"
 INCLUDE_TESTCONTAINERS = "{{ cookiecutter.include_testcontainers }}" == "True"
 INCLUDE_CLAUDE_PLUGIN = "{{ cookiecutter.include_claude_plugin }}" == "True"
 INCLUDE_RELEASE_PIPELINE = "{{ cookiecutter.include_release_pipeline }}" == "True"
+INCLUDE_AKS_GITOPS = "{{ cookiecutter.include_aks_gitops }}" == "True"
 
 PACKAGE_NAME = "{{ cookiecutter.package_name }}"
 
@@ -53,5 +54,8 @@ if not INCLUDE_RELEASE_PIPELINE:
         ".github/workflows/release.yml",
         ".github/workflows/docker-image.yml",
     )
+
+if not INCLUDE_AKS_GITOPS:
+    remove("terraform", "gitops", "docs")
 
 print(f"Generated {PACKAGE_NAME} — see README.md to get started.")

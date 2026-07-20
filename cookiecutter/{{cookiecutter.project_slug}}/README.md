@@ -83,6 +83,16 @@ access to `main` — so the release commit and tag can be pushed back and
 trigger downstream workflows.
 {%- if cookiecutter.include_docker %}
 After each release, `docker-image.yml` builds a multi-arch image, pushes it to
-`ghcr.io/<your-org>/{{ cookiecutter.project_slug }}`, and signs it with cosign.
+`ghcr.io/{{ cookiecutter.github_repository }}`, and signs it with cosign.
 {%- endif %}
+{% endif %}
+{% if cookiecutter.include_aks_gitops %}
+## AKS + GitOps deployment
+
+`terraform/aks/` provisions an AKS cluster (with Azure Key Vault-backed Vault
+auto-unseal), installs Flux, and syncs the `gitops/` manifests: traefik,
+cert-manager, CloudNativePG, Redis, Vault, and this app — deployed from
+`ghcr.io/{{ cookiecutter.github_repository }}` and configured entirely from
+Vault via its ServiceAccount. See
+[docs/one-time-setup.md](docs/one-time-setup.md) for the bootstrap steps.
 {% endif %}

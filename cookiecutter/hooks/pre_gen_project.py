@@ -11,8 +11,10 @@ import sys
 PROJECT_SLUG = "{{ cookiecutter.project_slug }}"
 PACKAGE_NAME = "{{ cookiecutter.package_name }}"
 AGENT_LAB_VERSION = "{{ cookiecutter.agent_lab_version }}"
+INCLUDE_DOCKER = "{{ cookiecutter.include_docker }}" == "True"
 INCLUDE_GITHUB_ACTIONS = "{{ cookiecutter.include_github_actions }}" == "True"
 INCLUDE_RELEASE_PIPELINE = "{{ cookiecutter.include_release_pipeline }}" == "True"
+INCLUDE_AKS_GITOPS = "{{ cookiecutter.include_aks_gitops }}" == "True"
 
 # Names that would shadow the framework package or the generated project's
 # own test-suite convention.
@@ -50,4 +52,10 @@ if INCLUDE_RELEASE_PIPELINE and not INCLUDE_GITHUB_ACTIONS:
     fail(
         "include_release_pipeline requires include_github_actions: release.yml "
         "is triggered by the CI workflow completing and lives in .github/."
+    )
+
+if INCLUDE_AKS_GITOPS and not INCLUDE_DOCKER:
+    fail(
+        "include_aks_gitops requires include_docker: the gitops deployment "
+        "runs the app image built from docker/app/Dockerfile."
     )

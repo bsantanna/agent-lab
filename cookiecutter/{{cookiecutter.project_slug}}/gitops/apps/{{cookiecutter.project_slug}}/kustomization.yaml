@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: {{ cookiecutter.project_slug }}
+resources:
+  - serviceaccount.yaml
+  - deployment.yaml
+  - service.yaml
+# newTag is bumped automatically by python-semantic-release on release
+# (see version_variables in pyproject.toml)
+images:
+  - name: ghcr.io/{{ cookiecutter.github_repository }}
+    newTag: "0.1.0"
