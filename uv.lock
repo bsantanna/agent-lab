@@ -671,13 +671,13 @@ requires-dist = [
     { name = "fastapi-keycloak-middleware", specifier = "~=1.6.0" },
     { name = "fastmcp", specifier = "~=3.4.4" },
     { name = "hvac", specifier = "~=2.4.0" },
-    { name = "icalendar", specifier = "~=7.1.0" },
+    { name = "icalendar", specifier = "~=7.2.2" },
     { name = "ipykernel", specifier = ">=7.3.0" },
     { name = "jinja2", specifier = "~=3.1.6" },
     { name = "langchain", specifier = "~=1.3.13" },
     { name = "langchain-anthropic", specifier = "~=1.4.8" },
     { name = "langchain-community", specifier = "~=0.4.1" },
-    { name = "langchain-core", specifier = "~=1.4.9" },
+    { name = "langchain-core", specifier = "~=1.5.0" },
     { name = "langchain-experimental", specifier = "~=0.4.1" },
     { name = "langchain-openai", specifier = "~=1.2.1" },
     { name = "langchain-postgres", specifier = "~=0.0.16" },
@@ -717,7 +717,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "pre-commit", specifier = "~=4.6.0" },
+    { name = "pre-commit", specifier = "~=4.6.1" },
     { name = "ruff", specifier = "~=0.15.10" },
 ]
 notebooks = [
@@ -728,8 +728,8 @@ notebooks = [
     { name = "python-dotenv" },
 ]
 test = [
-    { name = "cookiecutter", specifier = "~=2.6.0" },
-    { name = "langfuse", specifier = ">=4.14.0" },
+    { name = "cookiecutter", specifier = "~=2.7.1" },
+    { name = "langfuse", specifier = ">=4.14.1" },
     { name = "pytest", specifier = "~=9.0.3" },
     { name = "pytest-asyncio", specifier = "~=1.3.0" },
     { name = "pytest-cov", specifier = "~=7.1.0" },
@@ -1029,7 +1029,7 @@ wheels = [
 
 [[package]]
 name = "cookiecutter"
-version = "2.6.0"
+version = "2.7.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "arrow" },
@@ -1041,9 +1041,9 @@ dependencies = [
     { name = "requests" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/52/17/9f2cd228eb949a91915acd38d3eecdc9d8893dde353b603f0db7e9f6be55/cookiecutter-2.6.0.tar.gz", hash = "sha256:db21f8169ea4f4fdc2408d48ca44859349de2647fbe494a9d6c3edfc0542c21c", size = 158767, upload-time = "2024-02-21T18:02:41.949Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/92/03/f4c96d8fd4f5e8af0210bf896eb63927f35d3014a8e8f3bf9d2c43ad3332/cookiecutter-2.7.1.tar.gz", hash = "sha256:ca7bb7bc8c6ff441fbf53921b5537668000e38d56e28d763a1b73975c66c6138", size = 142854, upload-time = "2026-03-04T04:06:02.786Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b6/d9/0137658a353168ffa9d0fc14b812d3834772040858ddd1cb6eeaf09f7a44/cookiecutter-2.6.0-py3-none-any.whl", hash = "sha256:a54a8e37995e4ed963b3e82831072d1ad4b005af736bb17b99c2cbd9d41b6e2d", size = 39177, upload-time = "2024-02-21T18:02:39.569Z" },
+    { url = "https://files.pythonhosted.org/packages/14/a9/8c855c14b401dc67d20739345295af5afce5e930a69600ab20f6cfa50b5c/cookiecutter-2.7.1-py3-none-any.whl", hash = "sha256:cee50defc1eaa7ad0071ee9b9893b746c1b3201b66bf4d3686d0f127c8ed6cf9", size = 41317, upload-time = "2026-03-04T04:06:01.221Z" },
 ]
 
 [[package]]
@@ -2216,16 +2216,16 @@ wheels = [
 
 [[package]]
 name = "icalendar"
-version = "7.1.3"
+version = "7.2.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "python-dateutil" },
     { name = "typing-extensions", marker = "python_full_version < '3.13'" },
     { name = "tzdata" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/bd/86/16051e4f00db105d76bfd79f87cc5685c55d562d335f97c71bf128914c56/icalendar-7.1.3.tar.gz", hash = "sha256:eb03a0e215f30db689a72c49f18f998aabf17522eb0858a293c393510850727c", size = 472734, upload-time = "2026-06-15T14:06:13.199Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9e/37/4c43e9534a4d43f8cde8f0fd7f869628b45f63f27c5b040230c8f1d90b3d/icalendar-7.2.2.tar.gz", hash = "sha256:6cf904a928881e20c89b682e75bca2eb97e8c5ca629782ed44a519abf4cac1cc", size = 491618, upload-time = "2026-07-20T12:04:05.173Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a0/57/aa44e7af1244856d92a700dca5089777a334fecd328f82d5faa5c2696e2e/icalendar-7.1.3-py3-none-any.whl", hash = "sha256:690f30aa50a76cbf854db5ad52654705db9c5cd0e1b152222f5d4b7854b60667", size = 475481, upload-time = "2026-06-15T14:06:11.605Z" },
+    { url = "https://files.pythonhosted.org/packages/f1/fd/8cbebc368afc020c979e5f9433348531215c65df93b0d6d6f1a1b13a39eb/icalendar-7.2.2-py3-none-any.whl", hash = "sha256:90dd280cb4f67d1ef07b5178c2c33db4fc0a05627e50a3758b6b2aa9b117bc07", size = 502831, upload-time = "2026-07-20T12:04:03.796Z" },
 ]
 
 [[package]]
@@ -2705,7 +2705,7 @@ wheels = [
 
 [[package]]
 name = "langchain-core"
-version = "1.4.9"
+version = "1.5.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jsonpatch" },
@@ -2718,9 +2718,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "uuid-utils" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2a/b9/e937d0a90b26540bff07e7a7c64349f3b29c2dcc36257cd1cd3fdce17f2a/langchain_core-1.4.9.tar.gz", hash = "sha256:f8078901145bed0466755277500a5a22822a7b628808c4c0a28d4fc88895fcf2", size = 967294, upload-time = "2026-07-08T20:06:54.191Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a7/fc/84e23e8adff5adcd7792273ad610c4972ec534658a52698fb8db6defa87a/langchain_core-1.5.1.tar.gz", hash = "sha256:b0df382704c6403c1e0c9603415bce09290455d4aeeb38f350d15f78ca597483", size = 972219, upload-time = "2026-07-23T20:13:22.282Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/84/70/ade2fada52772798ef815b6352b59e71b116aa0c32c3aef5be3dc2cbed12/langchain_core-1.4.9-py3-none-any.whl", hash = "sha256:28e3909e2a10cc81504952d795ac0a9e014c0018121ef89d48dd396fa09ec624", size = 558293, upload-time = "2026-07-08T20:06:52.382Z" },
+    { url = "https://files.pythonhosted.org/packages/55/1e/1eb8833dc59b9c1f49da89a4a1ad7510440c9eb57fb539ea2203294a1acd/langchain_core-1.5.1-py3-none-any.whl", hash = "sha256:c5ec8f51dd05124f950c9afd0fd8bb3f7be4e405eeb868d481b2f8ff652cb9d2", size = 561634, upload-time = "2026-07-23T20:13:20.717Z" },
 ]
 
 [[package]]
@@ -2809,7 +2809,7 @@ wheels = [
 
 [[package]]
 name = "langfuse"
-version = "4.14.0"
+version = "4.14.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "backoff" },
@@ -2821,9 +2821,9 @@ dependencies = [
     { name = "pydantic" },
     { name = "wrapt" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ae/40/752661e4376dcaa73bf839703296530d91807e90e219e1fc0d24c5460bc2/langfuse-4.14.0.tar.gz", hash = "sha256:31b875c8d09eee39c558584b9424bbd5ed014965c5944c4528a37947ae4b7787", size = 363802, upload-time = "2026-07-10T11:33:39.153Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a1/61/bb7fa00f5334a670c9aae1f053bc725654a0ca5435fa17d0cb103df8c978/langfuse-4.14.1.tar.gz", hash = "sha256:576641820ae79aeca71453c8eff3c8c35d53f7e41729c918f59eb81f7499faf9", size = 381977, upload-time = "2026-07-20T08:44:04.669Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/76/c7/ca0f591e1184415ffcd920a4107f3d2638ab5af7ff7e498d99a9b8b2bb13/langfuse-4.14.0-py3-none-any.whl", hash = "sha256:632b74abfa14d9ad3dccbe3322bf7e11b0dce9be0de451b0d134db9bff246d44", size = 638356, upload-time = "2026-07-10T11:33:37.419Z" },
+    { url = "https://files.pythonhosted.org/packages/e6/e4/6c305af16f1ce344271dd829383b7af586530cf60b55af1aaf274ca37ba9/langfuse-4.14.1-py3-none-any.whl", hash = "sha256:07d19f16338b8e21f8e5996b7e6c3ed150ee582fbaa6275ac9eeea297093f4be", size = 669448, upload-time = "2026-07-20T08:44:05.682Z" },
 ]
 
 [[package]]
@@ -4198,7 +4198,7 @@ name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ptyprocess" },
+    { name = "ptyprocess", marker = "sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450, upload-time = "2023-11-25T09:07:26.339Z" }
 wheels = [
@@ -4356,7 +4356,7 @@ wheels = [
 
 [[package]]
 name = "pre-commit"
-version = "4.6.0"
+version = "4.6.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cfgv" },
@@ -4365,9 +4365,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "virtualenv" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8e/22/2de9408ac81acbb8a7d05d4cc064a152ccf33b3d480ebe0cd292153db239/pre_commit-4.6.0.tar.gz", hash = "sha256:718d2208cef53fdc38206e40524a6d4d9576d103eb16f0fec11c875e7716e9d9", size = 198525, upload-time = "2026-04-21T20:31:41.613Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/25/3a/ddb78f32a0814e66b18a099377a106a2dcdce92d86a034d69d65df9b256e/pre_commit-4.6.1.tar.gz", hash = "sha256:03e809865c7d178b9979d06c761fcbfe6808fdaded8581a745bb110e52050421", size = 198646, upload-time = "2026-07-21T20:56:58.225Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/80/6e/4b28b62ecb6aae56769c34a8ff1d661473ec1e9519e2d5f8b2c150086b26/pre_commit-4.6.0-py2.py3-none-any.whl", hash = "sha256:e2cf246f7299edcabcf15f9b0571fdce06058527f0a06535068a86d38089f29b", size = 226472, upload-time = "2026-04-21T20:31:40.092Z" },
+    { url = "https://files.pythonhosted.org/packages/fb/49/bc925106abcdac498074f2cbe6137e94e09f418dd2b7775df5b577dc0313/pre_commit-4.6.1-py2.py3-none-any.whl", hash = "sha256:0e3b2942510d1fb34eec167a3ec57331bf8442122f1153a9fb8b58f5c49b2717", size = 226186, upload-time = "2026-07-21T20:56:57.064Z" },
 ]
 
 [[package]]
@@ -8648,8 +8648,8 @@ name = "secretstorage"
 version = "3.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cryptography" },
-    { name = "jeepney" },
+    { name = "cryptography", marker = "sys_platform != 'win32'" },
+    { name = "jeepney", marker = "sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/1c/03/e834bcd866f2f8a49a85eaff47340affa3bfa391ee9912a952a1faa68c7b/secretstorage-3.5.0.tar.gz", hash = "sha256:f04b8e4689cbce351744d5537bf6b1329c6fc68f91fa666f60a380edddcd11be", size = 19884, upload-time = "2025-11-23T19:02:53.191Z" }
 wheels = [
@@ -8818,8 +8818,8 @@ name = "standard-aifc"
 version = "3.13.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "audioop-lts" },
-    { name = "standard-chunk" },
+    { name = "audioop-lts", marker = "python_full_version >= '3.13'" },
+    { name = "standard-chunk", marker = "python_full_version >= '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/c4/53/6050dc3dde1671eb3db592c13b55a8005e5040131f7509cef0215212cb84/standard_aifc-3.13.0.tar.gz", hash = "sha256:64e249c7cb4b3daf2fdba4e95721f811bde8bdfc43ad9f936589b7bb2fae2e43", size = 15240, upload-time = "2024-10-30T16:01:31.772Z" }
 wheels = [
