@@ -190,6 +190,10 @@ def setup_auth(container, application, mounts: List[RouterMount]):
         for mount in mounts:
             exclude_patterns.extend(mount.auth_exclude_patterns)
 
+        spa_pattern = _spa_auth_exclude_pattern(mounts, config.get("static") or {})
+        if spa_pattern:
+            exclude_patterns.append(spa_pattern)
+
         setup_keycloak_middleware(
             application,
             keycloak_configuration=keycloak_config,
@@ -199,6 +203,38 @@ def setup_auth(container, application, mounts: List[RouterMount]):
 
     else:
         logger.warning("Authentication disabled")
+
+
+# Framework paths that must stay behind auth (or keep their own auth) even
+# though they are not RouterMounts: the MCP server, the OpenAPI docs, and the
+# branding/static-logo route.
+_RESERVED_PROTECTED_PREFIXES = ["mcp", "static", "docs", "redoc", "openapi.json"]
+
+
+def _spa_auth_exclude_pattern(
+    mounts: List[RouterMount], static_config: dict
+) -> Optional[str]:
+    """Auth exclusion that makes a root-mounted static SPA publicly reachable.
+
+    A SPA needs *every* non-API path to bypass auth so unknown deep links fall
+    through to ``index.html`` (the auth middleware answers 401 before routing,
+    so the 404→index fallback never sees them otherwise). Rather than list the
+    public paths, we derive the protected surface — the API router prefixes plus
+    a few reserved framework paths — and exclude everything else via a negative
+    lookahead. This can't drift as the frontend adds routes.
+
+    Only applies when static serving is enabled at ``mount_path: "/"``; a static
+    mount under a sub-path leaves the default-authenticated model untouched.
+    """
+    if not static_config.get("enabled", False):
+        return None
+    if static_config.get("mount_path", "/") != "/":
+        return None
+
+    protected = [mount.prefix.strip("/") for mount in mounts]
+    protected += _RESERVED_PROTECTED_PREFIXES
+    alternation = "|".join(re.escape(prefix) for prefix in protected)
+    return rf"^/(?!(?:{alternation})(?:/|$)).*"
 
 
 def setup_resource_metadata(container: Container, application: FastAPI):

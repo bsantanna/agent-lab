@@ -59,6 +59,16 @@ class VaultConfigSource(ConfigSource):
             },
             "vault": {"url": self.url, "token": self.token},
             "broker": {"url": app_secrets["broker_url"]},
+            # Vault holds only secrets, so static serving is a code convention:
+            # enabled with the SPA build under STATIC_DIR (each app points this
+            # at its own package dir). setup_auth() derives the public-path
+            # exclusions from the router prefixes, so nothing to configure here.
+            "static": {
+                "enabled": True,
+                "directory": os.getenv("STATIC_DIR", "static/frontend/browser"),
+                "index_file": "index.html",
+                "mount_path": "/",
+            },
             "db": {
                 "url": app_secrets["db_url"],
                 "vectors": app_secrets["db_vectors"],

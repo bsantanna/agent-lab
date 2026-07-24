@@ -1,11 +1,16 @@
 import os
+import re
 from unittest.mock import MagicMock
 
 import pytest
-from fastapi import FastAPI, HTTPException
+from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.testclient import TestClient
 
-from agent_lab.app_factory import _setup_spa_fallback
+from agent_lab.app_factory import (
+    RouterMount,
+    _setup_spa_fallback,
+    _spa_auth_exclude_pattern,
+)
 from agent_lab.main import app
 
 
@@ -163,3 +168,47 @@ class TestResourceMetadata:
     def test_oauth_authorization_server_metadata_trailing_slash(self, client):
         response = client.get("/.well-known/oauth-authorization-server/mcp/")
         assert response.status_code == 200
+
+
+class TestSpaAuthExclude:
+    _mounts = [
+        RouterMount(APIRouter(), "/agents", ["agents"]),
+        RouterMount(APIRouter(), "/messages", ["messages"]),
+        RouterMount(APIRouter(), "/auth", ["auth"]),
+    ]
+
+    def _pattern(self, static_config):
+        return _spa_auth_exclude_pattern(self._mounts, static_config)
+
+    def test_disabled_returns_none(self):
+        assert self._pattern({"enabled": False}) is None
+
+    def test_missing_config_returns_none(self):
+        assert self._pattern({}) is None
+
+    def test_sub_path_mount_returns_none(self):
+        # Only a root-mounted SPA flips into the public-by-default model.
+        assert self._pattern({"enabled": True, "mount_path": "/app"}) is None
+
+    def test_public_paths_are_excluded(self):
+        pattern = re.compile(self._pattern({"enabled": True}))
+        for path in ("/", "/index.html", "/main-ABC123.js", "/favicon.ico"):
+            assert pattern.match(path), path
+
+    def test_spa_deep_links_are_excluded(self):
+        pattern = re.compile(self._pattern({"enabled": True}))
+        for path in ("/sobre", "/clientes/42", "/relatorios/2026/anual"):
+            assert pattern.match(path), path
+
+    def test_api_and_reserved_paths_are_not_excluded(self):
+        pattern = re.compile(self._pattern({"enabled": True}))
+        for path in (
+            "/agents",
+            "/agents/123",
+            "/messages/abc",
+            "/auth/token",
+            "/mcp/",
+            "/docs",
+            "/openapi.json",
+        ):
+            assert not pattern.match(path), path
