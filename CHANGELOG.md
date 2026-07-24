@@ -2,6 +2,21 @@
 
 <!-- version list -->
 
+## v1.16.0 (2026-07-24)
+
+### Features
+
+- Add SPA auth exclusion pattern and static serving configuration
+  ([#362](https://github.com/btech-software/agent-lab/pull/362),
+  [`c0999b7`](https://github.com/btech-software/agent-lab/commit/c0999b7adb241303ba8d882a9a0ecac6a922289c))
+
+- Updates project dependencies ([#362](https://github.com/btech-software/agent-lab/pull/362),
+  [`c0999b7`](https://github.com/btech-software/agent-lab/commit/c0999b7adb241303ba8d882a9a0ecac6a922289c))
+
+- Updates project dependencies (2) ([#362](https://github.com/btech-software/agent-lab/pull/362),
+  [`c0999b7`](https://github.com/btech-software/agent-lab/commit/c0999b7adb241303ba8d882a9a0ecac6a922289c))
+
+
 ## v1.15.0 (2026-07-20)
 
 ### Bug Fixes
